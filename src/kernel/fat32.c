@@ -1,0 +1,774 @@
+#include "disk.h"
+#include "fat32.h"
+#include "lib.h"
+#include "VFS.h"
+#include "errno.h"
+#include "memory.h"
+#include "stdio.h"
+
+struct Disk_Partition_Table DPT;
+struct FAT32_BootSector fat32_bootsector;
+struct FAT32_FSInfo fat32_fsinfo;
+
+// unsigned long FirstDataSector = 0; // 数据区起始扇区号
+// unsigned long BytesPerClus = 0;    // 每簇字节数
+// unsigned long FirstFAT1Sector = 0; // FAT1表起始扇区号
+// unsigned long FirstFAT2Sector = 0; // FAT2 表起始扇区号
+
+/**
+ * @brief 在fat表中读出 簇号为fat_entry 对应的fat表项值
+ *
+ * @param fat_entry
+ * @return unsigned int 簇号/结束标志
+ */
+unsigned int DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int fat_entry)
+{
+    unsigned int buf[128];
+    memset(buf, 0, 512);
+    // fat_entry >> 7: 是因为一个扇区有128个fat表项， 这样会定位到簇号对应的偏移扇区
+    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (unsigned char *)buf);
+
+    color_printk(BLUE, BLACK, "DISK1_FAT32_read_FAT_Entry fat_entry:%#018lx, %#010x\n", fat_entry, buf[fat_entry & 0x7f]);
+
+    // fat_entry & 7f: 来定位本扇区内的，那个簇号
+    return buf[fat_entry & 0x7f] & 0x0fffffff;
+}
+
+/**
+ * @brief 在fat_entry对应的fat表项中，修改fat表项值为value
+ *
+ * @param fat_entry
+ * @param value
+ * @return unsigned long 成功返回1
+ */
+unsigned long DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int fat_entry, unsigned int value)
+{
+    unsigned int buf[128];
+    int i;
+    memset(buf, 0, 512);
+    // 读fat
+    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (unsigned char *)buf);
+
+    buf[fat_entry & 0x7f] = (buf[fat_entry & 0x7f] & 0xf0000000) | (value & 0x0fffffff);
+    // 写fat1,fat2,...表
+    for (i = 0; i < fsbi->NumFATs; i++)
+        IDE_device_operation.transfer(ATA_WRITE_CMD, fsbi->FAT1_firstsector + fsbi->sector_per_FAT * i + (fat_entry >> 7), 1, (unsigned char *)buf);
+    return 1;
+}
+
+/**
+ * @brief 从FAT32文件系统中搜索出空闲簇号
+ *
+ * @param fsbi
+ * @return unsigned long
+ */
+unsigned long FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
+{
+    int i, j;
+    int fat_entry;
+    unsigned long sector_per_fat = fsbi->sector_per_FAT;
+    unsigned int buf[128];
+
+    // fsbi->fat_fsinfo->FSI_Free_Count & fsbi->fat_fsinfo->FSI_Nxt_Free not exactly, so unuse
+    for (i = 0; i < sector_per_fat; i++)
+    {
+        memset(buf, 0, 512);
+        IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + i, 1, (unsigned char *)buf);
+
+        for (j = 0; j < 128; j++)
+        {
+            if ((buf[j] & 0x0fffffff) == 0)
+                return j + i * 128; // return (i << 7) + j；
+        }
+    }
+    return -1;
+}
+
+// 负责为访问文件数据提供操作方法
+long FAT32_open(struct index_node *inode, struct file *filp) { return 1; }
+long FAT32_close(struct index_node *inode, struct file *filp) { return 1; }
+
+/**
+ * @brief 在filp指定的文件中，从文件起始偏移position个字节开始，读取count字节数据，存入buf中
+ *
+ * @param filp
+ * @param buf 存储读出数据的缓存区
+ * @param count 要读取的字节数
+ * @param position 相对于文件的偏移位置/目标位置
+ * @return long 成功返回读取的字节数，失败返回错误码
+ */
+long FAT32_read(struct file *filp, char *buf, unsigned long count, long *position)
+{
+    struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
+    struct FAT32_sb_info *fsbi = filp->dentry->dir_inode->sb->private_sb_info;
+
+    unsigned long cluster = finode->first_cluster; // 文件访问位置所在簇号
+    unsigned long sector = 0;
+    int i, length = 0;
+    long retval = 0;
+    int index = *position / fsbi->bytes_per_cluster;   // 目标位置偏移簇数
+    long offset = *position % fsbi->bytes_per_cluster; // 目标位置簇内偏移字节
+    char *buffer = (char *)kmalloc(fsbi->bytes_per_cluster, 0);
+
+    if (!cluster)
+        return -EFAULT;
+    // A.得到要读的簇号
+    for (i = 0; i < index; i++)
+        cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster);
+    // 计算出可读取数据长度
+    if (*position + count > filp->dentry->dir_inode->file_size)
+        index = count = filp->dentry->dir_inode->file_size - *position;
+    else
+        index = count;
+    // preempt:先占，先取，current->preempt_count是什么东西
+    color_printk(GREEN, BLACK, "FAT32_read- first_cluster:%d, size:%d, preempt_count:%d\n", finode->first_cluster, filp->dentry->dir_inode->file_size, current->preempt_count);
+    // b. 循环体实现数据读取过程
+    do
+    {
+        memset(buffer, 0, fsbi->bytes_per_cluster);
+        // 计算要读取的扇区号
+        sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster;
+
+        if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+        {
+            color_printk(RED, BLACK, "FAT32 FS(read) read disk ERROR!!!!!!\n");
+            retval = -EIO;
+            break;
+        }
+        length = index <= fsbi->bytes_per_cluster - offset ? index : fsbi->bytes_per_cluster - offset;
+
+        // 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
+        if ((unsigned long)buf < TASK_SIZE)
+            copy_to_user(buffer + offset, buf, length);
+        else
+            memcpy(buffer + offset, buf, length);
+
+        index -= length;
+        buf += length;
+        offset -= offset; // 第二次循环后，offset = 0
+        *position += length;
+    } while (index && (cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster)));
+
+    kfree(buffer);
+    // index值若为0，则说明数据已经成功从文件读取出来，随即返回已读取数据长度
+    // 否则说明数据读取错误，进而返回错误码
+    if (!index)
+        retval = count;
+    return retval;
+}
+
+/**
+ * @brief 在filp指定的文件中，从文件起始偏移position个字节开始，写出count字节数据，
+ *
+ * @param filp
+ * @param buf 存储要写入数据的缓存区
+ * @param count 要写入的字节数
+ * @param position 相对于文件的偏移位置/目标位置
+ * @return long 成功返回读取的字节数，失败返回错误码
+ */
+long FAT32_write(struct file *filp, char *buf, unsigned long count, long *position)
+{
+    // a. 得到FAT32文件系统的元数据
+    struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
+    struct FAT32_sb_info *fsbi = filp->dentry->dir_inode->sb->private_sb_info;
+
+    unsigned long cluster = finode->first_cluster; // 要写入文件的第一个簇
+    unsigned long next_cluster = 0;
+    unsigned long sector = 0;
+    int i, length = 0;
+    long retval = 0;
+    long flags = 0;
+    int index = *position / fsbi->bytes_per_cluster;
+    long offset = *position % fsbi->bytes_per_cluster;
+    char *buffer = (char *)kmalloc(fsbi->bytes_per_cluster, 0);
+
+    if (!cluster) // 要写入的文件没有被分配簇号，那么获得簇号
+    {
+        cluster = FAT32_find_available_cluster(fsbi);
+        flags = 1;
+    }
+    else
+        for (i = 0; i < index; i++)
+            cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster);
+
+    if (!cluster)
+    { // 硬盘已无法分配多余簇号
+        kfree(buffer);
+        return -ENOSPC;
+    }
+
+    if (flags)
+    { // 创建文件后，第一次写入文件时，缓存本文件的目录，
+        finode->first_cluster = cluster;
+        filp->dentry->dir_inode->sb->sb_ops->write_inode(filp->dentry->dir_inode);
+        // 在申请好的FAT表项内先填入写入标志
+        DISK1_FAT32_write_FAT_Entry(fsbi, cluster, 0x0ffffff8);
+    }
+
+    // index = 是要写入的总字节数
+    index = count;
+
+    // 当取得目标簇号以后，便可开始数据写入工作，这项工作同样采用循环体实现
+    // 当数据全部写入，或文件系统已满，或在硬盘写入期间出错，循环体才会退出
+    do
+    { // flags标记当前簇的操作状态为已使用还是新分配。对于已使用的簇，必须将簇数据读出来，再写入数据覆盖到读取缓存区中
+        // 如果簇是新分配的，那么只需数据写入缓冲区中
+        if (!flags)
+        { // 文件不是首次创建，先读出文件要写入的位置
+            memset(buffer, 0, fsbi->bytes_per_cluster);
+            sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster;
+            if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+            {
+                color_printk(RED, BLACK, "FAT32 FS(write) read disk ERROR!!!!\n");
+                retval = -EIO;
+                break;
+            }
+        }
+
+        // 此中有深意
+        length = index <= fsbi->bytes_per_cluster - offset ? index : fsbi->bytes_per_cluster - offset;
+
+        if ((unsigned long)buf < TASK_SIZE)
+            copy_from_user(buf, buffer + offset, length);
+        else
+            memcpy(buf, buffer + offset, length);
+
+        // 把准备好的数据写入硬盘
+        if (!IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+        {
+            color_printk(RED, BLACK, "FAT32 FS(write) write disk ERROR!!!!\n");
+            retval = -EIO;
+            break;
+        }
+
+        // 更新下一次循环的数据
+        index -= length;
+        buf += length;
+        offset -= offset;
+        *position += length;
+
+        // 得到下一个簇号
+        if (index)
+            next_cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster);
+        else
+            break;
+        // 文件写入到，最后一个簇号
+        if (next_cluster >= 0x0ffffff8)
+        {
+            next_cluster = FAT32_find_available_cluster(fsbi);
+            if (!next_cluster)
+            {
+                kfree(buffer);
+                return -ENOSPC;
+            }
+
+            // 簇号的连接有点像链表
+            DISK1_FAT32_write_FAT_Entry(fsbi, cluster, next_cluster);
+            DISK1_FAT32_write_FAT_Entry(fsbi, next_cluster, 0x0ffffff8); // 写入结束标志
+            cluster = next_cluster;
+            flags = 1;
+        }
+    } while (index);
+
+    // 本次写操作，写超了文件大小，所以要更新目录项。日后要添加的功能:此处也应该更新一下修改时间呢？
+    if (*position > filp->dentry->dir_inode->file_size)
+    {
+        filp->dentry->dir_inode->file_size = *position;
+        filp->dentry->dir_inode->sb->sb_ops->write_inode(filp->dentry->dir_inode);
+    }
+
+    kfree(buffer);
+    if (!index)
+        retval = count;
+    return retval;
+}
+
+// 设置文件指针的位置。这个函数的使用能否提升到VFS层面?
+long FAT32_lseek(struct file *filp, long offset, long origin)
+{
+    struct index_node *inode = filp->dentry->dir_inode;
+    long pos = 0;
+
+    switch (origin)
+    {
+    case SEEK_SET:
+        pos = offset;
+        break;
+    case SEEK_CUR:
+        pos = filp->position + offset;
+        break;
+    case SEEK_END:
+        pos = filp->dentry->dir_inode->file_size + offset;
+        break;
+    default:
+        return -EINVAL;
+        break;
+    }
+
+    if (pos < 0 || pos > filp->dentry->dir_inode->file_size)
+        return -EOVERFLOW; // 访问位置不正确
+
+    filp->position = pos;
+    color_printk(GREEN, BLACK, "FAT32 FS(lseek) alert position:%d\n", filp->position);
+    return pos;
+}
+long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) {}
+struct file_operations FAT32_file_ops =
+    {
+        .open = FAT32_open,
+        .close = FAT32_close,
+        .read = FAT32_read,
+        .write = FAT32_write,
+        .lseek = FAT32_lseek,
+        .ioctl = FAT32_ioctl,
+};
+
+long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode) {}
+
+/**
+ * @brief 从硬盘读出目录dentry的数据块，在其中搜索名称为name的文件，
+ *
+ * @param name    // 要搜索的文件名
+ * @param namelen // 文件长短
+ * @param dentry  // 父目录
+ * @param flags   // 标志
+ * @return struct FAT32_Directory* 成功返回为name的目录项结构
+ */
+/**
+ * @brief 负责从目录项中搜索出子目录项
+ *
+ * @param parent_inode 父目录的inode
+ * @param dest_dentry  把找出来的目录项, 记录在dest_dentry结构中(传出参数
+ * @return struct dir_entry* 返回dest_dentry结构
+ */
+struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry)
+{
+    // 得到FAT32的基础信息结构体
+    struct FAT32_inode_info *finode = parent_inode->private_index_info;
+    struct FAT32_sb_info *fsbi = parent_inode->sb->private_sb_info;
+
+    unsigned int cluster = 0;  // 簇号
+    unsigned long sector = 0;  // 扇区号
+    unsigned char *buf = NULL; // 保存硬盘数据的缓冲区
+    int i = 0, j = 0, x = 0;
+    struct FAT32_Directory *tmpdentry = NULL;
+    struct FAT32_LongDirectory *tmpldentry = NULL;
+    struct index_node *p = NULL;
+
+    buf = kmalloc(fsbi->bytes_per_cluster, 0); // 申请缓冲区
+    cluster = finode->first_cluster;           // 根目录的簇号
+next_cluster:
+    sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster; // 计算要读取的扇区号
+    color_printk(BLUE, BLACK, "lookup cluster:%#010x\n", cluster, sector);
+    if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf))
+    { // 读目录的数据块
+        color_printk(RED, BLACK, "FAT32 FS(lookup) read disk ERROR!!!!!!!\n");
+        kfree(buf);
+        return NULL;
+    }
+
+    tmpdentry = (struct FAT32_Directory *)buf;
+    for (i = 0; i < fsbi->bytes_per_cluster; i += 32, tmpdentry++)
+    {
+        if (tmpdentry->DIR_Attr == ATTR_LONG_NAME) // 跳过长目录项
+            continue;
+        // 跳过空闲目录项
+        if (tmpdentry->DIR_Name[0] == 0xe5 || tmpdentry->DIR_Name[0] == 0x00 || tmpdentry->DIR_Name[0] == 0x05)
+            continue;
+
+        // 长目录项排列的时候，在短目录项之前，而且长/短目录项都是32B，32字节.
+        // so 可以用下面的方式得到长目录项
+        tmpldentry = (struct FAT32_LongDirectory *)tmpdentry - 1;
+        //  j = 0;
+        //  long file/dir name compare, 长目录项的匹配是有问题的，错误的
+        //  建议读FAT32白皮书，了解FAT32格式，再进行长目录项的匹配
+        /*while (((struct FAT32_Directory *)tmpldentry)->DIR_Attr == ATTR_LONG_NAME && tmpldentry->LDIR_Ord != 0xe5)
+        {
+            // 依次匹配长目录项名字成员的三部分
+            for (x = 0; x < 5; x++)
+            {
+                if (j > dest_dentry->name_length && tmpldentry->LDIR_Name1[x] == 0xffff)
+                    continue;
+                // 这里的匹配方式，name应该只是ASCII码而已，这样比较Unicode码和ASCII码，对吗？
+                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name1[x] != (unsigned short)(dest_dentry->name[j++]))
+                    goto continue_cmp_fail;
+            }
+            for (x = 0; x < 6; x++)
+            {
+                if (j > dest_dentry->name_length && tmpldentry->LDIR_Name2[x] == 0xffff)
+                    continue;
+                else if (j > dest_dentry->name_length && tmpldentry->LDIR_Name2[x] != (unsigned short)(dest_dentry->name[j++]))
+                    goto continue_cmp_fail;
+            }
+            for (x = 0; x < 2; x++)
+            {
+                if (j > dest_dentry->name_length && tmpldentry->LDIR_Name3[x] == 0xffff)
+                    continue;
+                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name3[x] != (unsigned short)(dest_dentry->name[j++]))
+                    goto continue_cmp_fail;
+            }
+
+            // 找到了确定的目录项
+            if (j >= dest_dentry->name_length)
+                goto find_lookup_success;
+
+            // 什么情况能执行到这里 ？
+            tmpldentry--;
+        }*/
+
+        // short file/dir base name compare
+        // 为什么这里的比较不使用strcmp()? 下面的比较思路麻烦，而且不支持比较特殊字符，比如'-'
+        j = 0;
+        for (x = 0; x < 8; x++)
+        {
+            switch (tmpdentry->DIR_Name[x])
+            {
+                // 短目录项的前八的名字的空位都是' '
+            case ' ':
+                if (!(tmpdentry->DIR_Attr & ATTR_DIRECTORY))
+                { // 本文件不是目录
+                    if (dest_dentry->name[j] == '.')
+                        continue;
+                    else if (tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                    {
+                        j++;
+                        break;
+                    }
+                    else
+                        goto continue_cmp_fail;
+                }
+                else
+                { // 当前文件是目录
+                    if (j < dest_dentry->name_length && tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                    {
+                        j++;
+                        break;
+                    }
+                    else if (j == dest_dentry->name_length)
+                        continue;
+                    else
+                        goto continue_cmp_fail;
+                }
+            case 'A' ... 'Z':
+            case 'a' ... 'z':
+                if (tmpdentry->DIR_NTRes & LOWERCASE_BASE) // 这个LOWERCASE_BASE是为了兼容Windows操作系统，才准备的
+                {                                          // 这一段代码是什么意思？
+                    if (j < dest_dentry->name_length && tmpdentry->DIR_Name[x] + 32 == dest_dentry->name[j])
+                    {
+                        j++;
+                        break;
+                    }
+                    else
+                        goto continue_cmp_fail;
+                }
+                else
+                {
+                    if (j < dest_dentry->name_length && tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                    {
+                        j++;
+                        break;
+                    }
+                    else
+                        goto continue_cmp_fail;
+                }
+            case '0' ... '9':
+                if (j < dest_dentry->name_length && tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                {
+                    j++;
+                    break;
+                }
+                else
+                    goto continue_cmp_fail;
+            default:
+                j++;
+                break;
+            }
+        }
+        // short file ext name compare
+        if (!(tmpdentry->DIR_Attr & ATTR_DIRECTORY))
+        { // 不是目录，目录没有扩展名
+            j++;
+            for (x = 8; x < 11; x++)
+            {
+                switch (tmpdentry->DIR_Name[x])
+                {
+                case 'A' ... 'Z':
+                case 'a' ... 'z':
+                    if (tmpdentry->DIR_NTRes & LOWERCASE_EXT)
+                        if (tmpdentry->DIR_Name[x] + 32 == dest_dentry->name[j])
+                        {
+                            j++;
+                            break;
+                        }
+                        else
+                            goto continue_cmp_fail;
+                    else
+                    {
+                        if (tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                        {
+                            j++;
+                            break;
+                        }
+                        else
+                            goto continue_cmp_fail;
+                    }
+
+                case '0' ... '9':
+                    if (tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                    {
+                        j++;
+                        break;
+                    }
+                    else
+                        goto continue_cmp_fail;
+
+                case ' ':
+                    if (tmpdentry->DIR_Name[x] == dest_dentry->name[j])
+                    {
+                        j++;
+                        break;
+                    }
+                    else
+                        goto continue_cmp_fail;
+
+                default:
+                    goto continue_cmp_fail;
+                }
+            }
+        }
+
+        goto find_lookup_success;
+    continue_cmp_fail:;
+    }
+
+    // 得到目录本文件的下一个簇号
+    cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster);
+    if (cluster < 0x0ffffff7) // 判断簇号是否为结束簇or坏簇。如果是正常簇号，就继续读下个簇
+        goto next_cluster;
+
+    kfree(buf);
+    return NULL; // 寻找失败返回空
+
+find_lookup_success:
+    p = (struct index_node *)kmalloc(sizeof(struct index_node), 0);
+    memset(p, 0, sizeof(struct index_node));
+
+    p->file_size = tmpdentry->DIR_FileSize;
+    p->blocks = (p->file_size + fsbi->bytes_per_cluster - 1) / fsbi->bytes_per_sector;
+    p->attribute = (tmpdentry->DIR_Attr & ATTR_DIRECTORY) ? FS_ATTR_DIR : FS_ATTR_FILE;
+    p->sb = parent_inode->sb;
+    p->f_ops = &FAT32_file_ops;
+    p->inode_ops = &FAT32_inode_ops;
+
+    p->private_index_info = (struct FAT32_inode_info *)kmalloc(sizeof(struct FAT32_inode_info), 0);
+    memset(p->private_index_info, 0, sizeof(struct FAT32_inode_info));
+    finode = p->private_index_info;
+
+    finode->first_cluster = (tmpdentry->DIR_FstClusHI << 16 | tmpdentry->DIR_FstClusLO) & 0x0fffffff;
+    finode->dentry_location = cluster;
+    finode->dentry_position = tmpdentry - (struct FAT32_Directory *)buf;
+    finode->create_date = tmpdentry->DIR_CrtDate;
+    finode->create_time = tmpdentry->DIR_CrtTime;
+    finode->write_date = tmpdentry->DIR_WrtDate;
+    finode->write_time = tmpdentry->DIR_WrtTime;
+
+    dest_dentry->dir_inode = p;
+    kfree(buf);
+    return dest_dentry;
+}
+long FAT32_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {}
+long FAT32_rmdir(struct index_node *inode, struct dir_entry *dentry) {}
+long FAT32_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) {}
+long FAT32_getattr(struct dir_entry *dentry, unsigned long *attr) {}
+long FAT32_setattr(struct dir_entry *dentry, unsigned long *attr) {}
+
+struct index_node_operations FAT32_inode_ops =
+    {
+        .create = FAT32_create,
+        .lookup = FAT32_lookup,
+        .mkdir = FAT32_mkdir,
+        .rmdir = FAT32_rmdir,
+        .rename = FAT32_rename,
+        .getattr = FAT32_getattr,
+        .setattr = FAT32_setattr,
+};
+
+//// these operation need cache and list - 为缓存目录项提供操作方法
+long FAT32_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) {}
+long FAT32_hash(struct dir_entry *dentry, char *filename) {}
+long FAT32_release(struct dir_entry *dentry) {}
+long FAT32_iput(struct dir_entry *dentry, struct index_node *inode) {}
+struct dir_entry_operations FAT32_dentry_ops =
+    {
+        .compare = FAT32_compare,
+        .hash = FAT32_hash,
+        .release = FAT32_release,
+        .iput = FAT32_iput,
+};
+
+// 修改超级块？
+void fat32_write_superblock(struct super_block *sb) {}
+
+// 用于释放superblock结构，dentry结构，根目录inode结构，文件系统的特有结构
+void fat32_put_superblock(struct super_block *sb)
+{
+    kfree(sb->private_sb_info);
+    kfree(sb->root->dir_inode->private_index_info);
+    kfree(sb->root->dir_inode);
+    kfree(sb->root);
+    kfree(sb);
+}
+
+// 用于把inode文件对应的目录项写到硬盘中- 缓存目录项
+void fat32_write_inode(struct index_node *inode)
+{
+    struct FAT32_Directory *fdentry = NULL;
+    struct FAT32_Directory *buf = NULL;
+    struct FAT32_inode_info *finode = inode->private_index_info;
+    struct FAT32_sb_info *fsbi = inode->sb->private_sb_info;
+    unsigned long sector = 0;
+    if (finode->dentry_location == 0)
+    {
+        color_printk(RED, BLACK, "FS ERROR:write root inode!\n");
+        return;
+    }
+    sector = fsbi->Data_firstsector + (finode->dentry_location - 2) * fsbi->sector_per_cluster;
+    buf = (struct FAT32_Directory *)kmalloc(fsbi->bytes_per_cluster, 0);
+    memset(buf, 0, fsbi->bytes_per_cluster);
+    IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf);
+    fdentry = buf + finode->dentry_position;
+    //// alert fat32 dentry data
+    fdentry->DIR_FileSize = inode->file_size;
+    fdentry->DIR_FstClusLO = finode->first_cluster & 0xffff;
+    fdentry->DIR_FstClusHI = (fdentry->DIR_FstClusHI & 0xf000) | (finode->first_cluster >> 16);
+    IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf);
+    kfree(buf);
+}
+
+// 提供了操作超级块和索引节点的方法
+struct super_block_operations FAT32_sb_ops =
+    {
+        .write_superblock = fat32_write_superblock,
+        .put_superblock = fat32_put_superblock,
+
+        .write_inode = fat32_write_inode,
+};
+
+/**
+ * @brief 为fat32文件系统编写的引导扇区解析方法, 主要建立并初始化超级块
+ *
+ * @param DPTE MBR的分区表
+ * @param buf fat32文件系统的引导扇区
+ * @return struct super_block*
+ */
+struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *buf)
+{
+    struct super_block *sbp = NULL;
+    struct FAT32_inode_info *finode = NULL;
+    struct FAT32_BootSector *fbs = NULL;
+    struct FAT32_sb_info *fsbi = NULL;
+
+    // super block - 超级块的申请
+    sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
+    memset(sbp, 0, sizeof(struct super_block));
+
+    sbp->sb_ops = &FAT32_sb_ops;
+    sbp->private_sb_info = (struct FAT32_sb_info *)kmalloc(sizeof(struct FAT32_sb_info), 0);
+    memset(sbp->private_sb_info, 0, sizeof(struct FAT32_sb_info));
+
+    // fat32 boot sector 根据FAT32引导扇区，记录一些数据提供给VFS使用
+    fbs = (struct FAT32_BootSector *)buf;
+    fsbi = sbp->private_sb_info;
+    fsbi->start_sector = DPTE->start_LBA;
+    fsbi->sector_count = DPTE->sectors_limit;
+    fsbi->sector_per_cluster = fbs->BPB_SecPerClus;
+    // 每簇的字节数 = 每簇的扇区数 * 每扇区的字节数
+    // 簇是fat系统操作的最小单元
+    fsbi->bytes_per_cluster = fbs->BPB_SecPerClus * fbs->BPB_BytesPerSec;
+    fsbi->bytes_per_sector = fbs->BPB_BytesPerSec;
+    // 第一个数据扇区 = 本文件系统的起始扇区 + fat32系统的保留扇区 + 文件系统的fat表数 * fat表的大小。
+    fsbi->Data_firstsector = DPTE->start_LBA + fbs->BPB_RsvdSecCnt + fbs->BPB_NumFATs * fbs->BPB_FATSz32;
+    // 第一个fat表在文件系统的保留扇区之后
+    fsbi->FAT1_firstsector = DPTE->start_LBA + fbs->BPB_RsvdSecCnt;
+    fsbi->sector_per_FAT = fbs->BPB_FATSz32;
+    fsbi->NumFATs = fbs->BPB_NumFATs;
+    fsbi->fsinfo_sector_infat = fbs->BPB_FSInfo;
+    fsbi->bootsector_bk_infat = fbs->BPB_BkBootSec;
+
+    // BPB - 引导扇区参数块 - BIOS Parameter Block ? - Boot Parameter Block
+    color_printk(BLUE, BLACK, "FAT32 Boot Sector\nBPB_FSInfo:%#018lx\tFAT1_firstsector:%#018lx\tBPB_TotSec32:%#018lx\n", fbs->BPB_FSInfo, fsbi->FAT1_firstsector, fbs->BPB_TotSec32);
+    color_printk(BLUE, BLACK, "BPB_SecPerClus:%#018lx\tBPB_NumFATs:%#018lx\tBPB_FATSz32:%#018lx\t\n", fbs->BPB_SecPerClus, fbs->BPB_NumFATs, fbs->BPB_FATSz32);
+    color_printk(BLUE, BLACK, "BPB_firstsector:%#018lx\tBPB_RootClus:%#018lx\tBPB_BytesPerSec:%#018lx\n", fsbi->Data_firstsector, fbs->BPB_RootClus, fbs->BPB_BytesPerSec);
+
+    // fat32 fsinfo sector
+    fsbi->fat_fsinfo = (struct FAT32_FSInfo *)kmalloc(sizeof(struct FAT32_FSInfo), 0);
+    memset(fsbi->fat_fsinfo, 0, 512);
+    IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (unsigned char *)fsbi->fat_fsinfo);
+    color_printk(BLUE, BLACK, "FAT32 FSInfo\nFSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx\n", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
+
+    // directory entry
+    sbp->root = (struct dir_entry *)kmalloc(sizeof(struct dir_entry), 0);
+    memset(sbp->root, 0, sizeof(struct dir_entry));
+
+    list_init(&sbp->root->child_node);
+    list_init(&sbp->root->subdirs_list);
+    sbp->root->parent = sbp->root; // 根目录的父目录是自己
+    sbp->root->dir_ops = &FAT32_dentry_ops;
+    sbp->root->name = (char *)kmalloc(2, 0);
+    sbp->root->name[0] = '/';
+    sbp->root->name_length = 1;
+
+    // 根目录的 index node
+    sbp->root->dir_inode = (struct index_node *)kmalloc(sizeof(struct index_node), 0);
+    memset(sbp->root->dir_inode, 0, sizeof(struct index_node));
+    sbp->root->dir_inode->inode_ops = &FAT32_inode_ops;
+    sbp->root->dir_inode->f_ops = &FAT32_file_ops;
+    sbp->root->dir_inode->file_size = 0;
+    sbp->root->dir_inode->blocks = (sbp->root->dir_inode->file_size + fsbi->bytes_per_cluster - 1) / fsbi->bytes_per_sector;
+    sbp->root->dir_inode->attribute = FS_ATTR_DIR;
+    sbp->root->dir_inode->sb = sbp;
+
+    // fat32 root inode's private_index_info成员
+    sbp->root->dir_inode->private_index_info = (struct FAT32_inode_info *)kmalloc(sizeof(struct FAT32_inode_info), 0);
+    memset(sbp->root->dir_inode->private_index_info, 0, sizeof(struct FAT32_inode_info));
+    finode = (struct FAT32_inode_info *)sbp->root->dir_inode->private_index_info;
+    finode->first_cluster = fbs->BPB_RootClus;
+    finode->dentry_location = 0;
+    finode->dentry_position = 0;
+    finode->create_date = 0;
+    finode->create_time = 0;
+    finode->write_date = 0;
+    finode->write_time = 0;
+    return sbp;
+}
+
+struct file_system_type FAT32_fs_type =
+    {
+        .name = "FAT32",
+        .fs_flags = 0,
+        .read_superblock = fat32_read_superblock,
+        .next = NULL,
+};
+
+void DISK1_FAT32_FS_init()
+{
+    int i;
+    unsigned char buf[512];
+    struct dir_entry *dentry = NULL;
+
+    // 在VFS中注册FAT32文件系统
+    register_filesystem(&FAT32_fs_type);
+
+    // 读MBR
+    memset(buf, 0, 512);
+    IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
+    DPT = *(struct Disk_Partition_Table *)buf;
+    color_printk(BLUE, BLACK, "DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
+
+    // 读 FAT32文件系统的引导扇区
+    memset(buf, 0, 512);
+    IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);
+
+    // 挂载fat32系统
+    root_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);
+}

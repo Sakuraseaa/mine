@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "gate.h": "c",
+        "printk.h": "c",
+        "time.h": "c",
+        "softirq.h": "c",
+        "timer.h": "c",
+        "*.tcc": "cpp",
+        "spinlock.h": "c",
+        "lib.h": "c",
+        "semaphore.h": "c",
+        "schedule.h": "c",
+        "chrono": "c",
+        "typeinfo": "c"
+    }
+}

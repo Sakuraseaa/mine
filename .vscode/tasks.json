@@ -1,0 +1,32 @@
+{
+    "tasks": [
+        {
+            "label": "make-all",
+            "command": "make",
+            "args": [
+                "-f",
+                "/home/steven/mine/src/kernel/makefile",
+            ],
+        },
+        {
+            "label": "run-bochs",
+            "command": "qemu-system-x86_64",
+            "isBackground": true,
+            "args": [
+                "-cpu Broadwell-v1  -vga std -fda /home/steven/mine/bochs/boot.img -m 512M -boot a -s -S"
+            ],
+            //"dependsOn": "make-all",
+        },
+        {
+            "label": "make-clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "-f",
+                "/home/steven/mine/src/kernel/makefile",
+                "clean",
+            ],
+        },
+    ],
+    "version": "2.0.0"
+}
