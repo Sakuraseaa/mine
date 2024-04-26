@@ -71,19 +71,38 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "pagetable init \n");
 	pagetable_init();
 
+	// color_printk(RED, BLACK, "HPET init \n");
+	HEPT_init();
+
 	// color_printk(RED, BLACK, "interrupt init \n");
 #if APIC
 	APIC_IOAPIC_init();
 #else
 	init_8259A();
 #endif
-
 	// color_printk(RED, BLACK, "keyboard init \n");
 	keyboard_init();
 
 	// color_printk(RED, BLACK, "mouse init \n");
 	mouse_init();
+
+	// color_printk(RED, BLACK, "disk init \n");
+	disk_init();
+
+	// color_printk(RED, BLACK, "schedule init \n");
+	schedule_init();
+
+	// color_printk(RED, BLACK, "Soft IRQ init \n");
+	softirq_init();
+
+	// color_printk(RED, BLACK, "Timer init \n");
+	timer_init();
+
+	// color_printk(RED, BLACK, "task init \n");
+	task_init();
+
 	sti();
+
 	while (1)
 	{
 		if (p_kb->count)
@@ -91,36 +110,4 @@ void Start_Kernel(void)
 		if (p_mouse->count)
 			analysis_mousecode();
 	}
-
-	// color_printk(RED, BLACK, "disk init \n");
-	disk_init();
-
-	// color_printk(RED, BLACK, "schedule init \n");
-	schedule_init();
-	// color_printk(RED, BLACK, "Soft IRQ init \n");
-	softirq_init();
-	// color_printk(RED, BLACK, "Timer init \n");
-	timer_init();
-	// color_printk(RED, BLACK, "HPET init \n");
-	HEPT_init();
-
-	// color_printk(RED, BLACK, "task init \n");
-	task_init();
-
-	// unsigned char buf[512];
-	// color_printk(PURPLE, BLACK, "disk write:\n");
-	// memset(buf, 0x44, 512);
-	// IDE_device_operation.transfer(ATA_WRITE_CMD, 0x78, 1, (unsigned char *)buf);
-
-	// color_printk(PURPLE, BLACK, "disk write end\n");
-
-	// color_printk(PURPLE, BLACK, "disk read:\n");
-	// memset(buf, 0x00, 512);
-	// IDE_device_operation.transfer(ATA_READ_CMD, 0x78, 1, (unsigned char *)buf);
-
-	// for (i = 0; i < 512; i++)
-	// 	color_printk(BLACK, WHITE, "%02x", buf[i]);
-	// color_printk(PURPLE, BLACK, "\ndisk read end\n");
-
-	// IDE_device_operation.ioctl(GET_IDENTIFY_DISK_CMD, NULL);
 }

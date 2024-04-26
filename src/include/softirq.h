@@ -4,7 +4,8 @@
 // 记录软中断的状态
 unsigned long softirq_status = 0;
 
-#define TIMER_SIRQ (1 << 0)
+#define TIMER_SIRQ (1 << 0) // 只属于定时任务的软中断
+
 // 该结构用于描述软中断的处理方法和参数
 struct softirq
 {

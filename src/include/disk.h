@@ -4,6 +4,7 @@
 #include "lib.h"
 #include "block.h"
 #include "semaphore.h"
+#include "waitqueue.h"
 
 #define PORT_DISK0_DATA 0x1f0		 // Data			数据
 #define PORT_DISK0_ERR_FEATURE 0x1f1 // Error-Featrues 	错误状态
@@ -14,7 +15,7 @@
 #define PORT_DISK0_DEVICE 0x1f6		 // Device			设备配置寄存器
 #define PORT_DISK0_STATUS_CMD 0x1f7	 // Status			状态控制端口
 
-#define PORT_DISK0_ALT_STA_CTL 0x3f6
+#define PORT_DISK0_ALT_STA_CTL 0x3f6 // 主控制端口
 
 #define PORT_DISK1_DATA 0x170
 #define PORT_DISK1_ERR_FEATURE 0x171
@@ -367,7 +368,7 @@ void disk_exit();
 void write_handler(unsigned long nr, unsigned long parameter);
 void read_handler(unsigned long nr, unsigned long parameter);
 void other_handler(unsigned long nr, unsigned long parameter);
-
+long IDE_ioctl(long cmd, long arg);
 struct block_buffer_node *make_request(long cmd, unsigned long blocks, long count, unsigned char *buffer);
 void add_request(struct block_buffer_node *node);
 long cmd_out();

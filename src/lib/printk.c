@@ -304,6 +304,7 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 	va_start(args, fmt);
 
 	// 通过IF位，来判断是否是中断处理程序，中断处理程序的IF位是0
+	// 不是中断处理程序，那么我们就进行自旋锁
 	if (get_rflags() & 0x200UL)
 		spin_lock(&Pos.printk_lock);
 

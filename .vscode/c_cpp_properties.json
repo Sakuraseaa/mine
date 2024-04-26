@@ -3,7 +3,14 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
+                "${workspaceFolder}/*",
+                "${workspaceFolder}/src/*",
+                "${workspaceFolder}/src/include/*",
+                "${workspaceFolder}/src/fs/*",
+                "${workspaceFolder}/src/fs/FAT32/",
+                "${workspaceFolder}/src/include/drivers/*",
+                "${workspaceFolder}/src/include/base/*",
+                "${workspaceFolder}/src/include/lib/*"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

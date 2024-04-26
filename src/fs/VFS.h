@@ -55,8 +55,9 @@ struct index_node
     void *private_index_info; // 对于fat32系统，这里指向的是 struct FAT32_inode_info
 };
 
-#define FS_ATTR_FILE (1UL << 0) // 文件
-#define FS_ATTR_DIR (1UL << 1)  // 目录
+#define FS_ATTR_FILE (1UL << 0)   // 文件
+#define FS_ATTR_DIR (1UL << 1)    // 目录
+#define FS_ATTR_DEVICE (1UL << 2) // 设备文件 - 键盘
 
 // 用于描述文件/目录在文件系统中的层级关系-目录项
 struct dir_entry

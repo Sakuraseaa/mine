@@ -12,6 +12,7 @@ typedef struct
 // ++
 static inline void atomic_inc(atomic_T *atomic)
 {
+    // lock指令 使得处理器在执行主体指令时会锁住硬件系统平台的前端总线，从而防止其他处理器访问物理内存
     __asm__ __volatile__("lock incq %0 \n\t"
                          : "=m"(atomic->value)
                          : "m"(atomic->value)

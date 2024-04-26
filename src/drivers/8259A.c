@@ -60,11 +60,12 @@ void init_8259A()
 	io_out8(0xa1, 0x02);
 	io_out8(0xa1, 0x01);
 
-	// 8259A-M/S	OCW1
+	// 8259A-M/S	OCW1 0xf9, 会关闭了时钟中断
 	io_out8(0x21, 0xf8);
 	io_out8(0xa1, 0x2f);
 
 	// enable IF eflages
+	// sti();
 }
 
 /**
@@ -76,8 +77,8 @@ void init_8259A()
 void do_IRQ(struct pt_regs *regs, unsigned long nr) // regs,nr
 {
 	irq_desc_T *irq = &interrupt_desc[nr - 32];
-
-	// 执行中断进程上半部
+	// color_printk(BLUE, WHITE, "rip:%#018lx,  rsp:%#018lx\n", regs->rip, regs->rsp);
+	//  执行中断进程上半部
 	if (irq->handler != NULL)
 		irq->handler(nr, irq->parameter, regs);
 

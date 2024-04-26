@@ -326,15 +326,6 @@ struct file_operations FAT32_file_ops =
 long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode) {}
 
 /**
- * @brief 从硬盘读出目录dentry的数据块，在其中搜索名称为name的文件，
- *
- * @param name    // 要搜索的文件名
- * @param namelen // 文件长短
- * @param dentry  // 父目录
- * @param flags   // 标志
- * @return struct FAT32_Directory* 成功返回为name的目录项结构
- */
-/**
  * @brief 负责从目录项中搜索出子目录项
  *
  * @param parent_inode 父目录的inode
@@ -359,7 +350,7 @@ struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry
     cluster = finode->first_cluster;           // 根目录的簇号
 next_cluster:
     sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster; // 计算要读取的扇区号
-    color_printk(BLUE, BLACK, "lookup cluster:%#010x\n", cluster, sector);
+    color_printk(BLUE, BLACK, "lookup cluster:%#010x, sector: %#018lx\n", cluster, sector);
     if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf))
     { // 读目录的数据块
         color_printk(RED, BLACK, "FAT32 FS(lookup) read disk ERROR!!!!!!!\n");
@@ -645,7 +636,7 @@ void fat32_write_inode(struct index_node *inode)
     kfree(buf);
 }
 
-// 提供了操作超级块和索引节点的方法
+// 提供了操作超级块和写inode结点的方法
 struct super_block_operations FAT32_sb_ops =
     {
         .write_superblock = fat32_write_superblock,
@@ -659,7 +650,7 @@ struct super_block_operations FAT32_sb_ops =
  *
  * @param DPTE MBR的分区表
  * @param buf fat32文件系统的引导扇区
- * @return struct super_block*
+ * @return struct super_block* 超级块结构体
  */
 struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *buf)
 {
@@ -668,7 +659,7 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     struct FAT32_BootSector *fbs = NULL;
     struct FAT32_sb_info *fsbi = NULL;
 
-    // super block - 超级块的申请
+    // =============================== 建立 super block =====================================
     sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
     memset(sbp, 0, sizeof(struct super_block));
 
@@ -679,6 +670,7 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     // fat32 boot sector 根据FAT32引导扇区，记录一些数据提供给VFS使用
     fbs = (struct FAT32_BootSector *)buf;
     fsbi = sbp->private_sb_info;
+
     fsbi->start_sector = DPTE->start_LBA;
     fsbi->sector_count = DPTE->sectors_limit;
     fsbi->sector_per_cluster = fbs->BPB_SecPerClus;
@@ -702,10 +694,11 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
 
     // fat32 fsinfo sector
     fsbi->fat_fsinfo = (struct FAT32_FSInfo *)kmalloc(sizeof(struct FAT32_FSInfo), 0);
-    memset(fsbi->fat_fsinfo, 0, 512);
+    memset(fsbi->fat_fsinfo, 0, sizeof(struct FAT32_FSInfo));
     IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (unsigned char *)fsbi->fat_fsinfo);
     color_printk(BLUE, BLACK, "FAT32 FSInfo\nFSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx\n", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
 
+    // ================================== 创建根目录 =====================================
     // directory entry
     sbp->root = (struct dir_entry *)kmalloc(sizeof(struct dir_entry), 0);
     memset(sbp->root, 0, sizeof(struct dir_entry));

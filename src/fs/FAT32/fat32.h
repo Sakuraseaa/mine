@@ -72,7 +72,7 @@ struct FAT32_FSInfo
     unsigned int FSI_TrailSig;        // 结束标志
 } __attribute__((packed));
 
-// fat32文件系统特有结构, 描述出一个FAT32文件系统元数据
+// fat32文件系统超级块信息结构体,描述出一个FAT32文件系统元数据
 struct FAT32_sb_info
 {
     unsigned long start_sector; // 文件系统起始扇区

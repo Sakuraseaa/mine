@@ -11,6 +11,9 @@
         "semaphore.h": "c",
         "schedule.h": "c",
         "chrono": "c",
-        "typeinfo": "c"
-    }
+        "typeinfo": "c",
+        "list": "c",
+        "waitqueue.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

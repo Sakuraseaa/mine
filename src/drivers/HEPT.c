@@ -66,6 +66,7 @@ void intr_timer_handler(unsigned long nr, unsigned long parameter, struct pt_reg
    // 如果定时任务的失效日期没有到，那么不进入中断下半部
    if ((container_of(list_next(&timer_list_head.list), struct timer_list, list))->expire_jiffies <= jiffies)
       set_softirq_status(TIMER_SIRQ);
+
    // 依据进程的优先级，增加进程虚拟运行时间，减少处理器时间片维护代码
    switch (current->priority)
    {
@@ -112,6 +113,8 @@ void HEPT_init()
    register_irq(0x20, &entry, intr_timer_handler, 0, &HPET_int_controller, "HPET");
 
    get_cmos_time(&Time);
+   color_printk(RED, BLACK, "year:%#010x, month:%#010x, day:%#010x, hour:%#010x, mintue:%#010x, second:%#010x\n",
+                Time.year, Time.month, Time.day, Time.hour, Time.minute, Time.second);
 }
 
 /* 以毫秒为单位的sleep   1秒= 1000毫秒 */

@@ -1,16 +1,17 @@
-SRC_DIR=/home/steven/mine/src/kernel
-BOT_DIR=/home/steven/mine/src
+SRC_DIR=/home/steven/mine/src
 BUI_DIR=/home/steven/mine/src/Build
 BOCHS = /home/steven/mine/bochs
+INC_DIR = /home/steven/mine/src/include
+
 
 PIC   := PIC
 ASM   = nasm
 CC	  = gcc
 
-CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector \
-		-fno-builtin -fno-pie -fno-pic  \
-		-c -g \
-
+CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -fno-common -std=gnu89 -nostartfiles \
+		-fno-builtin -fno-pie -fno-pic  -Wno-address-of-packed-memeber\
+		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
+		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ 
 #被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
 		$(BUI_DIR)/trap.o $(BUI_DIR)/memory.o $(BUI_DIR)/interrupt.o $(BUI_DIR)/PIC.o \
@@ -18,7 +19,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/disk.o  $(BUI_DIR)/time.o $(BUI_DIR)/HEPT.o $(BUI_DIR)/softirq.o \
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
-		$(BUI_DIR)/VFS.o 
+		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o
 		
 ALL:$(BUI_DIR)/kernel.bin
 
@@ -30,72 +31,74 @@ $(BUI_DIR)/kernel.bin:$(OBJS)
 	sudo umount /mnt/flo/
 	@echo '感谢世界!系统编译构建完成！ ^_^'
 
-$(BUI_DIR)/main.o: main.c
+$(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c
 #	$(CC) $(CFLAGS) $< -o $@
 	$(CC) $(CFLAGS) $< -o $@ -D$(PIC)
 
-$(BUI_DIR)/head.o : head.S
+$(BUI_DIR)/head.o : $(SRC_DIR)/kernel/head.S
 	$(CC) $(CFLAGS) $< -o $@
 #	gcc -E head.S > head.s
 # as --64 -g -o $@ head.s
 
-$(BUI_DIR)/printk.o: printk.c 
+$(BUI_DIR)/printk.o: $(SRC_DIR)/lib/printk.c 
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUI_DIR)/entry.o : entry.S
+$(BUI_DIR)/entry.o : $(SRC_DIR)/kernel/entry.S
 	$(CC) $(CFLAGS) $< -o $@
 #	gcc -E  entry.S > entry.s
 #	as --64 -g -o $@ entry.s
 
-$(BUI_DIR)/trap.o: trap.c
+$(BUI_DIR)/trap.o: $(SRC_DIR)/kernel/trap.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/memory.o: memory.c
+$(BUI_DIR)/memory.o: $(SRC_DIR)/kernel/memory.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/interrupt.o: interrupt.c
+$(BUI_DIR)/interrupt.o: $(SRC_DIR)/kernel/interrupt.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/task.o: task.c
+$(BUI_DIR)/task.o: $(SRC_DIR)/kernel/task.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/cpu.o: cpu.c
+$(BUI_DIR)/cpu.o: $(SRC_DIR)/drivers/cpu.c
 	$(CC) $(CFLAGS) $< -o $@
 ifeq ($(PIC), APIC)
-$(BUI_DIR)/PIC.o: APIC.c
+$(BUI_DIR)/PIC.o: $(SRC_DIR)/drivers/APIC.c
 	$(CC) $(CFLAGS) $< -o $@
 else
-$(BUI_DIR)/PIC.o: 8259A.c
+$(BUI_DIR)/PIC.o: $(SRC_DIR)/drivers/8259A.c
 	$(CC) $(CFLAGS) $< -o $@
 endif
-$(BUI_DIR)/keyboard.o: keyboard.c
+$(BUI_DIR)/keyboard.o: $(SRC_DIR)/drivers/keyboard.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/mouse.o: mouse.c
+$(BUI_DIR)/mouse.o: $(SRC_DIR)/drivers/mouse.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/disk.o: disk.c
+$(BUI_DIR)/disk.o: $(SRC_DIR)/drivers/disk.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/time.o: time.c
+$(BUI_DIR)/time.o: $(SRC_DIR)/kernel/time.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/HEPT.o: HEPT.c
+$(BUI_DIR)/HEPT.o: $(SRC_DIR)/drivers/HEPT.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/softirq.o: softirq.c
+$(BUI_DIR)/softirq.o: $(SRC_DIR)/kernel/softirq.c
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUI_DIR)/timer.o: timer.c
+$(BUI_DIR)/timer.o: $(SRC_DIR)/lib/timer.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/SMP.o: SMP.c
+$(BUI_DIR)/SMP.o: $(SRC_DIR)/drivers/SMP.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/schedule.o: schedule.c
+$(BUI_DIR)/schedule.o: $(SRC_DIR)/kernel/schedule.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/semaphore.o: semaphore.c
+$(BUI_DIR)/semaphore.o: $(SRC_DIR)/lib/semaphore.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/lib.o: lib.c
+$(BUI_DIR)/lib.o: $(SRC_DIR)/lib/lib.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/spinlock.o: spinlock.c
+$(BUI_DIR)/spinlock.o: $(SRC_DIR)/lib/spinlock.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/fat32.o: fat32.c
+$(BUI_DIR)/fat32.o: $(SRC_DIR)/fs/FAT32/fat32.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/syscalls.o: syscalls.c
+$(BUI_DIR)/syscalls.o: $(SRC_DIR)/kernel/syscalls.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/sys.o: sys.c
+$(BUI_DIR)/sys.o: $(SRC_DIR)/kernel/sys.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/VFS.o: VFS.c
+$(BUI_DIR)/VFS.o: $(SRC_DIR)/fs/VFS.c
+	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	$(CC) $(CFLAGS) $< -o $@
 .PHONY: clean
 clean:

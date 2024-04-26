@@ -32,7 +32,7 @@ void do_timer(void *data)
     struct timer_list *tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
 
     while ((!list_is_empty(&timer_list_head.list)) && (tmp->expire_jiffies <= jiffies))
-    { // 这里没有清理 tmp占用的栈内存 ？
+    {
         tmp->func(tmp->data);
         tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
         del_timer(tmp);

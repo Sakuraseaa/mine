@@ -3,7 +3,7 @@
 #include "lib.h"
 #include "printk.h"
 #include "timer.h"
-#include "HEPT.c"
+#include "HEPT.h"
 struct schedule task_schedule;
 struct task_struct *get_next_task()
 {
@@ -90,17 +90,19 @@ void schedule()
 				break;
 			}
 	}
-	// sti();
+	sti();
 }
 
 void schedule_init()
 {
 	memset(&task_schedule, 0, sizeof(struct schedule));
 	list_init(&task_schedule.task_queue.list);
+
+	// 给内核主程序赋值最大值, 主程序无法被动的 被schedule调度
 	task_schedule.task_queue.vrun_time = 0x7fffffffffffffff;
 
-	// 这是把内核主程序作为一共特殊进程囊括进入就绪队列的缘故。当内核主程序为操作系统创建出第一个进程后
-	// 他将变为一共空闲进程，其作用是循环执行一个特殊的指令让系统保存低功耗待机，待到进程准备就绪队列
+	// 这是把内核主程序作为一个特殊进程囊括进入就绪队列的缘故。当内核主程序为操作系统创建出第一个进程后
+	// 他将变为一个空闲进程，其作用是循环执行一个特殊的指令让系统保存低功耗待机，待到进程准备就绪队列
 	// 为空时，处理器便会去执行空闲进程
 	task_schedule.running_task_count = 1;
 

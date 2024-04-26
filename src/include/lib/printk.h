@@ -44,8 +44,8 @@
 #define PURPLE 0x008000ff // 紫
 
 #define VBE_Phy_address 0xfd000000
-/*
-fd000000
+/* e0000000 -bochs
+fd000000  -qemu
 */
 extern unsigned char font_ascii[256][16];
 

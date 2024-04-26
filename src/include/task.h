@@ -65,10 +65,10 @@ struct mm_struct
 
 struct thread_struct
 {
-	unsigned long rsp0; // in tss 内核层栈基地址
+	unsigned long rsp0; // in tss, 记录着应用程序在内核层使用的栈基地址
 
-	unsigned long rip; // 内核层代码指针
-	unsigned long rsp; // 内核层当前栈指针
+	unsigned long rip; // 保存着进程切换回来时执行代码的地址
+	unsigned long rsp; // 保存着进程切换时的栈指针
 
 	unsigned long fs;
 	unsigned long gs;
@@ -84,11 +84,11 @@ struct task_struct
 
 	volatile long state; // 进程状态: 运行态，停止态，可中断态
 	unsigned long flags; // 进程标志：进程，线程，内核线程
-	long preempt_count;
+	long preempt_count;	 // 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
 	long signal;
 
 	struct mm_struct *mm;		  // 内存空间分布结构体，记录内存页表和程序段信息
-	struct thread_struct *thread; // 进程切换时保留的状态信息
+	struct thread_struct *thread; // 进程切换时保存的寄存器(上下文)信息
 	struct List list;			  // 双向链表节点
 
 	unsigned long addr_limit; // 进程地址空间范围
@@ -220,5 +220,6 @@ unsigned long do_exit(unsigned long code);
 unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
 void task_init();
 void switch_mm(struct task_struct *prev, struct task_struct *next);
+void wakeup_process(struct task_struct *tsk);
 
 #endif

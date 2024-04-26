@@ -19,7 +19,7 @@ void semaphore_init(semaphore_T *semaphore, unsigned long count)
 
 void __down(semaphore_T *semaphore)
 {
-    wait_queue_T wait; // 这个给等待队列变量此处使用的是栈内存， 这合理吗 ？？
+    wait_queue_T wait; // 这个给等待队列变量此处使用的是内核栈内存， 这合理吗 ？？
     // 执行这个函数, 证明本进程即将切换，该wait的声明周期将一直延续到，本进程再次运行，
     // 退出down函数的时候，wait将被释放掉
     wait_queue_init(&wait, current);
@@ -27,7 +27,8 @@ void __down(semaphore_T *semaphore)
     list_add_to_before(&semaphore->wait.wait_list, &wait.wait_list);
     schedule();
 }
-// 信号量锁操作
+
+// 信号量加锁操作
 void semaphore_down(semaphore_T *semaphore)
 {
     if (atomic_read(&semaphore->conter) > 0)
@@ -39,6 +40,7 @@ void semaphore_down(semaphore_T *semaphore)
 // 使得加入了阻塞队列的进程重新加入就绪队列
 void __up(semaphore_T *semaphore)
 {
+    // container_of 真是神来之笔
     wait_queue_T *wait = container_of(list_next(&semaphore->wait.wait_list), wait_queue_T, wait_list);
     list_del(&wait->wait_list);
     wait->tsk->state = TASK_RUNNING;
@@ -48,6 +50,7 @@ void __up(semaphore_T *semaphore)
     current->flags |= NEED_SCHEDULE;
 }
 
+// 信号量解锁操作
 void semaphore_up(semaphore_T *semaphore)
 {
 

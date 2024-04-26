@@ -69,7 +69,7 @@ ENTRY(ret_from_intr)
 ret_with_reschedule:	
 	GET_CURRENT(%rbx)				 // 得到当前运行的进程的PCB
 	movq TSK_PREEMPT(%rbx), %rcx	 // 检测本进程是否持有自旋锁(preemp > 0)，如果有，则跳过抢占检测代码,直接从中断返回
-	cmpq $0, %rcx					 // 只有当preempt_count = 0 时，系统才会开启抢占功能
+	cmpq $0, %rcx					 // 只有当preempt_count = 0 时，系统才会开启抢占功能(代码74 ~ 76)
 	jne RESTORE_ALL
 	movq TSK_FLAGS(%rbx), %rcx		 // 检测本进程是否可调度(可抢占)，如果可调度,则跳转去执行reschedule	
 	testq $2,  %rcx

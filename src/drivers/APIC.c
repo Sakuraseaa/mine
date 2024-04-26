@@ -176,9 +176,9 @@ void Local_APIC_init()
 	else if (((x & 0xff) >= 0x10) && ((x & 0xff) <= 0x15))
 		color_printk(WHITE, BLACK, "Integrated APIC\n");
 
-	// mask all LVT
+	// mask all LVT,//the virtual machine of bochs, vbox and qemu does not support CMCI register
 	__asm__ __volatile__(
-		"movq 	$0x82f,	%%rcx	\n\t" // CMCI
+		//"movq 	$0x82f,	%%rcx	\n\t" // CMCI
 		//"wrmsr	\n\t"				  // 这条指令会引起QEMU异常
 		"movq 	$0x832,	%%rcx	\n\t" // Timer
 		"wrmsr	\n\t"
@@ -238,9 +238,6 @@ void IOAPIC_init()
 	for (i = 0x10; i < 0x40; i += 2)
 		ioapic_rte_write(i, 0x10020 + ((i - 0x10) >> 1));
 
-	// 开启RET1表现来接受键盘中断，并且封装位中断为投递到处理器核心
-	// 向量号为0x21, 物理模式，投递目标的APIC ID号为0
-	ioapic_rte_write(0x12, 0x21);
 	color_printk(GREEN, BLACK, "I/O APIC Redirection Table Entries Set Finished.\n");
 }
 
@@ -277,24 +274,24 @@ void APIC_IOAPIC_init()
 	IOAPIC_init();
 
 	// get RCBA address(RCBA = Root Complex Address Register)
-	io_out32(0xcf8, 0x8000f8f0); // RCBA位于PCI总线0的31号设备0号功能的F0h偏移处。这一句详情看书
-	x = io_in32(0xcfc);
-	color_printk(RED, BLACK, "Root Complex Address Register:%#010x\n", x);
-	x = x & 0xffffc000;
-	color_printk(RED, BLACK, "Chipset registers Address:%#010x\n", x); // 芯片组寄存器的物理基地址
+	// io_out32(0xcf8, 0x8000f8f0); // RCBA位于PCI总线0的31号设备0号功能的F0h偏移处。这一句详情看书
+	// x = io_in32(0xcfc);
+	// color_printk(RED, BLACK, "Root Complex Address Register:%#010x\n", x);
+	// x = x & 0xffffc000;
+	// color_printk(RED, BLACK, "Chipset registers Address:%#010x\n", x); // 芯片组寄存器的物理基地址
 
-	// get OIC address
-	if (x > 0xfec00000 && x < 0xfee00000)
-	{
-		// OIC 寄存器位于芯片组配置寄存器组的31FEh地址便宜处
-		p = (unsigned int *)Phy_To_Virt(x + 0x31feUL);
-	}
+	// // get OIC address
+	// if (x > 0xfec00000 && x < 0xfee00000)
+	// {
+	// 	// OIC 寄存器位于芯片组配置寄存器组的31FEh地址便宜处
+	// 	p = (unsigned int *)Phy_To_Virt(x + 0x31feUL);
+	// }
 
-	// enable IOAPIC
-	x = (*p & 0xffffff00) | 0x100;
-	io_mfence();
-	*p = x;
-	io_mfence();
+	// // enable IOAPIC
+	// x = (*p & 0xffffff00) | 0x100;
+	// io_mfence();
+	// *p = x;
+	// io_mfence();
 
 	// enable IF eflages
 	sti();

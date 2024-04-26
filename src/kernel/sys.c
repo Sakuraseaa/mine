@@ -5,6 +5,7 @@
 #include "VFS.h"
 #include "fat32.h"
 #include "stdio.h"
+#include "keyboard.h"
 
 // 系统调用有关
 /*
@@ -21,7 +22,6 @@ sysenter need rdx(rip) rcx(rsp)
 syscall need rcx(rip) r11(rflags)
 
 xchg rdx to r10, rcx to r11
-
 */
 
 unsigned long no_system_call(void)
@@ -114,7 +114,10 @@ unsigned long sys_open(char *filename, int flags)
     memset(filp, 0, sizeof(struct file));
     filp->dentry = dentry;
     filp->mode = flags;
-    filp->f_ops = dentry->dir_inode->f_ops;
+    if (dentry->dir_inode->attribute & FS_ATTR_DEVICE)
+        filp->f_ops = &keyboard_fops;
+    else
+        filp->f_ops = dentry->dir_inode->f_ops;
 
     if (filp->f_ops && filp->f_ops->open)
         error = filp->f_ops->open(dentry->dir_inode, filp); // 让具体的文件系统，比如fat32执行特定的打开操作
@@ -259,6 +262,7 @@ unsigned long sys_fork()
     // regs.rsp 是指向哪里呢？
     return do_fork(regs, 0, regs->rsp, 0);
 }
+
 /**
  * @brief vfork()创建的子进程与父进程共享地址空间，当vfork函数执行后，子进程无法独立运行
  *  必须与exec类函数联合使用

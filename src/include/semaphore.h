@@ -4,13 +4,7 @@
 #include "lib.h"
 #include "task.h"
 #include "atomic.h"
-
-// 等待队列
-typedef struct
-{
-    struct List wait_list;
-    struct task_struct *tsk; // 记录待挂起的PCB
-} wait_queue_T;
+#include "waitqueue.h"
 
 // 信号量
 typedef struct

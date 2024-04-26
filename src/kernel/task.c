@@ -11,7 +11,8 @@
 #include "stdio.h"
 #include "errno.h"
 
-union task_union init_task_union __attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
+union task_union init_task_union
+	__attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
 
 struct task_struct *init_task[NR_CPUS] = {&init_task_union.task, 0};
 
@@ -430,17 +431,20 @@ unsigned long copy_thread(unsigned long clone_flags, unsigned long stack_start, 
 	struct thread_struct *thd = NULL;
 	struct pt_regs *childregs = NULL; // 应用层执行现场结构体
 
-	// 开辟中断栈
+	// 开辟中断栈，
 	thd = (struct thread_struct *)(tsk + 1);
 	memset(thd, 0, sizeof(*thd));
 	tsk->thread = thd;
 
+	// 给新进程复制上下文环境到中断栈内
 	childregs = (struct pt_regs *)((unsigned long)tsk + STACK_SIZE) - 1;
-
 	memcpy(regs, childregs, sizeof(struct pt_regs));
-	childregs->rax = 0;			  // fork给子进程，返回值为0
-	childregs->rsp = stack_start; // 设置子进程和应用层栈指针 ?  0
 
+	childregs->rax = 0;			  // fork给子进程，返回值为0
+	childregs->rsp = stack_start; // 设置子进程和应用层栈指针 ？
+
+	// 中断栈中的rsp会在新进程从内核中启动运行的时候用到
+	// rsp0用于新进程进入内核用到的栈
 	thd->rsp0 = (unsigned long)tsk + STACK_SIZE;
 	thd->rsp = (unsigned long)childregs;
 	thd->fs = current->thread->fs;
@@ -532,19 +536,22 @@ unsigned long do_exit(unsigned long code)
 }
 
 // 线程承载的函数，参数，标志
+// kernel_thread给进程创建了寄存器环境
 int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigned long flags)
 { // 设置中断栈
 	struct pt_regs regs;
 	memset(&regs, 0, sizeof(regs));
 
-	regs.rbx = (unsigned long)fn;
-	regs.rdx = (unsigned long)arg;
+	regs.rbx = (unsigned long)fn;  // RBX保存着程序的入口地址
+	regs.rdx = (unsigned long)arg; // RDX保存着进程创建者传入的参数
 
 	regs.ds = KERNEL_DS;
 	regs.es = KERNEL_DS;
 	regs.cs = KERNEL_CS;
 	regs.ss = KERNEL_DS;
 	regs.rflags = (1 << 9); // 设置可中断标志
+
+	// rip 保存着进程引导程序, 在内核栈中设置这个rip,的意义是什么
 	regs.rip = (unsigned long)kernel_thread_func;
 
 	return do_fork(&regs, flags | CLONE_VM, 0, 0);
@@ -577,7 +584,8 @@ unsigned long do_execve(struct pt_regs *regs, char *name)
 
 	color_printk(RED, BLACK, "do_execve task is running\n");
 	if (current->flags & PF_VFORK)
-	{ // 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
+	{
+		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
 		// 而新程序必须拥有独立的地址空间才能正常运行
 		current->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
 		memset(current->mm, 0, sizeof(struct mm_struct));
@@ -652,7 +660,7 @@ void __switch_to(struct task_struct *prev, struct task_struct *next)
 	// 切换进程的TSS 和 数据段选择子
 	init_tss[0].rsp0 = next->thread->rsp0;
 
-	// 这样下一次中断就会本进程的pcb中的中断栈
+	// 这样下一次中断就会使用next进程中断栈
 	set_tss64(init_tss[0].rsp0, init_tss[0].rsp1, init_tss[0].rsp2, init_tss[0].ist1, init_tss[0].ist2, init_tss[0].ist3, init_tss[0].ist4, init_tss[0].ist5, init_tss[0].ist6, init_tss[0].ist7);
 
 	__asm__ __volatile__("movq	%%fs,	%0 \n\t"
@@ -663,6 +671,7 @@ void __switch_to(struct task_struct *prev, struct task_struct *next)
 	__asm__ __volatile__("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
 	__asm__ __volatile__("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
 
+	// 改变下一个进程要使用的中断栈
 	wrmsr(0x175, next->thread->rsp0);
 
 	// color_printk(WHITE, BLACK, "prev->thread->rsp0:%#018lx\n", prev->thread->rsp0);
@@ -691,6 +700,7 @@ void task_init()
 			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
 		}
 	}
+
 	// 初始化内核进程的内存结构
 	init_mm.pgd = (pml4t_t *)Get_gdt();
 
@@ -726,9 +736,9 @@ void task_init()
 	init_tss[0].rsp0 = init_thread.rsp0;
 
 	list_init(&init_task_union.task.list);
+
 	// 创建内核线程
 	kernel_thread(init, 13, CLONE_FS | CLONE_SIGNAL);
-
 	init_task_union.task.state = TASK_RUNNING;
 	init_task_union.task.preempt_count = 0;
 	// 取得即将运行的线程
