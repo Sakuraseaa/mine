@@ -22,7 +22,7 @@ SECTIONS
 	.text :
 	{
 		_text = .;
-		init.o(.text);
+		/home/steven/mine/src/user/Build/init.o(.text);
 		*(.text)
 		_etext = .;
 	}

@@ -125,9 +125,10 @@ unsigned long rdmsr(unsigned long address);
 void wrmsr(unsigned long address, unsigned long value);
 
 unsigned long get_rsp();
-
+void lower(char *str);
+void upper(char *str);
 unsigned long get_rflags();
-
+long str_find_char(char *string, char ch, long strlen);
 long verify_area(unsigned char *addr, unsigned long size);
 // 一对常用的数据复制函数，只不过这对函数会检测应用程序提供的应用层操作地址空间是否越界
 long copy_from_user(void *from, void *to, unsigned long size);

@@ -150,8 +150,6 @@ struct FAT32_LongDirectory
 } __attribute__((packed));
 
 void DISK1_FAT32_FS_init();
-struct dir_entry *path_walk(char *name, unsigned long flags);
-
 extern struct index_node_operations FAT32_inode_ops;
 extern struct file_operations FAT32_file_ops;
 extern struct dir_entry_operations FAT32_dentry_ops;

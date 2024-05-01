@@ -3,11 +3,6 @@
 
 #include "VFS.h"
 
-// NR_SCAN_CODES * MAP_COLS描述了一个由第三类键盘扫描码组成的一维数组的长度，共128个按键
-// 每个键都有 普通按键 和 Shift+普通按键 两个状态
-#define NR_SCAN_CODES 0x80 // 128
-#define MAP_COLS 2
-
 #define KB_BUF_SIZE 100
 struct keyboard_inputbuffer
 {

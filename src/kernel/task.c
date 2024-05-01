@@ -10,7 +10,9 @@
 #include "fcntl.h"
 #include "stdio.h"
 #include "errno.h"
-
+// ----------- DEBUGE -------------------
+#include "sys.h"
+// ----------- DEBUGE -------------------
 union task_union init_task_union
 	__attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
 
@@ -49,12 +51,12 @@ struct task_struct *get_task(long pid)
 	return NULL;
 }
 
-// 用户进程 执行一次系统调用
+// 用户进程 执行一次系统调用, 已经过时了
 void user_level_function()
 {
 	long errno = 0;
 	// 这里会出现截断现象, 但如果我给string的内存配置大一点就不会 这是为甚么？
-	char path[7] = "/A.TXT";
+	char path[7] = "/a.txt";
 	char buf[50];
 	char str[] = "YSKM";
 	int fd = -1;
@@ -67,8 +69,8 @@ void user_level_function()
 	__asm__ __volatile__("sub $0x100, %%rsp \n\t"
 						 "pushq %%r10 \n\t"
 						 "pushq %%r11 \n\t"
-						 "leaq sysexit_return_address0(%%rip), %%r10 \n\t" // 再次执行的rip
-						 "movq %%rsp, %%r11 \n\t"						   // 再次执行的rsp
+						 "leaq sysexit_return_address0(%%rip), %%r10 \n\t" // 保存应用层的rip
+						 "movq %%rsp, %%r11 \n\t"						   // 保存应用层的rsp
 						 "sysenter \n\t"								   // 进入内核层，跳转到entry.S的system_call
 						 "sysexit_return_address0:  \n\t"
 						 "xchgq %%rdx, %%r10 \n\t"
@@ -159,7 +161,7 @@ struct file *open_exec_file(char *path)
 	struct dir_entry *dentry = NULL;
 	struct file *filp = NULL;
 
-	dentry = path_walk(path, 0);
+	dentry = path_walk(path, 0, 0);
 	if (dentry == NULL)
 		return (void *)-ENOENT;
 	if (dentry->dir_inode->attribute == FS_ATTR_DIR)
@@ -186,7 +188,6 @@ unsigned long init(unsigned long arg)
 	// struct pt_regs *regs; // 这里破坏了中断栈
 	DISK1_FAT32_FS_init();
 	color_printk(RED, BLACK, "init task is running, arg:%#018lx\n", arg);
-
 	current->thread->rip = (unsigned long)ret_system_call;
 	current->thread->rsp = (unsigned long)current + STACK_SIZE - sizeof(struct pt_regs);
 	current->thread->gs = USER_DS;
@@ -198,7 +199,7 @@ unsigned long init(unsigned long arg)
 	__asm__ __volatile("movq %1, %%rsp \n\t"
 					   "pushq %2  \n\t"
 					   "jmp do_execve \n\t" ::"D"(current->thread->rsp),
-					   "m"(current->thread->rsp), "m"(current->thread->rip), "S"("/INIT.BIN")
+					   "m"(current->thread->rsp), "m"(current->thread->rip), "S"("/init.bin")
 					   : "memory");
 
 	return 1;
@@ -671,7 +672,7 @@ void __switch_to(struct task_struct *prev, struct task_struct *next)
 	__asm__ __volatile__("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
 	__asm__ __volatile__("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
 
-	// 改变下一个进程要使用的中断栈
+	// 改变下一个进程要使用的系统调用栈
 	wrmsr(0x175, next->thread->rsp0);
 
 	// color_printk(WHITE, BLACK, "prev->thread->rsp0:%#018lx\n", prev->thread->rsp0);

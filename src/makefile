@@ -26,9 +26,9 @@ ALL:$(BUI_DIR)/kernel.bin
 
 $(BUI_DIR)/kernel.bin:$(OBJS)
 	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds  -Map $(BUI_DIR)/kernel.map
-	sudo mount -o loop $(BOCHS)/boot.img /mnt/flo/
-	sudo cp $(BUI_DIR)/kernel.bin /mnt/flo/ -v
-	sudo umount /mnt/flo/
+	sudo mount -o loop $(BOCHS)/boot.img /mnt
+	sudo cp $(BUI_DIR)/kernel.bin /mnt -v
+	sudo umount /mnt
 	@echo '感谢世界!系统编译构建完成！ ^_^'
 
 $(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c

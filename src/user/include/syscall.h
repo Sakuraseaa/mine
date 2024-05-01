@@ -13,17 +13,21 @@
 *
 ***************************************************/
 
-#ifndef __STDIO_H__
+#ifndef __SYSCALL_H__
 
-#define __STDIO_H__
+#define __SYSCALL_H__
 
-#define	SEEK_SET	0	/* Seek relative to start-of-file */
-#define	SEEK_CUR	1	/* Seek relative to current position */
-#define	SEEK_END	2	/* Seek relative to end-of-file */
+#define	__NR_putstring	1
 
-#define SEEK_MAX	3
+#define	__NR_open	2
+#define	__NR_close	3
+#define	__NR_read	4
+#define	__NR_write	5
+#define	__NR_lseek	6
 
-int putstring(char *string);
+#define	__NR_fork	7
+#define	__NR_vfork	8
 
+#define __NR_brk	12
 
 #endif

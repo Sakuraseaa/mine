@@ -21,6 +21,7 @@
 #include "schedule.h"
 #include "semaphore.h"
 #include "fat32.h"
+#include "VFS.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
@@ -105,9 +106,8 @@ void Start_Kernel(void)
 
 	while (1)
 	{
-		if (p_kb->count)
-			analysis_keycode();
-		if (p_mouse->count)
-			analysis_mousecode();
+		// if (p_mouse->count)
+		// 	analysis_mousecode();
+		;
 	}
 }

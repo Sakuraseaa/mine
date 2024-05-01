@@ -32,7 +32,15 @@ long copy_to_user(void *from, void *to, unsigned long size)
     unsigned long d0, d1;
     if (!verify_area(to, size))
         return 0;
-    // + 代表这个输出操作数，不但作为输出，也是输入
+    // + 代表这个输出操作数，既是输出，也是输入
+    // = 表示 这只是输出
+    // & 表示输入部分的q,r,g等模糊约束，不能把变量约束到&修饰的寄存器
+    // 输入部分的0, 表示使用第一个输出部分的寄存器，ecx，作为输入
+    // "memory"表明asm语句修改的内存，但在输入输出部分没有显示出来，
+
+    // 每一条 __asm__语句就像一个函数，输入部分是函数参数，输出部分是函数返回值
+    // 输入部分指定，把传入的值 绑定到 寄存器
+    // 输出部分指定，把寄存器处理好的值，保存到指定变量
     __asm__ __volatile__("rep \n\t"
                          "movsq \n\t"
                          "movq %3, %0 \n\t"
@@ -336,6 +344,52 @@ int strlen(char *String)
                          : "D"(String), "a"(0), "0"(0xffffffff)
                          :);
     return __res;
+}
+
+/**
+ * @brief 反向在string之中寻找，ch字符第一次出现的位置
+ *
+ * @param string 字符串
+ * @param ch   字符
+ * @param strlen  字符串长度
+ * @return int 位置信息, ch不存在则返回 -1
+ */
+long str_find_char(char *string, char ch, long strlen)
+{
+    long ret = -1;
+    long i;
+    for (i = strlen - 1; i >= 0; i--)
+        if (string[i] == ch)
+        {
+            ret = i;
+            break;
+        }
+
+    return ret;
+}
+
+void upper(char *str)
+{
+    while (*str)
+    {
+        if (*str >= 'a' && *str <= 'z')
+        {
+            *str = *str - 32;
+        }
+        str++;
+    }
+}
+
+void lower(char *str)
+{
+    while (*str)
+    {
+        if (*str >= 'A' && *str <= 'Z')
+        {
+            *str = *str + 32;
+        }
+        str++;
+    }
 }
 
 unsigned long bit_set(unsigned long *addr, unsigned long nr)

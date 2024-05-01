@@ -19,10 +19,6 @@ struct file_system_type
     struct file_system_type *next;
 };
 
-struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf);
-unsigned long register_filesystem(struct file_system_type *fs);
-unsigned long unregister_filesystem(struct file_system_type *fs);
-
 struct super_block_operations;
 struct index_node_operations;
 struct dir_entry_operations;
@@ -55,9 +51,9 @@ struct index_node
     void *private_index_info; // 对于fat32系统，这里指向的是 struct FAT32_inode_info
 };
 
-#define FS_ATTR_FILE (1UL << 0)   // 文件
-#define FS_ATTR_DIR (1UL << 1)    // 目录
-#define FS_ATTR_DEVICE (1UL << 2) // 设备文件 - 键盘
+#define FS_ATTR_FILE (1UL << 0)            // 文件
+#define FS_ATTR_DIR (1UL << 1)             // 目录
+#define FS_ATTR_DEVICE_KEYBOARD (1UL << 2) // 设备文件 - 键盘
 
 // 用于描述文件/目录在文件系统中的层级关系-目录项
 struct dir_entry
@@ -77,7 +73,7 @@ struct dir_entry
 
 // 是进程和VFS的纽带，它是抽象出来的，不存在于物质介质中
 // 文件的读写访问(同步/异步)，IO控制以及其他操作方法
-// 文件描述符结构体
+// 文件描述符
 struct file
 {
     long position;      // 本文件的当前访问位置
@@ -128,5 +124,10 @@ struct file_operations
     long (*lseek)(struct file *filp, long offset, long origin);
     long (*ioctl)(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg);
 };
+
+struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf);
+unsigned long register_filesystem(struct file_system_type *fs);
+unsigned long unregister_filesystem(struct file_system_type *fs);
+struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file);
 
 #endif

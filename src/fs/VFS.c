@@ -66,9 +66,10 @@ unsigned long unregister_filesystem(struct file_system_type *fs)
  *
  * @param name 文件名称
  * @param flags 当形参flags = 1时, path_walk函数返回目标父目录的目录项，否则返回目标目录项
+ * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
  * @return struct dir_entry* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
-struct dir_entry *path_walk(char *name, unsigned long flags)
+struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file)
 {
     char *tmpname = NULL;
     int tmpnamelen = 0;
@@ -102,14 +103,24 @@ struct dir_entry *path_walk(char *name, unsigned long flags)
 
         // lookup函数从当前目录中搜索与目标名想匹配的目录项。
         // 如果匹配成功，那么lookup函数将返回目标名的短目录项，失败返回NULL
+        // 注意此处的Path是一个传出参数，如果在parent中，寻找成功。
+        // 那么path中记录目标文件的index_node, 通过inode可以获得该文件的所有信息
         if (parent->dir_inode->inode_ops->lookup(parent->dir_inode, path) == NULL)
         { // 查找失败，释放申请的内存资源，返回
+            if (flags & 1)
+            {
+                // 如果是创建文件，即时是查找失败了，也继续进行循环
+                // 但如果此处是中间路径错误了怎么办？这里的逻辑重写的 日后
+                goto continue_for;
+            }
+
             color_printk(RED, WHITE, "can not find file or dir:%s\n", path->name);
             kfree(path->name);
             kfree(path);
+
             return NULL;
         }
-
+    continue_for:
         // child_node 来记录我是谁的子文件, 加入到父目录的列表中
         // suddires_list 来记录我的子文件都有谁
         list_init(&path->child_node);
@@ -131,7 +142,10 @@ last_slash:     // 最后的斜杠
 
     // 当形参flags = 1时, path_walk函数返回目标父目录的目录项，否则返回目标目录项
     if (flags & 1)
+    {
+        *create_file = path;
         return parent;
+    }
 
     return path;
 }

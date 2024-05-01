@@ -6,7 +6,7 @@
 #include "fat32.h"
 #include "stdio.h"
 #include "keyboard.h"
-
+#include "sys.h"
 // 系统调用有关
 /*
 normal
@@ -53,12 +53,14 @@ unsigned long sys_putstring(char *string)
 {
     color_printk(ORANGE, WHITE, string);
     // color_printk(ORANGE, WHITE, "%s", string);
+
     return 0;
 }
 
 /**
  * @brief VFS的文件打开函数 = 给本进程要打开的文件filename创建文件描述符，文件描述符是进程私有的
- *  // 这里还暂时没有创建文件功能，对O_CREAT标志的处理
+ *  目录项结构,inode结构的缓存与释放是个问题
+ *  为系统增加缓冲区功能
  * @param filename 需要打开文件的路径
  * @param flags  文件操作标志位，描述文件的访问模式和操作模式,WRITE,READ,TRUNC, APPEND
  * @return unsigned long 返回一个最小未使用的正整数来代表这个文件对应的文件描述符，执行失败返回-1
@@ -68,6 +70,8 @@ unsigned long sys_open(char *filename, int flags)
     char *path = NULL;
     long pathlen = 0;
     long error = 0;
+    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
+    int path_flags = 0;
     struct dir_entry *dentry = NULL;
     struct file *filp = NULL;
     struct file **f = NULL;
@@ -79,7 +83,8 @@ unsigned long sys_open(char *filename, int flags)
     if (path == NULL)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
-    pathlen = strnlen_user(filename, PAGE_4K_SIZE);
+    pathlen = strlen(filename);
+    // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
     if (pathlen <= 0)
     {
         kfree(path);
@@ -90,41 +95,48 @@ unsigned long sys_open(char *filename, int flags)
         kfree(path);
         return -ENAMETOOLONG;
     }
-    strncpy_from_user(filename, path, pathlen);
+    // strncpy_from_user(filename, path, pathlen);
+    strncpy(path, filename, pathlen);
 
-    // b.获取path文件的目录项
-    dentry = path_walk(path, 0);
+    // b.获取path文件的目录项,
+    if (flags & O_CREAT) // 根据是否创建新文件判断得到 文件的目录项 还是 文件所属目录的目录项
+        path_flags = 1;
+
+    dentry = path_walk(path, path_flags, &Child_dentry); // b.2得到目录项
+
+    if (flags & O_CREAT)
+    {
+        Parent_dentry = dentry;
+        // 创建文件
+        if (Parent_dentry->dir_inode->inode_ops && Parent_dentry->dir_inode->inode_ops->create)
+            Parent_dentry->dir_inode->inode_ops->create(Parent_dentry->dir_inode, Child_dentry, 1);
+        else
+            return -EACCES;
+    }
     kfree(path);
-
-    //////////Testing Code///////////
-    if (dentry != NULL)
-        color_printk(BLUE, BLACK, "Find a.txt \nDIR_FirstCluster:%#018lx\tDIR_FileSize:%#018lx\n", ((struct FAT32_inode_info *)(dentry->dir_inode->private_index_info))->first_cluster, dentry->dir_inode->file_size);
-    else
-        color_printk(BLUE, BLACK, "Can`t find file\n");
-    /////////////////////////////////
 
     if (dentry == NULL)
         return -ENOENT;
     if (dentry->dir_inode->attribute == FS_ATTR_DIR)
         return -EISDIR;
 
-    // c.为目标文件,目标进程创建文件描述符, filp什么意思？
-    // 此处蕴藏着虚拟文件系统的精髓
+    // c.为目标文件,目标进程创建文件描述符, filp什么意思？file description?
     filp = (struct file *)kmalloc(sizeof(struct file), 0);
     memset(filp, 0, sizeof(struct file));
     filp->dentry = dentry;
     filp->mode = flags;
-    if (dentry->dir_inode->attribute & FS_ATTR_DEVICE)
+
+    if (dentry->dir_inode->attribute & FS_ATTR_DEVICE_KEYBOARD)
         filp->f_ops = &keyboard_fops;
     else
         filp->f_ops = dentry->dir_inode->f_ops;
 
     if (filp->f_ops && filp->f_ops->open)
         error = filp->f_ops->open(dentry->dir_inode, filp); // 让具体的文件系统，比如fat32执行特定的打开操作
+
     if (error != 1)
     { // 内核只释放了文件描述符占用的内存空间，而未释放inode结构和dentry结构占用的内存空间
         // 因为释放它们是一个漫长的过程，其中必将设计路径所以内所有结构的回收，缓存，销毁等管理细节
-        // sk:此处需要多思考
         kfree(filp);
         return -EFAULT;
     }
@@ -152,7 +164,7 @@ unsigned long sys_open(char *filename, int flags)
         return -EMFILE;
     }
     f[fd] = filp;
-    color_printk(GREEN, BLACK, "sys_open:%d\n", fd);
+
     return fd; // 返回文件描述符数组下标
 }
 
@@ -191,7 +203,7 @@ unsigned long sys_read(int fd, void *buf, long count)
     struct file *filp = NULL;
     unsigned long ret = 0;
 
-    color_printk(GREEN, BLACK, "sys_read:%d\n", fd);
+    // color_printk(GREEN, BLACK, "sys_read:%d\n", fd);
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
     if (count < 0)
@@ -200,9 +212,7 @@ unsigned long sys_read(int fd, void *buf, long count)
     filp = current->file_struct[fd];
     if (filp->f_ops && filp->f_ops->read)
         ret = filp->f_ops->read(filp, buf, count, &filp->position);
-    int i = 0;
-    for (; i < ret; i++)
-        color_printk(GREEN, BLACK, "%c", *((char *)buf + i));
+
     return ret;
 }
 
