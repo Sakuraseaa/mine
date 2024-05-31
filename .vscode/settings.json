@@ -17,7 +17,18 @@
         "unistd.h": "c",
         "syscalls.h": "c",
         "string.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "keyboard.h": "c",
+        "stddef.h": "c",
+        "atomic": "c",
+        "fstream": "c",
+        "sstream": "c",
+        "syscall.h": "c",
+        "fcntl.h": "c",
+        "printf.h": "c",
+        "memory.h": "c",
+        "algorithm": "c",
+        "format": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

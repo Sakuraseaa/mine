@@ -28,6 +28,10 @@ extern struct keyboard_inputbuffer *p_kb;
 extern struct keyboard_inputbuffer *p_mouse;
 extern long global_pid;
 struct Global_Memory_Descriptor memory_management_struct = {{0}, 0};
+extern int usr_init();
+extern unsigned long shell_boot(unsigned long arg);
+extern int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigned long flags);
+extern int shell_up;
 
 void Start_Kernel(void)
 {
@@ -103,6 +107,11 @@ void Start_Kernel(void)
 	task_init();
 
 	sti();
+
+	// 此处的while用于线程同步
+	while (!shell_up)
+		;
+	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 
 	while (1)
 	{

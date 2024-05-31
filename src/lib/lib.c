@@ -3,10 +3,11 @@
 // verify: 核实， 检测数据是否越过用户层界限
 long verify_area(unsigned char *addr, unsigned long size)
 {
-    if (((unsigned long)addr + size) <= (unsigned long)0x00007fffffffffff)
-        return 1;
-    else
-        return 0;
+    return 1;
+    // if (((unsigned long)addr + size) <= (unsigned long)0x00007fffffffffff)
+    //     return 1;
+    // else
+    //     return 0;
 }
 
 long copy_from_user(void *from, void *to, unsigned long size)

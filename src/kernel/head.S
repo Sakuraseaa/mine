@@ -177,33 +177,26 @@ ENTRY(_stack_start)
 	.quad	init_task_union + 32768
 
 //=======	init page
-.align 8
-
+/*.align 8
 .org	0x1000
-
 __PML4E:
-
 	.quad	0x102003
 	.fill	255,8,0
 	.quad	0x102003
 	.fill	255,8,0
 
 .org	0x2000
-
 __PDPTE:
-	
 	.quad	0x103003
 	.fill	511,8,0
 
 .org	0x3000
-
 __PDE:
-
 	.quad	0x000083	
 	.quad	0x200083
 	.quad	0x400083
 	.quad	0x600083
-	.quad	0x800083		/* 0X800083 */
+	.quad	0x800083		// 0X800083 
 	.quad   0xa00083
 	.quad   0xc00083
 	.quad   0xe00083
@@ -222,10 +215,9 @@ __PDE:
 	.quad	0x2800083
 	.quad	0x2a00083
 	.quad	0x2c00083
-	.quad	0x2e00083		/* 0 ~ 48MB 都被内核映射到了*/
+	.quad	0x2e00083		// 0 ~ 48MB 都被内核映射到了
 	
-
-	.quad	0xfd000083		/*0x300_0000*/
+	.quad	0xfd000083		// 0x300_0000
 	.quad	0xfd200083
 	.quad	0xfd400083
 	.quad	0xfd600083		
@@ -233,6 +225,65 @@ __PDE:
 	.quad	0xfda00083
 	.quad	0xfdc00083
 	.quad	0xfde00083
+	.fill	499,8,0
+*/
+//=======	init page
+.align 8
+
+.org	0x1000
+
+__PML4E:
+
+	.quad	0x102007
+	.fill	255,8,0
+	.quad	0x102007
+	.fill	255,8,0
+
+.org	0x2000
+
+__PDPTE:
+	
+	.quad	0x103007
+	.fill	511,8,0
+
+.org	0x3000
+
+__PDE:
+
+	.quad	0x000087	
+	.quad	0x200087
+	.quad	0x400087
+	.quad	0x600087
+	.quad	0x800087		/* 0X800083 */
+	.quad   0xa00087
+	.quad   0xc00087
+	.quad   0xe00087
+	.quad	0x1000087
+	.quad	0x1200087
+	.quad	0x1400087
+	.quad	0x1600087
+	.quad	0x1800087
+	.quad	0x1a00087
+	.quad	0x1c00087
+	.quad	0x1e00087
+	.quad	0x2000087
+	.quad	0x2200087
+	.quad	0x2400087
+	.quad	0x2600087
+	.quad	0x2800087
+	.quad	0x2a00087
+	.quad	0x2c00087
+	.quad	0x2e00087		/* 0 ~ 48MB 都被内核映射到了*/
+	
+
+	.quad	0xfd000087		/*0x300_0000*/
+	.quad	0xfd200087
+	.quad	0xfd400087
+	.quad	0xfd600087		
+	.quad	0xfd800087
+	.quad	0xfda00087
+	.quad	0xfdc00087
+	.quad	0xfde00087
 	.fill	499,8,0
 
 //=======	GDT_Table

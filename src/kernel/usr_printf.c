@@ -15,12 +15,11 @@
 
 #include <stdarg.h>
 #include "printf.h"
-#include "string.h"
 #include "stdio.h"
 /*
 
 */
-int strlen(char *String)
+static int strlen(char *String)
 {
 	register int __res;
 	__asm__ __volatile__("cld	\n\t"
@@ -33,7 +32,7 @@ int strlen(char *String)
 						 :);
 	return __res;
 }
-int skip_atoi(const char **s)
+static int skip_atoi(const char **s)
 {
 	int i = 0;
 
@@ -105,7 +104,7 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 	return str;
 }
 
-int vsprintf(char *buf, const char *fmt, va_list args)
+static int vsprintf(char *buf, const char *fmt, va_list args)
 {
 	char *str, *s;
 	int flags;
@@ -293,7 +292,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 	return str - buf;
 }
 
-int sprintf(char *buf, const char *fmt, ...)
+static int sprintf(char *buf, const char *fmt, ...)
 {
 	int count = 0;
 	va_list args;

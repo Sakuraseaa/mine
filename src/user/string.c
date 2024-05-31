@@ -1,23 +1,8 @@
-/***************************************************
- *		版权声明
- *
- *	本操作系统名为：MINE
- *	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
- *	只允许个人学习以及公开交流使用
- *
- *	代码最终所有权及解释权归田宇所有；
- *
- *	本模块作者：	田宇
- *	EMail:		345538255@qq.com
- *
- *
- ***************************************************/
-
+#include "string.h"
 /*
 		From => To memory copy Num bytes
 */
-
-inline void *memcpy(void *From, void *To, long Num)
+void *memcpy(void *From, void *To, long Num)
 {
 	int d0, d1, d2;
 	__asm__ __volatile__("cld	\n\t"
@@ -44,8 +29,7 @@ inline void *memcpy(void *From, void *To, long Num)
 		FirstPart > SecondPart		=>	 1
 		FirstPart < SecondPart		=>	-1
 */
-
-inline int memcmp(void *FirstPart, void *SecondPart, long Count)
+int memcmp(void *FirstPart, void *SecondPart, long Count)
 {
 	register int __res;
 
@@ -66,8 +50,7 @@ inline int memcmp(void *FirstPart, void *SecondPart, long Count)
 /*
 		set memory at Address with C ,number is Count
 */
-
-inline void *memset(void *Address, unsigned char C, long Count)
+void *memset(void *Address, unsigned char C, long Count)
 {
 	int d0, d1;
 	unsigned long tmp = C * 0x0101010101010101UL;
@@ -93,8 +76,7 @@ inline void *memset(void *Address, unsigned char C, long Count)
 /*
 		string copy
 */
-
-inline char *strcpy(char *Dest, char *Src)
+char *strcpy(char *Dest, char *Src)
 {
 	__asm__ __volatile__("cld	\n\t"
 						 "1:	\n\t"
@@ -111,8 +93,7 @@ inline char *strcpy(char *Dest, char *Src)
 /*
 		string copy number bytes
 */
-
-inline char *strncpy(char *Dest, char *Src, long Count)
+char *strncpy(char *Dest, char *Src, long Count)
 {
 	__asm__ __volatile__("cld	\n\t"
 						 "1:	\n\t"
@@ -134,8 +115,7 @@ inline char *strncpy(char *Dest, char *Src, long Count)
 /*
 		string cat Dest + Src
 */
-
-inline char *strcat(char *Dest, char *Src)
+char *strcat(char *Dest, char *Src)
 {
 	__asm__ __volatile__("cld	\n\t"
 						 "repne	\n\t"
@@ -158,8 +138,7 @@ inline char *strcat(char *Dest, char *Src)
 		FirstPart > SecondPart =>  1
 		FirstPart < SecondPart => -1
 */
-
-inline int strcmp(char *FirstPart, char *SecondPart)
+int strcmp(char *FirstPart, char *SecondPart)
 {
 	register int __res;
 	__asm__ __volatile__("cld	\n\t"
@@ -189,7 +168,7 @@ inline int strcmp(char *FirstPart, char *SecondPart)
 		FirstPart < SecondPart => -1
 */
 
-inline int strncmp(char *FirstPart, char *SecondPart, long Count)
+int strncmp(char *FirstPart, char *SecondPart, long Count)
 {
 	register int __res;
 	__asm__ __volatile__("cld	\n\t"

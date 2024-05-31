@@ -23,7 +23,7 @@
 #define PAGE_2M_ALIGN(addr) (((unsigned long)(addr) + PAGE_2M_SIZE - 1) & PAGE_2M_MASK) // 把参数addr按2MB页的上边界对齐
 #define PAGE_4K_ALIGN(addr) (((unsigned long)(addr) + PAGE_4K_SIZE - 1) & PAGE_4K_MASK)
 
-#define Virt_To_Phy(addr) ((unsigned long)(addr)-PAGE_OFFSET) // 对于前40MB,该函数将内核层虚拟地址转换成物理地址
+#define Virt_To_Phy(addr) ((unsigned long)(addr) - PAGE_OFFSET) // 该函数将内核层虚拟地址转换成物理地址
 
 // 把物理地址转换成虚拟地址，这种切换的把戏，只有一一映射，才能使用
 #define Phy_To_Virt(addr) ((unsigned long *)((unsigned long)(addr) + PAGE_OFFSET))

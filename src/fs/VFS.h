@@ -65,7 +65,7 @@ struct dir_entry
     struct List child_node;
     struct List subdirs_list; // subdirectory - 子目录
 
-    struct index_node *dir_inode; // 本目录的inode
+    struct index_node *dir_inode; // 本目录项描述的文件的inode
     struct dir_entry *parent;     // 父目录项
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：

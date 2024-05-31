@@ -1,10 +1,11 @@
 #include "stddef.h"
-#include "unistd.h"
+// #include "unistd.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "fcntl.h"
-#include "string.h"
 #include "keyboard.h"
+#include "memory.h"
+#include "init.h"
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
@@ -17,40 +18,34 @@ struct buildincmd
 	int (*cmd_funcPtr)(int, char **);
 };
 const char *current_dir = NULL;
-
-int main()
+int sk = 0;
+int usr_init()
 {
+	int fd = 0;
+	unsigned char buf[256] = {0};
+	char path[] = "/KEYBOARD.DEV";
+	int index = -1;
+	current_dir = "/";
+	fd = open(path, 0);
 
-	printf("it is not Shell!\n");
-	// int fd = 0;
-	// unsigned char buf[256] = {0};
-	// char path[] = "/KEYBOARD.DEV";
-	// int index = -1;
+	while (1)
+	{
+		sk++;
+		int argc = 0;
+		char **argv = NULL;
+		printf("sk@Mine %d #:", sk);
+		memset(buf, 0, 256);
+		// 命令读取
+		read_line(fd, buf);
+		// 命令解析
+		index = parse_command(buf, &argc, &argv);
+		if (index < 0)
+			printf("Input Error, No Command Found!\n");
+		else
+			run_command(index, argc, argv); // 命令执行
+	}
 
-	// current_dir = "/";
-	// fd = open(path, 0);
-
-	// while (1)
-	// {
-	// 	// int argc = 0;
-	// 	// char **argv = NULL;
-	// 	// printf("[SHELL]#:");
-	// 	// memset(buf, 0, 256);
-	// 	// // 命令读取
-	// 	// read_line(fd, buf);
-	// 	// printf("\n");
-
-	// 	// printf(buf);
-
-	// 	// // 命令解析
-	// 	// index = parse_command(buf, &argc, &argv);
-	// 	// if (index < 0)
-	// 	// 	printf("Input Error, No Command Found!\n");
-	// 	// else
-	// 	// 	run_command(index, argc, argv); // 命令执行
-	// }
-
-	// close(fd);
+	close(fd);
 
 	while (1)
 		;
@@ -191,18 +186,6 @@ int analysis_keycode(int fd)
 			key = 0;
 			break;
 
-		case 0x0e: // BACKSPACE
-			key = '\b';
-			break;
-
-		case 0x0f: // TAB
-			key = '\t';
-			break;
-
-		case 0x1c: // ENTER
-			key = '\n';
-			break;
-
 		default:
 			if (!make)
 				key = 0;
@@ -217,7 +200,11 @@ int analysis_keycode(int fd)
 
 int cd_command(int argc, char **argv) {}
 int ls_command(int argc, char **argv) {}
-int pwd_command(int argc, char **argv) { printf(current_dir); }
+int pwd_command(int argc, char **argv)
+{
+	printf(current_dir);
+	printf("\n");
+}
 int cat_command(int argc, char **argv) {}
 int touch_command(int argc, char **argv) {}
 int rm_command(int argc, char **argv) {}
@@ -229,15 +216,15 @@ int reboot_command(int argc, char **argv) {}
 struct buildincmd shell_internal_cmd[] =
 	{
 		{"cd", cd_command},
-		{"ls", cd_command},
-		{"pwd", cd_command},
-		{"cat", cd_command},
-		{"touch", cd_command},
-		{"rm", cd_command},
-		{"mkdir", cd_command},
-		{"rmdir", cd_command},
-		{"exec", cd_command},
-		{"reboot", cd_command},
+		{"ls", ls_command},
+		{"pwd", pwd_command},
+		{"cat", cat_command},
+		{"touch", touch_command},
+		{"rm", rm_command},
+		{"mkdir", mkdir_command},
+		{"rmdir", rmdir_command},
+		{"exec", exec_command},
+		{"reboot", reboot_command},
 };
 
 int find_cmd(char *cmd_name)
@@ -251,27 +238,33 @@ int find_cmd(char *cmd_name)
 
 int read_line(int fd, char *buf)
 {
-	int key = 0;
+	char key = 0;
 	int count = 0;
 
 	while (1)
 	{
 		key = analysis_keycode(fd);
 
-		if (key == '\n')
+		switch (key)
+		{
+		case 0: // 通码
+			break;
+		case '\n':
+			printf("\n");
+			buf[count] = 0;
 			return count;
-		else if (key == '\b')
-		{
-			count--;
-			printf("%c", key);
-		}
-		else if (key)
-		{
+		case '\b':
+			if (count)
+			{
+				count--;
+				printf("%c", key);
+			}
+			break;
+		default:
 			buf[count++] = key;
 			printf("%c", key);
+			break;
 		}
-		else
-			continue;
 	}
 }
 
@@ -295,7 +288,7 @@ int parse_command(char *buf, int *argc, char ***argv)
 
 	if (!*argc)
 		return -1;
-	*argv = (char **)malloc(sizeof(char **) * (*argc));
+	*argv = (char **)kmalloc(sizeof(char **) * (*argc), 0);
 	// printf("parse_command argv:%#018lx, *argv:%#018lx\n", argv, *argv);
 
 	for (i = 0; i < *argc && j < 256; i++)

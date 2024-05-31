@@ -37,11 +37,8 @@ struct keyboard_inputbuffer
 
 extern struct file_operations keyboard_fops;
 
-unsigned char get_scancode();
 void keyboard_init();
 void keyboard_exit();
-void analysis_keycode();
-unsigned char get_scancode();
 long keyboard_open(struct index_node *inode, struct file *filp);
 long keyboard_close(struct index_node *inode, struct file *filp);
 long keyboard_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg);

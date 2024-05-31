@@ -51,7 +51,7 @@ __asm__	(
 
 unsigned long sys_putstring(char *string)
 {
-    color_printk(ORANGE, WHITE, string);
+    color_printk(WHITE, BLACK, string);
     // color_printk(ORANGE, WHITE, "%s", string);
 
     return 0;
@@ -104,21 +104,21 @@ unsigned long sys_open(char *filename, int flags)
 
     dentry = path_walk(path, path_flags, &Child_dentry); // b.2得到目录项
 
+    if (dentry == NULL)
+        return -ENOENT;
+    if (!Child_dentry && dentry->dir_inode->attribute == FS_ATTR_DIR)
+        return -EISDIR;
+
     if (flags & O_CREAT)
     {
         Parent_dentry = dentry;
         // 创建文件
         if (Parent_dentry->dir_inode->inode_ops && Parent_dentry->dir_inode->inode_ops->create)
-            Parent_dentry->dir_inode->inode_ops->create(Parent_dentry->dir_inode, Child_dentry, 1);
+            Parent_dentry->dir_inode->inode_ops->create(Parent_dentry->dir_inode, Child_dentry, 0);
         else
             return -EACCES;
     }
     kfree(path);
-
-    if (dentry == NULL)
-        return -ENOENT;
-    if (dentry->dir_inode->attribute == FS_ATTR_DIR)
-        return -EISDIR;
 
     // c.为目标文件,目标进程创建文件描述符, filp什么意思？file description?
     filp = (struct file *)kmalloc(sizeof(struct file), 0);
@@ -296,7 +296,7 @@ unsigned long sys_vfork()
 unsigned long sys_brk(unsigned long brk)
 {
     unsigned long new_brk = PAGE_2M_ALIGN(brk);
-    color_printk(GREEN, BLACK, "sys_brk:%018lx\n", brk);
+    // color_printk(GREEN, BLACK, "sys_brk:%018lx\n", brk);
     // color_printk(RED, BLACK, "brk:%#0x18lx, new_brk:%#018lx,current->mm->end_brk:%#018lx", brk, new_brk, current->mm->end_brk);
     if (new_brk == 0) // return brk base address
         return current->mm->start_brk;
@@ -306,6 +306,6 @@ unsigned long sys_brk(unsigned long brk)
     new_brk = do_brk(current->mm->end_brk, new_brk - current->mm->end_brk); // expand brk space
 
     current->mm->end_brk = new_brk;
-    color_printk(RED, BLACK, "brk:%#0x18lx, new_brk:%#018lx,current->mm->end_brk:%#018lx", brk, new_brk, current->mm->end_brk);
+    // color_printk(RED, BLACK, "brk:%#0x18lx, new_brk:%#018lx,current->mm->end_brk:%#018lx", brk, new_brk, current->mm->end_brk);
     return new_brk;
 }

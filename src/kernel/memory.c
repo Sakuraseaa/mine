@@ -828,7 +828,8 @@ void pagetable_init()
             if (*tmp == 0)
             { // 页表项为空，则分配4kbPDPT页表,填充该表项
                 unsigned long *virtual_addrees = kmalloc(PAGE_4K_SIZE, 0);
-                set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_KERNEL_GDT));
+                // set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_KERNEL_GDT));
+                set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_USER_GDT));
             }
             //=======================================================================================
 
@@ -838,7 +839,7 @@ void pagetable_init()
             if (*tmp == 0)
             { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
                 unsigned long *virtual_address = kmalloc(PAGE_4K_SIZE, 0);
-                set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual_address), PAGE_KERNEL_Dir));
+                set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual_address), PAGE_USER_Dir));
             }
 
             // ========================================================================================
@@ -846,7 +847,7 @@ void pagetable_init()
             tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) +
                                     (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_2M_SHIFT) & 0x1ff) * 8);
             // 在页表中填写对应的物理页
-            set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_KERNEL_Page));
+            set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
 
             // if (j % 50 == 0)
             //   color_printk(GREEN, BLACK, "@:%#018lx,%#018lx\t\n", (unsigned long)tmp, *tmp);

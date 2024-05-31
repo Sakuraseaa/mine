@@ -36,8 +36,10 @@ extern void ret_system_call(void);	  // 进入特权级3
 extern void kernel_thread_func(void); // 进入用户进程，在执行完用户进程后，会执行do_exit()程序
 extern void system_call(void);
 
+unsigned long shell_boot(unsigned long arg);
 unsigned long do_execve(struct pt_regs *regs, char *name);
 long global_pid;
+
 struct task_struct *get_task(long pid)
 {
 	struct task_struct *tsk = NULL;
@@ -188,6 +190,9 @@ unsigned long init(unsigned long arg)
 	// struct pt_regs *regs; // 这里破坏了中断栈
 	DISK1_FAT32_FS_init();
 	color_printk(RED, BLACK, "init task is running, arg:%#018lx\n", arg);
+
+	// sys_open("/The quick brown.fox", O_CREAT);
+
 	current->thread->rip = (unsigned long)ret_system_call;
 	current->thread->rsp = (unsigned long)current + STACK_SIZE - sizeof(struct pt_regs);
 	current->thread->gs = USER_DS;
@@ -201,9 +206,54 @@ unsigned long init(unsigned long arg)
 					   "jmp do_execve \n\t" ::"D"(current->thread->rsp),
 					   "m"(current->thread->rsp), "m"(current->thread->rip), "S"("/init.bin")
 					   : "memory");
+	return 1;
+}
+
+// ------------------DEBUG----------------------
+extern int usr_init();
+// 被init调用,加载用户进程体，到用户空间800000
+unsigned long shell_execve(struct pt_regs *regs, char *name)
+{
+	unsigned long retval = 0;
+
+	// 这里没有初始化gs,fs段选择子
+	regs->ds = USER_DS;
+	regs->es = USER_DS;
+	regs->ss = USER_DS;
+	regs->cs = USER_CS;
+	// regs->rip = new_rip;
+	// regs->rsp = new_rsp;
+	//  在中断栈中填入地址
+
+	int (*fn)(void) = usr_init;
+	regs->r10 = (unsigned long)fn;				// RIP
+	void *tmp = kmalloc(1048576, 0);			// 申请1MB
+	regs->r11 = ((unsigned long)tmp) + 1048576; // RSP
+	regs->rax = 0;
+
+	// 清理地址空间脏数据
+	// go to ret_system_call
+	return retval;
+}
+
+unsigned long shell_boot(unsigned long arg)
+{
+	current->thread->rip = (unsigned long)ret_system_call;
+	current->thread->rsp = (unsigned long)current + STACK_SIZE - sizeof(struct pt_regs);
+	current->thread->gs = USER_DS;
+	current->thread->fs = USER_DS;
+	current->flags &= ~PF_KTHREAD;
+
+	// 更换rsp到中断栈, PCB最上部的需要pop返回的位置
+	// 压入了ret_system_call作为返回地址
+	__asm__ __volatile("movq %1, %%rsp \n\t"
+					   "pushq %2  \n\t"
+					   "jmp shell_execve \n\t" ::"D"(current->thread->rsp),
+					   "m"(current->thread->rsp), "m"(current->thread->rip) : "memory");
 
 	return 1;
 }
+//--------------------DEBUG----------------------
 
 // 创建内核线程的PCB
 unsigned long do_fork_old(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size)
@@ -456,8 +506,8 @@ unsigned long copy_thread(unsigned long clone_flags, unsigned long stack_start, 
 	else
 		thd->rip = (unsigned long)ret_system_call;
 
-	color_printk(WHITE, BLACK, "current user ret addr:%#018lx, rsp:%#018lx\n", regs->r10, regs->r11);
-	color_printk(WHITE, BLACK, "new user ret addr:%#018lx, rsp:%#018lx\n", childregs->r10, childregs->r11);
+	// color_printk(WHITE, BLACK, "current user ret addr:%#018lx, rsp:%#018lx\n", regs->r10, regs->r11);
+	// color_printk(WHITE, BLACK, "new user ret addr:%#018lx, rsp:%#018lx\n", childregs->r10, childregs->r11);
 
 	return 0;
 }
@@ -699,6 +749,7 @@ void task_init()
 			unsigned long *virtual = kmalloc(PAGE_4K_SIZE, 0);
 			memset(virtual, 0, PAGE_4K_SIZE);
 			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
+			// set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
 		}
 	}
 
@@ -740,6 +791,7 @@ void task_init()
 
 	// 创建内核线程
 	kernel_thread(init, 13, CLONE_FS | CLONE_SIGNAL);
+
 	init_task_union.task.state = TASK_RUNNING;
 	init_task_union.task.preempt_count = 0;
 	// 取得即将运行的线程

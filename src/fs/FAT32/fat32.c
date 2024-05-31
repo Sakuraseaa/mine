@@ -361,59 +361,81 @@ static unsigned char ChkSum(unsigned char *pFcbName)
     return sum;
 }
 #define LDir_NameCount 13
-static struct FAT32_LongDirectory *Create_FAT32DEntry(struct dir_entry *dentry, int mode, long *size)
+/**
+ * @brief 创建FAT32的目录项
+ *        a. 创建目录项并初始化
+ *        b. 为新建立的文件， 创建了inode结点
+ * @param inode 父目录的inode结构
+ * @param dentry 里面保存了要创建目录项的文件名和长度
+ * @param mode
+ * @param size 传出参数，记录目录项占用字节数
+ * @return struct FAT32_LongDirectory*
+ */
+static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, struct dir_entry *dentry, int mode, long *size)
 {
     struct FAT32_LongDirectory *fld, *fld0;
     struct FAT32_Directory *fd;
-    int i = 0, j = 0, LDir_count = 0;
-    long ExpandNameIndex = -1, namelen = dentry->name_length;
-    char Dname[namelen + 1];
-    memset(Dname, 0, namelen + 1);
+    struct FAT32_sb_info *fsbi = inode->sb->private_sb_info;
+    int i = 0, j = 0, LDir_count = 0, k = 0;
+    long ExpandNameIndex = -1, namelen = dentry->name_length; // 扩展名索引，字符串长度
+
+    char tmpName[namelen + 1];
+    memset(tmpName, 0, namelen + 1);
     if (dentry->name_length > 64)
     {
         color_printk(WHITE, BLACK, "FAT32(Create_FAT32DEntry) ERROR:: Name Length Too Long!");
         return NULL;
     }
+    strncpy(tmpName, dentry->name, namelen);
 
-    strncpy(Dname, dentry->name, namelen);
-
-    LDir_count = namelen / LDir_NameCount + 1;
+    LDir_count = namelen / LDir_NameCount + 1; // 计算需要创建的长目录项个数
     fld = kmalloc(FAT_DENRY_SIZE * (LDir_count + 1), 0);
-    *size = FAT_DENRY_SIZE * (LDir_count + 1);
-
-    fd = (struct FAT32_Directory *)(fld + LDir_count);
-    fld0 = (struct FAT32_LongDirectory *)fd - 1;
-    // ------------------------- 初始化长目录项------------------
     memset(fld, 0xff, FAT_DENRY_SIZE * (LDir_count + 1));
-    fld->LDIR_Attr = ATTR_LONG_NAME;
-    fld->LDIR_Ord = 0x40 | 1; // 目前我只支持多创建一个长目录项, 如果这里要修改 ，记得改path_walk中匹配长目录项的方法
-    fld->LDIR_Chksum = ChkSum(dentry->name);
-    fld->LDIR_FstClusLO = fld->LDIR_Type = 0;
 
-    for (i = 0, j = 0; i < 5 && j < dentry->name_length;)
-        fld->LDIR_Name1[i++] = dentry->name[j++];
-    for (i = 0; i < 6 && j < dentry->name_length;)
-        fld->LDIR_Name2[i++] = dentry->name[j++];
-    for (i = 0; i < 2 && j < dentry->name_length;)
-        fld->LDIR_Name3[i++] = dentry->name[j++];
+    *size = FAT_DENRY_SIZE * (LDir_count + 1); // 为传出参数赋值
+
+    fd = (struct FAT32_Directory *)(fld + LDir_count); // 定位短目录项的长度
+    // ------------------------- 初始化长目录项------------------
+    fld0 = (struct FAT32_LongDirectory *)fd - 1;
+    unsigned char ChkSum_ = ChkSum(tmpName);
+    j = 0;
+    for (; k < LDir_count; k++, fld0--)
+    {
+        fld0->LDIR_Attr = ATTR_LONG_NAME;
+
+        if (k == LDir_count - 1)
+            fld0->LDIR_Ord = (0x40 | (k + 1)); // 长目录项结束标志
+        else
+            fld0->LDIR_Ord = (k + 1);
+
+        fld0->LDIR_Chksum = ChkSum_;
+        fld0->LDIR_FstClusLO = fld0->LDIR_Type = 0;
+
+        for (i = 0; i < 5 && j < namelen;)
+            fld0->LDIR_Name1[i++] = tmpName[j++];
+        for (i = 0; i < 6 && j < namelen;)
+            fld0->LDIR_Name2[i++] = tmpName[j++];
+        for (i = 0; i < 2 && j < namelen;)
+            fld0->LDIR_Name3[i++] = tmpName[j++];
+    }
+
     // 添加LDIR_NAME的文件名结束标志
-    int last_index = dentry->name_length;
+    int last_index = namelen % LDir_NameCount;
     if (last_index >= 11)
     {
         last_index -= 11;
-        fld->LDIR_Name3[last_index] = 0;
+        fld0->LDIR_Name3[last_index] = 0;
     }
     else if (last_index >= 5)
     {
         last_index -= 5;
-        fld->LDIR_Name2[last_index] = 0;
+        fld0->LDIR_Name2[last_index] = 0;
     }
     else
-        fld->LDIR_Name1[last_index] = 0;
+        fld0->LDIR_Name1[last_index] = 0;
 
     // ------------------- 初始化短目录项 -------------------------------
-    // 关于时间的属性，目前忽略为0
-    fd->DIR_NTRes = fd->DIR_LastAccDate = 0;
+    fd->DIR_NTRes = fd->DIR_LastAccDate = 0; // 关于时间的属性，目前忽略为0
     fd->DIR_CrtTimeTenth = fd->DIR_CrtDate = fd->DIR_CrtTime = 0;
     fd->DIR_WrtTime = fd->DIR_WrtDate = 0;
     // 此处没有给性文件分配簇号
@@ -433,26 +455,26 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct dir_entry *dentry, 
         color_printk(WHITE, BLACK, "The name \".\" not vaild as a file or a floder name");
         return 0;
     }
-    // 把文件名词都转换成大写
-    upper(Dname);
+    // 把文件名词都转换成大写, 短文件的目录项都强制是大写的
+    upper(tmpName);
     // 拷贝基础名
     i = j = 0;
     while (j < 8 && i < ExpandNameIndex)
-        fd->DIR_Name[j++] = Dname[i++];
+        fd->DIR_Name[j++] = tmpName[i++];
     // 拷贝扩展名
     j = 8, i = ExpandNameIndex + 1;
     while (j < 11 && i < namelen && ExpandNameIndex != -1)
-        fd->DIR_Name[j++] = Dname[i++];
+        fd->DIR_Name[j++] = tmpName[i++];
     // ------------------------------------------------------------------
-    /*寻找成功后，创建本文件的index_node，通过读取到的物理目录项，获得该文件的全部信息*/
+    /*寻找成功后，创建本文件的index_node，通过物理目录项，获得该文件的全部信息*/
     struct index_node *p;
     p = (struct index_node *)kmalloc(sizeof(struct index_node), 0);
     memset(p, 0, sizeof(struct index_node));
     // 文件普遍都有的信息
     p->file_size = fd->DIR_FileSize;
-
+    p->blocks = (p->file_size + fsbi->bytes_per_cluster - 1) / fsbi->bytes_per_cluster;
     p->attribute = (fd->DIR_Attr & ATTR_DIRECTORY) ? FS_ATTR_DIR : FS_ATTR_FILE;
-    p->sb = NULL;
+    p->sb = inode->sb;
     p->f_ops = &FAT32_file_ops;
     p->inode_ops = &FAT32_inode_ops;
     struct FAT32_inode_info *finode;
@@ -477,6 +499,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct dir_entry *dentry, 
     finode->create_time = fd->DIR_CrtTime;
     finode->write_date = fd->DIR_WrtDate;
     finode->write_time = fd->DIR_WrtTime;
+
     dentry->dir_inode = p;
     return fld;
 }
@@ -499,13 +522,12 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
     long retval = 0, i = 0;
     unsigned long dir_entry_size_total = 0;
     char *buffer = (char *)kmalloc(fsbi->bytes_per_cluster, 0);
+
     struct FAT32_LongDirectory *fld;
     struct FAT32_Directory *entry;
 
-    fld = Create_FAT32DEntry(dentry, mode, &dir_entry_size_total);
-    dentry->dir_inode->sb = inode->sb;
+    fld = Create_FAT32DEntry(inode, dentry, mode, &dir_entry_size_total);
     finode = dentry->dir_inode->private_index_info;
-    dentry->dir_inode->blocks = (dentry->dir_inode->file_size + fsbi->bytes_per_cluster - 1) / fsbi->bytes_per_sector;
     struct index_node *p = NULL;
     int flag_finish = 1;
     do
@@ -518,6 +540,7 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
         {
             kfree(buffer);
             kfree(fld);
+            // 注意此处失败 还应该 回收inode, dentry, 占用的动态内存
             color_printk(RED, BLACK, "FAT32 inode(Create) write disk ERROR!!!!\n");
             retval = -EIO;
             break;
@@ -605,6 +628,7 @@ next_cluster:
         j = 0;
 
         //  long file/dir name compare, 若长目录下匹配成功 则不会进行短目录项的匹配
+        //  逐次匹配多个长目录项
         while (((struct FAT32_Directory *)tmpldentry)->DIR_Attr == ATTR_LONG_NAME && tmpldentry->LDIR_Ord != 0xe5)
         {
             // 依次匹配长目录项名字成员的三部分
@@ -636,7 +660,7 @@ next_cluster:
             if (j >= dest_dentry->name_length)
                 goto find_lookup_success;
 
-            // 什么时候运行到此处
+            // 匹配多个目录项
             tmpldentry--;
         }
 
@@ -695,6 +719,7 @@ next_cluster:
                         goto continue_cmp_fail;
                 }
             case '0' ... '9':
+            default:
                 if (j < dest_dentry->name_length && tmpdentry->DIR_Name[x] == dest_dentry->name[j])
                 {
                     j++;
@@ -702,8 +727,6 @@ next_cluster:
                 }
                 else
                     goto continue_cmp_fail;
-            default:
-                j++;
                 break;
             }
         }
@@ -831,8 +854,8 @@ struct index_node_operations FAT32_inode_ops =
 //// these operation need cache and list - 为缓存目录项提供操作方法
 long FAT32_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) {}
 long FAT32_hash(struct dir_entry *dentry, char *filename) {}
-long FAT32_release(struct dir_entry *dentry) {}
-long FAT32_iput(struct dir_entry *dentry, struct index_node *inode) {}
+long FAT32_release(struct dir_entry *dentry) {}                        // 释放目录项
+long FAT32_iput(struct dir_entry *dentry, struct index_node *inode) {} // 释放inode索引
 struct dir_entry_operations FAT32_dentry_ops =
     {
         .compare = FAT32_compare,

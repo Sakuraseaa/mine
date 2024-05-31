@@ -40,10 +40,11 @@ void do_timer(void *data)
 
     color_printk(RED, WHITE, "(HPET:%ld)", jiffies);
 }
-
+int shell_up = 0;
 void test_timer(void *data)
 {
-    color_printk(BLUE, WHITE, "test_timer");
+    color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?");
+    shell_up = 1;
 }
 
 void timer_init()
@@ -57,6 +58,6 @@ void timer_init()
 
     // 给定时队列加入第一个任务
     tmp = (struct timer_list *)kmalloc(sizeof(struct timer_list), 0);
-    init_timer(tmp, &test_timer, NULL, 500);
+    init_timer(tmp, &test_timer, NULL, 50);
     add_timer(tmp);
 }
