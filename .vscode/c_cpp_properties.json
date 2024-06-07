@@ -10,7 +10,8 @@
                 "${workspaceFolder}/src/fs/FAT32/**",
                 "${workspaceFolder}/src/include/drivers/*",
                 "${workspaceFolder}/src/include/base/*",
-                "${workspaceFolder}/src/include/lib/*"
+                "${workspaceFolder}/src/include/lib/*",
+                "${workspaceFolder}/src/include/usr/*"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

@@ -10,3 +10,7 @@ SYSCALL_COMMON(__NR_fork, sys_fork)
 SYSCALL_COMMON(__NR_vfork, sys_vfork)
 
 SYSCALL_COMMON(__NR_brk, sys_brk)
+SYSCALL_COMMON(__NR_reboot, sys_reboot)
+SYSCALL_COMMON(__NR_chdir, sys_chdir)
+SYSCALL_COMMON(__NR_getdents, sys_getdents)
+

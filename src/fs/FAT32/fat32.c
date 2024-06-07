@@ -1,3 +1,4 @@
+#include "dirent.h"
 #include "disk.h"
 #include "fat32.h"
 #include "lib.h"
@@ -127,7 +128,7 @@ long FAT32_read(struct file *filp, char *buf, unsigned long count, long *positio
         index = count;
 
     // preempt:先占，先取，current->preempt_count是当前进程持有自旋锁数量
-    color_printk(GREEN, BLACK, "FAT32_read- first_cluster:%d, size:%d, preempt_count:%d\n", finode->first_cluster, filp->dentry->dir_inode->file_size, current->preempt_count);
+    // color_printk(GREEN, BLACK, "FAT32_read- first_cluster:%d, size:%d, preempt_count:%d\n", finode->first_cluster, filp->dentry->dir_inode->file_size, current->preempt_count);
 
     // C. 循环体实现数据读取过程
     do
@@ -326,10 +327,150 @@ long FAT32_lseek(struct file *filp, long offset, long origin)
         return -EOVERFLOW; // 访问位置不正确
 
     filp->position = pos;
-    color_printk(GREEN, BLACK, "FAT32 FS(lseek) alert position:%d\n", filp->position);
+    // color_printk(GREEN, BLACK, "FAT32 FS(lseek) alert position:%d\n", filp->position);
     return pos;
 }
 long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) {}
+
+int fill_dentry(void* buf, char*name, long namelen, long type, long offset)
+{
+    long t = 0;
+    struct dirent* dent = (struct dirent*)buf;
+    if((unsigned long) buf < TASK_SIZE && !verify_area(buf, sizeof(struct dirent) + namelen))
+        return -EFAULT;
+    memcpy(name, dent->d_name, namelen);
+    dent->d_namelen = namelen;
+
+    if(type & ATTR_DIRECTORY)
+        t = 2;
+    else if(type & ATTR_SYSTEM)
+        t = 1;
+    else
+        t = 0;
+    
+    dent->d_type = t;
+    dent->d_offset = offset;
+    return sizeof(struct dirent) + namelen;
+
+}
+
+long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
+{
+    struct FAT32_inode_info* finode = filp->dentry->dir_inode->private_index_info;
+    struct FAT32_sb_info* fsbi = filp->dentry->dir_inode->sb->private_sb_info;
+
+    unsigned int cluster = 0;
+    unsigned long sector = 0;
+    unsigned char * buf = NULL;
+    char* name = NULL;
+    int namelen = 0;
+    int i = 0, j = 0, x = 0,y = 0;
+    struct FAT32_Directory* tmpdentry = NULL;
+    struct FAT32_LongDirectory* tmpldentry = NULL;
+
+    buf = kmalloc(fsbi->bytes_per_cluster, 0);
+    
+    //定位本次操作的簇号。
+    cluster = finode->first_cluster;
+    j = filp->position / fsbi->bytes_per_cluster;
+    for(i = 0; i < j; i++)
+    {
+        cluster = DISK1_FAT32_read_FAT_Entry(fsbi,cluster);
+        if(cluster > 0x0ffffff7)
+        {
+            color_printk(RED, BLACK, "FAT32 FS(readdir) cluster didn't exist\n");
+            return NULL;
+        }
+    }
+
+next_cluster:
+    sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->bytes_per_sector;
+    if(!(IDE_device_operation.transfer(ATA_READ_CMD,sector, fsbi->bytes_per_cluster, buf)))
+    {
+        color_printk(RED, BLACK, "FS::FAT32_readdir read disk ERROR!!!\n");
+        kfree(buf);
+        return NULL;
+    }
+
+    tmpdentry = (struct FAT32_Directory*)(buf + (filp->position % fsbi->bytes_per_cluster));
+    for(i = filp->position % fsbi->bytes_per_cluster; i < fsbi->bytes_per_cluster; i += 32, tmpdentry++,filp->position+=32)
+    {
+        if(tmpdentry->DIR_Attr == ATTR_LONG_NAME) continue;
+        if(tmpdentry->DIR_Name[0] == 0xe5 || tmpdentry->DIR_Name[0] == 0x00 ||
+            tmpdentry->DIR_Name[0] == 0x05)
+            continue;
+        
+        namelen = 0;
+        tmpldentry = (struct FAT32_LongDirectory*)tmpdentry - 1;
+
+        if(tmpldentry->LDIR_Attr == ATTR_LONG_NAME && tmpldentry->LDIR_Ord != 0xe5 &&
+        tmpldentry->LDIR_Ord != 0x00 && tmpldentry->LDIR_Ord != 0x05)
+        {
+            j = 0;
+            // long file / dir name read
+            while(tmpldentry->LDIR_Attr == ATTR_LONG_NAME && tmpldentry->LDIR_Ord != 0xe5 && 
+            tmpldentry->LDIR_Ord != 0x00 && tmpldentry->LDIR_Ord != 0x05)
+            {
+                j++;
+                if(tmpldentry->LDIR_Ord & 0x40)
+                    break;
+                tmpldentry--;
+            }
+            name = kmalloc(j * 13+ 1, 0);
+            memset(name, 0 , j * 13 + 1);
+            tmpldentry = (struct FAT32_LongDirectory*)tmpdentry - 1;
+
+            for(x = 0; x < j; x++, tmpldentry--)
+            {
+                for(y = 0; y < 5; y++)
+                    if(tmpldentry->LDIR_Name1[y] != 0xffff && tmpldentry->LDIR_Name1 != 0x0000)
+                        name[namelen++] = (char)tmpldentry->LDIR_Name1[y];
+                for(y = 0; y < 6; y++)
+                    if(tmpldentry->LDIR_Name2[y] != 0xffff && tmpldentry->LDIR_Name2 != 0x0000)
+                        name[namelen++] = (char)tmpldentry->LDIR_Name2[y];
+                for(y = 0; y < 2; y++)
+                    if(tmpldentry->LDIR_Name3[y] != 0xffff && tmpldentry->LDIR_Name3 != 0x0000)
+                        name[namelen++] = (char)tmpldentry->LDIR_Name3[y];
+            }
+            goto find_lookup_success;
+        }
+
+        name = kmalloc(15, 0);
+        memset(name, 0 , 15);
+        // short file/dir beae name compare
+        for(x = 0; x < 8; x ++)
+        {
+            if(tmpdentry->DIR_Name[x] == ' ') break;
+            if(tmpdentry->DIR_NTRes & LOWERCASE_BASE)
+                name[namelen++] = tmpdentry->DIR_Name[x] + 32;
+            else
+                name[namelen++] = tmpdentry->DIR_Name[x];
+        }
+        if(tmpdentry->DIR_Attr & ATTR_DIRECTORY)
+            goto find_lookup_success;
+        name[namelen++] = '.';
+        //short file ext name compare
+        for(x = 8; x < 11; x++)
+        {
+            if(tmpdentry->DIR_Name[x] == ' ') break;
+            if(tmpdentry->DIR_NTRes&LOWERCASE_EXT)
+                name[namelen++] = tmpdentry->DIR_Name[x] + 32;
+            else
+                name[namelen++] = tmpdentry->DIR_Name[x]; 
+        }
+        if(x == 8)
+            name[--namelen] = 0;
+        goto find_lookup_success;
+    }
+    cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster);
+    if(cluster < 0x0ffffff7)
+        goto next_cluster;
+    kfree(buf);
+    return NULL;
+find_lookup_success:
+    filp->position += 32;
+    return filler(dirent,name,namelen, tmpdentry->DIR_Attr, 0);
+}
 struct file_operations FAT32_file_ops =
     {
         .open = FAT32_open,
@@ -338,6 +479,7 @@ struct file_operations FAT32_file_ops =
         .write = FAT32_write,
         .lseek = FAT32_lseek,
         .ioctl = FAT32_ioctl,
+        .readdir = FAT32_readdir,
 };
 
 /**
@@ -605,7 +747,7 @@ struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry
     cluster = finode->first_cluster;           // 根目录的簇号
 next_cluster:
     sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster; // 计算要读取的扇区号
-    color_printk(BLUE, BLACK, "lookup cluster:%#010x, sector: %#018lx\n", cluster, sector);
+    // color_printk(BLUE, BLACK, "lookup cluster:%#010x, sector: %#018lx\n", cluster, sector);
     if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf))
     { // 读目录的数据块
         color_printk(RED, BLACK, "FAT32 FS(lookup) read disk ERROR!!!!!!!\n");

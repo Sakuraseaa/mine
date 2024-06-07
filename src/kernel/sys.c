@@ -106,8 +106,11 @@ unsigned long sys_open(char *filename, int flags)
 
     if (dentry == NULL)
         return -ENOENT;
-    if (!Child_dentry && dentry->dir_inode->attribute == FS_ATTR_DIR)
+    if (!(flags & O_DIRECTORY) && dentry->dir_inode->attribute == FS_ATTR_DIR)
         return -EISDIR;
+    if((flags & O_DIRECTORY) && (dentry->dir_inode->attribute != FS_ATTR_DIR))
+        return -ENOTDIR;
+
 
     if (flags & O_CREAT)
     {
@@ -177,7 +180,7 @@ unsigned long sys_open(char *filename, int flags)
 unsigned long sys_close(int fd)
 {
     struct file *filp = NULL;
-    color_printk(GREEN, BLACK, "sys_close:%d\n", fd);
+  //  color_printk(GREEN, BLACK, "sys_close:%d\n", fd);
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
 
@@ -247,7 +250,7 @@ unsigned long sys_lseek(int filds, long offset, int whence)
 {
     struct file *filp = NULL;
     unsigned long ret = 0;
-    color_printk(GREEN, BLACK, "sys_lseek:%d\n", filds);
+    // color_printk(GREEN, BLACK, "sys_lseek:%d\n", filds);
     if (filds < 0 || filds >= TASK_FILE_MAX)
         return -EBADF;
     if (whence < 0 || whence >= SEEK_MAX)
@@ -308,4 +311,74 @@ unsigned long sys_brk(unsigned long brk)
     current->mm->end_brk = new_brk;
     // color_printk(RED, BLACK, "brk:%#0x18lx, new_brk:%#018lx,current->mm->end_brk:%#018lx", brk, new_brk, current->mm->end_brk);
     return new_brk;
+}
+
+unsigned long sys_reboot(unsigned long cmd, void *arg)
+{
+    color_printk(GREEN, BLACK, "sys_reboot\n");
+    switch (cmd)
+    {
+    case SYSTEM_REBOOT:
+        io_out8(0x64, 0xFE);
+        break;
+
+    case SYSTEM_POWEROFF:
+        color_printk(RED, BLACK, "sys_reboot cmd SYSTEM_POWEROFF\n");
+        break;
+
+    default:
+        color_printk(RED, BLACK, "sys_reboot cmd ERROR!\n");
+        break;
+    }
+}
+
+extern int fill_dentry(void* buf, char*name, long namelen, long type, long offset);
+unsigned long sys_getdents(int fd, void* dirent, long count)
+{
+    struct file* filp = NULL;
+    unsigned long ret = 0;
+    // color_printk(GREEN, BLACK, "sys_getdents:%d\n",fd);
+    if(fd < 0 || fd > TASK_FILE_MAX)
+        return -EBADF;
+    if(count < 0)
+        return -EINVAL;
+    filp = current->file_struct[fd];
+
+    if(filp->f_ops && filp->f_ops->readdir)
+        ret = filp->f_ops->readdir(filp, dirent, &fill_dentry);
+    return ret;
+}
+
+unsigned long sys_chdir(char* filename)
+{
+    char* path = NULL;
+    long pathlen = 0;
+    struct dir_entry* dentry = NULL;
+
+    color_printk(GREEN, BLACK, "sys_chdir\n");
+    path = (char*) kmalloc(PAGE_4K_SIZE, 0);
+    if(path == NULL)
+        return -ENOMEM;
+    memset(path, 0, PAGE_4K_SIZE);
+
+    pathlen = strnlen_user(filename, PAGE_4K_SIZE);
+    if(pathlen <= 0)
+    {
+        kfree(path);
+        return -EFAULT;
+    } else if(pathlen >= PAGE_4K_SIZE)
+    {
+        kfree(path);
+        return -ENAMETOOLONG;
+    }
+    strncpy_from_user(filename, path, pathlen);
+    dentry = path_walk(path, 0, NULL);
+    kfree(path);
+
+    if(dentry == NULL)
+        return -ENOENT;
+    if(dentry->dir_inode->attribute != FS_ATTR_DIR)
+        return -ENOTDIR;
+
+    return 0;
 }

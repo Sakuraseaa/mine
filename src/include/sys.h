@@ -11,4 +11,9 @@ unsigned long sys_lseek(int filds, long offset, int whence);
 unsigned long sys_fork();
 unsigned long sys_vfork();
 unsigned long sys_brk(unsigned long brk);
+unsigned long sys_reboot(unsigned long cmd, void *arg);
+
+#define SYSTEM_REBOOT (1UL << 0)
+#define SYSTEM_POWEROFF (1UL << 1)
+
 #endif

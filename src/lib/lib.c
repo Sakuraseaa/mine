@@ -210,7 +210,7 @@ void *memset(void *Address, unsigned char C, long Count)
         string copy
 */
 
-char *strcpy(char *Dest, char *Src)
+char *strcpy(char *Dest,const char *Src)
 {
     __asm__ __volatile__("cld	\n\t"
                          "1:	\n\t"
@@ -277,7 +277,7 @@ char *strcat(char *Dest, char *Src)
         FirstPart < SecondPart => -1
 */
 
-int strcmp(char *FirstPart, char *SecondPart)
+int strcmp(char *FirstPart, const char *SecondPart)
 {
     register int __res;
     __asm__ __volatile__("cld	\n\t"
@@ -333,7 +333,7 @@ int strncmp(char *FirstPart, char *SecondPart, long Count)
     return __res;
 }
 
-int strlen(char *String)
+int strlen(const char *String)
 {
     register int __res;
     __asm__ __volatile__("cld	\n\t"

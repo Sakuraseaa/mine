@@ -26,6 +26,10 @@ SYSFUNC_DEF(fork)
 SYSFUNC_DEF(vfork)
 
 SYSFUNC_DEF(brk)
+SYSFUNC_DEF(reboot)
+SYSFUNC_DEF(chdir)
+SYSFUNC_DEF(getdents)
+
 
 __asm__(
     "LABEL_SYSCALL:	\n\t"

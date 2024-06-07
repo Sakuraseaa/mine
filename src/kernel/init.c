@@ -6,18 +6,21 @@
 #include "keyboard.h"
 #include "memory.h"
 #include "init.h"
+#include "dirent.h"
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
 void run_command(int index, int argc, char **argv);
 int parse_command(char *buf, int *argc, char ***argv);
 
+extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
+
 struct buildincmd
 {
 	char *cmd_name;
 	int (*cmd_funcPtr)(int, char **);
 };
-const char *current_dir = NULL;
+char *current_dir = NULL;
 int sk = 0;
 int usr_init()
 {
@@ -198,20 +201,106 @@ int analysis_keycode(int fd)
 	return 0;
 }
 
-int cd_command(int argc, char **argv) {}
-int ls_command(int argc, char **argv) {}
+int cd_command(int argc, char **argv) 
+{
+	char* path = NULL;
+	int len = 0;
+	int i = 0;
+	len = strlen(current_dir);
+
+	if(!strcmp(".", argv[1])) return 1;
+
+	if(!strcmp("..", argv[1]))
+	{
+		if(!strcmp("/", current_dir))
+			return 1;
+		for(i = len - 1; i > 1; i--)
+			if(current_dir[i] == '/')
+				break;
+		current_dir[i] = '\0';
+		printf("pwd switch to %s\n", current_dir);
+		return 1;
+	}
+
+	i = len + strlen(argv[1]);
+	path = kmalloc(i + 2, 0);
+	memset(path, 0, i + 2);
+	strcpy(path, current_dir);
+	if(len > 1)
+		path[len] = '/';
+	strcat(path, argv[1]);
+	printf("cd_command:%s\n", path);
+
+	i = chdir(path);
+	if(!i)
+		current_dir = path;
+	else
+		printf("Can't Goto Dir %s\n", argv[1]);
+	printf("pwd switch to %s\n", current_dir);
+}
+
+const char file_type[] = {'-', 's', 'd'};
+int ls_command(int argc, char **argv) 
+{
+	struct DIR* dir = NULL;
+	struct dirent* buf = NULL;
+
+	dir=opendir(current_dir);
+	// printf("ls_command opendir:%d\n", dir->fd);
+
+	buf = (struct dirent*)kmalloc(256, 0);
+	// 直到该目录为空
+	while(1)
+	{
+		buf = readdir(dir);// 每次读一条目录项
+		if(buf == NULL)
+			break;
+		
+		// 打印信息
+		printf("%c %d %s\t \n", file_type[buf->d_type], buf->d_namelen, buf->d_name);
+	}
+	closedir(dir);
+}
+
 int pwd_command(int argc, char **argv)
 {
 	printf(current_dir);
 	printf("\n");
 }
-int cat_command(int argc, char **argv) {}
+int cat_command(int argc, char **argv) 
+{
+	int len = 0;
+	char* filename = NULL;
+	int fd = 0;
+	char* buf = NULL;
+	int i = 0;
+
+	len = strlen(current_dir);
+	i = len + strlen(argv[1]);
+	filename = kmalloc(i + 2, 0);
+	memset(filename, 0, i + 2);
+	strcpy(filename, current_dir);
+	if(len > 1)
+		filename[len] = '/';
+	strcat(filename, argv[1]);
+	// printf("cat_command filename:%s\n", filename);
+
+	fd = open(filename, 0);
+	i = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0 , SEEK_SET);
+	buf = kmalloc(i + 1, 0);
+	memset(buf, 0 , i + 1);
+	len = read(fd, buf, i);
+	// printf("length:%d\t%s\n",len,buf);
+
+	close(fd);
+}
 int touch_command(int argc, char **argv) {}
 int rm_command(int argc, char **argv) {}
 int mkdir_command(int argc, char **argv) {}
 int rmdir_command(int argc, char **argv) {}
 int exec_command(int argc, char **argv) {}
-int reboot_command(int argc, char **argv) {}
+int reboot_command(int argc, char **argv) { reboot(SYSTEM_REBOOT, NULL); }
 
 struct buildincmd shell_internal_cmd[] =
 	{

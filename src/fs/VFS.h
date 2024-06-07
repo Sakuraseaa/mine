@@ -70,6 +70,8 @@ struct dir_entry
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：
 };
+typedef int (*filldir_t)(void *buf,char *name, long namelen,long type,long offset);
+
 
 // 是进程和VFS的纽带，它是抽象出来的，不存在于物质介质中
 // 文件的读写访问(同步/异步)，IO控制以及其他操作方法
@@ -123,6 +125,7 @@ struct file_operations
     long (*write)(struct file *filp, char *buf, unsigned long count, long *position);
     long (*lseek)(struct file *filp, long offset, long origin);
     long (*ioctl)(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg);
+    long (*readdir)(struct file* filp, void* dirent, filldir_t filler);
 };
 
 struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf);

@@ -64,7 +64,7 @@ void *memset(void *Address, unsigned char C, long Count);
 		string copy
 */
 
-char *strcpy(char *Dest, char *Src);
+char *strcpy(char *Dest,const char *Src);
 
 /*
 		string copy number bytes
@@ -85,7 +85,7 @@ char *strcat(char *Dest, char *Src);
 		FirstPart < SecondPart => -1
 */
 
-int strcmp(char *FirstPart, char *SecondPart);
+int strcmp(char *FirstPart,const char *SecondPart);
 
 /*
 		string compare FirstPart and SecondPart with Count Bytes
@@ -96,7 +96,7 @@ int strcmp(char *FirstPart, char *SecondPart);
 
 int strncmp(char *FirstPart, char *SecondPart, long Count);
 
-int strlen(char *String);
+int strlen(const char *String);
 
 unsigned long bit_set(unsigned long *addr, unsigned long nr);
 

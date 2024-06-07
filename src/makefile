@@ -15,7 +15,7 @@ CC	  = gcc
 CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -fno-common -std=gnu89 -nostartfiles \
 		-fno-builtin -fno-pie -fno-pic  -Wno-address-of-packed-memeber \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
-		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ 
+		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ 
 #被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
 		$(BUI_DIR)/trap.o $(BUI_DIR)/memory.o $(BUI_DIR)/interrupt.o $(BUI_DIR)/PIC.o \
@@ -24,7 +24,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o  $(BUI_DIR)/usr_lib.o \
-		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o
+		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o $(BUI_DIR)/usr_dirent.o
 
 		
 ALL:$(BUI_DIR)/kernel.bin
@@ -112,6 +112,8 @@ $(BUI_DIR)/init.o: $(SRC_DIR)/kernel/init.c
 $(BUI_DIR)/usr_lib.o: $(SRC_DIR)/kernel/usr_lib.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/usr_printf.o: $(SRC_DIR)/kernel/usr_printf.c
+	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/usr_dirent.o: $(SRC_DIR)/kernel/usr_dirent.c
 	$(CC) $(CFLAGS) $< -o $@
 # ============= DEBUGE ============
 .PHONY: clean
