@@ -14,23 +14,24 @@ error_code = 0x38
 switch_to: 
     pushq   %rbp
     pushq   %rax
-    pushq   %rbx
+    pushq   %rcx
     pushq   %rdx
 
-    movq    thread(%rdi), %rbx // 0x28 = thread在PCB中的偏移
-    movq    thread(%rsi), %rdx
+    movq    thread(%rdi), %rcx // prev
+    movq    thread(%rsi), %rdx // next
 
-    movq %rsp, RSP(%rbx)
+    movq %rsp, RSP(%rcx)
     movq RSP(%rdx), %rsp
     
-    leaq 1f(%rip), %rax
-    movq %rax, RIP(%rbx)
+    leaq back(%rip), %rax
+    movq %rax, RIP(%rcx)
 
     pushq  RIP(%rdx)
     jmp __switch_to
     
-    1:
+back:
     popq %rdx
-    popq %rbx
+    popq %rcx
     popq %rax
     popq %rbp
+    ret
