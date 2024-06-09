@@ -10,7 +10,7 @@
 #include "printk.h"
 #include "VFS.h"
 #include "sched.h"
-
+#include "waitqueue.h"
 // 每个任务的文件描述符最大数
 #define TASK_FILE_MAX 10
 
@@ -98,8 +98,11 @@ struct task_struct
 	long pid;
 	long priority;	// 进程可用时间片
 	long vrun_time; // 记录进程虚拟运行时间的成员变量 vrun_time
+	long exit_code;
 	struct file *file_struct[TASK_FILE_MAX];
 
+
+	wait_queue_T wait_childexit;
 	struct task_struct *next;	// next 用于连接所有进程
 	struct task_struct *parent; // parent 用于记录当前进程的父进程
 };
@@ -216,10 +219,12 @@ static inline struct task_struct *get_current()
 	} while (0)
 
 unsigned long system_call_function(struct pt_regs *regs);
-unsigned long do_exit(unsigned long code);
+unsigned long do_exit(unsigned long exit_code);
 unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
 void task_init();
 void switch_mm(struct task_struct *prev, struct task_struct *next);
 void wakeup_process(struct task_struct *tsk);
+void exit_mm(struct task_struct *tsk);
+void exit_files(struct task_struct *tsk);
 
 #endif

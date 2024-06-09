@@ -37,7 +37,7 @@ extern void kernel_thread_func(void); // 进入用户进程，在执行完用户
 extern void system_call(void);
 
 unsigned long shell_boot(unsigned long arg);
-unsigned long do_execve(struct pt_regs *regs, char *name);
+unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char* envp[]);
 long global_pid;
 
 struct task_struct *get_task(long pid)
@@ -204,7 +204,8 @@ unsigned long init(unsigned long arg)
 	__asm__ __volatile("movq %1, %%rsp \n\t"
 					   "pushq %2  \n\t"
 					   "jmp do_execve \n\t" ::"D"(current->thread->rsp),
-					   "m"(current->thread->rsp), "m"(current->thread->rip), "S"("/init.bin")
+					   "m"(current->thread->rsp), "m"(current->thread->rip), 
+					   "S"("/init.bin"),"d"(NULL),"c"(NULL)
 					   : "memory");
 	return 1;
 }
@@ -538,6 +539,9 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	memset(tsk, 0, sizeof(*tsk));
 	memcpy(current, tsk, sizeof(struct task_struct));
 	list_init(&tsk->list);
+	wait_queue_init(&tsk->wait_childexit, current);
+	
+	tsk->exit_code = 0;
 	tsk->priority = 2;
 	tsk->pid = global_pid++;
 	tsk->preempt_count = 0; // 进程抢占计数值初始化
@@ -579,11 +583,29 @@ alloc_copy_task_fail:
 	return retval;
 }
 
-unsigned long do_exit(unsigned long code)
+void exit_notify(void)
 {
-	color_printk(RED, BLACK, "exit task is running,arg:%#018lx\n", code);
-	while (1)
-		;
+	wakeup(&current->parent->wait_childexit, TASK_INTERRUPTIBLE);
+}
+
+unsigned long do_exit(unsigned long exit_code)
+{
+	struct task_struct *tsk = current;
+	color_printk(RED, BLACK, "exit task is running,arg:%#018lx\n", exit_code);
+	
+do_exit_again:
+	cli();
+	tsk->state = TASK_ZOMBIE;
+	tsk->exit_code = exit_code;
+	exit_thread(tsk);
+	exit_files(tsk);
+	sti();
+	
+	exit_notify();
+	schedule();
+	goto do_exit_again;
+
+	return 0;
 }
 
 // 线程承载的函数，参数，标志
@@ -609,7 +631,7 @@ int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigne
 }
 
 // 被init调用,加载用户进程体，到用户空间800000
-unsigned long do_execve(struct pt_regs *regs, char *name)
+unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *envp[])
 {
 	unsigned long code_start_addr = 0x800000;
 	unsigned long stack_start_addr = 0xa00000;
@@ -621,19 +643,7 @@ unsigned long do_execve(struct pt_regs *regs, char *name)
 	unsigned long retval = 0;
 	long pos = 0;
 
-	// 这里没有初始化gs,fs段选择子
-	regs->ds = USER_DS;
-	regs->es = USER_DS;
-	regs->ss = USER_DS;
-	regs->cs = USER_CS;
-	// regs->rip = new_rip;
-	// regs->rsp = new_rsp;
-	//  在中断栈中填入地址
-	regs->r10 = 0x800000; // RIP
-	regs->r11 = 0xa00000; // RSP
-	regs->rax = 0;
-
-	color_printk(RED, BLACK, "do_execve task is running\n");
+	// color_printk(RED, BLACK, "do_execve task is running\n");
 	if (current->flags & PF_VFORK)
 	{
 		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
@@ -674,6 +684,11 @@ unsigned long do_execve(struct pt_regs *regs, char *name)
 	}
 	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd)
 						 : "memory");
+    
+	filp = open_exec_file(name);
+    if((unsigned long)filp > -0x1000UL) // 这是什么意思？
+		return (unsigned long)filp;
+
 
 	if (!(current->flags & PF_KTHREAD))
 		current->addr_limit = TASK_SIZE;
@@ -684,8 +699,8 @@ unsigned long do_execve(struct pt_regs *regs, char *name)
 	current->mm->end_data = 0;
 	current->mm->start_rodata = 0;
 	current->mm->end_rodata = 0;
-	current->mm->start_bss = 0;
-	current->mm->end_bss = 0;
+	current->mm->start_bss = code_start_addr + filp->dentry->dir_inode->file_size;
+	current->mm->end_bss = stack_start_addr;
 	current->mm->start_brk = brk_start_addr;
 	current->mm->end_brk = brk_start_addr;
 	current->mm->start_stack = stack_start_addr;
@@ -693,14 +708,44 @@ unsigned long do_execve(struct pt_regs *regs, char *name)
 	exit_files(current);
 	current->flags &= ~PF_VFORK;
 
-	filp = open_exec_file(name);
-	if ((unsigned long)filp > -0x1000UL)
-		return (unsigned long)filp;
+	if( argv != NULL ) {
+		int argc = 0, len = 0, i = 0;
+		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
+		pos = (unsigned long)dargv;
+
+		for(i = 0; i < 10 && argv[i] != NULL; i++)
+		{
+			len = strnlen_user(argv[i], 1024) + 1;
+			strcpy((char*)(pos - len), argv[i]);
+			dargv[i] = (char*)(pos - len);
+			pos -= len;
+		}
+
+		stack_start_addr = pos - 10;
+		regs->rdi = i; // argc
+		regs->rsi = (unsigned long)dargv; // argv
+	}
+
 
 	// 清理地址空间脏数据
-	memset((void *)0x800000, 0, PAGE_2M_SIZE);
-	retval = filp->f_ops->read(filp, (void *)0x800000, filp->dentry->dir_inode->file_size, &pos);
+	memset((void *)code_start_addr, 0, stack_start_addr - code_start_addr);
+	pos = 0;
+	retval = filp->f_ops->read(filp, (void *)code_start_addr, filp->dentry->dir_inode->file_size, &pos);
+	
+    __asm__ __volatile__("movq %0,%%gs; movq %0, %%fs;"::"r"(0UL));
 
+
+	// 这里没有初始化gs,fs段选择子
+	regs->ds = USER_DS;
+	regs->es = USER_DS;
+	regs->ss = USER_DS;
+	regs->cs = USER_CS;
+	// regs->rip = new_rip;
+	// regs->rsp = new_rsp;
+	//  在中断栈中填入地址
+	regs->r10 = code_start_addr; // RIP
+	regs->r11 = stack_start_addr; // RSP
+	regs->rax = 1;
 	// go to ret_system_call
 	return retval;
 }
@@ -799,3 +844,5 @@ void task_init()
 
 	//	switch_to(current, p);
 }
+
+

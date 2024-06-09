@@ -24,7 +24,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o  $(BUI_DIR)/usr_lib.o \
-		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o $(BUI_DIR)/usr_dirent.o
+		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o $(BUI_DIR)/usr_dirent.o $(BUI_DIR)/usr_wait.o \
 
 		
 ALL:$(BUI_DIR)/kernel.bin
@@ -114,6 +114,8 @@ $(BUI_DIR)/usr_lib.o: $(SRC_DIR)/kernel/usr_lib.c
 $(BUI_DIR)/usr_printf.o: $(SRC_DIR)/kernel/usr_printf.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/usr_dirent.o: $(SRC_DIR)/kernel/usr_dirent.c
+	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/usr_wait.o: $(SRC_DIR)/kernel/usr_wait.c
 	$(CC) $(CFLAGS) $< -o $@
 # ============= DEBUGE ============
 .PHONY: clean

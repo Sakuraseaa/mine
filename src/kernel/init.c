@@ -299,7 +299,39 @@ int touch_command(int argc, char **argv) {}
 int rm_command(int argc, char **argv) {}
 int mkdir_command(int argc, char **argv) {}
 int rmdir_command(int argc, char **argv) {}
-int exec_command(int argc, char **argv) {}
+int exec_command(int argc, char **argv)
+{
+	int errno = 0;
+	long retval = 0;
+	int len = 0;
+	char* filename = 0;
+	int i = 0;
+
+	errno = fork();
+	if(errno ==  0 ) {
+		printf("child process\n");
+		len = strlen(current_dir);
+		i = len + strlen(argv[1]);
+		filename = kmalloc(i + 2, 0);
+		memset(filename, 0, i + 2);
+		strcpy(filename, current_dir);
+		if(len > 1)
+			filename[len] = '/';
+		strcat(filename, argv[1]);
+
+		printf("exec_command filename:%s\n", filename);
+		for(i = 0; i < argc; i++)
+			printf("argv[%d]:%s\n", i, argv[i]);
+		
+		execve(filename, argv, NULL);
+
+		exit(0);
+	} else {
+		printf("parent process childpid:%#d\n", errno);
+		waitpid(errno, &retval, 0);
+		printf("parent process waitpid:%#018lx\n", retval);
+	}
+}
 int reboot_command(int argc, char **argv) { reboot(SYSTEM_REBOOT, NULL); }
 
 struct buildincmd shell_internal_cmd[] =

@@ -382,3 +382,83 @@ unsigned long sys_chdir(char* filename)
 
     return 0;
 }
+
+
+unsigned long sys_execve()
+{
+    char* pathname = NULL;
+    long pathlen = 0;
+    long error = 0;
+    struct pt_regs* regs = (struct pt_regs*)current->thread->rsp0 - 1;
+    
+    color_printk(GREEN, BLACK, "sys_execve\n");
+
+    pathname = (char*)kmalloc(PAGE_4K_SIZE, 0);
+    if(pathname == NULL)
+        return -ENOMEM;
+    
+    memset(pathname, 0, PAGE_4K_SIZE);
+    pathlen = strnlen_user((char*)regs->rdi, PAGE_4K_SIZE);
+
+    if(pathlen <= 0)
+    {
+        kfree(pathname);
+        return -EFAULT;
+    }else if(pathlen >= PAGE_4K_SIZE)
+    {
+        kfree(pathname);
+        return -ENAMETOOLONG;
+    }
+
+
+    strncpy_from_user((char*)regs->rdi, pathname, pathlen);
+    error = do_execve(regs, pathname, (char**)regs->rsi, NULL);
+
+    kfree(pathname);
+    return error;
+}
+
+unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage)
+{
+    long retval = 0;
+    struct task_struct* child = NULL;
+    struct task_struct* tsk = NULL;
+
+    color_printk(GREEN, BLACK,"sys_wait4\n");
+    for(tsk =&init_task_union.task; tsk->next != &init_task_union.task; tsk = tsk->next)
+    {
+        if(tsk->next->pid == pid)
+        {
+            child = tsk->next;
+            break;
+        }
+    }
+
+    if( child == NULL )   return -ECHILD;
+    if( options != 0 )    return -EINVAL;
+    if( child->state == TASK_ZOMBIE )
+    {
+        copy_to_user(&child->exit_code, status, sizeof(int));
+        tsk->next = child->next;
+        exit_mm(child);
+        kfree(child);
+        return retval;
+    }
+
+    interruptible_sleep_on(&current->wait_childexit); // 阻塞
+
+    copy_to_user(&child->exit_code, status, sizeof(long));
+    tsk->next = child->next;
+    exit_mm(child);
+    kfree(child);
+
+    return retval;
+}
+
+unsigned long sys_exit(int exit_code)
+{
+    color_printk(GREEN, BLACK, "sys_exit\n");
+    return do_exit(exit_code);
+}
+
+
