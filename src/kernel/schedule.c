@@ -38,10 +38,12 @@ void insert_task_queue(struct task_struct *tsk)
 	task_schedule.running_task_count += 1;
 }
 
+
+struct task_struct *tsk = NULL;
 // 调度器
 void schedule()
 {
-	struct task_struct *tsk = NULL;
+	//struct task_struct *tsk = NULL;
 	cli();							  // 关闭外中断·
 	current->flags &= ~NEED_SCHEDULE; // 复位调度标志
 	tsk = get_next_task();			  // 从准备就绪队列中取出下一个待执行的进程

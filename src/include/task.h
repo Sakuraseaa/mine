@@ -199,24 +199,27 @@ static inline struct task_struct *get_current()
 // 线程切换函数
 // 保存next的rsp, 加载prev的rsp, 加载再次被调度的地址给prev.rip
 // 压入next的rip, 跳转执行__switch_to，返回时会执行next的rip
-#define switch_to(prev, next)                                                                       \
-	do                                                                                              \
-	{                                                                                               \
-		__asm__ __volatile__("pushq	%%rbp	\n\t"                                                     \
-							 "pushq	%%rax	\n\t"                                                     \
-							 "movq	%%rsp,	%0	\n\t"                                                  \
-							 "movq	%2,	%%rsp	\n\t"                                                  \
-							 "leaq	1f(%%rip),	%%rax	\n\t"                                           \
-							 "movq	%%rax,	%1	\n\t"                                                  \
-							 "pushq	%3		\n\t"                                                       \
-							 "jmp	__switch_to	\n\t"                                                 \
-							 "1:	\n\t"                                                              \
-							 "popq	%%rax	\n\t"                                                      \
-							 "popq	%%rbp	\n\t"                                                      \
-							 : "=m"(prev->thread->rsp), "=m"(prev->thread->rip)                     \
-							 : "m"(next->thread->rsp), "m"(next->thread->rip), "D"(prev), "S"(next) \
-							 : "memory");                                                           \
-	} while (0)
+// #define switch_to(prev, next)                                                                       \
+// 	do                                                                                              \
+// 	{                                                                                               \
+// 		__asm__ __volatile__("pushq	%%rbp	\n\t"                                                     \
+// 							 "pushq	%%rax	\n\t"                                                     \
+// 							 "movq	%%rsp,	%0	\n\t"                                                  \
+// 							 "movq	%2,	%%rsp	\n\t"                                                  \
+// 							 "leaq	1f(%%rip),	%%rax	\n\t"                                           \
+// 							 "movq	%%rax,	%1	\n\t"                                                  \
+// 							 "pushq	%3		\n\t"                                                       \
+// 							 "jmp	__switch_to	\n\t"                                                 \
+// 							 "1:	\n\t"                                                              \
+// 							 "popq	%%rax	\n\t"                                                      \
+// 							 "popq	%%rbp	\n\t"                                                      \
+// 							 : "=m"(prev->thread->rsp), "=m"(prev->thread->rip)                     \
+// 							 : "m"(next->thread->rsp), "m"(next->thread->rip), "D"(prev), "S"(next) \
+// 							 : "memory");                                                           \
+// 	} while (0)
+
+
+
 
 unsigned long system_call_function(struct pt_regs *regs);
 unsigned long do_exit(unsigned long exit_code);
@@ -226,5 +229,7 @@ void switch_mm(struct task_struct *prev, struct task_struct *next);
 void wakeup_process(struct task_struct *tsk);
 void exit_mm(struct task_struct *tsk);
 void exit_files(struct task_struct *tsk);
+void __switch_to(struct task_struct *prev, struct task_struct *next);
+
 
 #endif

@@ -493,7 +493,7 @@ unsigned long copy_thread(unsigned long clone_flags, unsigned long stack_start, 
 	memcpy(regs, childregs, sizeof(struct pt_regs));
 
 	childregs->rax = 0;			  // fork给子进程，返回值为0
-	childregs->rsp = stack_start; // 设置子进程和应用层栈指针 ？
+	childregs->rsp = stack_start; // 设置子进程的应用层栈指针 ？为什么这里设置为0?
 
 	// 中断栈中的rsp会在新进程从内核中启动运行的时候用到
 	// rsp0用于新进程进入内核用到的栈
@@ -633,6 +633,7 @@ int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigne
 // 被init调用,加载用户进程体，到用户空间800000
 unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *envp[])
 {
+	// color_printk(RED, BLACK, "do_execve task is running\n");
 	unsigned long code_start_addr = 0x800000;
 	unsigned long stack_start_addr = 0xa00000;
 	unsigned long brk_start_addr = 0xc00000;
@@ -643,7 +644,7 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 	unsigned long retval = 0;
 	long pos = 0;
 
-	// color_printk(RED, BLACK, "do_execve task is running\n");
+
 	if (current->flags & PF_VFORK)
 	{
 		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
