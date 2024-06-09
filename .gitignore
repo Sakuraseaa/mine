@@ -1,0 +1,15 @@
+/src/Build
+/src/tmp
+*.o
+*.s~
+*.s
+*.S~
+*.c~
+*.h~
+system
+Kernel.lds~
+kernel.bin
+*.ini
+*.bin
+*.sh
+/src/user/system_api_lib
