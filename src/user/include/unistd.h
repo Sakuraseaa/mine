@@ -24,8 +24,6 @@ long lseek(int fildes, long offset, int whence);
 
 int fork(void);
 int vfork(void);
-
-void *malloc(unsigned long size);
-void free(void *address);
+int execve(const char* path, char* const argv[], char* const envp[]);
 
 #endif

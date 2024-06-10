@@ -38,6 +38,11 @@ extern long global_pid;
 
 extern void ret_system_call();
 
+extern unsigned long kallsyms_addresses[] __attribute__((weak));
+extern long kallsyms_syms_num __attribute__((weak));
+extern long kallsyms_index[] __attribute__((weak));
+extern char* kallsyms_names __attribute((weak));
+
 //// struct task_struct.falgs
 #define PF_KTHREAD (1UL << 0)
 #define NEED_SCHEDULE (1UL << 1) // 若此标志被置位，则表明当前进程可在适当时机进行调度

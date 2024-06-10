@@ -43,7 +43,7 @@ void do_timer(void *data)
 int shell_up = 0;
 void test_timer(void *data)
 {
-    color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?");
+    color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?\n");
     shell_up = 1;
 }
 
@@ -58,6 +58,6 @@ void timer_init()
 
     // 给定时队列加入第一个任务
     tmp = (struct timer_list *)kmalloc(sizeof(struct timer_list), 0);
-    init_timer(tmp, &test_timer, NULL, 50);
+    init_timer(tmp, &test_timer, NULL, 100);
     add_timer(tmp);
 }

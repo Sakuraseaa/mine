@@ -269,9 +269,9 @@ unsigned long sys_lseek(int filds, long offset, int whence)
  */
 unsigned long sys_fork()
 {
-    // 索引到父进程的应用层执行现场
+    // 索引到父进程的内核栈执行现场
     struct pt_regs *regs = (struct pt_regs *)current->thread->rsp0 - 1;
-    color_printk(GREEN, BLACK, "sys_fork\n");
+    // color_printk(GREEN, BLACK, "sys_fork\n");
     // regs.rsp 是指向哪里呢？
     return do_fork(regs, 0, regs->rsp, 0);
 }
@@ -391,7 +391,7 @@ unsigned long sys_execve()
     long error = 0;
     struct pt_regs* regs = (struct pt_regs*)current->thread->rsp0 - 1;
     
-    color_printk(GREEN, BLACK, "sys_execve\n");
+    // color_printk(GREEN, BLACK, "sys_execve\n");
 
     pathname = (char*)kmalloc(PAGE_4K_SIZE, 0);
     if(pathname == NULL)

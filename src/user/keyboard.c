@@ -28,7 +28,7 @@ unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 /*scan-code	unShift		Shift		*/
 /*--------------------------------------------------------------*/
 /*0x00*/	0,		0,
-/*0x01*/	0x01,		0x01,		//ESC
+/*0x01*/	0,		0,		//ESC
 /*0x02*/	'1',		'!',
 /*0x03*/	'2',		'@',
 /*0x04*/	'3',		'#',
@@ -41,8 +41,8 @@ unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 /*0x0b*/	'0',		')',
 /*0x0c*/	'-',		'_',
 /*0x0d*/	'=',		'+',
-/*0x0e*/	0x0e,		0x0e,		//BACKSPACE	
-/*0x0f*/	0x0f,		0x0f,		//TAB
+/*0x0e*/	'\b',		0,		//BACKSPACE	
+/*0x0f*/	'\t',		0,		//TAB
 
 /*0x10*/	'q',		'Q',
 /*0x11*/	'w',		'W',
@@ -56,7 +56,7 @@ unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 /*0x19*/	'p',		'P',
 /*0x1a*/	'[',		'{',
 /*0x1b*/	']',		'}',
-/*0x1c*/	0x1c,		0x1c,		//ENTER
+/*0x1c*/	'\n',		0,		//ENTER
 /*0x1d*/	0x1d,		0x1d,		//CTRL Left
 /*0x1e*/	'a',		'A',
 /*0x1f*/	's',		'S',

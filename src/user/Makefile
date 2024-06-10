@@ -2,6 +2,9 @@ USR_SRC_DIR=/home/steven/mine/src/user
 USR_BUI_DIR=/home/steven/mine/src/user/Build
 USR_INC_DIR = /home/steven/mine/src/user/include
 
+ASM   = nasm
+CC	  = gcc
+
 CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector \
 		-fno-builtin -fno-pie -fno-pic  -I $(USR_INC_DIR) \
 		-c\
@@ -9,7 +12,7 @@ CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector \
 #被链接的文件
 OBJS =    $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/lib.o $(USR_BUI_DIR)/errno.o  \
 		$(USR_BUI_DIR)/malloc.o $(USR_BUI_DIR)/keyboard.o $(USR_BUI_DIR)/printf.o \
-		$(USR_BUI_DIR)/string.o
+		$(USR_BUI_DIR)/string.o $(USR_BUI_DIR)/dirent.o $(USR_BUI_DIR)/wait.o \
 
 all: $(USR_BUI_DIR)/system_api_lib
 	objcopy -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary $(USR_BUI_DIR)/system_api_lib $(USR_BUI_DIR)/init.bin
@@ -34,6 +37,10 @@ $(USR_BUI_DIR)/keyboard.o: $(USR_SRC_DIR)/keyboard.c
 	gcc  $(CFLAGS)  $< -o $@
 $(USR_BUI_DIR)/string.o: $(USR_SRC_DIR)/string.c
 	gcc  $(CFLAGS)  $< -o $@
+$(USR_BUI_DIR)/dirent.o: $(USR_SRC_DIR)/dirent.c
+	$(CC) $(CFLAGS) $< -o $@
+$(USR_BUI_DIR)/wait.o: $(USR_SRC_DIR)/wait.c
+	$(CC) $(CFLAGS) $< -o $@
 Hd_Path=/home/steven/mine/bochs/hd.img
 .PHONY: clean update
 clean:

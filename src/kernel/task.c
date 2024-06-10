@@ -530,7 +530,7 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 
 	// alloc & copy task struct
 	tsk = (struct task_struct *)kmalloc(STACK_SIZE, 0);
-	color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (unsigned long)tsk);
+	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (unsigned long)tsk);
 	if (tsk == NULL)
 	{
 		retval = -EAGAIN;
@@ -591,7 +591,7 @@ void exit_notify(void)
 unsigned long do_exit(unsigned long exit_code)
 {
 	struct task_struct *tsk = current;
-	color_printk(RED, BLACK, "exit task is running,arg:%#018lx\n", exit_code);
+	// color_printk(RED, BLACK, "exit task is running,arg:%#018lx\n", exit_code);
 	
 do_exit_again:
 	cli();

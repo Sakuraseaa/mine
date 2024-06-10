@@ -109,9 +109,9 @@ void Start_Kernel(void)
 	sti();
 
 	// 此处的while用于线程同步
-	while (!shell_up)
-		;
-	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+	// while (!shell_up)
+	// 	;
+	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 
 	while (1)
 	{

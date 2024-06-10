@@ -31,6 +31,19 @@
             //"preLaunchTask": "make-all",
             "miDebuggerPath": "/usr/bin/gdb",
             // "postDebugTask": "make-clean"
+        },
+        {
+            "name": "test",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/script/kallsyms",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
         }
     ]
 }

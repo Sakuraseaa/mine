@@ -3,51 +3,50 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "fcntl.h"
-#include "string.h"
 #include "keyboard.h"
+#include "dirent.h"
+#include "wait.h"
+#include "reboot.h"
+#include "string.h"
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
 void run_command(int index, int argc, char **argv);
 int parse_command(char *buf, int *argc, char ***argv);
 
+extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
+
 struct buildincmd
 {
 	char *cmd_name;
 	int (*cmd_funcPtr)(int, char **);
 };
-const char *current_dir = NULL;
-
+char *current_dir = NULL;
+int sk = 0;
 int main()
 {
-
-	printf("it is not Shell!\n");
-	// int fd = 0;
+	int fd = 0;
 	// unsigned char buf[256] = {0};
 	// char path[] = "/KEYBOARD.DEV";
 	// int index = -1;
-
 	// current_dir = "/";
 	// fd = open(path, 0);
 
 	// while (1)
 	// {
-	// 	// int argc = 0;
-	// 	// char **argv = NULL;
-	// 	// printf("[SHELL]#:");
-	// 	// memset(buf, 0, 256);
-	// 	// // 命令读取
-	// 	// read_line(fd, buf);
-	// 	// printf("\n");
-
-	// 	// printf(buf);
-
-	// 	// // 命令解析
-	// 	// index = parse_command(buf, &argc, &argv);
-	// 	// if (index < 0)
-	// 	// 	printf("Input Error, No Command Found!\n");
-	// 	// else
-	// 	// 	run_command(index, argc, argv); // 命令执行
+	// 	sk++;
+	// 	int argc = 0;
+	// 	char **argv = NULL;
+	// 	printf("sk@Mine %d #:", sk);
+	// 	memset(buf, 0, 256);
+	// 	// 命令读取
+	// 	read_line(fd, buf);
+	// 	// 命令解析
+	// 	index = parse_command(buf, &argc, &argv);
+	// 	if (index < 0)
+	// 		printf("Input Error, No Command Found!\n");
+	// 	else
+	// 		run_command(index, argc, argv); // 命令执行
 	// }
 
 	// close(fd);
@@ -191,18 +190,6 @@ int analysis_keycode(int fd)
 			key = 0;
 			break;
 
-		case 0x0e: // BACKSPACE
-			key = '\b';
-			break;
-
-		case 0x0f: // TAB
-			key = '\t';
-			break;
-
-		case 0x1c: // ENTER
-			key = '\n';
-			break;
-
 		default:
 			if (!make)
 				key = 0;
@@ -215,29 +202,151 @@ int analysis_keycode(int fd)
 	return 0;
 }
 
-int cd_command(int argc, char **argv) {}
-int ls_command(int argc, char **argv) {}
-int pwd_command(int argc, char **argv) { printf(current_dir); }
-int cat_command(int argc, char **argv) {}
+int cd_command(int argc, char **argv) 
+{
+	char* path = NULL;
+	int len = 0;
+	int i = 0;
+	len = strlen(current_dir);
+
+	if(!strcmp(".", argv[1])) return 1;
+
+	if(!strcmp("..", argv[1]))
+	{
+		if(!strcmp("/", current_dir))
+			return 1;
+		for(i = len - 1; i > 1; i--)
+			if(current_dir[i] == '/')
+				break;
+		current_dir[i] = '\0';
+		printf("pwd switch to %s\n", current_dir);
+		return 1;
+	}
+
+	i = len + strlen(argv[1]);
+	path = malloc(i + 2, 0);
+	memset(path, 0, i + 2);
+	strcpy(path, current_dir);
+	if(len > 1)
+		path[len] = '/';
+	strcat(path, argv[1]);
+	printf("cd_command:%s\n", path);
+
+	i = chdir(path);
+	if(!i)
+		current_dir = path;
+	else
+		printf("Can't Goto Dir %s\n", argv[1]);
+	printf("pwd switch to %s\n", current_dir);
+}
+
+const char file_type[] = {'-', 's', 'd'};
+int ls_command(int argc, char **argv) 
+{
+	struct DIR* dir = NULL;
+	struct dirent* buf = NULL;
+
+	dir=opendir(current_dir);
+	// printf("ls_command opendir:%d\n", dir->fd);
+
+	buf = (struct dirent*)malloc(256, 0);
+	// 直到该目录为空
+	while(1)
+	{
+		buf = readdir(dir);// 每次读一条目录项
+		if(buf == NULL)
+			break;
+		
+		// 打印信息
+		printf("%c %d %s\t \n", file_type[buf->d_type], buf->d_namelen, buf->d_name);
+	}
+	closedir(dir);
+}
+
+int pwd_command(int argc, char **argv)
+{
+	printf(current_dir);
+	printf("\n");
+}
+int cat_command(int argc, char **argv) 
+{
+	int len = 0;
+	char* filename = NULL;
+	int fd = 0;
+	char* buf = NULL;
+	int i = 0;
+
+	len = strlen(current_dir);
+	i = len + strlen(argv[1]);
+	filename = malloc(i + 2, 0);
+	memset(filename, 0, i + 2);
+	strcpy(filename, current_dir);
+	if(len > 1)
+		filename[len] = '/';
+	strcat(filename, argv[1]);
+	// printf("cat_command filename:%s\n", filename);
+
+	fd = open(filename, 0);
+	i = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0 , SEEK_SET);
+	buf = malloc(i + 1, 0);
+	memset(buf, 0 , i + 1);
+	len = read(fd, buf, i);
+	// printf("length:%d\t%s\n",len,buf);
+
+	close(fd);
+}
 int touch_command(int argc, char **argv) {}
 int rm_command(int argc, char **argv) {}
 int mkdir_command(int argc, char **argv) {}
 int rmdir_command(int argc, char **argv) {}
-int exec_command(int argc, char **argv) {}
-int reboot_command(int argc, char **argv) {}
+int exec_command(int argc, char **argv)
+{
+	int errno = 0;
+	int retval = 0;
+	int len = 0;
+	char* filename = 0;
+	int i = 0;
+
+	errno = fork();
+	if(errno ==  0 ) {
+		printf("child process\n");
+		len = strlen(current_dir);
+		i = len + strlen(argv[1]);
+		filename = malloc(i + 2, 0);
+		memset(filename, 0, i + 2);
+		strcpy(filename, current_dir);
+		if(len > 1)
+			filename[len] = '/';
+		strcat(filename, argv[1]);
+
+		printf("exec_command filename:%s\n", filename);
+		for(i = 0; i < argc; i++)
+			printf("argv[%d]:%s\n", i, argv[i]);
+		
+		execve(filename, argv, NULL);
+
+		exit(0);
+	} else {
+		printf("parent process childpid:%#d\n", errno);
+		waitpid(errno, &retval, 0);
+		printf("parent process waitpid:%#018lx\n", retval);
+	}
+}
+int reboot_command(int argc, char **argv) { reboot(SYSTEM_REBOOT, NULL); }
 
 struct buildincmd shell_internal_cmd[] =
 	{
 		{"cd", cd_command},
-		{"ls", cd_command},
-		{"pwd", cd_command},
-		{"cat", cd_command},
-		{"touch", cd_command},
-		{"rm", cd_command},
-		{"mkdir", cd_command},
-		{"rmdir", cd_command},
-		{"exec", cd_command},
-		{"reboot", cd_command},
+		{"ls", ls_command},
+		{"pwd", pwd_command},
+		{"cat", cat_command},
+		{"touch", touch_command},
+		{"rm", rm_command},
+		{"mkdir", mkdir_command},
+		{"rmdir", rmdir_command},
+		{"exec", exec_command},
+		{"reboot", reboot_command},
 };
 
 int find_cmd(char *cmd_name)
@@ -251,27 +360,33 @@ int find_cmd(char *cmd_name)
 
 int read_line(int fd, char *buf)
 {
-	int key = 0;
+	char key = 0;
 	int count = 0;
 
 	while (1)
 	{
 		key = analysis_keycode(fd);
 
-		if (key == '\n')
+		switch (key)
+		{
+		case 0: // 通码
+			break;
+		case '\n':
+			printf("\n");
+			buf[count] = 0;
 			return count;
-		else if (key == '\b')
-		{
-			count--;
-			printf("%c", key);
-		}
-		else if (key)
-		{
+		case '\b':
+			if (count)
+			{
+				count--;
+				printf("%c", key);
+			}
+			break;
+		default:
 			buf[count++] = key;
 			printf("%c", key);
+			break;
 		}
-		else
-			continue;
 	}
 }
 
@@ -295,7 +410,7 @@ int parse_command(char *buf, int *argc, char ***argv)
 
 	if (!*argc)
 		return -1;
-	*argv = (char **)malloc(sizeof(char **) * (*argc));
+	*argv = (char **)malloc(sizeof(char **) * (*argc), 0);
 	// printf("parse_command argv:%#018lx, *argv:%#018lx\n", argv, *argv);
 
 	for (i = 0; i < *argc && j < 256; i++)
@@ -317,3 +432,5 @@ void run_command(int index, int argc, char **argv)
 	// printf("run_command %s\n", shell_internal_cmd[index].cmd_name);
 	shell_internal_cmd[index].cmd_funcPtr(argc, argv);
 }
+
+
