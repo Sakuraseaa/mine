@@ -22,6 +22,8 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o  $(BUI_DIR)/usr_lib.o  $(BUI_DIR)/switch_to.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o $(BUI_DIR)/usr_dirent.o $(BUI_DIR)/usr_wait.o \
+		$(BUI_DIR)/SMP.o
+
 
 OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
 		
@@ -65,6 +67,8 @@ $(BUI_DIR)/switch_to.o: $(SRC_DIR)/kernel/switch_to.S
 $(BUI_DIR)/task.o: $(SRC_DIR)/kernel/task.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/cpu.o: $(SRC_DIR)/drivers/cpu.c
+	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/SMP.o: $(SRC_DIR)/drivers/SMP.c
 	$(CC) $(CFLAGS) $< -o $@
 ifeq ($(PIC), APIC)
 $(BUI_DIR)/PIC.o: $(SRC_DIR)/drivers/APIC.c
@@ -110,7 +114,7 @@ $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	$(CC) $(CFLAGS) $< -o $@
 
 # =============  SCRIPT ============
-$(BUI_DIR)/kallsyms.o: $(SRC_DIR)/script/kallsyms.c
+$(BUI_DIR)/kallsyms.o: $(SRC_DIR)/script/kallsyms.c $(BUI_DIR)/kernel.bin
 	$(CC) -o $(BUI_DIR)/kallsyms $(SRC_DIR)/script/kallsyms.c
 	nm -n $(BUI_DIR)/kernel.bin | $(BUI_DIR)/kallsyms > $(SRC_DIR)/script/kallsyms.S
 	$(CC) -c -o $(BUI_DIR)/kallsyms.o $(SRC_DIR)/script/kallsyms.S

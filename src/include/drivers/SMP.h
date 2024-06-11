@@ -12,7 +12,7 @@ extern unsigned char _APU_boot_end[];
 // spinlock_T SMP_lock;
 
 void SMP_init();
-
+int SMP_cpu_id();
 void Start_SMP();
 
 #endif

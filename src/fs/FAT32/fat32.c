@@ -376,7 +376,7 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
     for(i = 0; i < j; i++)
     {
         cluster = DISK1_FAT32_read_FAT_Entry(fsbi,cluster);
-        if(cluster > 0x0ffffff7)
+        if(cluster > 0x0ffffff7) // 0x0fffffff7文件结束标志。
         { // 目录完了
            // color_printk(RED, BLACK, "FAT32 FS(readdir) cluster didn't exist\n");
             return NULL;
@@ -490,7 +490,7 @@ struct file_operations FAT32_file_ops =
  * @param pFcbName Pointer to an unsigned byte array assumed to be 11 bytes long.
  * @return unsigned char Sum An 8-bit unsigned checksum of the array pointed to by pFcbName.
  */
-static unsigned char ChkSum(unsigned char *pFcbName)
+static unsigned char FAT32_ChkSum(unsigned char *pFcbName)
 {
     short FcbNameLen;
     unsigned char sum;
@@ -539,7 +539,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
     fd = (struct FAT32_Directory *)(fld + LDir_count); // 定位短目录项的长度
     // ------------------------- 初始化长目录项------------------
     fld0 = (struct FAT32_LongDirectory *)fd - 1;
-    unsigned char ChkSum_ = ChkSum(tmpName);
+    unsigned char ChkSum_ = FAT32_ChkSum(tmpName);
     j = 0;
     for (; k < LDir_count; k++, fld0--)
     {

@@ -27,3 +27,7 @@ void SMP_init()
         // memcpy(_APU_boot_start, (unsigned char *)0xffff800000020000, (unsigned long)&_APU_boot_end - (unsigned long)&_APU_boot_start);
     }
 }
+
+int SMP_cpu_id() {
+    return 0;
+}
