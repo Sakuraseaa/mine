@@ -8,7 +8,7 @@
             "name": "mine",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/src/Build/kernel.bin",
+            "program": "${workspaceFolder}/src/Build/Kernel.bin",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

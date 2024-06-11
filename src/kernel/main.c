@@ -55,7 +55,9 @@ void Start_Kernel(void)
 
 	set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00);
 
+	// 初始化异常函数表 IDT
 	sys_vector_init();
+	
 	init_cpu();
 
 	memory_management_struct.start_code = (unsigned long)&_text;
@@ -109,9 +111,9 @@ void Start_Kernel(void)
 	sti();
 
 	// 此处的while用于线程同步
-	// while (!shell_up)
-	// 	;
-	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+	while (!shell_up)
+		;
+	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 
 	while (1)
 	{

@@ -1,12 +1,71 @@
 #include "trap.h"
 #include "gate.h"
 #include "lib.h"
+#include "ptrace.h"
 
-void do_divide_error(unsigned long rsp, unsigned long error_code)
+int lookup_kallsyms(unsigned long address, int level)
 {
-	unsigned long *p = NULL;
-	p = (unsigned long *)(rsp + 0x98);
-	color_printk(RED, BLACK, "do_divide_error(0),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n", error_code, rsp, *p);
+	int index = 0;
+	int level_index = 0;
+
+	char* string = (char*)&kallsyms_names;
+	for(index = 0; index < kallsyms_syms_num; index++)
+		if(address > kallsyms_addresses[index] && address <= kallsyms_addresses[index + 1])
+			break;
+	
+	if(index < kallsyms_syms_num) {
+		for(level_index = 0; level_index < level; level_index++)
+			color_printk(RED, BLACK, " ");
+		color_printk(RED, BLACK, "+-->");
+
+		color_printk(RED, BLACK, "address:%#018lx \t(+) %04d function:%s\n", address,
+		 address - kallsyms_addresses[index], &string[kallsyms_index[index]]);
+		return 0;
+	}
+	else
+		return 1;
+
+}
+
+
+void backtrace(struct pt_regs* regs)
+{
+	unsigned long *rbp = (unsigned long*)regs->rbp;
+	unsigned long ret_address = regs->rip;
+	int i = 0;
+
+	// color_printk(RED,BLACK,"&kallsyms_addresses:%#018lx,kallsyms_addresses:%#018lx\n",&kallsyms_addresses,kallsyms_addresses);
+	// color_printk(RED,BLACK,"&kallsyms_syms_num:%#018lx,kallsyms_syms_num:%d\n",&kallsyms_syms_num,kallsyms_syms_num);
+	// color_printk(RED,BLACK,"&kallsyms_index:%#018lx\n",&kallsyms_index);
+	// color_printk(RED,BLACK,"&kallsyms_names:%#018lx,kallsyms_names:%s\n",&kallsyms_names,&kallsyms_names);
+	color_printk(RED,BLACK,"====================== Kernel Stack Backtrace ======================\n");
+
+	for(i = 0; i < 10; i++)
+	{
+		if(lookup_kallsyms(ret_address, i))
+			break;
+		
+		if((unsigned long)rbp < (unsigned long)regs->rsp || (unsigned long)rbp > current->thread->rsp0)
+					break;
+		ret_address = *(rbp + 1);
+		rbp = (unsigned long *)*rbp;
+		// color_printk(RED, BLACK, "rbp:%#018lx, *rbp:%#018lx\n", rbp, *rbp);
+	}
+}
+
+void display_regs(struct pt_regs * regs)
+{
+	color_printk(RED,BLACK,"CS:%#010x,SS:%#010x\nDS:%#010x,ES:%#010x\nRFLAGS:%#018lx\n",regs->cs,regs->ss,regs->ds,regs->es,regs->rflags);
+	color_printk(RED,BLACK,"RAX:%#018lx,RBX:%#018lx,RCX:%#018lx,RDX:%#018lx\nRSP:%#018lx,RBP:%#018lx,RIP:%#018lx\nRSI:%#018lx,RDI:%#018lx\n",regs->rax,regs->rbx,regs->rcx,regs->rdx,regs->rsp,regs->rbp,regs->rip,regs->rsi,regs->rdi);
+	color_printk(RED,BLACK,"R8 :%#018lx,R9 :%#018lx\nR10:%#018lx,R11:%#018lx\nR12:%#018lx,R13:%#018lx\nR14:%#018lx,R15:%#018lx\n",regs->r8,regs->r9,regs->r10,regs->r11,regs->r12,regs->r13,regs->r14,regs->r15);
+	backtrace(regs);
+}
+
+void do_divide_error(struct pt_regs* regs, unsigned long error_code)
+{
+
+	color_printk(RED, BLACK, "do_divide_error(0),ERROR_CODE:%#018lx\n", error_code);
+	backtrace(regs);
 	while (1)
 		hlt();
 }

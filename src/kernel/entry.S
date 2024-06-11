@@ -189,7 +189,7 @@ ENTRY(kernel_thread_func)
 // ==============================================================
 ENTRY(divide_error)
 	pushq	$0        // 压入错误码
-	pushq	%rax	  // 把目标程序地址入栈，这里之所以使用xchagq,是为了不覆盖rax内存
+	pushq	%rax	  // 把目标程序地址入栈，这里之所以使用xchgq,是为了不覆盖rax内存
 	leaq	do_divide_error(%rip),	%rax
 	xchgq	%rax,	(%rsp) 	// 这里等于压入了regs中的func
 

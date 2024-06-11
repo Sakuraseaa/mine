@@ -3,11 +3,8 @@ BUI_DIR=/home/steven/mine/src/Build
 BOCHS = /home/steven/mine/bochs
 INC_DIR = /home/steven/mine/src/include
 
-############# test ########
-USR_SRC_DIR=/home/steven/mine/src/user
-USR_BUI_DIR=/home/steven/mine/src/user/Build
-USR_INC_DIR = /home/steven/mine/src/user/include
-##########################
+
+
 PIC   := PIC
 ASM   = nasm
 CC	  = gcc
@@ -26,16 +23,19 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o  $(BUI_DIR)/usr_lib.o  $(BUI_DIR)/switch_to.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o $(BUI_DIR)/usr_dirent.o $(BUI_DIR)/usr_wait.o \
 
+OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
 		
-ALL:$(BUI_DIR)/kernel.bin
+ALL:$(BUI_DIR)/Kernel.bin 
 
-
-$(BUI_DIR)/kernel.bin:$(OBJS)
-	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds  -Map $(BUI_DIR)/kernel.map
+$(BUI_DIR)/Kernel.bin:$(OBJS) $(OBJS_SCRIPT)
+	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds  -Map $(BUI_DIR)/Kernel.map
 	sudo mount -o loop $(BOCHS)/boot.img /mnt
-	sudo cp $(BUI_DIR)/kernel.bin /mnt -v
+	sudo cp $(BUI_DIR)/Kernel.bin /mnt -v
 	sudo umount /mnt
 	@echo '感谢世界!系统编译构建完成！ ^_^'
+
+$(BUI_DIR)/kernel.bin:$(OBJS)
+	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds 
 
 $(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c
 #	$(CC) $(CFLAGS) $< -o $@
@@ -108,6 +108,15 @@ $(BUI_DIR)/VFS.o: $(SRC_DIR)/fs/VFS.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	$(CC) $(CFLAGS) $< -o $@
+
+# =============  SCRIPT ============
+$(BUI_DIR)/kallsyms.o: $(SRC_DIR)/script/kallsyms.c
+	$(CC) -o $(BUI_DIR)/kallsyms $(SRC_DIR)/script/kallsyms.c
+	nm -n $(BUI_DIR)/kernel.bin | $(BUI_DIR)/kallsyms > $(SRC_DIR)/script/kallsyms.S
+	$(CC) -c -o $(BUI_DIR)/kallsyms.o $(SRC_DIR)/script/kallsyms.S
+# ============= SCRIPT ============
+
+
 # ============= DEBUGE ============
 $(BUI_DIR)/init.o: $(SRC_DIR)/kernel/init.c
 	$(CC) $(CFLAGS) $< -o $@

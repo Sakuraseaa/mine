@@ -377,8 +377,8 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
     {
         cluster = DISK1_FAT32_read_FAT_Entry(fsbi,cluster);
         if(cluster > 0x0ffffff7)
-        {
-            color_printk(RED, BLACK, "FAT32 FS(readdir) cluster didn't exist\n");
+        { // 目录完了
+           // color_printk(RED, BLACK, "FAT32 FS(readdir) cluster didn't exist\n");
             return NULL;
         }
     }

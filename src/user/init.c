@@ -25,7 +25,7 @@ char *current_dir = NULL;
 int sk = 0;
 int main()
 {
-	int fd = 0;
+	// int fd = 0;
 	// unsigned char buf[256] = {0};
 	// char path[] = "/KEYBOARD.DEV";
 	// int index = -1;
