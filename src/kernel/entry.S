@@ -30,6 +30,7 @@ TSK_FLAGS = 0x08
 TSK_PREEMPT = 0x10
 TSK_SIGNAL = 0x18
 
+
 RESTORE_ALL:
 	popq	%r15	
 	popq	%r14		
@@ -74,7 +75,16 @@ ret_with_reschedule:
 	movq TSK_FLAGS(%rbx), %rcx		 // 检测本进程是否可调度(可抢占)，如果可调度,则跳转去执行reschedule	
 	testq $2,  %rcx
 	jnz reschedule
+ret_with_signal:
+	movq TSK_SIGNAL(%rbx), %rcx		// 信号位图不为0 则跳转 信号处理函数
+	cmpq $0, %rcx
+	jne signal_handler
+	
 	jmp	RESTORE_ALL	
+
+signal_handler:
+	callq do_signal
+	jmp RESTORE_ALL
 
 softirq_handler:
 	callq do_softirq
