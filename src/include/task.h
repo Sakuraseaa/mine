@@ -1,8 +1,7 @@
 #ifndef __TASK_H__ // #ifndef 当且仅当变量未定义时为真，#ifdef 当前仅当
 // 变量已定义时为真。 一旦检测结构为真，则执行后续操作直至遇见#endif指令为止
-
 #define __TASK_H__
-
+#include "signal.h"
 #include "memory.h"
 #include "cpu.h"
 #include "lib.h"
@@ -87,22 +86,25 @@ struct thread_struct
 struct task_struct
 {
 
-	volatile long state; // 进程状态: 运行态，停止态，可中断态
-	unsigned long flags; // 进程标志：进程，线程，内核线程
-	long preempt_count;	 // 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
+	volatile long state;		// 进程状态: 运行态，停止态，可中断态
+	unsigned long flags; 		// 进程标志：进程，线程，内核线程
+	long preempt_count;	 		// 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
 	long signal;
+	long blocked;  		// 信号位图 和 bitmap of masked signals
+	sigaction_T* sigaction;		// 信号将要执行的操作和标志信息, 每一项对应一个信号, 一共三十二项
 
+	
 	struct mm_struct *mm;		  // 内存空间分布结构体，记录内存页表和程序段信息
 	struct thread_struct *thread; // 进程切换时保存的寄存器(上下文)信息
 	struct List list;			  // 双向链表节点
 
-	unsigned long addr_limit; // 进程地址空间范围
-	/*0x0000,0000,0000,0000 - 0x0000,7fff,ffff,ffff user, 对应第255个PML4页表项， 0 ~ 255*/
-	/*0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel, 对应第256个PML4页表项， 256 ~ 511*/
+	unsigned long addr_limit; 	  // 进程地址空间范围
+	/*	0x0000,0000,0000,0000 - 0x0000,7fff,ffff,ffff user,   对应第255个PML4页表项， 0 ~ 255   */
+	/*	0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel, 对应第256个PML4页表项， 256 ~ 511 */
 
 	long pid;
-	long priority;	// 进程可用时间片
-	long vrun_time; // 记录进程虚拟运行时间的成员变量 vrun_time
+	long priority;			// 进程可用时间片
+	long vrun_time; 		// 记录进程虚拟运行时间的成员变量 vrun_time
 	long exit_code;
 	struct file *file_struct[TASK_FILE_MAX];
 
@@ -131,6 +133,8 @@ union task_union
 		.preempt_count = 0,               \
 		.vrun_time = 0,                   \
 		.signal = 0,                      \
+		.blocked = 0,                     \
+		.sigaction = (NULL),              \
 		.priority = 2,                    \
 		.file_struct = {0},               \
 		.next = &tsk,                     \

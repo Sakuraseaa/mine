@@ -1,3 +1,13 @@
+/**
+ * @file interrupt.c 重写这段程序，使得中断入口函数 使用汇编完成。
+ * @author your name (you@domain.com)
+ * @brief 
+ * @version 0.1
+ * @date 2024-06-13
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #include "interrupt.h"
 #include "linkage.h"
 #include "lib.h"
@@ -45,7 +55,8 @@
 // 这段宏代码定义中断处理程序的入口部分
 #define Build_IRQ(nr)                                                      \
     void IRQ_NAME(nr);                                                     \
-    __asm__(SYMBOL_NAME_STR(IRQ) #nr "_interrupt:    \n\t"                 \
+    __asm__( ".section .text	\n\t"              \
+            SYMBOL_NAME_STR(IRQ) #nr "_interrupt:    \n\t"                 \                        
                                      "pushq $0x00 \n\t" SAVE_ALL           \
                                      "movq %rsp, %rdi \n\t"                \
                                      "leaq ret_from_intr(%rip), %rax \n\t" \
@@ -77,6 +88,7 @@ Build_IRQ(0x34);
 Build_IRQ(0x35);
 Build_IRQ(0x36);
 Build_IRQ(0x37);
+
 
 /*函数指针数组, 每个元素都指向由宏函数Build_IRQ定义的一个中断处理函数入口*/
 void (*interrupt[24])(void) =

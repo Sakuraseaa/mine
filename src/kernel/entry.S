@@ -60,7 +60,7 @@ RESTORE_ALL:
 	movq	$-32768,reg;	\
 	andq	%rsp,	reg
 
-// 中断,异常,退出函数
+// 中断 和 异常的退出函数
 ret_from_exception:
 ENTRY(ret_from_intr)
 	movq $-1, %rcx
@@ -87,7 +87,7 @@ reschedule:
 // =============== 进入系统调用 =========================
 ENTRY(system_call)
 	sti				 // 开中断
-	subq $0x38, %rsp //给 ss,rsp, rflags, cs, rip, error_code, func 留出内存空间
+	subq $0x38, %rsp //给 ss,rsp, rflags, cs, rip, error_code, func 留出内存空间 (其实此处是对齐结构体)
 	cld			 	 // 清除方向位
 
 	pushq %rax	 	 // 保存上下文环境，要返回的rip和rsp，也被记录再这里（内核栈）

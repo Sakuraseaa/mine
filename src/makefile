@@ -9,7 +9,7 @@ PIC   := PIC
 ASM   = nasm
 CC	  = gcc
 
-CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -fno-common -std=gnu89 -nostartfiles \
+CFLAGS = -m64 -mcmodel=large -fno-stack-protector -fno-common -std=gnu89 -nostartfiles \
 		-fno-builtin -fno-pie -fno-pic  -Wno-address-of-packed-memeber \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
 		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ 
@@ -37,7 +37,7 @@ $(BUI_DIR)/Kernel.bin:$(OBJS) $(OBJS_SCRIPT)
 	@echo '感谢世界!系统编译构建完成！ ^_^'
 
 $(BUI_DIR)/kernel.bin:$(OBJS)
-	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds 
+	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds -Map $(BUI_DIR)/kernel.map
 
 $(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c
 #	$(CC) $(CFLAGS) $< -o $@
@@ -89,10 +89,7 @@ $(BUI_DIR)/HEPT.o: $(SRC_DIR)/drivers/HEPT.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/softirq.o: $(SRC_DIR)/kernel/softirq.c
 	$(CC) $(CFLAGS) $< -o $@
-
 $(BUI_DIR)/timer.o: $(SRC_DIR)/lib/timer.c
-	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/SMP.o: $(SRC_DIR)/drivers/SMP.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/schedule.o: $(SRC_DIR)/kernel/schedule.c
 	$(CC) $(CFLAGS) $< -o $@

@@ -528,8 +528,6 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	int retval = 0;
 	struct task_struct *tsk = NULL;
 
-	retval = retval / 0;
-
 	// alloc & copy task struct
 	tsk = (struct task_struct *)kmalloc(STACK_SIZE, 0);
 	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (unsigned long)tsk);

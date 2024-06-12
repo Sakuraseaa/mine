@@ -5,6 +5,7 @@
 #define _SYSFUNC_DEF_(name,nr)	__SYSFUNC_DEF__(name,nr)
 #define __SYSFUNC_DEF__(name,nr)	\
 __asm__	(		\
+".section .text	\n\t"        \
 ".global "#name"	\n\t"	\
 ".type	"#name",	@function \n\t"	\
 #name":		\n\t"	\

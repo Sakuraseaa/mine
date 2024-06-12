@@ -1,7 +1,8 @@
 .section .text
 .globl switch_to
 
-thread = 0x28
+thread = 0x38 // PCB结构体中 thread(线程栈) 的偏移
+//===================thread中各成员变量偏移=======================
 rsp0 =	0x00
 RIP	=	0x08
 RSP	=	0x10
@@ -10,6 +11,7 @@ GS	=	0x20
 CR2	=	0x28
 trap_nr = 0x30
 error_code = 0x38
+// ==============================================================
 
 switch_to: 
     pushq   %rbp
@@ -34,4 +36,4 @@ back:
     popq %rcx
     popq %rax
     popq %rbp
-    ret
+    retq
