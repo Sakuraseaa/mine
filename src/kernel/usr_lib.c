@@ -34,6 +34,10 @@ SYSFUNC_DEF(reboot)
 SYSFUNC_DEF(chdir)
 SYSFUNC_DEF(getdents)
 
+SYSFUNC_DEF(SIGNAL)
+SYSFUNC_DEF(KILL)
+
+SYSFUNC_DEF(getpid)
 
 __asm__(
     "LABEL_SYSCALL:	\n\t"

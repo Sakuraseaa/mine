@@ -4,5 +4,4 @@
 
 int wait(int * status);
 int waitpid(int pid, int *status, int options);
-
 #endif

@@ -83,6 +83,7 @@ ret_with_signal:
 	jmp	RESTORE_ALL	
 
 signal_handler:
+	movq %rsp, %rdi  // 传入参数
 	callq do_signal
 	jmp RESTORE_ALL
 
@@ -96,11 +97,12 @@ reschedule:
 
 // =============== 进入系统调用 =========================
 ENTRY(system_call)
-	sti				 // 开中断
-	subq $0x38, %rsp //给 ss,rsp, rflags, cs, rip, error_code, func 留出内存空间 (其实此处是对齐结构体)
-	cld			 	 // 清除方向位
+	sti				 	// 开中断
+	subq $0x38, %rsp 	//给 ss,rsp, rflags, cs, rip, error_code, func 留出内存空间 (其实此处是对齐结构体)
+	movq $0, 0x10(%rsp) // 设置 rip 为 0， 给 do_signal信号做标志
+	cld			 	 	// 清除方向位
 
-	pushq %rax	 	 // 保存上下文环境，要返回的rip和rsp，也被记录再这里（内核栈）
+	pushq %rax	 	 	// 保存上下文环境，要返回的rip和rsp，也被记录再这里（内核栈）
 	
 	movq %es, %rax
 	pushq %rax
@@ -131,6 +133,10 @@ ENTRY(system_call)
 	callq *(%rbx, %rax, 8)	// *(rbx + rax * 8)
 	movq %rax, RAX(%rsp)    // 把rax记录再要恢复的下文环境中
 
+// ++++++++++信号检测+++++++++++++++++++++
+	movq %rsp, %rdi  // 传入参数
+	callq do_signal
+// ++++++++++++++++++++++++++++++++++++++
 
 // ===============	返回用户进程	=========================
 ENTRY(ret_system_call)

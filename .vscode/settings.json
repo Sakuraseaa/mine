@@ -32,7 +32,8 @@
         "cstdlib": "c",
         "dirent.h": "c",
         "stdlib.h": "c",
-        "smp.h": "c"
+        "smp.h": "c",
+        "ptrace.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

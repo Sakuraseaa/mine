@@ -39,20 +39,23 @@ typedef unsigned int sigset_t; /* 32 bits */
 #define SIG_UNBLOCK 1 /* for unblocking signals */
 #define SIG_SETMASK 2 /* for setting the signal mask */
 
-#define SIG_DFL ((void (*)(int))0) /* default signal handling 默认信号处理程序*/
-#define SIG_IGN ((void (*)(int))1) /* ignore signal 忽略信号处理程序*/
+#define SIG_DFL ((void (*)(long))0) /* default signal handling 默认信号处理程序*/
+#define SIG_IGN ((void (*)(long))1) /* ignore signal 忽略信号处理程序*/
+
+typedef void(*sighadler_t)(long);
 
 typedef struct sigaction
 {
-	void (*sa_handler)(int);   // 某信号指定要采取的行动，可用SIG_DFL, SIG_IGN来填写
+	void (*sa_handler)(long);   // 某信号指定要采取的行动，可用SIG_DFL, SIG_IGN来填写
 	sigset_t sa_mask;		   // 信号屏蔽码，在信号执行时会阻塞对这些信号的处理
 	int sa_flags;			   // 指定代表信号处理过程中的信号集
 	void (*sa_restorer)(void); // 恢复函数指针，由Libc提供，用于清理用户态堆栈
 }sigaction_T;
 
-void (*signal(int _sig, void (*_func)(int)))(int);
+// void (*signal(int _sig, void (*_func)(int)))(int);
 int raise(int sig);
-int kill(long pid, int sig);
+int kill(long pid, long signum);
+sighadler_t sys_signal(long signum, sighadler_t hander,  void (*restorer)(void));
 int sigaddset(sigset_t *mask, int signo);
 int sigdelset(sigset_t *mask, int signo);
 int sigemptyset(sigset_t *mask);

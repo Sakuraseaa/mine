@@ -24,4 +24,9 @@
 #define __NR_chdir	14
 #define __NR_getdents	15
 
+#define __NR_SIGNAL	16
+#define __NR_KILL	17
+
+#define __NR_getpid 18
+
 #endif

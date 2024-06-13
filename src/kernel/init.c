@@ -1,12 +1,14 @@
-#include "stddef.h"
 // #include "unistd.h"
 #include "stdio.h"
-#include "stdlib.h"
 #include "fcntl.h"
 #include "keyboard.h"
 #include "memory.h"
 #include "init.h"
 #include "dirent.h"
+#include "signal.h"
+
+extern int kill(long pid, long signum);
+extern sighadler_t signal(long signum, sighadler_t handler);
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
@@ -22,8 +24,21 @@ struct buildincmd
 };
 char *current_dir = NULL;
 int sk = 0;
+
+static void handler(int sig) {
+	
+	printf("The signal is %d\n", sig);
+
+}
+
+
 int usr_init()
 {
+	signal(2 , handler);
+	long pid = getpid();
+
+	kill(pid, 2);
+
 	int fd = 0;
 	unsigned char buf[256] = {0};
 	char path[] = "/KEYBOARD.DEV";

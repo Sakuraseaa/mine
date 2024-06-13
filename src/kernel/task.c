@@ -545,6 +545,11 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	tsk->priority = 2;
 	tsk->pid = global_pid++;
 	tsk->preempt_count = 0; // 进程抢占计数值初始化
+	
+	// 拷贝信号
+	tsk->sigaction = (sigaction_T*)kmalloc(sizeof(sigaction_T) * (NSIG + 1), 0);
+	memcpy(current->sigaction, tsk->sigaction, sizeof(sigaction_T) * (NSIG + 1));
+
 	tsk->state = TASK_UNINTERRUPTIBLE;
 	//////头插法
 	tsk->next = init_task_union.task.next;
@@ -834,15 +839,13 @@ void task_init()
 
 	list_init(&init_task_union.task.list);
 
+	init_task_union.task.sigaction = (sigaction_T*)kmalloc(sizeof(sigaction_T) * (NSIG + 1), 0);
+
 	// 创建内核线程
 	kernel_thread(init, 13, CLONE_FS | CLONE_SIGNAL);
 
 	init_task_union.task.state = TASK_RUNNING;
 	init_task_union.task.preempt_count = 0;
-	// 取得即将运行的线程
-	// p = container_of(list_next(&task_schedule.task_queue.list), struct task_struct, list);
-
-	//	switch_to(current, p);
 }
 
 

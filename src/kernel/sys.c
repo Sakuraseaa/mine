@@ -49,6 +49,11 @@ __asm__	(
 );
 */
 
+long sys_getpid(void)
+{
+    return current->pid;
+}
+
 unsigned long sys_putstring(char *string)
 {
     color_printk(WHITE, BLACK, string);
