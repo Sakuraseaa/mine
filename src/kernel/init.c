@@ -306,7 +306,7 @@ int cat_command(int argc, char **argv)
 	buf = kmalloc(i + 1, 0);
 	memset(buf, 0 , i + 1);
 	len = read(fd, buf, i);
-	// printf("length:%d\t%s\n",len,buf);
+	printf("length:%d\t%s\n",len,buf);
 
 	close(fd);
 }

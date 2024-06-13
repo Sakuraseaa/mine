@@ -284,7 +284,7 @@ int cat_command(int argc, char **argv)
 	if(len > 1)
 		filename[len] = '/';
 	strcat(filename, argv[1]);
-	// printf("cat_command filename:%s\n", filename);
+	printf("cat_command filename:%s\n", filename);
 
 	fd = open(filename, 0);
 	i = lseek(fd, 0, SEEK_END);
@@ -292,7 +292,7 @@ int cat_command(int argc, char **argv)
 	buf = malloc(i + 1, 0);
 	memset(buf, 0 , i + 1);
 	len = read(fd, buf, i);
-	// printf("length:%d\t%s\n",len,buf);
+	printf("length:%d\t%s\n",len,buf);
 
 	close(fd);
 }

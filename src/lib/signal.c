@@ -35,7 +35,20 @@ sighadler_t sys_signal(long signum, sighadler_t  hander, void (*restorer)(void))
 // 发送信号
 int sys_kill(long pid, int signum)
 {
-    current->signal |= (1 << signum); // 设置信号位图-表示接收信号
+    struct task_struct *tsk = NULL;
+
+	for (tsk = init_task_union.task.next; tsk != &init_task_union.task; tsk = tsk->next)
+	{
+		if (tsk->pid == pid)
+			break;
+	}
+
+    if(tsk == NULL)
+        return;
+
+    tsk->signal |= (1 << signum); // 设置信号位图-表示接收信号
+
+   //  current->signal |= (1 << signum); // 设置信号位图-表示接收信号
     return 0;
 }
 

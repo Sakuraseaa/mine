@@ -374,31 +374,31 @@ kallsyms_addresses:
 	.quad	0xffff8000001186cc
 	.quad	0xffff8000001187aa
 	.quad	0xffff8000001187ff
-	.quad	0xffff8000001189dd
-	.quad	0xffff8000001189ef
-	.quad	0xffff800000118a01
-	.quad	0xffff800000118a13
-	.quad	0xffff800000118a25
-	.quad	0xffff800000118c88
-	.quad	0xffff800000118cb4
-	.quad	0xffff800000118d18
-	.quad	0xffff800000118e17
-	.quad	0xffff800000118fd3
-	.quad	0xffff800000119017
-	.quad	0xffff8000001190bf
-	.quad	0xffff800000119102
-	.quad	0xffff80000011917d
-	.quad	0xffff8000001191b1
-	.quad	0xffff8000001191e9
-	.quad	0xffff80000011925d
-	.quad	0xffff8000001192c5
-	.quad	0xffff80000011930f
-	.quad	0xffff8000001193cf
-	.quad	0xffff8000001193de
-	.quad	0xffff800000119413
-	.quad	0xffff800000119476
-	.quad	0xffff8000001194bd
-	.quad	0xffff8000001197a6
+	.quad	0xffff800000118a04
+	.quad	0xffff800000118a16
+	.quad	0xffff800000118a28
+	.quad	0xffff800000118a3a
+	.quad	0xffff800000118a4c
+	.quad	0xffff800000118caf
+	.quad	0xffff800000118cdb
+	.quad	0xffff800000118d3f
+	.quad	0xffff800000118e3e
+	.quad	0xffff800000118ffa
+	.quad	0xffff80000011903e
+	.quad	0xffff8000001190e6
+	.quad	0xffff800000119129
+	.quad	0xffff8000001191a4
+	.quad	0xffff8000001191d8
+	.quad	0xffff800000119210
+	.quad	0xffff800000119284
+	.quad	0xffff8000001192ec
+	.quad	0xffff800000119336
+	.quad	0xffff8000001193f6
+	.quad	0xffff800000119405
+	.quad	0xffff80000011943a
+	.quad	0xffff80000011949d
+	.quad	0xffff800000119530
+	.quad	0xffff800000119819
 
 .globl kallsyms_syms_num
 .align 8
