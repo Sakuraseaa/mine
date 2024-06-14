@@ -1,0 +1,251 @@
+
+Merging program properties
+
+Removed property 0xc0000002 to merge /home/steven/mine/src/user/Build/init.o (0x3) and /home/steven/mine/src/user/Build/sig_restore.o (not found)
+
+Discarded input sections
+
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/init.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/syscall.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/errno.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/malloc.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/keyboard.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/printf.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/string.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/dirent.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/wait.o
+ .note.gnu.property
+                0x0000000000000000       0x20 /home/steven/mine/src/user/Build/signal.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+TARGET(elf64-x86-64)
+LOAD /home/steven/mine/src/user/Build/init.o
+LOAD /home/steven/mine/src/user/Build/syscall.o
+LOAD /home/steven/mine/src/user/Build/errno.o
+LOAD /home/steven/mine/src/user/Build/malloc.o
+LOAD /home/steven/mine/src/user/Build/keyboard.o
+LOAD /home/steven/mine/src/user/Build/printf.o
+LOAD /home/steven/mine/src/user/Build/string.o
+LOAD /home/steven/mine/src/user/Build/dirent.o
+LOAD /home/steven/mine/src/user/Build/wait.o
+LOAD /home/steven/mine/src/user/Build/signal.o
+LOAD /home/steven/mine/src/user/Build/sig_restore.o
+                0x0000000000800000                . = 0x800000
+
+.text           0x0000000000800000     0x25c0
+                0x0000000000800000                _text = .
+ /home/steven/mine/src/user/Build/init.o(.text)
+ .text          0x0000000000800000     0x1011 /home/steven/mine/src/user/Build/init.o
+                0x0000000000800000                main
+                0x000000000080000a                sig_handler
+                0x000000000080003f                get_scancode
+                0x0000000000800075                analysis_keycode
+                0x00000000008003ce                cd_command
+                0x00000000008006a7                ls_command
+                0x0000000000800785                pwd_command
+                0x00000000008007da                cat_command
+                0x00000000008009df                touch_command
+                0x00000000008009f1                rm_command
+                0x0000000000800a03                mkdir_command
+                0x0000000000800a15                rmdir_command
+                0x0000000000800a27                exec_command
+                0x0000000000800c82                reboot_command
+                0x0000000000800cae                find_cmd
+                0x0000000000800d12                read_line
+                0x0000000000800e11                parse_command
+                0x0000000000800fcd                run_command
+ *(.text)
+ .text          0x0000000000801011      0x141 /home/steven/mine/src/user/Build/syscall.o
+                0x0000000000801011                putstring
+                0x0000000000801021                open
+                0x0000000000801031                close
+                0x0000000000801041                read
+                0x0000000000801051                write
+                0x0000000000801061                lseek
+                0x0000000000801071                fork
+                0x0000000000801081                vfork
+                0x0000000000801091                execve
+                0x00000000008010a1                exit
+                0x00000000008010ae                wait4
+                0x00000000008010bb                brk
+                0x00000000008010c8                reboot
+                0x00000000008010d5                chdir
+                0x00000000008010e2                getdents
+                0x00000000008010ef                SIGNAL
+                0x00000000008010fc                KILL
+                0x0000000000801109                sleep
+                0x0000000000801116                getpid
+ .text          0x0000000000801152        0x0 /home/steven/mine/src/user/Build/errno.o
+ .text          0x0000000000801152      0x185 /home/steven/mine/src/user/Build/malloc.o
+                0x0000000000801152                malloc
+                0x00000000008012c8                free
+ .text          0x00000000008012d7        0x0 /home/steven/mine/src/user/Build/keyboard.o
+ .text          0x00000000008012d7      0xdc2 /home/steven/mine/src/user/Build/printf.o
+                0x00000000008012d7                strlen
+                0x000000000080130a                skip_atoi
+                0x00000000008015eb                vsprintf
+                0x0000000000801ee2                sprintf
+                0x0000000000801fab                puts
+                0x0000000000801fba                printf
+ .text          0x0000000000802099      0x270 /home/steven/mine/src/user/Build/string.o
+                0x0000000000802099                memcpy
+                0x00000000008020f7                memcmp
+                0x0000000000802138                memset
+                0x00000000008021b2                strcpy
+                0x00000000008021dd                strncpy
+                0x0000000000802214                strcat
+                0x000000000080224b                strcmp
+                0x000000000080228a                strncmp
+ .text          0x0000000000802309      0x161 /home/steven/mine/src/user/Build/dirent.o
+                0x0000000000802309                opendir
+                0x00000000008023ac                closedir
+                0x00000000008023ef                readdir
+ .text          0x000000000080246a       0x6c /home/steven/mine/src/user/Build/wait.o
+                0x000000000080246a                wait
+                0x000000000080249e                waitpid
+ .text          0x00000000008024d6       0xd5 /home/steven/mine/src/user/Build/signal.o
+                0x00000000008024d6                signal
+                0x0000000000802543                kill
+ .text          0x00000000008025ab       0x15 /home/steven/mine/src/user/Build/sig_restore.o
+                0x00000000008025ab                sig_restore
+                0x00000000008025c0                _etext = .
+
+.iplt           0x00000000008025c0        0x0
+ .iplt          0x00000000008025c0        0x0 /home/steven/mine/src/user/Build/init.o
+                0x00000000008025c0                . = ALIGN (0x8)
+
+.data           0x00000000008025c0      0x4c0
+                0x00000000008025c0                _data = .
+ *(.data)
+ .data          0x00000000008025c0       0xa0 /home/steven/mine/src/user/Build/init.o
+                0x00000000008025c0                shell_internal_cmd
+ .data          0x0000000000802660        0x0 /home/steven/mine/src/user/Build/syscall.o
+ .data          0x0000000000802660        0x0 /home/steven/mine/src/user/Build/errno.o
+ .data          0x0000000000802660        0x0 /home/steven/mine/src/user/Build/malloc.o
+ .data          0x0000000000802660      0x420 /home/steven/mine/src/user/Build/keyboard.o
+                0x0000000000802660                pausebreak_scode
+                0x0000000000802680                keycode_map_normal
+ .data          0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/printf.o
+ .data          0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/string.o
+ .data          0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/dirent.o
+ .data          0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/wait.o
+ .data          0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/signal.o
+ .data          0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/sig_restore.o
+                0x0000000000802a80                _edata = .
+
+.got            0x0000000000802a80        0x0
+ .got           0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/init.o
+
+.got.plt        0x0000000000802a80        0x0
+ .got.plt       0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/init.o
+
+.igot.plt       0x0000000000802a80        0x0
+ .igot.plt      0x0000000000802a80        0x0 /home/steven/mine/src/user/Build/init.o
+
+.rodata         0x0000000000802a80      0x4c7
+                0x0000000000802a80                _rodata = .
+ *(.rodata)
+ .rodata        0x0000000000802a80      0x11a /home/steven/mine/src/user/Build/init.o
+                0x0000000000802acf                file_type
+ .rodata        0x0000000000802b9a       0x12 /home/steven/mine/src/user/Build/malloc.o
+ *fill*         0x0000000000802bac        0x4 
+ .rodata        0x0000000000802bb0      0x378 /home/steven/mine/src/user/Build/printf.o
+ .rodata        0x0000000000802f28       0x1f /home/steven/mine/src/user/Build/signal.o
+                0x0000000000802f47                _erodata = .
+
+.eh_frame       0x0000000000802f48      0x580
+ .eh_frame      0x0000000000802f48      0x258 /home/steven/mine/src/user/Build/init.o
+ .eh_frame      0x00000000008031a0       0x40 /home/steven/mine/src/user/Build/malloc.o
+                                         0x58 (size before relaxing)
+ .eh_frame      0x00000000008031e0       0xe0 /home/steven/mine/src/user/Build/printf.o
+                                         0xf8 (size before relaxing)
+ .eh_frame      0x00000000008032c0      0x128 /home/steven/mine/src/user/Build/string.o
+                                        0x140 (size before relaxing)
+ .eh_frame      0x00000000008033e8       0x60 /home/steven/mine/src/user/Build/dirent.o
+                                         0x78 (size before relaxing)
+ .eh_frame      0x0000000000803448       0x40 /home/steven/mine/src/user/Build/wait.o
+                                         0x58 (size before relaxing)
+ .eh_frame      0x0000000000803488       0x40 /home/steven/mine/src/user/Build/signal.o
+                                         0x58 (size before relaxing)
+
+.rela.dyn       0x00000000008034c8        0x0
+ .rela.got      0x00000000008034c8        0x0 /home/steven/mine/src/user/Build/init.o
+ .rela.iplt     0x00000000008034c8        0x0 /home/steven/mine/src/user/Build/init.o
+
+.bss            0x00000000008034c8       0x40
+                0x00000000008034c8                _bss = .
+ *(.bss)
+ .bss           0x00000000008034c8        0xc /home/steven/mine/src/user/Build/init.o
+                0x00000000008034c8                current_dir
+                0x00000000008034d0                sk
+ .bss           0x00000000008034d4        0x0 /home/steven/mine/src/user/Build/syscall.o
+ .bss           0x00000000008034d4        0x4 /home/steven/mine/src/user/Build/errno.o
+                0x00000000008034d4                errno
+ .bss           0x00000000008034d8       0x18 /home/steven/mine/src/user/Build/malloc.o
+ .bss           0x00000000008034f0       0x18 /home/steven/mine/src/user/Build/keyboard.o
+                0x00000000008034f0                shift_l
+                0x00000000008034f4                shift_r
+                0x00000000008034f8                ctrl_l
+                0x00000000008034fc                ctrl_r
+                0x0000000000803500                alt_l
+                0x0000000000803504                alt_r
+ .bss           0x0000000000803508        0x0 /home/steven/mine/src/user/Build/printf.o
+ .bss           0x0000000000803508        0x0 /home/steven/mine/src/user/Build/string.o
+ .bss           0x0000000000803508        0x0 /home/steven/mine/src/user/Build/dirent.o
+ .bss           0x0000000000803508        0x0 /home/steven/mine/src/user/Build/wait.o
+ .bss           0x0000000000803508        0x0 /home/steven/mine/src/user/Build/signal.o
+ .bss           0x0000000000803508        0x0 /home/steven/mine/src/user/Build/sig_restore.o
+                0x0000000000803508                _ebss = .
+                0x0000000000803508                _end = .
+OUTPUT(/home/steven/mine/src/user/Build/system_api_lib elf64-x86-64)
+
+.comment        0x0000000000000000       0x2b
+ .comment       0x0000000000000000       0x2b /home/steven/mine/src/user/Build/init.o
+                                         0x2c (size before relaxing)
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/syscall.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/errno.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/malloc.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/keyboard.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/printf.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/string.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/dirent.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/wait.o
+ .comment       0x000000000000002b       0x2c /home/steven/mine/src/user/Build/signal.o
+
+.note.GNU-stack
+                0x0000000000000000        0x0
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/init.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/syscall.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/errno.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/malloc.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/keyboard.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/printf.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/string.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/dirent.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/wait.o
+ .note.GNU-stack
+                0x0000000000000000        0x0 /home/steven/mine/src/user/Build/signal.o

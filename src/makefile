@@ -21,8 +21,8 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o  $(BUI_DIR)/usr_lib.o  $(BUI_DIR)/switch_to.o\
-		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/init.o $(BUI_DIR)/usr_dirent.o $(BUI_DIR)/usr_wait.o \
-		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o \
+		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  \
+		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/usr_LIB.o\
 
 
 OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
@@ -86,11 +86,11 @@ $(BUI_DIR)/mouse.o: $(SRC_DIR)/drivers/mouse.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/disk.o: $(SRC_DIR)/drivers/disk.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/time.o: $(SRC_DIR)/kernel/time.c
+$(BUI_DIR)/time.o: $(SRC_DIR)/lib/time.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/HEPT.o: $(SRC_DIR)/drivers/HEPT.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/softirq.o: $(SRC_DIR)/kernel/softirq.c
+$(BUI_DIR)/softirq.o: $(SRC_DIR)/lib/softirq.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/timer.o: $(SRC_DIR)/lib/timer.c
 	$(CC) $(CFLAGS) $< -o $@
@@ -122,15 +122,13 @@ $(BUI_DIR)/kallsyms.o: $(SRC_DIR)/script/kallsyms.c $(BUI_DIR)/kernel.bin
 
 
 # ============= DEBUGE ============
-$(BUI_DIR)/init.o: $(SRC_DIR)/kernel/init.c
+$(BUI_DIR)/usr_init.o: $(SRC_DIR)/kernel/usr_init.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/usr_lib.o: $(SRC_DIR)/kernel/usr_lib.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/usr_printf.o: $(SRC_DIR)/kernel/usr_printf.c
 	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/usr_dirent.o: $(SRC_DIR)/kernel/usr_dirent.c
-	$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/usr_wait.o: $(SRC_DIR)/kernel/usr_wait.c
+$(BUI_DIR)/usr_LIB.o: $(SRC_DIR)/kernel/usr_LIB.c
 	$(CC) $(CFLAGS) $< -o $@
 # ============= DEBUGE ============
 .PHONY: clean

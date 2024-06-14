@@ -99,9 +99,7 @@ reschedule:
 ENTRY(system_call)
 	sti				 	// 开中断
 	subq $0x38, %rsp 	//给 ss,rsp, rflags, cs, rip, error_code, func 留出内存空间 (其实此处是对齐结构体)
-	movq $0, 0x10(%rsp) // 设置 rip 为 0， 给 do_signal信号做标志
 	cld			 	 	// 清除方向位
-
 	pushq %rax	 	 	// 保存上下文环境，要返回的rip和rsp，也被记录再这里（内核栈）
 	
 	movq %es, %rax
@@ -135,6 +133,7 @@ ENTRY(system_call)
 
 // ++++++++++信号检测+++++++++++++++++++++
 	movq %rsp, %rdi  // 传入参数
+	movq $0, RIP(%rsp) // 设置 rip 为 0， 给 do_signal信号做标志
 	callq do_signal
 // ++++++++++++++++++++++++++++++++++++++
 

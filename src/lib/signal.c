@@ -84,7 +84,7 @@ void do_signal(struct pt_regs* regs)
 
     // 为信号的执行准备栈帧
     sf.blocked = current->blocked;
-    sf.restorer = sa->sa_restorer;
+    sf.restorer = (unsigned long)sa->sa_restorer;
     sf.signum = signr;
     sf.rflags = regs->rflags;
     sf.r12 = regs->r12;

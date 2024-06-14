@@ -5,8 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/*",
                 "${workspaceFolder}/src/*",
+                "${workspaceFolder}/src/**",
                 "${workspaceFolder}/src/include/*",
                 "${workspaceFolder}/src/fs/*",
+                "${workspaceFolder}/src/lib/*",
                 "${workspaceFolder}/src/fs/FAT32/**",
                 "${workspaceFolder}/src/include/drivers/*",
                 "${workspaceFolder}/src/include/base/*",

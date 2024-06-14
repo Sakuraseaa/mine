@@ -49,6 +49,12 @@ __asm__	(
 );
 */
 
+unsigned long sys_sleep(unsigned int seconds)
+{
+    time_sleep(seconds);
+    return 0;
+}
+
 long sys_getpid(void)
 {
     return current->pid;
@@ -429,7 +435,7 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
     struct task_struct* child = NULL;
     struct task_struct* tsk = NULL;
 
-    color_printk(GREEN, BLACK,"sys_wait4\n");
+    // color_printk(GREEN, BLACK,"sys_wait4\n");
     for(tsk =&init_task_union.task; tsk->next != &init_task_union.task; tsk = tsk->next)
     {
         if(tsk->next->pid == pid)
@@ -441,19 +447,14 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
 
     if( child == NULL )   return -ECHILD;
     if( options != 0 )    return -EINVAL;
-    if( child->state == TASK_ZOMBIE )
-    {
-        copy_to_user(&child->exit_code, status, sizeof(int));
-        tsk->next = child->next;
-        exit_mm(child);
-        kfree(child);
-        return retval;
-    }
-
-    interruptible_sleep_on(&current->wait_childexit); // 阻塞
+    
+    // 直到子进程的成为僵尸进程，才会继续进行sys_wait4函数流程
+    while( child->state != TASK_ZOMBIE )
+        interruptible_sleep_on(&current->wait_childexit); // 阻塞
+    
 
     copy_to_user(&child->exit_code, status, sizeof(long));
-    tsk->next = child->next;
+    tsk->next = child->next; // 在PCB列表中，删除掉当前进程PCB
     exit_mm(child);
     kfree(child);
 
@@ -462,7 +463,7 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
 
 unsigned long sys_exit(int exit_code)
 {
-    color_printk(GREEN, BLACK, "sys_exit\n");
+    // color_printk(GREEN, BLACK, "sys_exit\n");
     return do_exit(exit_code);
 }
 

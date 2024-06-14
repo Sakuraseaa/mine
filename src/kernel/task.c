@@ -598,13 +598,15 @@ unsigned long do_exit(unsigned long exit_code)
 	struct task_struct *tsk = current;
 	// color_printk(RED, BLACK, "exit task is running,arg:%#018lx\n", exit_code);
 	
-do_exit_again:
+
 	cli();
 	tsk->state = TASK_ZOMBIE;
 	tsk->exit_code = exit_code;
 	exit_thread(tsk);
 	exit_files(tsk);
 	sti();
+
+do_exit_again:
 	
 	exit_notify();
 	schedule();
@@ -688,8 +690,7 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
 		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
 	}
-	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd)
-						 : "memory");
+	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");
     
 	filp = open_exec_file(name);
     if((unsigned long)filp > -0x1000UL) // 这是什么意思？
@@ -838,6 +839,7 @@ void task_init()
 	init_tss[0].rsp0 = init_thread.rsp0;
 
 	list_init(&init_task_union.task.list);
+	list_init(&init_task_union.task.wait_childexit.wait_list);
 
 	init_task_union.task.sigaction = (sigaction_T*)kmalloc(sizeof(sigaction_T) * (NSIG + 1), 0);
 

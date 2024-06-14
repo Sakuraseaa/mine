@@ -8,6 +8,7 @@
 #include "wait.h"
 #include "reboot.h"
 #include "string.h"
+#include "signal.h"
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
@@ -23,8 +24,15 @@ struct buildincmd
 };
 char *current_dir = NULL;
 int sk = 0;
+void sig_handler(int sig);
+
 int main()
 {
+	// signal(2 , sig_handler);
+
+	// long pid = getpid();
+	// kill(pid, 2);
+
 	// int fd = 0;
 	// unsigned char buf[256] = {0};
 	// char path[] = "/KEYBOARD.DEV";
@@ -51,10 +59,21 @@ int main()
 
 	// close(fd);
 
+	// exit(0);
+
+
 	while (1)
-		;
-	return 0;
+	{
+		/* code */
+	}
+	
 }
+void sig_handler(int sig) {
+	
+	printf("Catch signal is %d\n", sig);
+
+}
+
 
 /**
  * @brief 从键盘文件中读取键盘扫描码
@@ -284,7 +303,7 @@ int cat_command(int argc, char **argv)
 	if(len > 1)
 		filename[len] = '/';
 	strcat(filename, argv[1]);
-	printf("cat_command filename:%s\n", filename);
+	// printf("cat_command filename:%s\n", filename);
 
 	fd = open(filename, 0);
 	i = lseek(fd, 0, SEEK_END);

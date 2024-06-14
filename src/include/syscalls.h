@@ -19,4 +19,4 @@ SYSCALL_COMMON(__NR_getdents, sys_getdents)
 SYSCALL_COMMON(__NR_SIGNAL, sys_signal)
 SYSCALL_COMMON(__NR_KILL, sys_kill)
 SYSCALL_COMMON(__NR_getpid,sys_getpid)
-
+SYSCALL_COMMON(__NR_sleep,sys_sleep)

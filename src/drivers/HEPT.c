@@ -33,16 +33,34 @@ hw_int_controller HPET_int_controller =
         .ack = IOAPIC_edge_ack,
 };
 
+// 24-06-14 17:22 bug报告：本次注释的ticks_to_sleep的函数，直接使用传入参数sleep_ticks（rdi）进行运算。
+//                在系统执行一段时间后，传入参数sleep_ticks会变成脏数据。猜测是因为rdi寄存器在中断等地方，
+//                切换的时候没有妥善保存导致的。sleep_ticks被修改 --> rdi寄存器被改变 --> 猜测在终端过程中改变。
+//                
+//
+// /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
+// static void ticks_to_sleep(unsigned int sleep_ticks)
+// {
+//    unsigned int Old_ticks = jiffies;
+
+//    /* 若间隔的ticks数不够便让出cpu */
+//    while (jiffies - Old_ticks < sleep_ticks)
+//       hlt();
+// }
+
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
 static void ticks_to_sleep(unsigned int sleep_ticks)
 {
    unsigned int Old_ticks = jiffies;
+   unsigned int mid_ticks = sleep_ticks;
 
    /* 若间隔的ticks数不够便让出cpu */
-   while (jiffies - Old_ticks < sleep_ticks)
-      ;
-   // thread_yield();
+   while (jiffies - Old_ticks < mid_ticks)
+      hlt();
+
 }
+
+
 
 /* 把操作的计数器counter_no、读写锁属性rwl、计数器模式counter_mode写入模式控制寄存器并赋予初始值counter_value */
 static void frequency_set(unsigned char counter_port,
@@ -123,3 +141,10 @@ void mtime_sleep(unsigned int m_seconds)
    unsigned int sleep_ticks = (m_seconds + mil_seconds_per_intr - 1) / mil_seconds_per_intr;
    ticks_to_sleep(sleep_ticks);
 }
+
+/* 以秒为单位的sleep   1秒 */
+void time_sleep(unsigned int seconds)
+{
+   mtime_sleep(seconds * 1000);
+}
+

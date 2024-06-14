@@ -36,7 +36,7 @@ SYSFUNC_DEF(getdents)
 
 SYSFUNC_DEF(SIGNAL)
 SYSFUNC_DEF(KILL)
-
+SYSFUNC_DEF(sleep)
 SYSFUNC_DEF(getpid)
 
 __asm__(

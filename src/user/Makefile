@@ -7,12 +7,15 @@ CC	  = gcc
 
 CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector \
 		-fno-builtin -fno-pie -fno-pic  -I $(USR_INC_DIR) \
-		-c\
+		-c -I $(USR_INC_DIR)/base \
 
 #被链接的文件
-OBJS =    $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/lib.o $(USR_BUI_DIR)/errno.o  \
+OBJS =    $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/syscall.o $(USR_BUI_DIR)/errno.o  \
 		$(USR_BUI_DIR)/malloc.o $(USR_BUI_DIR)/keyboard.o $(USR_BUI_DIR)/printf.o \
 		$(USR_BUI_DIR)/string.o $(USR_BUI_DIR)/dirent.o $(USR_BUI_DIR)/wait.o \
+		$(USR_BUI_DIR)/signal.o $(USR_BUI_DIR)/sig_restore.o\
+
+
 
 all: $(USR_BUI_DIR)/system_api_lib
 	objcopy -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary $(USR_BUI_DIR)/system_api_lib $(USR_BUI_DIR)/init.bin
@@ -22,25 +25,31 @@ all: $(USR_BUI_DIR)/system_api_lib
 	sudo umount /mnt
 
 $(USR_BUI_DIR)/system_api_lib: $(OBJS)
-	ld -b elf64-x86-64 -z muldefs -o $@ $^  -T User.lds
+	ld -b elf64-x86-64 -z muldefs -o $@ $^  -T User.lds -Map $(USR_BUI_DIR)/init.map
 $(USR_BUI_DIR)/init.o: $(USR_SRC_DIR)/init.c
 	gcc  $(CFLAGS) $< -o $@
-$(USR_BUI_DIR)/lib.o: $(USR_SRC_DIR)/lib.c
+$(USR_BUI_DIR)/syscall.o: $(USR_SRC_DIR)/syscall.c
 	gcc  $(CFLAGS)  $< -o $@
-$(USR_BUI_DIR)/errno.o: $(USR_SRC_DIR)/errno.c
+$(USR_BUI_DIR)/errno.o: $(USR_SRC_DIR)/LIB/errno.c
 	gcc  $(CFLAGS)  $< -o $@
 $(USR_BUI_DIR)/malloc.o: $(USR_SRC_DIR)/malloc.c
 	gcc  $(CFLAGS)  $< -o $@
-$(USR_BUI_DIR)/printf.o: $(USR_SRC_DIR)/printf.c
+$(USR_BUI_DIR)/printf.o: $(USR_SRC_DIR)/LIB/printf.c
 	gcc  $(CFLAGS)  $< -o $@
-$(USR_BUI_DIR)/keyboard.o: $(USR_SRC_DIR)/keyboard.c
+$(USR_BUI_DIR)/keyboard.o: $(USR_SRC_DIR)/LIB/keyboard.c
 	gcc  $(CFLAGS)  $< -o $@
-$(USR_BUI_DIR)/string.o: $(USR_SRC_DIR)/string.c
+$(USR_BUI_DIR)/string.o: $(USR_SRC_DIR)/LIB/string.c
 	gcc  $(CFLAGS)  $< -o $@
 $(USR_BUI_DIR)/dirent.o: $(USR_SRC_DIR)/dirent.c
 	$(CC) $(CFLAGS) $< -o $@
-$(USR_BUI_DIR)/wait.o: $(USR_SRC_DIR)/wait.c
+$(USR_BUI_DIR)/wait.o: $(USR_SRC_DIR)/LIB/wait.c
 	$(CC) $(CFLAGS) $< -o $@
+$(USR_BUI_DIR)/signal.o: $(USR_SRC_DIR)/LIB/signal.c
+	$(CC) $(CFLAGS) $< -o $@
+$(USR_BUI_DIR)/sig_restore.o: $(USR_SRC_DIR)/LIB/sig_restore.S
+	$(CC) $(CFLAGS) $< -o $@
+
+
 Hd_Path=/home/steven/mine/bochs/hd.img
 .PHONY: clean update
 clean:
