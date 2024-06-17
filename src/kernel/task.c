@@ -173,6 +173,8 @@ unsigned long init(unsigned long arg)
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
 
+	//while(1);
+
 	// 更换rsp到中断栈, PCB最上部的需要pop返回的位置
 	// 压入了ret_system_call作为返回地址
 	__asm__ __volatile("movq %1, %%rsp \n\t"

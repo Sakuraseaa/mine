@@ -5,13 +5,16 @@
 #include "fcntl.h"
 #include "stdio.h"
 #include "printk.h"
+
+#define false 0;
+#define true 1;
+
 typedef unsigned int Elf64_Word;
-typedef unsigned long Elf64_Addr, Elf64_Off;
+typedef unsigned long Elf64_Addr;
+typedef unsigned long Elf64_Off;
 typedef unsigned short Elf64_Half;
 typedef unsigned long Elf64_Xword;
-typedef char bool
-typedef 0 FALSE
-typedef 1 TRUE
+typedef char bool;
 
 #define EI_NIDENT 16
 
@@ -53,7 +56,7 @@ typedef struct
 {
     Elf64_Word	p_type;			/* Segment type */              // segment 的类型
     Elf64_Word	p_flags;		/* Segment flags */             // segment 的权限，R， W， X
-    Elf64_Off	    p_offset;		/* Segment file offset */       // segment 在文件中的偏移
+    Elf64_Off	p_offset;		/* Segment file offset */       // segment 在文件中的偏移
     Elf64_Addr	p_vaddr;		/* Segment virtual address */   // segment 在第一个字节在进程虚拟地址空间的起始位置
     Elf64_Addr	p_paddr;		/* Segment physical address */  // segment 的物理装载地址
     Elf64_Xword	p_filesz;		/* Segment size in file */      // segment 在ELF文件中所占空间的长度
@@ -99,52 +102,45 @@ struct file *open_exec_file(char *path)
 
 	return filp;
 }
+
 /**
- * @brief pte_addr用于获得虚拟地址vaddr对应的页表项指针，pte中有vaddr保存的物理页地址
- *
- * @param vaddr 需要获得pte地址的虚拟地址
- * @return uint32_t* 可访问pte的虚拟地址
+ * @brief pmle_addr用于获得虚拟地址vaddr对应的4级页表项指针，pte中有vaddr保存的物理页地址
  */
-unsigned long *pmle_ptr(unsigned long vaddr)
+unsigned long* pml4e_ptr(unsigned long vaddr)
 {
-    unsigned long *pte =  Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
+    unsigned long *pmle =  Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
 					  ((vaddr >> PAGE_GDT_SHIFT) & 0x1ff));
-    return pte;
+    return pmle;
 }
 
 /**
- * @brief pde_addr用于获得指向给定虚拟地址所在的页表的地址，即pde中的物理地址
- *
- * @param vaddr 需要获得pde地址的虚拟地址
- * @return uint32_t* 虚拟地址的pde地址
+ * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录指针表(3级页表)项指针
  */
-unsigned long *pdpe_ptr(unsigned long vaddr)
+unsigned long* pdpe_ptr(unsigned long vaddr)
 {
-    // 要想访问页目录表，那么就得让cpu以为访问到物理页地址的时候，其实访问的是页目录表地址
-    // 然后通过 pde偏移 * 4, 访问目标页目录表项
-	unsigned long *pde = Phy_To_Virt((unsigned long *)(*pmle_ptr(vaddr) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
-    return pde;
+	unsigned long *pdpe = Phy_To_Virt((unsigned long *)(*(pml4e_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
+    return pdpe;
 }
-static long virtual_map(unsigned long user_addr){
+
+/**
+ * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
+ */
+unsigned long* pde_ptr(unsigned long vaddr) {
+	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pdpe_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_2M_SHIFT) & 0x1ff));
+	return pde;
+}
+
+/**
+ * @brief 进行虚拟地址的映射
+ * 
+ * @param user_addr 
+ */
+static void virtual_map(unsigned long user_addr){
 	
 	unsigned long *tmp;
 	unsigned long *virtual = NULL;
 	struct Page *p = NULL;
 	
-	if (current->flags & PF_VFORK)
-	{
-		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
-		// 而新程序必须拥有独立的地址空间才能正常运行
-		current->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
-		memset(current->mm, 0, sizeof(struct mm_struct));
-		current->mm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
-		color_printk(RED, BLACK, "load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
-		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
-		// copy kernel space
-		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
-		current->flags &= ~PF_VFORK;
-	}
-
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
 					  ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
@@ -154,7 +150,7 @@ static long virtual_map(unsigned long user_addr){
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
 	}
-// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
+	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if (*tmp == NULL)
 	{
@@ -162,13 +158,16 @@ static long virtual_map(unsigned long user_addr){
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
-// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
+	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 	// 申请用户占用的内存,填充页表, 填充PDT内存
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
 	if (*tmp == NULL)
 	{
 		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
 		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
+
+		// 清理地址空间脏数据
+		memset(user_addr & PAGE_2M_MASK, 0, PAGE_2M_SIZE);
 	}
 	
 }
@@ -188,46 +187,46 @@ static bool segment_load(struct file* filp, unsigned long offset, unsigned long 
     // 计算段将要加载到的虚拟页
     unsigned long vaddr_first_page = vaddr & TASK_SIZE;
     // 表示文件在第一个页框中占用的字节大小
-    unsigned long size_in_first_page = PAGE_2M_SIZE - (vaddr & PAGE_2M_MASK);
+    long size_in_first_page = PAGE_2M_SIZE - (vaddr & (PAGE_2M_SIZE - 1));
 
     // 如果虚拟页内装不下, 则计算额外需要的页数
-    unsigned long occupy_pages = 0;
+    unsigned long occupy_pages = 1; // 计算本次加载要占用的物理页数
     if (filesz > size_in_first_page) {
         unsigned long left_size = filesz - size_in_first_page;
         occupy_pages = PAGE_2M_ALIGN(left_size / PAGE_2M_SIZE) + 1;
     }
-    else {
-        occupy_pages = 1;
-    }
 
     unsigned long page_idx = 0;
     unsigned long vaddr_page = vaddr_first_page;
-    while (page_idx < occupy_pages)
-    {
-		
-
-
-
+	unsigned long* a, *b, *c;
+	do
+    { 	a = pml4e_ptr(vaddr_page);
+		b = pdpe_ptr(vaddr_page);
+		c = pde_ptr(vaddr_page);
+		if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) || !(*pde_ptr(vaddr_page) & 0x01)) {
+			virtual_map(vaddr_page); // 映射地址，若虚拟地址对应的实际地址为空，则分配物理面
+		}
         vaddr_page += PAGE_2M_SIZE;
         page_idx++;
-    }
+    } while (page_idx < occupy_pages);
 	
 	filp->f_ops->lseek(filp, offset, SEEK_SET);
-	filp->f_ops->read(filp, vaddr_page, filesz, &filp->position);
+	filp->f_ops->read(filp, (void *)vaddr_first_page, filesz, &filp->position);
 
     return true;
 }
 
+unsigned long code_start_addr = 0;
 /**
  * @brief load用于将filename指向的程序文件加载到内存中
  *
  * @param pathname 需要加载的程序文件的名称
- * @return int32_t 若加载成功, 则返回程序的起始地址(虚拟地址); 若加载失败, 则返回-1
+ * @return unsiged long 若加载成功, 则返回程序的 bss 段的结束地址; 若加载失败, 则返回-1
  */
-static long load(char *pathname)
+static unsigned long load(char *pathname)
 {
 	struct file *filp = NULL;
-	unsigned long retval = 0;
+	unsigned long end_bss = 0;
 	long pos = 0, ret = -1;
 
 	Elf64_Ehdr elf_header;
@@ -262,29 +261,31 @@ static long load(char *pathname)
         return ret;
     }
 
-  	Elf64_Half prog_header_size = elf_header.e_phentsize;
+	code_start_addr = elf_header.e_entry; // 程序的入口地址
+
+	Elf64_Half prog_header_size = elf_header.e_phentsize;
     Elf64_Off prog_header_offset = elf_header.e_phoff;
     // 遍历所有程序头表
     unsigned int prog_idx = 0;
-	filp->f_ops->lseek(filp, prog_header_offset, SEEK_SET);	
+	
 	while (prog_idx < elf_header.e_phnum)
 	{
 		memset(&prog_header, 0, prog_header_size);
-
+		
+		filp->f_ops->lseek(filp, prog_header_offset + (prog_idx * prog_header_size), SEEK_SET);	
 		if(filp->f_ops->read(filp, (void *)&prog_header, sizeof(Elf64_Phdr), &filp->position) != prog_header_size) {
 			color_printk(RED, BLACK,"EXECVE -> read file ERROR!\n");
 			return ret;
 		}
 		
 		if(PT_LOAD == prog_header.p_type) {
-			segment_load(filp, prog_header.p_offset, prog_header.p_memsz, prog_header.p_vaddr);
+			segment_load(filp, prog_header.p_offset, prog_header.p_filesz, prog_header.p_vaddr);
+			end_bss = prog_header.p_vaddr + prog_header.p_filesz;
 		}
 		prog_idx++;
 	}
 	
-
-done:
-	
+	return end_bss;
 }
 
 
@@ -292,35 +293,54 @@ done:
 unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *envp[])
 {
   	// color_printk(RED, BLACK, "do_execve task is running\n");
-	unsigned long code_start_addr = 0x800000;
-	unsigned long stack_start_addr = 0xa00000;
-	unsigned long brk_start_addr = 0xc00000;
-	struct file *filp = NULL;
+	unsigned long stack_start_addr = TASK_SIZE + 1;
 	unsigned long retval = 0;
 	long pos = 0;
+	
+	if (current->flags & PF_VFORK)
+	{
+		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
+		// 而新程序必须拥有独立的地址空间才能正常运行
+		current->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
+		memset(current->mm, 0, sizeof(struct mm_struct));
+		current->mm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
+		color_printk(RED, BLACK, "load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
+		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
+		// copy kernel space
+		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
+		
+		current->flags &= ~PF_VFORK;
+		__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
+	}
 
-	load(name);
-
-	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");
-    
+	if((retval = load(name)) == -1) {
+		// ERROR!!!!!
+	}
 
 	if (!(current->flags & PF_KTHREAD))
 		current->addr_limit = TASK_SIZE;
 
+	// 此处我目前不打算解析段表，因为解析出来也用不到。所以此处多数项我暂且赋值为0
 	current->mm->start_code = code_start_addr;
 	current->mm->end_code = 0;
 	current->mm->start_data = 0;
 	current->mm->end_data = 0;
 	current->mm->start_rodata = 0;
 	current->mm->end_rodata = 0;
-	current->mm->start_bss = code_start_addr + filp->dentry->dir_inode->file_size;
-	current->mm->end_bss = stack_start_addr;
-	current->mm->start_brk = brk_start_addr;
-	current->mm->end_brk = brk_start_addr;
+	current->mm->start_bss = 0;
+	current->mm->end_bss = retval;
+
+	// 设置用户堆 起始地址
+	current->mm->start_brk = current->mm->end_brk = PAGE_2M_ALIGN(current->mm->end_bss); 
+	// 设置用户栈 起始地址
 	current->mm->start_stack = stack_start_addr;
+	// 映射栈地址, 目前刚启动为栈分配2MB （有点多？）
+	// issue:: 栈空气不够了，如何扩充？ （缺页中断！）
+	virtual_map(stack_start_addr - PAGE_2M_SIZE);
 
 	exit_files(current);
 
+	// 在用户空间，复制进程运行参数
 	if( argv != NULL ) {
 		int argc = 0, len = 0, i = 0;
 		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
@@ -339,16 +359,9 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		regs->rsi = (unsigned long)dargv; // argv
 	}
 
-
-	// 清理地址空间脏数据
-	memset((void *)code_start_addr, 0, stack_start_addr - code_start_addr);
-	pos = 0;
-	retval = filp->f_ops->read(filp, (void *)code_start_addr, filp->dentry->dir_inode->file_size, &pos);
-	
     __asm__ __volatile__("movq %0,%%gs; movq %0, %%fs;"::"r"(0UL));
 
-
-	// 这里没有初始化gs,fs段选择子
+	// 为进程创建初始进程环境(上下文)
 	regs->ds = USER_DS;
 	regs->es = USER_DS;
 	regs->ss = USER_DS;

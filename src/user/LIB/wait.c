@@ -1,5 +1,5 @@
 #include "wait.h"
-
+#include "unistd.h"
 int wait(int *status)
 {
     return wait4((int)-1, status, 0);

@@ -56,7 +56,7 @@ unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 /*0x19*/	'p',		'P',
 /*0x1a*/	'[',		'{',
 /*0x1b*/	']',		'}',
-/*0x1c*/	'\n',		0,		//ENTER
+/*0x1c*/	'\n',		'\n',		//ENTER
 /*0x1d*/	0x1d,		0x1d,		//CTRL Left
 /*0x1e*/	'a',		'A',
 /*0x1f*/	's',		'S',

@@ -28,45 +28,44 @@ void sig_handler(int sig);
 
 int main()
 {
-	// signal(2 , sig_handler);
+	signal(4 , sig_handler);
 
-	// long pid = getpid();
-	// kill(pid, 2);
+	long pid = getpid();
+	kill(pid, 4);
+	printf("Pid: %d\n", pid);
+	
+	int fd = 0;
+	unsigned char buf[256] = {0};
+	char path[] = "/KEYBOARD.DEV";
+	int index = -1;
+	current_dir = "/";
+	fd = open(path, 0);
 
-	// int fd = 0;
-	// unsigned char buf[256] = {0};
-	// char path[] = "/KEYBOARD.DEV";
-	// int index = -1;
-	// current_dir = "/";
-	// fd = open(path, 0);
+	while (1)
+	{
+		sk++;
+		int argc = 0;
+		char **argv = NULL;
+		printf("sk@Mine %d #:", sk);
+		memset(buf, 0, 256);
+		// 命令读取
+		read_line(fd, buf);
+		// 命令解析
+		index = parse_command(buf, &argc, &argv);
+		if (index < 0)
+			printf("Input Error, No Command Found!\n");
+		else
+			run_command(index, argc, argv); // 命令执行
+	}
 
-	// while (1)
-	// {
-	// 	sk++;
-	// 	int argc = 0;
-	// 	char **argv = NULL;
-	// 	printf("sk@Mine %d #:", sk);
-	// 	memset(buf, 0, 256);
-	// 	// 命令读取
-	// 	read_line(fd, buf);
-	// 	// 命令解析
-	// 	index = parse_command(buf, &argc, &argv);
-	// 	if (index < 0)
-	// 		printf("Input Error, No Command Found!\n");
-	// 	else
-	// 		run_command(index, argc, argv); // 命令执行
-	// }
-
-	// close(fd);
-
-	// exit(0);
-
+	close(fd);
 
 	while (1)
 	{
 		/* code */
 	}
-	
+	// issue:: init进程有能力执行exit函数吗？
+	exit(0);
 }
 void sig_handler(int sig) {
 	

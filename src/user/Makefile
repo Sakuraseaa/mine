@@ -25,7 +25,7 @@ all: $(USR_BUI_DIR)/init.bin
 	sudo umount /mnt
 
 $(USR_BUI_DIR)/init.bin: $(OBJS)
-	ld -b elf64-x86-64 -z muldefs -o $@ $^  -T User.lds -Map $(USR_BUI_DIR)/init.map
+	ld -b elf64-x86-64 -z muldefs -o $@ $^ -Map $(USR_BUI_DIR)/init.map
 $(USR_BUI_DIR)/init.o: $(USR_SRC_DIR)/init.c
 	gcc  $(CFLAGS) $< -o $@
 $(USR_BUI_DIR)/syscall.o: $(USR_SRC_DIR)/syscall.c
