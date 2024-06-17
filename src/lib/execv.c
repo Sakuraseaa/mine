@@ -173,8 +173,8 @@ static void virtual_map(unsigned long user_addr){
 }
 
 /**
- * @brief segment_load用于将fd指向的文件中偏移为offset, 大小为filesz的段加载到虚拟地址为
- *        vaddr所对应的物理内存处. 该函数会自动为分配一个物理页, 并完成与vaddr表示的虚拟页的映射
+ * @brief segment_load用于将filp指向的文件中偏移为offset, 大小为filesz的段加载到虚拟地址为
+ *        vaddr所对应的物理内存处. 该函数会自动为分配用户空间内存并完成与vaddr表示的虚拟页的映射
  *
  * @param fd 需要加载的程序文件的文件描述符
  * @param offset 段在文件内的偏移地址
@@ -198,11 +198,8 @@ static bool segment_load(struct file* filp, unsigned long offset, unsigned long 
 
     unsigned long page_idx = 0;
     unsigned long vaddr_page = vaddr_first_page;
-	unsigned long* a, *b, *c;
 	do
-    { 	a = pml4e_ptr(vaddr_page);
-		b = pdpe_ptr(vaddr_page);
-		c = pde_ptr(vaddr_page);
+    { 	
 		if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) || !(*pde_ptr(vaddr_page) & 0x01)) {
 			virtual_map(vaddr_page); // 映射地址，若虚拟地址对应的实际地址为空，则分配物理面
 		}
@@ -239,6 +236,7 @@ static unsigned long load(char *pathname)
 	if((unsigned long)filp > -0x1000UL) // 这是什么意思？
 		return (unsigned long)filp;
 	
+	// 读取程序头
 	filp->f_ops->read(filp, (void *)&elf_header, sizeof(Elf64_Ehdr), &filp->position);
 	
 	// 校验elf头, check elf header
@@ -271,16 +269,18 @@ static unsigned long load(char *pathname)
 	while (prog_idx < elf_header.e_phnum)
 	{
 		memset(&prog_header, 0, prog_header_size);
-		
+		// 读取程序头表项
 		filp->f_ops->lseek(filp, prog_header_offset + (prog_idx * prog_header_size), SEEK_SET);	
 		if(filp->f_ops->read(filp, (void *)&prog_header, sizeof(Elf64_Phdr), &filp->position) != prog_header_size) {
 			color_printk(RED, BLACK,"EXECVE -> read file ERROR!\n");
 			return ret;
 		}
 		
+		// 加载可加载段，到内存
 		if(PT_LOAD == prog_header.p_type) {
+			
 			segment_load(filp, prog_header.p_offset, prog_header.p_filesz, prog_header.p_vaddr);
-			end_bss = prog_header.p_vaddr + prog_header.p_filesz;
+			end_bss = prog_header.p_vaddr + prog_header.p_filesz; // 计算end_bss
 		}
 		prog_idx++;
 	}
