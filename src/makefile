@@ -20,9 +20,10 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/disk.o  $(BUI_DIR)/time.o $(BUI_DIR)/HEPT.o $(BUI_DIR)/softirq.o \
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
-		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o  $(BUI_DIR)/usr_lib.o  $(BUI_DIR)/switch_to.o\
-		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  \
-		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/usr_LIB.o\
+		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o   $(BUI_DIR)/switch_to.o\
+		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o \
+		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
+	
 
 
 OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
@@ -112,7 +113,8 @@ $(BUI_DIR)/VFS.o: $(SRC_DIR)/fs/VFS.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	$(CC) $(CFLAGS) $< -o $@
-
+$(BUI_DIR)/execv.o: $(SRC_DIR)/lib/execv.c
+	$(CC) $(CFLAGS) $< -o $@
 # =============  SCRIPT ============
 $(BUI_DIR)/kallsyms.o: $(SRC_DIR)/script/kallsyms.c $(BUI_DIR)/kernel.bin
 	$(CC) -o $(BUI_DIR)/kallsyms $(SRC_DIR)/script/kallsyms.c

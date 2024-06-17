@@ -99,7 +99,7 @@ long FAT32_close(struct index_node *inode, struct file *filp) { return 1; }
  * @param filp
  * @param buf 存储读出数据的缓存区
  * @param count 要读取的字节数
- * @param position 相对于文件的偏移位置/目标位置
+ * @param position 相对于文件的偏移位置/目标位置, 该参数会被FAT32_read进行修改
  * @return long 成功返回读取的字节数，失败返回错误码
  */
 long FAT32_read(struct file *filp, char *buf, unsigned long count, long *position)

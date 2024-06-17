@@ -230,7 +230,6 @@ static inline struct task_struct *get_current()
 
 
 
-unsigned long system_call_function(struct pt_regs *regs);
 unsigned long do_exit(unsigned long exit_code);
 unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
 void task_init();

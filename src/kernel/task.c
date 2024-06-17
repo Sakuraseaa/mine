@@ -10,6 +10,7 @@
 #include "fcntl.h"
 #include "stdio.h"
 #include "errno.h"
+#include "execv.h"
 // ----------- DEBUGE -------------------
 #include "sys.h"
 // ----------- DEBUGE -------------------
@@ -152,33 +153,6 @@ void user_level_function()
 	// color_printk(RED, BLACK, "user_level_function task called sysenter,errno:%d\n", errno);
 	while (1)
 		;
-}
-
-/**
- * @brief open_exec_file(char*)用于搜索文件系统的目标文件，本函数与sys_open函数的指向流程基本相似
- *本函数最重要的作用是为目标文件描述符指派操作方法（filp.f_ops = dentry.dir_inode.f_ops）
- */
-struct file *open_exec_file(char *path)
-{
-	struct dir_entry *dentry = NULL;
-	struct file *filp = NULL;
-
-	dentry = path_walk(path, 0, 0);
-	if (dentry == NULL)
-		return (void *)-ENOENT;
-	if (dentry->dir_inode->attribute == FS_ATTR_DIR)
-		return (void *)-ENOTDIR;
-
-	filp = (struct file *)kmalloc(sizeof(struct file), 0);
-	if (filp == NULL)
-		return (void *)-ENOMEM;
-	filp->position = 0;
-	filp->mode = 0;
-	filp->dentry = dentry;
-	filp->mode = O_RDONLY;
-	filp->f_ops = dentry->dir_inode->f_ops;
-
-	return filp;
 }
 
 // 内核线程，该线程会进入特权级3
@@ -635,126 +609,6 @@ int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigne
 	regs.rip = (unsigned long)kernel_thread_func;
 
 	return do_fork(&regs, flags | CLONE_VM, 0, 0);
-}
-
-// 被init调用,加载用户进程体，到用户空间800000
-unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *envp[])
-{
-	// color_printk(RED, BLACK, "do_execve task is running\n");
-	unsigned long code_start_addr = 0x800000;
-	unsigned long stack_start_addr = 0xa00000;
-	unsigned long brk_start_addr = 0xc00000;
-	unsigned long *tmp;
-	unsigned long *virtual = NULL;
-	struct Page *p = NULL;
-	struct file *filp = NULL;
-	unsigned long retval = 0;
-	long pos = 0;
-
-
-	if (current->flags & PF_VFORK)
-	{
-		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
-		// 而新程序必须拥有独立的地址空间才能正常运行
-		current->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
-		memset(current->mm, 0, sizeof(struct mm_struct));
-		current->mm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
-		color_printk(RED, BLACK, "load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
-		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
-		// copy kernel space
-		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
-	}
-
-	// 为其分配独立的应用层地址空间
-	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
-					  ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	if (*tmp == NULL)
-	{
-		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
-	}
-
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	if (*tmp == NULL)
-	{
-		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
-
-	// 申请用户占用的内存,填充页表, 填充PDT内存
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
-	if (*tmp == NULL)
-	{
-		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
-	}
-	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");
-    
-	filp = open_exec_file(name);
-    if((unsigned long)filp > -0x1000UL) // 这是什么意思？
-		return (unsigned long)filp;
-
-
-	if (!(current->flags & PF_KTHREAD))
-		current->addr_limit = TASK_SIZE;
-
-	current->mm->start_code = code_start_addr;
-	current->mm->end_code = 0;
-	current->mm->start_data = 0;
-	current->mm->end_data = 0;
-	current->mm->start_rodata = 0;
-	current->mm->end_rodata = 0;
-	current->mm->start_bss = code_start_addr + filp->dentry->dir_inode->file_size;
-	current->mm->end_bss = stack_start_addr;
-	current->mm->start_brk = brk_start_addr;
-	current->mm->end_brk = brk_start_addr;
-	current->mm->start_stack = stack_start_addr;
-
-	exit_files(current);
-	current->flags &= ~PF_VFORK;
-
-	if( argv != NULL ) {
-		int argc = 0, len = 0, i = 0;
-		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
-		pos = (unsigned long)dargv;
-
-		for(i = 0; i < 10 && argv[i] != NULL; i++)
-		{
-			len = strnlen_user(argv[i], 1024) + 1;
-			strcpy((char*)(pos - len), argv[i]);
-			dargv[i] = (char*)(pos - len);
-			pos -= len;
-		}
-
-		stack_start_addr = pos - 10;
-		regs->rdi = i; // argc
-		regs->rsi = (unsigned long)dargv; // argv
-	}
-
-
-	// 清理地址空间脏数据
-	memset((void *)code_start_addr, 0, stack_start_addr - code_start_addr);
-	pos = 0;
-	retval = filp->f_ops->read(filp, (void *)code_start_addr, filp->dentry->dir_inode->file_size, &pos);
-	
-    __asm__ __volatile__("movq %0,%%gs; movq %0, %%fs;"::"r"(0UL));
-
-
-	// 这里没有初始化gs,fs段选择子
-	regs->ds = USER_DS;
-	regs->es = USER_DS;
-	regs->ss = USER_DS;
-	regs->cs = USER_CS;
-	// regs->rip = new_rip;
-	// regs->rsp = new_rsp;
-	//  在中断栈中填入地址
-	regs->r10 = code_start_addr; // RIP
-	regs->r11 = stack_start_addr; // RSP
-	regs->rax = 1;
-	// go to ret_system_call
-	return retval;
 }
 
 // 被switch_to宏调用, 用来切换任务

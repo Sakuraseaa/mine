@@ -17,14 +17,14 @@ OBJS =    $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/syscall.o $(USR_BUI_DIR)/errno.o 
 
 
 
-all: $(USR_BUI_DIR)/system_api_lib
-	objcopy -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary $(USR_BUI_DIR)/system_api_lib $(USR_BUI_DIR)/init.bin
+all: $(USR_BUI_DIR)/init.bin
+# objcopy -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary $(USR_BUI_DIR)/system_api_lib $(USR_BUI_DIR)/init.bin
 	sudo mount /dev/dm-0 /mnt -o uid=$$USER,gid=$$USER
 	sudo cp $(USR_BUI_DIR)/init.bin /mnt -v
-	sudo cp $(USR_BUI_DIR)/system_api_lib /mnt -v
+# sudo cp $(USR_BUI_DIR)/system_api_lib /mnt -v
 	sudo umount /mnt
 
-$(USR_BUI_DIR)/system_api_lib: $(OBJS)
+$(USR_BUI_DIR)/init.bin: $(OBJS)
 	ld -b elf64-x86-64 -z muldefs -o $@ $^  -T User.lds -Map $(USR_BUI_DIR)/init.map
 $(USR_BUI_DIR)/init.o: $(USR_SRC_DIR)/init.c
 	gcc  $(CFLAGS) $< -o $@
