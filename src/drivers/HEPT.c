@@ -49,14 +49,19 @@ hw_int_controller HPET_int_controller =
 // }
 
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
+unsigned int mid_ticks = 0;
+unsigned int Old_ticks = 0;
 static void ticks_to_sleep(unsigned int sleep_ticks)
-{
-   unsigned int Old_ticks = jiffies;
-   unsigned int mid_ticks = sleep_ticks;
+{  
+   // 此处使用栈变量这两个值经过中断-调度之后都被破坏掉了
+   // 此处属于系统调用，这个内存开在内核栈上
+   // 为什么这栈空间值 没有好好的保护下来
+   Old_ticks = jiffies;
+   mid_ticks = sleep_ticks;
 
    /* 若间隔的ticks数不够便让出cpu */
-   while (jiffies - Old_ticks < mid_ticks)
-      hlt();
+   while (jiffies - Old_ticks < mid_ticks) // 此处应该去睡眠
+      ;
 
 }
 
