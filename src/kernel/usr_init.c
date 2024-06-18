@@ -30,14 +30,20 @@ static void handler(int sig) {
 	printf("The signal is %d\n", sig);
 
 }
-
-
+extern unsigned long volatile jiffies;
+extern unsigned long startup_time;
+#include "time.h"
 int usr_init()
 {
 	signal(2 , handler);
 
 	long pid = getpid();
 	kill(pid, 2);
+
+	sleep(5)
+    struct time tm;
+    memset(&tm, 0, sizeof(struct time));
+    localtime(startup_time + (jiffies / 100), &tm);
 
 	int fd = 0;
 	unsigned char buf[256] = {0};

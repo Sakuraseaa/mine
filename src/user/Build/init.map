@@ -138,86 +138,86 @@ LOAD /home/steven/mine/src/user/Build/sig_restore.o
 .plt.sec
  *(.plt.sec)
 
-.text           0x0000000000401000     0x28cc
+.text           0x0000000000401000     0x25a9
  *(.text.unlikely .text.*_unlikely .text.unlikely.*)
  *(.text.exit .text.exit.*)
  *(.text.startup .text.startup.*)
  *(.text.hot .text.hot.*)
  *(SORT_BY_NAME(.text.sorted.*))
  *(.text .stub .text.* .gnu.linkonce.t.*)
- .text          0x0000000000401000     0x132a /home/steven/mine/src/user/Build/init.o
+ .text          0x0000000000401000     0x1007 /home/steven/mine/src/user/Build/init.o
                 0x0000000000401000                main
-                0x000000000040132d                sig_handler
-                0x0000000000401362                get_scancode
-                0x0000000000401398                analysis_keycode
-                0x00000000004016f1                cd_command
-                0x00000000004019c5                ls_command
-                0x0000000000401aa3                pwd_command
-                0x0000000000401af8                cat_command
-                0x0000000000401cfd                touch_command
-                0x0000000000401d0f                rm_command
-                0x0000000000401d21                mkdir_command
-                0x0000000000401d33                rmdir_command
-                0x0000000000401d45                exec_command
-                0x0000000000401f9b                reboot_command
-                0x0000000000401fc7                find_cmd
-                0x000000000040202b                read_line
-                0x000000000040212a                parse_command
-                0x00000000004022e6                run_command
- .text          0x000000000040232a      0x141 /home/steven/mine/src/user/Build/syscall.o
-                0x000000000040232a                putstring
-                0x000000000040233a                open
-                0x000000000040234a                close
-                0x000000000040235a                read
-                0x000000000040236a                write
-                0x000000000040237a                lseek
-                0x000000000040238a                fork
-                0x000000000040239a                vfork
-                0x00000000004023aa                execve
-                0x00000000004023ba                exit
-                0x00000000004023c7                wait4
-                0x00000000004023d4                brk
-                0x00000000004023e1                reboot
-                0x00000000004023ee                chdir
-                0x00000000004023fb                getdents
-                0x0000000000402408                SIGNAL
-                0x0000000000402415                KILL
-                0x0000000000402422                sleep
-                0x000000000040242f                getpid
- .text          0x000000000040246b        0x0 /home/steven/mine/src/user/Build/errno.o
- .text          0x000000000040246b      0x185 /home/steven/mine/src/user/Build/malloc.o
-                0x000000000040246b                malloc
-                0x00000000004025e1                free
- .text          0x00000000004025f0        0x0 /home/steven/mine/src/user/Build/keyboard.o
- .text          0x00000000004025f0      0xdc2 /home/steven/mine/src/user/Build/printf.o
-                0x00000000004025f0                strlen
-                0x0000000000402623                skip_atoi
-                0x0000000000402904                vsprintf
-                0x00000000004031fb                sprintf
-                0x00000000004032c4                puts
-                0x00000000004032d3                printf
- .text          0x00000000004033b2      0x270 /home/steven/mine/src/user/Build/string.o
-                0x00000000004033b2                memcpy
-                0x0000000000403410                memcmp
-                0x0000000000403451                memset
-                0x00000000004034cb                strcpy
-                0x00000000004034f6                strncpy
-                0x000000000040352d                strcat
-                0x0000000000403564                strcmp
-                0x00000000004035a3                strncmp
- .text          0x0000000000403622      0x157 /home/steven/mine/src/user/Build/dirent.o
-                0x0000000000403622                opendir
-                0x00000000004036c5                closedir
-                0x0000000000403703                readdir
- .text          0x0000000000403779       0x62 /home/steven/mine/src/user/Build/wait.o
-                0x0000000000403779                wait
-                0x00000000004037a8                waitpid
- .text          0x00000000004037db       0xd5 /home/steven/mine/src/user/Build/signal.o
-                0x00000000004037db                signal
-                0x0000000000403848                kill
- .text          0x00000000004038b0       0x1c /home/steven/mine/src/user/Build/sig_restore.o
-                0x00000000004038b0                _start
-                0x00000000004038b7                sig_restore
+                0x000000000040100a                sig_handler
+                0x000000000040103f                get_scancode
+                0x0000000000401075                analysis_keycode
+                0x00000000004013ce                cd_command
+                0x00000000004016a2                ls_command
+                0x0000000000401780                pwd_command
+                0x00000000004017d5                cat_command
+                0x00000000004019da                touch_command
+                0x00000000004019ec                rm_command
+                0x00000000004019fe                mkdir_command
+                0x0000000000401a10                rmdir_command
+                0x0000000000401a22                exec_command
+                0x0000000000401c78                reboot_command
+                0x0000000000401ca4                find_cmd
+                0x0000000000401d08                read_line
+                0x0000000000401e07                parse_command
+                0x0000000000401fc3                run_command
+ .text          0x0000000000402007      0x141 /home/steven/mine/src/user/Build/syscall.o
+                0x0000000000402007                putstring
+                0x0000000000402017                open
+                0x0000000000402027                close
+                0x0000000000402037                read
+                0x0000000000402047                write
+                0x0000000000402057                lseek
+                0x0000000000402067                fork
+                0x0000000000402077                vfork
+                0x0000000000402087                execve
+                0x0000000000402097                exit
+                0x00000000004020a4                wait4
+                0x00000000004020b1                brk
+                0x00000000004020be                reboot
+                0x00000000004020cb                chdir
+                0x00000000004020d8                getdents
+                0x00000000004020e5                SIGNAL
+                0x00000000004020f2                KILL
+                0x00000000004020ff                sleep
+                0x000000000040210c                getpid
+ .text          0x0000000000402148        0x0 /home/steven/mine/src/user/Build/errno.o
+ .text          0x0000000000402148      0x185 /home/steven/mine/src/user/Build/malloc.o
+                0x0000000000402148                malloc
+                0x00000000004022be                free
+ .text          0x00000000004022cd        0x0 /home/steven/mine/src/user/Build/keyboard.o
+ .text          0x00000000004022cd      0xdc2 /home/steven/mine/src/user/Build/printf.o
+                0x00000000004022cd                strlen
+                0x0000000000402300                skip_atoi
+                0x00000000004025e1                vsprintf
+                0x0000000000402ed8                sprintf
+                0x0000000000402fa1                puts
+                0x0000000000402fb0                printf
+ .text          0x000000000040308f      0x270 /home/steven/mine/src/user/Build/string.o
+                0x000000000040308f                memcpy
+                0x00000000004030ed                memcmp
+                0x000000000040312e                memset
+                0x00000000004031a8                strcpy
+                0x00000000004031d3                strncpy
+                0x000000000040320a                strcat
+                0x0000000000403241                strcmp
+                0x0000000000403280                strncmp
+ .text          0x00000000004032ff      0x157 /home/steven/mine/src/user/Build/dirent.o
+                0x00000000004032ff                opendir
+                0x00000000004033a2                closedir
+                0x00000000004033e0                readdir
+ .text          0x0000000000403456       0x62 /home/steven/mine/src/user/Build/wait.o
+                0x0000000000403456                wait
+                0x0000000000403485                waitpid
+ .text          0x00000000004034b8       0xd5 /home/steven/mine/src/user/Build/signal.o
+                0x00000000004034b8                signal
+                0x0000000000403525                kill
+ .text          0x000000000040358d       0x1c /home/steven/mine/src/user/Build/sig_restore.o
+                0x000000000040358d                _start
+                0x0000000000403594                sig_restore
  *(.gnu.warning)
 
 .fini
@@ -228,14 +228,14 @@ LOAD /home/steven/mine/src/user/Build/sig_restore.o
                 0x0000000000404000                . = ALIGN (CONSTANT (MAXPAGESIZE))
                 0x0000000000404000                . = SEGMENT_START ("rodata-segment", (ALIGN (CONSTANT (MAXPAGESIZE)) + (. & (CONSTANT (MAXPAGESIZE) - 0x1))))
 
-.rodata         0x0000000000404000      0x4ff
+.rodata         0x0000000000404000      0x4c7
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x0000000000404000      0x152 /home/steven/mine/src/user/Build/init.o
-                0x000000000040408d                file_type
- .rodata        0x0000000000404152       0x12 /home/steven/mine/src/user/Build/malloc.o
- *fill*         0x0000000000404164        0x4 
- .rodata        0x0000000000404168      0x378 /home/steven/mine/src/user/Build/printf.o
- .rodata        0x00000000004044e0       0x1f /home/steven/mine/src/user/Build/signal.o
+ .rodata        0x0000000000404000      0x11a /home/steven/mine/src/user/Build/init.o
+                0x000000000040404f                file_type
+ .rodata        0x000000000040411a       0x12 /home/steven/mine/src/user/Build/malloc.o
+ *fill*         0x000000000040412c        0x4 
+ .rodata        0x0000000000404130      0x378 /home/steven/mine/src/user/Build/printf.o
+ .rodata        0x00000000004044a8       0x1f /home/steven/mine/src/user/Build/signal.o
 
 .rodata1
  *(.rodata1)
@@ -244,20 +244,20 @@ LOAD /home/steven/mine/src/user/Build/sig_restore.o
  *(.eh_frame_hdr)
  *(.eh_frame_entry .eh_frame_entry.*)
 
-.eh_frame       0x0000000000404500      0x580
+.eh_frame       0x00000000004044c8      0x580
  *(.eh_frame)
- .eh_frame      0x0000000000404500      0x258 /home/steven/mine/src/user/Build/init.o
- .eh_frame      0x0000000000404758       0x40 /home/steven/mine/src/user/Build/malloc.o
+ .eh_frame      0x00000000004044c8      0x258 /home/steven/mine/src/user/Build/init.o
+ .eh_frame      0x0000000000404720       0x40 /home/steven/mine/src/user/Build/malloc.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000404798       0xe0 /home/steven/mine/src/user/Build/printf.o
+ .eh_frame      0x0000000000404760       0xe0 /home/steven/mine/src/user/Build/printf.o
                                          0xf8 (size before relaxing)
- .eh_frame      0x0000000000404878      0x128 /home/steven/mine/src/user/Build/string.o
+ .eh_frame      0x0000000000404840      0x128 /home/steven/mine/src/user/Build/string.o
                                         0x140 (size before relaxing)
- .eh_frame      0x00000000004049a0       0x60 /home/steven/mine/src/user/Build/dirent.o
+ .eh_frame      0x0000000000404968       0x60 /home/steven/mine/src/user/Build/dirent.o
                                          0x78 (size before relaxing)
- .eh_frame      0x0000000000404a00       0x40 /home/steven/mine/src/user/Build/wait.o
+ .eh_frame      0x00000000004049c8       0x40 /home/steven/mine/src/user/Build/wait.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000404a40       0x40 /home/steven/mine/src/user/Build/signal.o
+ .eh_frame      0x0000000000404a08       0x40 /home/steven/mine/src/user/Build/signal.o
                                          0x58 (size before relaxing)
  *(.eh_frame.*)
 

@@ -21,8 +21,8 @@
 #define mil_seconds_per_intr (1000 / IRQ0_FREQUENCY) // 1个时钟中断10毫秒, 1000/100
 
 unsigned long volatile jiffies = 0; // ticks是内核自中断开启以来总共的嘀嗒数
-struct time Time;
 extern struct timer_list timer_list_head;
+extern struct time Time;
 
 hw_int_controller HPET_int_controller =
     {
@@ -131,8 +131,8 @@ void HEPT_init()
    register_irq(0x20, &entry, intr_timer_handler, 0, &HPET_int_controller, "HPET");
 
    get_cmos_time(&Time);
-   color_printk(RED, BLACK, "year:%#010x, month:%#010x, day:%#010x, hour:%#010x, mintue:%#010x, second:%#010x\n",
-                Time.year, Time.month, Time.day, Time.hour, Time.minute, Time.second);
+   color_printk(RED, BLACK, "year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d\n",
+   Time.year, Time.month, Time.day, Time.week_day, Time.hour, Time.minute, Time.second);
 }
 
 /* 以毫秒为单位的sleep   1秒= 1000毫秒 */

@@ -5,16 +5,14 @@
 #include "fcntl.h"
 #include "stdio.h"
 #include "printk.h"
-
-#define false 0;
-#define true 1;
+#include "lib.h"
 
 typedef unsigned int Elf64_Word;
 typedef unsigned long Elf64_Addr;
 typedef unsigned long Elf64_Off;
 typedef unsigned short Elf64_Half;
 typedef unsigned long Elf64_Xword;
-typedef char bool;
+
 
 #define EI_NIDENT 16
 
