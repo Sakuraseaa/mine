@@ -11,6 +11,7 @@
 #include "stdio.h"
 #include "errno.h"
 #include "execv.h"
+#include "debug.h"
 // ----------- DEBUGE -------------------
 #include "sys.h"
 // ----------- DEBUGE -------------------
@@ -163,7 +164,8 @@ unsigned long init(unsigned long arg)
 {
 	// struct pt_regs *regs; // 这里破坏了中断栈
 	DISK1_FAT32_FS_init();
-	color_printk(RED, BLACK, "init task is running, arg:%#018lx\n", arg);
+ 	DEBUGK("init task is running, arg:%#018lx\n", arg);
+	// color_printk(RED, BLACK, "init task is running, arg:%#018lx\n", arg);
 
 	// sys_open("/The quick brown.fox", O_CREAT);
 

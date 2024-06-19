@@ -9,6 +9,7 @@
 #include "semaphore.h"
 #include "schedule.h"
 #include "waitqueue.h"
+#include "debug.h"
 
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
 void end_request(struct block_buffer_node *node)
@@ -265,7 +266,8 @@ void disk_init()
     int i;
     /* Get the number of drives from the BIOS data area */
     unsigned long *pNrDrives = (unsigned long *)(0xffff800000000475);
-    color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
+    DEBUGK("NrDrives:%d.\n", *pNrDrives & 0xff);
+    // color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
     /*在IO_APIC中，注册硬盘中断函数*/
     struct IO_APIC_RET_entry entry;
 

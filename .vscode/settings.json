@@ -35,7 +35,9 @@
         "smp.h": "c",
         "ptrace.h": "c",
         "signal.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "interrupt.h": "c",
+        "debug.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

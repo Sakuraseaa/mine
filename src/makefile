@@ -20,8 +20,8 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/disk.o  $(BUI_DIR)/time.o $(BUI_DIR)/HEPT.o $(BUI_DIR)/softirq.o \
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
-		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o   $(BUI_DIR)/switch_to.o\
-		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o \
+		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o   $(BUI_DIR)/switch_to.o $(BUI_DIR)/serial.o\
+		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o $(BUI_DIR)/debug.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
 	
 
@@ -87,6 +87,8 @@ $(BUI_DIR)/mouse.o: $(SRC_DIR)/drivers/mouse.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/disk.o: $(SRC_DIR)/drivers/disk.c
 	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/serial.o: $(SRC_DIR)/drivers/serial.c
+	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/time.o: $(SRC_DIR)/lib/time.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/HEPT.o: $(SRC_DIR)/drivers/HEPT.c
@@ -100,6 +102,8 @@ $(BUI_DIR)/schedule.o: $(SRC_DIR)/kernel/schedule.c
 $(BUI_DIR)/semaphore.o: $(SRC_DIR)/lib/semaphore.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/lib.o: $(SRC_DIR)/lib/lib.c
+	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/debug.o: $(SRC_DIR)/lib/debug.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/spinlock.o: $(SRC_DIR)/lib/spinlock.c
 	$(CC) $(CFLAGS) $< -o $@

@@ -22,6 +22,8 @@
 #include "semaphore.h"
 #include "fat32.h"
 #include "VFS.h"
+#include "serial.h"
+#include "debug.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
@@ -87,6 +89,9 @@ void Start_Kernel(void)
 #else
 	init_8259A();
 #endif
+
+	serial_init();
+
 	// color_printk(RED, BLACK, "keyboard init \n");
 	keyboard_init();
 
@@ -106,6 +111,7 @@ void Start_Kernel(void)
 	timer_init();
 
 	// color_printk(RED, BLACK, "task init \n");
+	DEBUGK("task init \n");
 	task_init();
 
 	sti();

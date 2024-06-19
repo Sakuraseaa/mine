@@ -6,6 +6,7 @@
 #include "stdio.h"
 #include "printk.h"
 #include "lib.h"
+#include "debug.h"
 
 typedef unsigned int Elf64_Word;
 typedef unsigned long Elf64_Addr;
@@ -302,7 +303,8 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		current->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
 		memset(current->mm, 0, sizeof(struct mm_struct));
 		current->mm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
-		color_printk(RED, BLACK, "load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
+		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
+		// color_printk(RED, BLACK, "load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
 		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
 		// copy kernel space
 		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);

@@ -5,6 +5,7 @@
 #include "HEPT.h"
 #include "timer.h"
 #include "memory.h"
+#include "debug.h"
 
 extern struct timer_list timer_list_head;
 struct time Time;
@@ -175,12 +176,14 @@ void do_timer(void *data)
         tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
         del_timer(tmp);
     }
-
-    // color_printk(RED, WHITE, "(HPET:%ld) \n", jiffies);
+    //BUG:: 此处使用 DEBUGK 会报错,程序会 混乱跳转
+    // DEBUGK("(HPET:%ld):: A timing task is completed\n", jiffies);
 }
 int shell_up = 0;
 void test_timer(void *data)
 {
+    //BUG:: 此处使用 DEBUGK 会报错
+    //DEBUGK("Why does debbuggin timed queues fail?\n");
     color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?  \n");
     shell_up = 1;
 }

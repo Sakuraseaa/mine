@@ -294,6 +294,18 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 	return str - buf;
 }
 
+int sprintf(char *buf, const char *fmt, ...)
+{
+	int count = 0;
+	va_list args;
+
+	va_start(args, fmt);
+	count = vsprintf(buf, fmt, args);
+	va_end(args);
+
+	return count;
+}
+
 int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...)
 {
 
