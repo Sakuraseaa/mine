@@ -33,17 +33,26 @@ static void handler(int sig) {
 extern unsigned long volatile jiffies;
 extern unsigned long startup_time;
 #include "time.h"
-int usr_init()
-{
-	signal(2 , handler);
 
+void test_signal() {
+	signal(2 , handler);
 	long pid = getpid();
 	kill(pid, 2);
+}
 
+void test_time() {
+	// 等待5秒
 	sleep(5);
     struct time ttmm;
     memset(&ttmm, 0, sizeof(struct time));
     localtime(startup_time + (jiffies / 100), &ttmm);
+    printf("year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d\n",
+    ttmm.year, ttmm.month, ttmm.day, ttmm.week_day, ttmm.hour, ttmm.minute, ttmm.second);
+}
+
+int usr_init()
+{
+	test_time();
 
 	int fd = 0;
 	unsigned char buf[256] = {0};

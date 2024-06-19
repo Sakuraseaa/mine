@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "schedule.h"
 #include "ptrace.h"
+#include "waitqueue.h"
 
 #define IRQ0_FREQUENCY 100 // 1秒100个时钟中断 / 1
 #define INPUT_FREQUENCY 1193180
@@ -19,6 +20,8 @@
 #define PIT_CONTROL_PORT 0x43
 
 #define mil_seconds_per_intr (1000 / IRQ0_FREQUENCY) // 1个时钟中断10毫秒, 1000/100
+
+wait_queue_T sleep_queue_head;
 
 unsigned long volatile jiffies = 0; // ticks是内核自中断开启以来总共的嘀嗒数
 extern struct timer_list timer_list_head;
@@ -33,35 +36,34 @@ hw_int_controller HPET_int_controller =
         .ack = IOAPIC_edge_ack,
 };
 
-// 24-06-14 17:22 bug报告：本次注释的ticks_to_sleep的函数，直接使用传入参数sleep_ticks（rdi）进行运算。
-//                在系统执行一段时间后，传入参数sleep_ticks会变成脏数据。猜测是因为rdi寄存器在中断等地方，
-//                切换的时候没有妥善保存导致的。sleep_ticks被修改 --> rdi寄存器被改变 --> 猜测在终端过程中改变。
-//                
-//
-// /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
-// static void ticks_to_sleep(unsigned int sleep_ticks)
-// {
-//    unsigned int Old_ticks = jiffies;
-
-//    /* 若间隔的ticks数不够便让出cpu */
-//    while (jiffies - Old_ticks < sleep_ticks)
-//       hlt();
-// }
+static void weakUp_sleepList(long* pid) {
+   wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *pid);
+}
 
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
-unsigned int mid_ticks = 0;
-unsigned int Old_ticks = 0;
 static void ticks_to_sleep(unsigned int sleep_ticks)
 {  
-   // 此处使用栈变量这两个值经过中断-调度之后都被破坏掉了
+   // bug报告(已解决):: 此处使用栈变量这两个值经过中断-调度之后都被破坏掉了
    // 此处属于系统调用，这个内存开在内核栈上
-   // 为什么这栈空间值 没有好好的保护下来
-   Old_ticks = jiffies;
-   mid_ticks = sleep_ticks;
+   // 为什么这栈空间值 没有好好的保护下来 - 
 
-   /* 若间隔的ticks数不够便让出cpu */
-   while (jiffies - Old_ticks < mid_ticks) // 此处应该去睡眠
-      ;
+   // 24-6-19 10:8 OK，检查过中断代码没有问题后，查看本程序的汇编，发现栈空间没有被开辟，
+   // 而只是单纯的递减rsp,使得变量存储在栈空间之外，经过中断后，变量就丢失
+   // 在次 我加上sleep_on()，经过编译之后，该函数就会主动开辟栈空间了
+   
+   // 切换进程
+   struct timer_list *tmp = NULL;
+   tmp = (struct timer_list *)kmalloc(sizeof(struct timer_list), 0);
+   init_timer(tmp, &weakUp_sleepList, &current->pid, jiffies + sleep_ticks);
+   add_timer(tmp);
+   interruptible_sleep_on(&sleep_queue_head);
+   
+   // 睡眠空转
+   // unsigned long Old_ticks = jiffies;
+   // // unsigned long mid_ticks = sleep_ticks;
+   // /* 若间隔的ticks数不够便让出cpu */
+   // while (jiffies - Old_ticks < sleep_ticks) // 此处应该去睡眠
+   //    sleep_on(NULL);
 
 }
 
@@ -134,7 +136,9 @@ void HEPT_init()
    entry.destination.physical.reserved2 = 0;
 
    register_irq(0x20, &entry, intr_timer_handler, 0, &HPET_int_controller, "HPET");
-
+   // 初始化睡眠队列 等待头
+   list_init(&sleep_queue_head.wait_list);
+   
    get_cmos_time(&Time);
    color_printk(RED, BLACK, "year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d\n",
    Time.year, Time.month, Time.day, Time.week_day, Time.hour, Time.minute, Time.second);

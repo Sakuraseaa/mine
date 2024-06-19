@@ -22,7 +22,10 @@ void wait_queue_init(wait_queue_T *wait_queue, struct task_struct *tsk)
  * @param wait_queue_head
  */
 void sleep_on(wait_queue_T *wait_queue_head)
-{
+{   
+    if(wait_queue_head == NULL)
+        return;
+
     // a. 创建等待结点, 将node和当前进程相关联
     wait_queue_T node;
     wait_queue_init(&node, current);
@@ -73,3 +76,28 @@ void wakeup(wait_queue_T *wait_queue_head, long state)
         wakeup_process(node->tsk);
     }
 }
+
+/**
+ * @brief 唤醒线程
+ */
+void wakeup_pid(wait_queue_T *wait_queue_head, long state, long pid)
+{
+    wait_queue_T *node = wait_queue_head;
+    if (list_is_empty(&wait_queue_head->wait_list))
+        return;
+
+    // 在等待队列上寻找进程号是pid的进程
+    do {
+    
+        node = container_of(list_next(&node->wait_list), wait_queue_T, wait_list);
+
+    } while(node->tsk->pid != pid);
+
+    // 需要唤醒的进程和传入参数state相等 ，才进行唤醒
+    if ((node->tsk->state & state) && (node->tsk->pid == pid))
+    {
+        list_del(&node->wait_list);
+        wakeup_process(node->tsk);
+    }
+}
+

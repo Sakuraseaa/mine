@@ -37,20 +37,36 @@ static int month[13] = {
     (31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30)
 };
 
-unsigned long elapsed_leap_years(int year) {
-
-    return year * month[12] -  (year - ((year + 1) / 4));
-
-}
 bool is_leap_year(int year)
 {
     return ((year % 4 == 0) && (year % 100 != 0)) || ((year) % 400 == 0);
 }
 
+/**
+ * @brief 计算year年总和是多少天
+ * 
+ * @param year 
+ * @return unsigned long 
+ */
+unsigned long elapsed_leap_years(int year) {
+    unsigned long res;
+    res = year * 365 +  ((year + 1) / 4);
+    
+    // 另外一种算法
+    // int i = 0;
+    // for(res = 0; i < year; i++) {
+    //     res += 365;
+    //     if(is_leap_year(1970 + i))
+    //         res++;
+    // }
+
+    return res;
+}
+
 unsigned long startup_time;
 // 计算从 1970-1-1-0时起到开机当日经过的秒数，作为开机的时间
 unsigned long kernel_mktime(struct time* tm) {
-    unsigned long res;
+    unsigned long res = 0;
     int year;
 
     // 距今过去了多少年 - 已然遥远的理想之城。
@@ -83,14 +99,14 @@ void localtime(unsigned long stamp, struct time* tm) {
     
     // 确定分
     unsigned long remain = stamp / 60;
-    tm->minute = stamp % 60;
+    tm->minute = remain % 60;
     
     // 确定时
     remain /= 60;
     tm->hour = remain % 24;
     
     // 计算1970年到现在已经过去了多少天
-    unsigned long days = remain / 24; // 天
+    unsigned long days = remain / 24; // 天,
     // 确定星期,1970-01-01 是周四
     tm->week_day = (days + 4) % 7;
     
@@ -103,7 +119,8 @@ void localtime(unsigned long stamp, struct time* tm) {
     if (is_leap_year(tm->year))
         offset = 0;
     
-    //修改days 为今年还有多少年
+    //修改days 今年已经过去了多少天（不包括当天）
+    //公式 days = days - 1970年到本年之间的天数
     days -= elapsed_leap_years(year);
     
     tm->year_day = days % (366 - offset);
@@ -115,7 +132,11 @@ void localtime(unsigned long stamp, struct time* tm) {
     }
     // 确定月日
     tm->month = mon - 1;
-    tm->day = tm->year - (month[tm->month]);
+    // 此处+1的原因是，在计算 hour second minite 中，
+    // 已经把当天的那些时钟跳数 在整除运算中忽略掉了
+    tm->day = (tm->year_day + 1) - (month[tm->month]);
+
+    return;
 }
 
 // 读取cmos芯片获取当前时间
@@ -155,12 +176,12 @@ void do_timer(void *data)
         del_timer(tmp);
     }
 
-    color_printk(RED, WHITE, "(HPET:%ld)", jiffies);
+    // color_printk(RED, WHITE, "(HPET:%ld) \n", jiffies);
 }
 int shell_up = 0;
 void test_timer(void *data)
 {
-    color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?\n");
+    color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?  \n");
     shell_up = 1;
 }
 
@@ -180,7 +201,7 @@ void timer_init()
 
     // 给定时队列加入第一个任务
     tmp = (struct timer_list *)kmalloc(sizeof(struct timer_list), 0);
-    init_timer(tmp, &test_timer, NULL, 100);
+    init_timer(tmp, &test_timer, NULL, 40);
     add_timer(tmp);
 }
 

@@ -9,7 +9,7 @@ PIC   := PIC
 ASM   = nasm
 CC	  = gcc
 
-CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -fno-common -std=gnu89 -nostartfiles \
+CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu89 -nostartfiles -fno-stack-protector\
 		-fno-builtin -fno-pie -fno-pic  -Wno-address-of-packed-memeber -nostdlib \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
 		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ 
