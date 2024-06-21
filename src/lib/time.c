@@ -175,9 +175,9 @@ void do_timer(void *data)
         tmp->func(tmp->data);
         tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
         del_timer(tmp);
+        //BUG:: 此处使用 DEBUGK 会报错,程序会 混乱跳转,重启
+        // debugk(__BASE_FILE__, __LINE__, "(HPET:%ld):: A timing task is completed\n", jiffies);
     }
-    //BUG:: 此处使用 DEBUGK 会报错,程序会 混乱跳转
-    // DEBUGK("(HPET:%ld):: A timing task is completed\n", jiffies);
 }
 int shell_up = 0;
 void test_timer(void *data)

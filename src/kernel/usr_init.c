@@ -26,7 +26,7 @@ struct buildincmd
 char *current_dir = NULL;
 int sk = 0;
 
-static void handler(int sig) {
+static void handler(long sig) {
 	
 	printf("The signal is %d\n", sig);
 
@@ -36,7 +36,7 @@ extern unsigned long startup_time;
 #include "time.h"
 
 void test_signal() {
-	signal(2 , handler);
+	signal(2, &handler);
 	long pid = getpid();
 	kill(pid, 2);
 }
@@ -362,8 +362,9 @@ int exec_command(int argc, char **argv)
 		waitpid(errno, &retval, 0);
 		printf("parent process waitpid:%#018lx\n", retval);
 	}
+	return errno;
 }
-int reboot_command(int argc, char **argv) { reboot(SYSTEM_REBOOT, NULL); }
+int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }
 
 struct buildincmd shell_internal_cmd[] =
 	{

@@ -204,7 +204,7 @@ struct Global_Memory_Descriptor
 
 // 管理每个以物理页为单位的内存空间
 // 每个物理页中包含着若干待分配的对象
-struct Slab
+typedef struct Slab
 {
     struct List list;  // 连接其他的Slab结构体
     struct Page *page; // 记录所使用页面的page成员变量
@@ -218,10 +218,10 @@ struct Slab
     unsigned long color_length;
     unsigned long color_count; //// 本物理页中的小内存块数
     unsigned long *color_map;
-};
+}Slab_t;
 
 // 抽象内存池
-struct Slab_cache
+typedef struct Slab_cache
 {
     unsigned long size;
     unsigned long total_using;                               // 本内存池正在使用的内存块数
@@ -230,7 +230,7 @@ struct Slab_cache
     struct Slab *cache_dma_pool;                             // 用于索引DMA内存池存储空间结构
     void *(*constructor)(void *Vaddress, unsigned long arg); // 内存池构造函数
     void *(*destructor)(void *vaddress, unsigned long arg);  // 内存池析构函数
-};
+}Slab_cache_t;
 
 extern struct Global_Memory_Descriptor memory_management_struct;
 
@@ -314,7 +314,6 @@ unsigned long slab_destroy(struct Slab_cache *slab_cache);
 void *slab_malloc(struct Slab_cache *slab_cache, unsigned long arg);
 unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg);
 unsigned long do_brk(unsigned long addr, unsigned long len);
-unsigned long slab_init();
 void pagetable_init();
 void init_memory();
 void My_vir_To_phy(void *vir_addr);

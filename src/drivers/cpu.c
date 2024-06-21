@@ -6,7 +6,7 @@
  */
 void init_cpu(void)
 {
-	int i, j;
+	int i;
 	unsigned int CpuFacName[4] = {0, 0, 0, 0};
 	char FactoryName[17] = {0};
 

@@ -119,7 +119,6 @@ void HEPT_init()
    frequency_set(CONTRER0_PORT, COUNTER0_NO, READ_WRITE_LATCH, COUNTER_MODE, COUNTER0_VALUE);
 
    struct IO_APIC_RET_entry entry;
-   unsigned long i, j;
 
    entry.vector = 0x20;
    entry.deliver_mode = APIC_ICR_IOAPIC_Fixed;

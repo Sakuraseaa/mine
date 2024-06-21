@@ -30,7 +30,6 @@ long copy_from_user(void *from, void *to, unsigned long size)
 
 long copy_to_user(void *from, void *to, unsigned long size)
 {
-    unsigned long d0, d1;
     if (!verify_area(to, size))
         return 0;
     // + 代表这个输出操作数，既是输出，也是输入
@@ -345,6 +344,37 @@ int strlen(const char *String)
                          : "D"(String), "a"(0), "0"(0xffffffff)
                          :);
     return __res;
+}
+
+/* 从左到右查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
+char *strchr(const char *str, const unsigned char* ch)
+{
+    while (*str != 0)
+    {
+        if (*str == ch)
+        {
+         return (char *)str; // 需要强制转化成和返回值类型一样,否则编译器会报const属性丢失,下同.
+        }
+        str++;
+    }
+    return NULL;
+}
+
+/* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
+char *strrchr(const char *str, const unsigned char* ch)
+{
+
+    const char *last_char = NULL;
+    /* 从头到尾遍历一次,若存在ch字符,last_char总是该字符最后一次出现在串中的地址(不是下标,是地址)*/
+    while (*str != 0)
+    {
+        if (*str == ch)
+        {
+            last_char = str;
+        }
+        str++;
+    }
+    return (char *)last_char;
 }
 
 /**

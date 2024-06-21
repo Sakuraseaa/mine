@@ -551,7 +551,7 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	retval = tsk->pid;
 	wakeup_process(tsk);
 
-fork_ok:
+// fork_ok:
 	return retval;
 
 copy_thread_fail:

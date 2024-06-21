@@ -37,7 +37,9 @@
         "signal.h": "c",
         "errno.h": "c",
         "interrupt.h": "c",
-        "debug.h": "c"
+        "debug.h": "c",
+        "wait.h": "c",
+        "vfs.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

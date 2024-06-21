@@ -204,7 +204,7 @@ static inline struct task_struct *get_current()
 #define GET_CURRENT        \
 	"movq	%rsp,	%rbx	\n\t" \
 	"andq	$-32768,%rbx	\n\t"
-
+/*
 // 线程切换函数
 // 保存next的rsp, 加载prev的rsp, 加载再次被调度的地址给prev.rip
 // 压入next的rip, 跳转执行__switch_to，返回时会执行next的rip
@@ -225,7 +225,7 @@ static inline struct task_struct *get_current()
 // 							 : "=m"(prev->thread->rsp), "=m"(prev->thread->rip)                     \
 // 							 : "m"(next->thread->rsp), "m"(next->thread->rip), "D"(prev), "S"(next) \
 // 							 : "memory");                                                           \
-// 	} while (0)
+// 	} while (0)*/
 
 
 

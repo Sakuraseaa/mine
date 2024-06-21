@@ -27,11 +27,11 @@ typedef char bool;
 #define io_mfence() __asm__ __volatile__("mfence	\n\t" :: \
 											 : "memory")
 
-struct List
+typedef struct List
 {
 	struct List *prev;
 	struct List *next;
-};
+}list_t;
 
 void list_init(struct List *list);
 
@@ -103,6 +103,11 @@ int strcmp(char *FirstPart,const char *SecondPart);
 */
 
 int strncmp(char *FirstPart, char *SecondPart, long Count);
+/* 从左到右查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
+char *strchr(const char *str, const unsigned char* ch);
+
+/* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
+char *strrchr(const char *str, const unsigned char* ch);
 
 int strlen(const char *String);
 
@@ -136,7 +141,7 @@ unsigned long get_rsp();
 void lower(char *str);
 void upper(char *str);
 unsigned long get_rflags();
-long str_find_char(char *string, char ch, long strlen);
+long str_find_char(char *string, char ch, long strlen); // 自己写的 略显丑陋
 long verify_area(unsigned char *addr, unsigned long size);
 // 一对常用的数据复制函数，只不过这对函数会检测应用程序提供的应用层操作地址空间是否越界
 long copy_from_user(void *from, void *to, unsigned long size);

@@ -9,8 +9,8 @@ PIC   := PIC
 ASM   = nasm
 CC	  = gcc
 
-CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu89 -nostartfiles -fno-stack-protector\
-		-fno-builtin -fno-pie -fno-pic  -Wno-address-of-packed-memeber -nostdlib \
+CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu89 -nostartfiles -fno-stack-protector -Wall \
+		-fno-builtin -fno-pie -fno-pic -nostdlib \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
 		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ 
 #被链接的文件
@@ -21,7 +21,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/timer.o $(BUI_DIR)/schedule.o $(BUI_DIR)/semaphore.o $(BUI_DIR)/lib.o \
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o   $(BUI_DIR)/switch_to.o $(BUI_DIR)/serial.o\
-		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o $(BUI_DIR)/debug.o\
+		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o $(BUI_DIR)/debug.o $(BUI_DIR)/buffer.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
 	
 
@@ -114,6 +114,8 @@ $(BUI_DIR)/syscalls.o: $(SRC_DIR)/kernel/syscalls.c
 $(BUI_DIR)/sys.o: $(SRC_DIR)/kernel/sys.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/VFS.o: $(SRC_DIR)/fs/VFS.c
+	$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/buffer.o: $(SRC_DIR)/fs/buffer.c
 	$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	$(CC) $(CFLAGS) $< -o $@

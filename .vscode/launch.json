@@ -16,7 +16,12 @@
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerServerAddress": "127.0.0.1:1234",
-            // "setupCommands": [
+            "setupCommands": [
+             // 设置目标架构
+            {
+                "text": "set arch i386:x86-64:intel",
+                "ignoreFailures": false
+            },
             //     {
             //         "description": "Enable pretty-printing for gdb",
             //         "text": "-enable-pretty-printing -target-select",
@@ -27,7 +32,7 @@
             //         "text": "-gdb-set disassembly-flavor intel",
             //         "ignoreFailures": true
             //     }
-            // ],
+            ],
             //"preLaunchTask": "make-all",
             "miDebuggerPath": "/usr/bin/gdb",
             // "postDebugTask": "make-clean"

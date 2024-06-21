@@ -58,7 +58,6 @@ void mouse_exit()
 void mouse_init()
 {
     struct IO_APIC_RET_entry entry;
-    unsigned long i, j;
 
     p_mouse = (struct keyboard_inputbuffer *)kmalloc(sizeof(struct keyboard_inputbuffer), 0);
     p_mouse->p_head = p_mouse->buf;
@@ -87,18 +86,12 @@ void mouse_init()
     wait_KB_write();
     io_out8(PORT_KB_CMD, KBCMD_EN_MOUSE_INTFACE);
 
-    // for (i = 0; i < 1000; i++)
-    //     for (j = 0; j < 1000; j++)
-    //         nop();
 
     wait_KB_write();
     io_out8(PORT_KB_CMD, KBCMD_SENDTO_MOUSE); // 向鼠标设备发送数据
     wait_KB_write();
     io_out8(PORT_KB_DATA, MOUSE_ENABLE); // 允许鼠标设备发送数据
 
-    // for (i = 0; i < 1000; i++)
-    //     for (j = 0; j < 1000; j++)
-    //         nop();
 
     // 重新配置8042控制器
     wait_KB_write();

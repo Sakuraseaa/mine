@@ -1179,7 +1179,7 @@ void DISK1_FAT32_FS_init()
     memset(buf, 0, 512);
     IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
     DPT = *(struct Disk_Partition_Table *)buf;
-    DEBUGK("DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
+    DEBUGK("DPTE[0] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
     // color_printk(BLUE, BLACK, "DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
 
     // 读 FAT32文件系统的引导扇区
