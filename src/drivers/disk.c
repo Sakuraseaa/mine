@@ -263,7 +263,6 @@ void disk_handler(unsigned long nr, unsigned long parameter, struct pt_regs *reg
 
 void disk_init()
 {
-    int i;
     /* Get the number of drives from the BIOS data area */
     unsigned long *pNrDrives = (unsigned long *)(0xffff800000000475);
     DEBUGK("NrDrives:%d.\n", *pNrDrives & 0xff);

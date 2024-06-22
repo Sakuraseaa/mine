@@ -1,4 +1,5 @@
 #include "VFS.h"
+#include "types.h"
 #include "errno.h"
 #include "memory.h"
 #include "task.h"
@@ -143,7 +144,7 @@ static void virtual_map(unsigned long user_addr){
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
 					  ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	if (*tmp == NULL)
+	if (*tmp == 0)
 	{
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
@@ -151,7 +152,7 @@ static void virtual_map(unsigned long user_addr){
 	}
 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	if (*tmp == NULL)
+	if (*tmp == 0)
 	{
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
@@ -160,13 +161,13 @@ static void virtual_map(unsigned long user_addr){
 	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 	// 申请用户占用的内存,填充页表, 填充PDT内存
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
-	if (*tmp == NULL)
+	if (*tmp == 0)
 	{
 		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
 		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
 
 		// 清理地址空间脏数据
-		memset(user_addr & PAGE_2M_MASK, 0, PAGE_2M_SIZE);
+		memset((char*)(user_addr & PAGE_2M_MASK), 0, PAGE_2M_SIZE);
 	}
 	
 }
@@ -223,7 +224,7 @@ static unsigned long load(char *pathname)
 {
 	struct file *filp = NULL;
 	unsigned long end_bss = 0;
-	long pos = 0, ret = -1;
+	long ret = -1;
 
 	Elf64_Ehdr elf_header;
 	Elf64_Phdr prog_header;
@@ -342,7 +343,7 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 
 	// 在用户空间，复制进程运行参数
 	if( argv != NULL ) {
-		int argc = 0, len = 0, i = 0;
+		int len = 0, i = 0;
 		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
 		pos = (unsigned long)dargv;
 

@@ -36,8 +36,8 @@ hw_int_controller HPET_int_controller =
         .ack = IOAPIC_edge_ack,
 };
 
-static void weakUp_sleepList(long* pid) {
-   wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *pid);
+static void weakUp_sleepList(void* pid) {
+   wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *((long*)pid));
 }
 
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */

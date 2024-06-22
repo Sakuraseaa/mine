@@ -1,8 +1,6 @@
 #ifndef __LIB_H__
 #define __LIB_H__
 
-#define NULL 0
-
 #define container_of(ptr, type, member)                                     \
 	({                                                                      \
 		typeof(((type *)0)->member) *p = (ptr);                             \
@@ -101,10 +99,10 @@ int strcmp(char *FirstPart,const char *SecondPart);
 
 int strncmp(char *FirstPart, char *SecondPart, long Count);
 /* 从左到右查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
-char *strchr(const char *str, const unsigned char* ch);
+char *strchr(const char *str, const char ch);
 
 /* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
-char *strrchr(const char *str, const unsigned char* ch);
+char *strrchr(const char *str, const char ch);
 
 int strlen(const char *String);
 

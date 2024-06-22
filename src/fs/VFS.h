@@ -70,7 +70,7 @@ struct dir_entry
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：
 };
-typedef int (*filldir_t)(void *buf,char *name, long namelen,long type,long offset);
+typedef int (*filldir_t)(void *buf,char *name, long namelen,long offset);
 
 
 // 是进程和VFS的纽带，它是抽象出来的，不存在于物质介质中

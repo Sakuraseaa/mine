@@ -44,7 +44,7 @@ int sys_kill(long pid, int signum)
 	}
 
     if(tsk == NULL)
-        return;
+        return -1;
 
     tsk->signal |= (1 << signum); // 设置信号位图-表示接收信号
 

@@ -47,7 +47,7 @@ void Start_Kernel(void)
 	Pos.XCharSize = 8;
 	Pos.YCharSize = 16;
 
-	Pos.FB_addr = (int *)0xffff800003000000;
+	Pos.FB_addr = (unsigned int *)0xffff800003000000;
 	Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
 
 	semaphore_init(&visual_lock, 1);

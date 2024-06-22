@@ -37,10 +37,10 @@ extern long global_pid;
 
 extern void ret_system_call();
 
-extern unsigned long kallsyms_addresses[] __attribute__((weak));
-extern long kallsyms_syms_num __attribute__((weak));
-extern long kallsyms_index[] __attribute__((weak));
-extern char* kallsyms_names __attribute((weak));
+extern unsigned long kallsyms_addresses[] __attribute__((__weak__));
+extern long kallsyms_syms_num __attribute__((__weak__));
+extern long kallsyms_index[] __attribute__((__weak__));
+extern char* kallsyms_names __attribute((__weak__));
 
 //// struct task_struct.falgs
 #define PF_KTHREAD (1UL << 0)

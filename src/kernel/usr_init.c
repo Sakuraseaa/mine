@@ -1,3 +1,5 @@
+#include "wait.h"
+#include "types.h"
 #include "debug.h"
 // #include "unistd.h"
 #include "stdio.h"
@@ -271,7 +273,6 @@ int cd_command(int argc, char **argv)
 }
 
 #include "stat.h"
-const char file_type[] = {'-', 's', 'd'};
 int ls_command(int argc, char **argv) 
 {
 	struct DIR* dir = NULL;
@@ -287,9 +288,9 @@ int ls_command(int argc, char **argv)
 		buf = readdir(dir);// 每次读一条目录项
 		if(buf == NULL)
 			break;
-		fstat(dir->fd, &statbuf);
+		// fstat(dir->fd, &statbuf);
 		// 打印信息
-		printf("%c %d %s\t \n", file_type[buf->d_type], buf->d_namelen, buf->d_name);
+		printf("%s\t", buf->d_name);
 	}
 	closedir(dir);
 }
@@ -327,10 +328,10 @@ int cat_command(int argc, char **argv)
 
 	close(fd);
 }
-int touch_command(int argc, char **argv) {}
-int rm_command(int argc, char **argv) {}
-int mkdir_command(int argc, char **argv) {}
-int rmdir_command(int argc, char **argv) {}
+int touch_command(int argc, char **argv) { return 0;}
+int rm_command(int argc, char **argv) { return 0; }
+int mkdir_command(int argc, char **argv) { return 0;}
+int rmdir_command(int argc, char **argv) { return 0;}
 int exec_command(int argc, char **argv)
 {
 	int errno = 0;

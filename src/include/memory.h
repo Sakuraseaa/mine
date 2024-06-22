@@ -1,6 +1,7 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
 
+#include "types.h"
 #include "lib.h"
 
 //	8Bytes per cell, 页表项个数
@@ -311,10 +312,10 @@ unsigned long kfree(void *address);
 struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Vaddress, unsigned long arg), void *(*destructor)(void *Vaddress, unsigned long arg), unsigned long arg);
 unsigned long slab_destroy(struct Slab_cache *slab_cache);
 
+unsigned long slab_init();
 void *slab_malloc(struct Slab_cache *slab_cache, unsigned long arg);
 unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg);
 unsigned long do_brk(unsigned long addr, unsigned long len);
 void pagetable_init();
 void init_memory();
-void My_vir_To_phy(void *vir_addr);
 #endif

@@ -1,3 +1,4 @@
+#include "types.h"
 #include "lib.h"
 #include "signal.h"
 #include "wait.h"
@@ -24,7 +25,7 @@ sighadler_t signal(long signum, sighadler_t handler) {
 int kill(long pid, long signum) {
     if(signum < 1 && signum > NSIG) {
         printf("ERROR!!!! invaild signal_value");
-        return NULL;
+        return -1;
     }
 
     return KILL(pid, signum);

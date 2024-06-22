@@ -20,6 +20,7 @@ void IOAPIC_disable(unsigned long irq)
 // 给向量号为irq的中断创建I/O中断向量投递寄存器
 unsigned long IOAPIC_install(unsigned long irq, void *arg)
 {
+	return 0;
 }
 
 // 回收分配给向量号irq中断创建的I/O中断向量投递寄存器

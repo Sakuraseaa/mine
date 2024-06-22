@@ -71,7 +71,6 @@ unsigned long DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned i
 unsigned long FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
 {
     int i, j;
-    int fat_entry;
     unsigned long sector_per_fat = fsbi->sector_per_FAT;
     unsigned int buf[128];
 
@@ -305,7 +304,7 @@ long FAT32_write(struct file *filp, char *buf, unsigned long count, long *positi
 // 设置文件指针的位置。这个函数的使用能否提升到VFS层面?
 long FAT32_lseek(struct file *filp, long offset, long origin)
 {
-    struct index_node *inode = filp->dentry->dir_inode;
+
     long pos = 0;
 
     switch (origin)
@@ -331,25 +330,15 @@ long FAT32_lseek(struct file *filp, long offset, long origin)
     // color_printk(GREEN, BLACK, "FAT32 FS(lseek) alert position:%d\n", filp->position);
     return pos;
 }
-long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) {}
+long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) { return 0; }
 
-int fill_dentry(void* buf, char*name, long namelen, struct FAT32_Directory* dentry, long offset)
+int fill_dentry(void* buf, char*name, long namelen, long offset)
 {
-    long t = 0;
     struct dirent* dent = (struct dirent*)buf;
     if((unsigned long) buf < TASK_SIZE && !verify_area(buf, sizeof(struct dirent) + namelen))
         return -EFAULT;
     memcpy(name, dent->d_name, namelen);
     dent->d_namelen = namelen;
-
-    if(dentry->DIR_Attr & ATTR_DIRECTORY)
-        t = 2;
-    else if(dentry->DIR_Attr & ATTR_SYSTEM)
-        t = 1;
-    else
-        t = 0;
-    
-    dent->d_type = t;
     dent->d_offset = offset;
     return sizeof(struct dirent) + namelen;
 
@@ -380,7 +369,7 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
         if(cluster > 0x0ffffff7) // 0x0fffffff7文件结束标志。
         { // 目录完了
            // color_printk(RED, BLACK, "FAT32 FS(readdir) cluster didn't exist\n");
-            return NULL;
+            return 0;
         }
     }
 
@@ -390,7 +379,7 @@ next_cluster:
     {
         color_printk(RED, BLACK, "FS::FAT32_readdir read disk ERROR!!!\n");
         kfree(buf);
-        return NULL;
+        return 0;
     }
 
     tmpdentry = (struct FAT32_Directory*)(buf + (filp->position % fsbi->bytes_per_cluster));
@@ -424,13 +413,13 @@ next_cluster:
             for(x = 0; x < j; x++, tmpldentry--)
             {
                 for(y = 0; y < 5; y++)
-                    if(tmpldentry->LDIR_Name1[y] != 0xffff && tmpldentry->LDIR_Name1 != 0x0000)
+                    if(tmpldentry->LDIR_Name1[y] != 0xffff && tmpldentry->LDIR_Name1[y] != 0x0000)
                         name[namelen++] = (char)tmpldentry->LDIR_Name1[y];
                 for(y = 0; y < 6; y++)
-                    if(tmpldentry->LDIR_Name2[y] != 0xffff && tmpldentry->LDIR_Name2 != 0x0000)
+                    if(tmpldentry->LDIR_Name2[y] != 0xffff && tmpldentry->LDIR_Name2[y] != 0x0000)
                         name[namelen++] = (char)tmpldentry->LDIR_Name2[y];
                 for(y = 0; y < 2; y++)
-                    if(tmpldentry->LDIR_Name3[y] != 0xffff && tmpldentry->LDIR_Name3 != 0x0000)
+                    if(tmpldentry->LDIR_Name3[y] != 0xffff && tmpldentry->LDIR_Name3[y] != 0x0000)
                         name[namelen++] = (char)tmpldentry->LDIR_Name3[y];
             }
             goto find_lookup_success;
@@ -467,10 +456,10 @@ next_cluster:
     if(cluster < 0x0ffffff7)
         goto next_cluster;
     kfree(buf);
-    return NULL;
+    return 0;
 find_lookup_success:
     filp->position += 32;
-    return filler(dirent,name,namelen, tmpdentry, 0);
+    return filler(dirent,name,namelen, 0);
 }
 struct file_operations FAT32_file_ops =
     {
@@ -514,7 +503,7 @@ static unsigned char FAT32_ChkSum(unsigned char *pFcbName)
  * @param size 传出参数，记录目录项占用字节数
  * @return struct FAT32_LongDirectory*
  */
-static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, struct dir_entry *dentry, int mode, long *size)
+static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, struct dir_entry *dentry, int mode, unsigned long *size)
 {
     struct FAT32_LongDirectory *fld, *fld0;
     struct FAT32_Directory *fd;
@@ -540,7 +529,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
     fd = (struct FAT32_Directory *)(fld + LDir_count); // 定位短目录项的长度
     // ------------------------- 初始化长目录项------------------
     fld0 = (struct FAT32_LongDirectory *)fd - 1;
-    unsigned char ChkSum_ = FAT32_ChkSum(tmpName);
+    unsigned char ChkSum_ = FAT32_ChkSum((unsigned char*)tmpName);
     j = 0;
     for (; k < LDir_count; k++, fld0--)
     {
@@ -671,7 +660,6 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
 
     fld = Create_FAT32DEntry(inode, dentry, mode, &dir_entry_size_total);
     finode = dentry->dir_inode->private_index_info;
-    struct index_node *p = NULL;
     int flag_finish = 1;
     do
     {
@@ -697,7 +685,7 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
                 IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer);
                 finode->dentry_location = cluster;
                 finode->dentry_position = FAT_DENRY_SIZE * i;
-                flag_finish = 0;
+                retval = flag_finish = 0;
                 break;
             }
 
@@ -720,7 +708,7 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
         cluster = next_cluster;
     } while (flag_finish);
 
-    return flag_finish;
+    return retval;
 }
 
 /**
@@ -977,11 +965,11 @@ find_lookup_success:
     kfree(buf);
     return dest_dentry;
 }
-long FAT32_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {}
-long FAT32_rmdir(struct index_node *inode, struct dir_entry *dentry) {}
-long FAT32_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) {}
-long FAT32_getattr(struct dir_entry *dentry, unsigned long *attr) {}
-long FAT32_setattr(struct dir_entry *dentry, unsigned long *attr) {}
+long FAT32_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { return 0; }
+long FAT32_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
+long FAT32_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
+long FAT32_getattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
+long FAT32_setattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
 
 struct index_node_operations FAT32_inode_ops =
     {
@@ -995,10 +983,10 @@ struct index_node_operations FAT32_inode_ops =
 };
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
-long FAT32_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) {}
-long FAT32_hash(struct dir_entry *dentry, char *filename) {}
-long FAT32_release(struct dir_entry *dentry) {}                        // 释放目录项
-long FAT32_iput(struct dir_entry *dentry, struct index_node *inode) {} // 释放inode索引
+long FAT32_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
+long FAT32_hash(struct dir_entry *dentry, char *filename) { return 0; }
+long FAT32_release(struct dir_entry *dentry) { return 0; }                        // 释放目录项
+long FAT32_iput(struct dir_entry *dentry, struct index_node *inode) { return 0; } // 释放inode索引
 struct dir_entry_operations FAT32_dentry_ops =
     {
         .compare = FAT32_compare,
@@ -1168,9 +1156,7 @@ struct file_system_type FAT32_fs_type =
 
 void DISK1_FAT32_FS_init()
 {
-    int i;
     unsigned char buf[512];
-    struct dir_entry *dentry = NULL;
 
     // 在VFS中注册FAT32文件系统
     register_filesystem(&FAT32_fs_type);

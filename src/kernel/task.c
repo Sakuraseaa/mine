@@ -1,3 +1,4 @@
+#include "execv.h"
 #include "ptrace.h"
 #include "printk.h"
 #include "lib.h"
@@ -39,7 +40,6 @@ extern void kernel_thread_func(void); // 进入用户进程，在执行完用户
 extern void system_call(void);
 
 unsigned long shell_boot(unsigned long arg);
-unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char* envp[]);
 long global_pid;
 
 struct task_struct *get_task(long pid)

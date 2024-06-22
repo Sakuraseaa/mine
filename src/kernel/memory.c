@@ -198,7 +198,7 @@ struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags)
                 //  (*p >> k) | (*(p + 1) << (64 - k))将后一个UNSIGNED LONG变量的低位补齐到正在检索的变量中
                 //  这样申请出的物理页是连续的
                 unsigned long z1 = (*p >> k) | (*(p + 1) << (64 - k));
-                if (!((k ? (z1) : *p)) & (num))
+                if (!((k ? (z1) : *p) & (num)))
                 {
                     // 找到了连续的number个物理页面, 初始化这个页面
                     unsigned long l;
@@ -959,7 +959,6 @@ void init_memory()
         unsigned long start, end;
         struct Zone *z;
         struct Page *p;
-        unsigned long *b;
         // 不符合要求的内存区域被掠过
         if (memory_management_struct.e820[i].type != 1)
             continue;
@@ -1078,44 +1077,6 @@ void init_memory()
     flush_tlb();
 }
 
-// 映射虚拟地址到物理地址，专门用来映射不存在的高端内存，外部io需要使用的内存,vir_addr是需要映射的物理地址
-void My_vir_To_phy(void *vir_addr)
-{
-    /////// re init frame buffer
-    unsigned long i;
-    unsigned long *tmp;
-    unsigned long *tmp1;
-    unsigned int *FB_addr = (unsigned int *)Phy_To_Virt(vir_addr);
-    unsigned long *vir_address;
-    Global_CR3 = Get_gdt();
-
-    // 获取该虚拟地址对应的PML(page map level 4, 4级页表)中的页表项指针
-    tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) +
-          (((unsigned long)FB_addr >> PAGE_GDT_SHIFT) & 0x1ff);
-    if (*tmp == 0)
-    { // 页表项为空，则分配4kbPDPT页表,填充该表项
-        vir_address = kmalloc(PAGE_4K_SIZE, 0);
-        set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(vir_address), PAGE_KERNEL_GDT));
-    }
-    //=======================================================================================
-
-    // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-    tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((unsigned long)FB_addr >> PAGE_1G_SHIFT) & 0x1ff);
-    if (*tmp == 0)
-    {
-        vir_address = kmalloc(PAGE_4K_SIZE, 0);
-        set_pdpt(tmp, mk_pdpt(Virt_To_Phy(vir_address), PAGE_KERNEL_Dir));
-    }
-    //============================================================
-
-    // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
-    tmp1 = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((unsigned long)FB_addr + i >> PAGE_2M_SHIFT) & 0x1ff);
-    // 填写该表项
-    set_pdt(tmp1, mk_pdpt(vir_addr, PAGE_KERNEL_Page | PAGE_PWT | PAGE_PCD));
-
-    flush_tlb();
-}
-
 /**
  * @brief 堆函数
  *
@@ -1133,21 +1094,21 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
     for (i = addr; i < addr + len; i += PAGE_2M_SIZE)
     {
         tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((i >> PAGE_GDT_SHIFT) & 0x1ff));
-        if (*tmp == NULL)
+        if (!(*tmp == 0))
         {
             virtual = kmalloc(PAGE_4K_SIZE, 0);
             memset(virtual, 0, PAGE_4K_SIZE);
             set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
         }
         tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_1G_SHIFT) & 0x1ff));
-        if (*tmp == NULL)
+        if (!(*tmp == 0))
         {
             virtual = kmalloc(PAGE_4K_SIZE, 0);
             memset(virtual, 0, PAGE_4K_SIZE);
             set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
         }
         tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
-        if (*tmp == NULL)
+        if (!(*tmp & 1))
         {
             p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
             if (p == NULL)

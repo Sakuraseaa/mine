@@ -9,12 +9,11 @@
 
 void SMP_init()
 {
-    int i;
+ 
     unsigned int a, b, c, d;
-
+    // char i;
     // get local APIC ID
     // for (i = 0;; i++)
-
     {
         get_cpuid(0xb, 0, &a, &b, &c, &d);
         // if ((c >> 8 & 0xff) == 0)

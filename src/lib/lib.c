@@ -1,3 +1,4 @@
+#include "types.h"
 #include "lib.h"
 
 // verify: 核实， 检测数据是否越过用户层界限
@@ -347,7 +348,7 @@ int strlen(const char *String)
 }
 
 /* 从左到右查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
-char *strchr(const char *str, const unsigned char* ch)
+char *strchr(const char *str, const char ch)
 {
     while (*str != 0)
     {
@@ -361,7 +362,7 @@ char *strchr(const char *str, const unsigned char* ch)
 }
 
 /* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
-char *strrchr(const char *str, const unsigned char* ch)
+char *strrchr(const char *str, const char ch)
 {
 
     const char *last_char = NULL;

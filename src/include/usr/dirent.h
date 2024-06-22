@@ -15,7 +15,6 @@ struct DIR
 struct dirent
 {
     long d_offset;
-    long d_type;
     long d_namelen;
     char d_name[];
 };

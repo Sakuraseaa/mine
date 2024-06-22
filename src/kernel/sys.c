@@ -1,3 +1,6 @@
+#include "time.h"
+#include "stab.h"
+#include "execv.h"
 #include "errno.h"
 #include "printk.h"
 #include "fcntl.h"
@@ -351,7 +354,7 @@ unsigned long sys_reboot(unsigned long cmd, void *arg)
     }
 }
 
-extern int fill_dentry(void* buf, char*name, long namelen, long type, long offset);
+extern int fill_dentry(void* buf, char*name, long namelen, long offset);
 unsigned long sys_getdents(int fd, void* dirent, long count)
 {
     struct file* filp = NULL;

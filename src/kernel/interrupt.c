@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2024
  * 
  */
+#include "types.h"
 #include "interrupt.h"
 #include "linkage.h"
 #include "lib.h"
@@ -161,7 +162,7 @@ int unregister_irq(unsigned long irq)
 
     p->controller = NULL;
     p->irq_name = NULL;
-    p->parameter = NULL;
+    p->parameter = 0;
     p->flags = 0;
     p->handler = NULL;
 

@@ -75,7 +75,7 @@ int skip_atoi(const char **s);
 int __res; \
 __asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
 __res; })
-
+int sprintf(char *buf, const char *fmt, ...);
 // int vsprintf(char *buf, const char *fmt, va_list args) __attribute__((force_stack_args));
  int vsprintf(char *buf, const char *fmt, va_list args);
 int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...);

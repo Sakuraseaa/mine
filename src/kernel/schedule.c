@@ -5,6 +5,7 @@
 #include "timer.h"
 #include "HEPT.h"
 struct schedule task_schedule;
+extern void switch_to(struct task_struct *prev, struct task_struct *next);
 struct task_struct *get_next_task()
 {
 	struct task_struct *tsk = NULL;

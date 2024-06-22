@@ -15,5 +15,6 @@ struct time
 #define BCD2BIN(value) (((value)&0xf) + ((value) >> 4) * 10)
 void timer_init();
 int get_cmos_time(struct time *time);
+void localtime(unsigned long stamp, struct time* tm);
 
 #endif
