@@ -333,7 +333,7 @@ long FAT32_lseek(struct file *filp, long offset, long origin)
 }
 long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) {}
 
-int fill_dentry(void* buf, char*name, long namelen, long type, long offset)
+int fill_dentry(void* buf, char*name, long namelen, struct FAT32_Directory* dentry, long offset)
 {
     long t = 0;
     struct dirent* dent = (struct dirent*)buf;
@@ -342,9 +342,9 @@ int fill_dentry(void* buf, char*name, long namelen, long type, long offset)
     memcpy(name, dent->d_name, namelen);
     dent->d_namelen = namelen;
 
-    if(type & ATTR_DIRECTORY)
+    if(dentry->DIR_Attr & ATTR_DIRECTORY)
         t = 2;
-    else if(type & ATTR_SYSTEM)
+    else if(dentry->DIR_Attr & ATTR_SYSTEM)
         t = 1;
     else
         t = 0;
@@ -470,7 +470,7 @@ next_cluster:
     return NULL;
 find_lookup_success:
     filp->position += 32;
-    return filler(dirent,name,namelen, tmpdentry->DIR_Attr, 0);
+    return filler(dirent,name,namelen, tmpdentry, 0);
 }
 struct file_operations FAT32_file_ops =
     {

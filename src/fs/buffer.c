@@ -1,3 +1,11 @@
+/* 
+    2024-6-22 16:21
+    虽然我们是软件工程专业的，但我的架构能力并不好，我并不知道应该把告诉缓冲区设置在操作系统的那个层才合理
+    我应该阅读更多的源码，学习设计模式？
+    我目前编码能力不足，所以暂时停止了高速缓冲区的编写
+
+*/
+
 #include "buffer.h"
 #include "memory.h"
 #include "VFS.h"
@@ -50,7 +58,7 @@ void buffer(void) {
     int i;
 
     struct FAT32_sb_info* sb = (struct FAT32_sb_info*)root_sb->private_sb_info;
-    blobuf[0]->pool =  slab_create(sb->sector_per_cluster * sb->bytes_per_sector, NULL, NULL, 0);
+    blobuf[0]->pool =  slab_create(sb->sector_per_cluster * sb->bytes_per_sector, &init_buffer, &del_buffer, 0);
     list_init(&blkbuf[0]->free_list);
     wait_queue_init(&blkbuf[0]->wait_list, NULL);
     for(i = 0; i < HASH_COUNT; i++)
@@ -58,21 +66,24 @@ void buffer(void) {
 }
 
 // 设备号用来确定使用什么缓冲区，我给每一个分区，文件系统都设置了一个缓冲区
-buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
-    
-    list_t head = blkbuf[dev]->hash_table[hash(block)];
+buffer_t *bread(unsigned long dev, long cmd, unsigned long block, long size, unsigned char *buffer) {
 
+    list_t *head = &blkbuf[dev]->hash_table[hash(block)];
+    buffer_t* bf;
     if(list_is_empty(&head))
     {
         // 为空则申请缓冲块
-        buffer_t* bf = (buffer_t*)slab_malloc(blkbuf[dev], block);
+        bf = (buffer_t*)slab_malloc(blkbuf[dev], block);
     } else {
         //不为空则查找是否有符合的缓冲块
-        list_t head = blkbuf[dev].hash_table[hash(arg)];
+        list_t head = blkbuf[dev].hash_table[hash(block)];
         do {
             head = head.next;
-            buffer_t* bf = container_of(&head), buffer_t, hash_list_node);
-        while(bf->block == block);
+            bf = container_of(&head, buffer_t, hash_list_node);
+        } while(bf->block == block);
+        
+        if(bf.valid) 
+            return bf;
     }
 
 }

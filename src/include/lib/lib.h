@@ -2,9 +2,6 @@
 #define __LIB_H__
 
 #define NULL 0
-#define false 0;
-#define true 1;
-typedef char bool;
 
 #define container_of(ptr, type, member)                                     \
 	({                                                                      \

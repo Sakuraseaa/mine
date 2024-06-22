@@ -270,12 +270,13 @@ int cd_command(int argc, char **argv)
 	printf("pwd switch to %s\n", current_dir);
 }
 
+#include "stat.h"
 const char file_type[] = {'-', 's', 'd'};
 int ls_command(int argc, char **argv) 
 {
 	struct DIR* dir = NULL;
 	struct dirent* buf = NULL;
-
+	stat_t  statbuf;
 	dir=opendir(current_dir);
 	// printf("ls_command opendir:%d\n", dir->fd);
 
@@ -286,7 +287,7 @@ int ls_command(int argc, char **argv)
 		buf = readdir(dir);// 每次读一条目录项
 		if(buf == NULL)
 			break;
-		
+		fstat(dir->fd, &statbuf);
 		// 打印信息
 		printf("%c %d %s\t \n", file_type[buf->d_type], buf->d_namelen, buf->d_name);
 	}

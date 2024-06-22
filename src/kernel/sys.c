@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "keyboard.h"
 #include "sys.h"
+#include "debug.h"
 // 系统调用有关
 /*
 normal
@@ -217,7 +218,6 @@ unsigned long sys_read(int fd, void *buf, long count)
     struct file *filp = NULL;
     unsigned long ret = 0;
 
-    // color_printk(GREEN, BLACK, "sys_read:%d\n", fd);
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
     if (count < 0)
@@ -227,8 +227,13 @@ unsigned long sys_read(int fd, void *buf, long count)
     if (filp->f_ops && filp->f_ops->read)
         ret = filp->f_ops->read(filp, buf, count, &filp->position);
 
+    DEBUGK("read_fd:%d read_size:%d\n", fd, ret);
+
     return ret;
 }
+
+int sys_stat(const char *pathname, struct stat *statbuf);
+int sys_fstat(int fd, struct stat *statbuf);
 
 // 写文件函数
 unsigned long sys_write(int fd, void *buf, long count)
@@ -236,7 +241,6 @@ unsigned long sys_write(int fd, void *buf, long count)
     struct file *filp = NULL;
     unsigned long ret = 0;
 
-    color_printk(GREEN, BLACK, "sys_write:%d\n", fd);
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
     if (count < 0)
@@ -245,6 +249,9 @@ unsigned long sys_write(int fd, void *buf, long count)
     filp = current->file_struct[fd];
     if (filp->f_ops && filp->f_ops->write)
         ret = filp->f_ops->write(filp, buf, count, &filp->position);
+
+
+    DEBUGK("written_fd:%d written_size:%d\n", fd, ret);
 
     return ret; // 成功的话返回的是写入的字节数
 }
@@ -271,6 +278,7 @@ unsigned long sys_lseek(int filds, long offset, int whence)
 
     if (filp->f_ops && filp->f_ops->lseek)
         ret = filp->f_ops->lseek(filp, offset, whence);
+
     return ret;
 }
 

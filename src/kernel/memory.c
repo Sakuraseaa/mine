@@ -395,7 +395,16 @@ unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned l
     return 0;
 }
 
-// SLAB内存池的创建
+
+/**
+ * @brief SLAB内存池的创建
+ * 
+ * @param size 每个内存块的大小
+ * @param constructor  内存块初始化函数
+ * @param destructor   内存块销毁函数
+ * @param arg  暂时没有用到
+ * @return struct Slab_cache* 内存池指针
+ */
 struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Vaddress, unsigned long arg),
                                void *(*destructor)(void *Vaddress, unsigned long arg), unsigned long arg)
 {
