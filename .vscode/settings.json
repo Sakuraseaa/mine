@@ -40,7 +40,8 @@
         "debug.h": "c",
         "wait.h": "c",
         "vfs.h": "c",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "assert.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

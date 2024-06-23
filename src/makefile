@@ -22,6 +22,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o   $(BUI_DIR)/switch_to.o $(BUI_DIR)/serial.o\
 		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o $(BUI_DIR)/debug.o $(BUI_DIR)/buffer.o\
+		$(BUI_DIR)/bitmap.o \
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
 	
 
@@ -106,6 +107,8 @@ $(BUI_DIR)/lib.o: $(SRC_DIR)/lib/lib.c
 $(BUI_DIR)/debug.o: $(SRC_DIR)/lib/debug.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/spinlock.o: $(SRC_DIR)/lib/spinlock.c
+	@$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/bitmap.o: $(SRC_DIR)/lib/bitmap.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/fat32.o: $(SRC_DIR)/fs/FAT32/fat32.c
 	@$(CC) $(CFLAGS) $< -o $@
