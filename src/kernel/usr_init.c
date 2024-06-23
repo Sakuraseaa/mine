@@ -292,6 +292,7 @@ int ls_command(int argc, char **argv)
 		// 打印信息
 		printf("%s\t", buf->d_name);
 	}
+	printf("\n");
 	closedir(dir);
 }
 

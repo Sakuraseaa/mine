@@ -39,7 +39,8 @@
         "interrupt.h": "c",
         "debug.h": "c",
         "wait.h": "c",
-        "vfs.h": "c"
+        "vfs.h": "c",
+        "cstdint": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
