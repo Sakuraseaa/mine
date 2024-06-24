@@ -1,7 +1,9 @@
+#include "debug.h"
 #include "VFS.h"
 #include "fat32.h"
 #include "printk.h"
 #include "memory.h"
+#include "disk.h"
 struct file_system_type filesystem = {"filesystem", 0};
 #define MAX_FILE_NAME_LEN PAGE_4K_SIZE
 // 当前文件系统的超级块
@@ -207,4 +209,33 @@ last_slash:     // 最后的斜杠
     }
 
     return path;
+}
+
+extern struct file_system_type FAT32_fs_type;
+extern struct file_system_type MINIX_fs_type;
+void DISK1_FAT32_FS_init()
+{
+    unsigned char buf[512];
+
+    // 在VFS中注册FAT32文件系统
+    register_filesystem(&FAT32_fs_type);
+    register_filesystem(&MINIX_fs_type);
+
+    // 读MBR
+    memset(buf, 0, 512);
+    IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
+    struct Disk_Partition_Table DPT = *(struct Disk_Partition_Table *)buf;
+    
+    DEBUGK("DPTE[0] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
+    DEBUGK("DPTE[1] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[1].start_LBA, DPT.DPTE[1].type, DPT.DPTE[1].sectors_limit);
+    // color_printk(BLUE, BLACK, "DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
+
+    // 读 FAT32文件系统的引导扇区
+    memset(buf, 0, 512);
+    IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);
+
+    // 挂载fat32系统
+    root_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);
+
+    mount_fs("MINIX", &DPT.DPTE[1], 0);
 }

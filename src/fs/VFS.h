@@ -4,9 +4,35 @@
 // 它们会根据自身情况和特点对这些操作方法予以实现
 #ifndef __VFS_H__
 #define __VFS_H__
+#include "buffer.h"
 #include "lib.h"
 #include "fat32.h"
+#include "types.h"
 extern struct super_block *root_sb;
+
+// 硬盘分区表项
+struct Disk_Partition_Table_Entry
+{
+    unsigned char flags;             // 0x80 = 活动分区标记(表明此分区的引导扇区中包含引导程序, 可引导),0 = 非活动分区
+    unsigned char start_head;        // 分区起始磁头号
+    unsigned short start_sector : 6, // 0 ~ 5 - 分区起始扇区号
+        start_cylinder : 10;         // 6 ~ 15 - 分区起始柱面号
+    unsigned char type;              // 文件类型ID, 0b表示FAT32
+    unsigned char end_head;          // 分区结束磁头号
+    unsigned short end_sector : 6,   // 0 ~ 5 - 分区结束扇区号
+        end_cylinder : 10;           // 6 ~ 15 - 分区起始柱面号
+    unsigned int start_LBA;          // 分区起始偏移扇区
+    unsigned int sectors_limit;      // 分区扇区数
+} __attribute__((packed));
+
+// MBR
+struct Disk_Partition_Table
+{
+    unsigned char BS_reserved[446];
+    struct Disk_Partition_Table_Entry DPTE[4];
+    unsigned short BS_TRailSig;
+} __attribute__((packed));
+
 // 记录VFS 支持的文件系统类型
 struct file_system_type
 {
@@ -23,12 +49,25 @@ struct super_block_operations;
 struct index_node_operations;
 struct dir_entry_operations;
 struct file_operations;
+struct index_node;
+
 
 // 记录着目标文件系统的引导扇区信息-操作系统为文件系统分配的资源信息
 struct super_block
 {
     // 记录着根目录的目录项，此目录项在文件系统中并不存在实体结构， 是为了便于搜索特意抽象出来的
     struct dir_entry *root;
+
+    struct buffer_t *buf; // 超级块描述符 buffer
+    dev_t dev;            // 设备号
+    u32 count;            // 引用计数
+    int type;             // 文件系统类型
+    size_t sector_size;   // 扇区大小
+    size_t block_size;    // 块大小
+    list_t inode_list;    // 使用中 inode 链表
+    struct index_node *iroot;       // 根目录 inode
+    struct index_node *imount;      // 安装到的 inode
+
     // 包含操作： superblock结构的读写, inode的写
     struct super_block_operations *sb_ops;
 
@@ -37,11 +76,31 @@ struct super_block
 };
 
 // 记录文件在文件系统中的物理信息和文件在操作系统中的抽象信息
-struct index_node
+typedef struct index_node
 {
-    unsigned long file_size; // 文件大小
+    size_t file_size; // 文件大小
     unsigned long blocks;    // 本文件占用了几个512B数据块 ？
     unsigned long attribute; // 用于保存目录项的属性
+
+    struct buffer_t *buf; // inode 描述符对应 buffer
+    
+    dev_t dev;  // 设备号
+    dev_t rdev; // 虚拟设备号
+
+    idx_t nr;     // i 节点号
+    size_t count; // 引用计数
+
+    time_t atime; // 访问时间
+    time_t mtime; // 修改时间
+    time_t ctime; // 创建时间
+
+    int type;    // 文件系统类型
+
+    int uid; // 用户 id
+    int gid; // 组 id
+
+    struct task_struct *rxwaiter; // 读等待进程
+    struct task_struct *txwaiter; // 写等待进程
 
     struct super_block *sb; // 超级块指针
 
@@ -49,7 +108,7 @@ struct index_node
     struct index_node_operations *inode_ops; // inode操作：创建
     // 用于保存各类文件系统的特有数据信息
     void *private_index_info; // 对于fat32系统，这里指向的是 struct FAT32_inode_info
-};
+}inode_t;
 
 #define FS_ATTR_FILE (1UL << 0)            // 文件
 #define FS_ATTR_DIR (1UL << 1)             // 目录
@@ -133,4 +192,5 @@ unsigned long register_filesystem(struct file_system_type *fs);
 unsigned long unregister_filesystem(struct file_system_type *fs);
 struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file);
 
+void DISK1_FAT32_FS_init();
 #endif

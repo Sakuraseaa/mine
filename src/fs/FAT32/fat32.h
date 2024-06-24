@@ -1,29 +1,6 @@
 #ifndef __FAT32_H__
 #define __FAT32_H__
 
-// 硬盘分区表项
-struct Disk_Partition_Table_Entry
-{
-    unsigned char flags;             // 0x80 = 活动分区标记(表明此分区的引导扇区中包含引导程序, 可引导),0 = 非活动分区
-    unsigned char start_head;        // 分区起始磁头号
-    unsigned short start_sector : 6, // 0 ~ 5 - 分区起始扇区号
-        start_cylinder : 10;         // 6 ~ 15 - 分区起始柱面号
-    unsigned char type;              // 文件类型ID, 0b表示FAT32
-    unsigned char end_head;          // 分区结束磁头号
-    unsigned short end_sector : 6,   // 0 ~ 5 - 分区结束扇区号
-        end_cylinder : 10;           // 6 ~ 15 - 分区起始柱面号
-    unsigned int start_LBA;          // 分区起始偏移扇区
-    unsigned int sectors_limit;      // 分区扇区数
-} __attribute__((packed));
-
-// MBR
-struct Disk_Partition_Table
-{
-    unsigned char BS_reserved[446];
-    struct Disk_Partition_Table_Entry DPTE[4];
-    unsigned short BS_TRailSig;
-} __attribute__((packed));
-
 // BPB = BIOS Parameter Block
 // FAT32文件系统的引导扇区
 struct FAT32_BootSector
@@ -149,7 +126,6 @@ struct FAT32_LongDirectory
     unsigned short LDIR_Name3[2];  // 长文件名的第12 ~ 13 个字符
 } __attribute__((packed));
 
-void DISK1_FAT32_FS_init();
 extern struct index_node_operations FAT32_inode_ops;
 extern struct file_operations FAT32_file_ops;
 extern struct dir_entry_operations FAT32_dentry_ops;

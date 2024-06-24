@@ -1047,7 +1047,7 @@ struct super_block_operations FAT32_sb_ops =
 };
 
 /**
- * @brief 为fat32文件系统编写的引导扇区解析方法, 主要建立并初始化超级块
+ * @brief 为fat32文件系统编写的引导扇区解析方法, 主要工作是建立并初始化超级块
  *
  * @param DPTE MBR的分区表
  * @param buf fat32文件系统的引导扇区
@@ -1154,24 +1154,4 @@ struct file_system_type FAT32_fs_type =
         .next = NULL,
 };
 
-void DISK1_FAT32_FS_init()
-{
-    unsigned char buf[512];
 
-    // 在VFS中注册FAT32文件系统
-    register_filesystem(&FAT32_fs_type);
-
-    // 读MBR
-    memset(buf, 0, 512);
-    IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
-    DPT = *(struct Disk_Partition_Table *)buf;
-    DEBUGK("DPTE[0] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
-    // color_printk(BLUE, BLACK, "DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
-
-    // 读 FAT32文件系统的引导扇区
-    memset(buf, 0, 512);
-    IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);
-
-    // 挂载fat32系统
-    root_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);
-}

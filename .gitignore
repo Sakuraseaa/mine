@@ -13,3 +13,5 @@ kernel.bin
 *.bin
 *.sh
 /src/user/system_api_lib
+
+vhd.img

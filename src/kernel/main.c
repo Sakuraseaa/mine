@@ -24,6 +24,7 @@
 #include "VFS.h"
 #include "serial.h"
 #include "debug.h"
+#include "bitmap.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
@@ -115,6 +116,7 @@ void Start_Kernel(void)
 	task_init();
 
 	sti();
+
 
 	// 此处的while用于线程同步
 	while (!shell_up)

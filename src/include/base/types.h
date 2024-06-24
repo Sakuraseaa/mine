@@ -23,7 +23,7 @@ typedef char bool;
 
 #define _inline __attribute__((always_inline)) inline
 
-typedef unsigned int size_t;
+typedef unsigned long size_t;
 
 typedef char int8;
 typedef short int16;
@@ -38,12 +38,12 @@ typedef unsigned long u64;
 typedef int32 pid_t;
 typedef int32 dev_t;
 
-typedef u32 time_t;
-typedef u32 idx_t;
+typedef u64 time_t;
+typedef u64 idx_t;
 
 typedef u16 mode_t; // 文件权限
 
-typedef int32 fd_t;
+typedef int64 fd_t;
 typedef enum std_fd_t
 {
     STDIN_FILENO,
