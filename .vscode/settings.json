@@ -41,7 +41,8 @@
         "wait.h": "c",
         "vfs.h": "c",
         "cstdint": "cpp",
-        "assert.h": "c"
+        "assert.h": "c",
+        "disk.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

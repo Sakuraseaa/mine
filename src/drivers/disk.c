@@ -10,6 +10,7 @@
 #include "schedule.h"
 #include "waitqueue.h"
 #include "debug.h"
+#include "device.h"
 
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
 void end_request(struct block_buffer_node *node)
@@ -269,7 +270,12 @@ void disk_init()
     // color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
     /*在IO_APIC中，注册硬盘中断函数*/
     struct IO_APIC_RET_entry entry;
-
+    
+    if(pNrDrives > 1){
+        device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);
+    } else
+        device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);
+    
     entry.vector = 0x2f;
     entry.deliver_mode = APIC_ICR_IOAPIC_Fixed;
     entry.dest_mode = ICR_IOAPIC_DELV_PHYSICAL;
@@ -346,6 +352,7 @@ void other_handler(unsigned long nr, unsigned long parameter)
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误
         color_printk(RED, BLACK, "write_handler:%#010x\n", io_in8(PORT_DISK1_ERR_FEATURE));
 
+    
     int i = 0;
     struct Disk_Identify_Info a;
     unsigned short *p = NULL;

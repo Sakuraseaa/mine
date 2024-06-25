@@ -13,5 +13,6 @@ kernel.bin
 *.bin
 *.sh
 /src/user/system_api_lib
-
+hd.img
 vhd.img
+hd.qcow2

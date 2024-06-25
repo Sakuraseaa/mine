@@ -25,6 +25,7 @@
 #include "serial.h"
 #include "debug.h"
 #include "bitmap.h"
+#include "device.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
@@ -80,6 +81,8 @@ void Start_Kernel(void)
 
 	// color_printk(RED, BLACK, "pagetable init \n");
 	pagetable_init();
+
+	device_init();
 
 	// color_printk(RED, BLACK, "HPET init \n");
 	HEPT_init();

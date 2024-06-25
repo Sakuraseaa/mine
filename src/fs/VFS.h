@@ -10,6 +10,18 @@
 #include "types.h"
 extern struct super_block *root_sb;
 
+
+enum
+{
+    FS_TYPE_NONE = 0,
+    FS_TYPE_PIPE,
+    FS_TYPE_SOCKET,
+    FS_TYPE_MINIX,
+    FS_TYPE_FAT32,
+    FS_TYPE_NUM,
+};
+
+
 // 硬盘分区表项
 struct Disk_Partition_Table_Entry
 {
