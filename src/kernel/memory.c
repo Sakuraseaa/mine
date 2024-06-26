@@ -13,6 +13,7 @@
 #include "lib.h"
 #include "printk.h"
 #include "errno.h"
+#include "assert.h"
 
 // 给page结构体的属性成员赋值, 增加引用
 unsigned long page_init(struct Page *page, unsigned long flags)
@@ -257,7 +258,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, unsigned long arg)
     struct Slab *tmp_slab = NULL;
     int j = 0;
 
-    if (Slab_cache->total_free == 0)
+    if (Slab_cache->total_free == 0 || slab_p == NULL)
     {
         // a.内存池中没有Slab可用了, 申请一个物理页，加入内存池
         tmp_slab = init_Slab(Slab_cache->size);
@@ -266,7 +267,12 @@ void *slab_malloc(struct Slab_cache *Slab_cache, unsigned long arg)
             color_printk(RED, BLACK, "slab_malloc::init_Slab ERROR: can't alloc");
             return NULL;
         }
-        list_add_to_behind(&Slab_cache->cache_pool->list, &tmp_slab->list);
+
+        if(slab_p == NULL)
+            Slab_cache->cache_pool = tmp_slab;
+        else
+            list_add_to_behind(&Slab_cache->cache_pool->list, &tmp_slab->list);
+        
         Slab_cache->total_free += tmp_slab->color_count;
 
         // b.根据Slab结构体中的内存位图，寻址对应虚拟地址返回给调用者
@@ -347,6 +353,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, unsigned long arg)
 unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg)
 {
     struct Slab *slab_p = slab_cache->cache_pool;
+    assert(slab_p != NULL);
     int index = 0;
     do
     {
@@ -426,7 +433,8 @@ struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Va
     slab_cache->destructor = destructor;
 
     // 为Slab申请内存
-    slab_cache->cache_pool = init_Slab(slab_cache->size);
+    // slab_cache->cache_pool = init_Slab(slab_cache->size);
+    slab_cache->cache_pool = NULL;
     slab_cache->total_free = slab_cache->cache_pool->free_count;
 
     return slab_cache;
@@ -444,6 +452,10 @@ unsigned long slab_destroy(struct Slab_cache *slab_cache)
         color_printk(RED, BLACK, "slab_cache->total_using != 0\n");
         return 0;
     }
+
+    if(slab_cache->cache_pool == NULL)
+        goto NO_SLAB_MEM
+    
 
     // 销毁Slab_cache里的每一个Slab
     while (!list_is_empty(&slab_p->list))
@@ -466,6 +478,7 @@ unsigned long slab_destroy(struct Slab_cache *slab_cache)
     free_pages(slab_p->page, 1);
     kfree(slab_p);
 
+NO_SLAB_MEM:
     // 销毁Slab_cache
     kfree(slab_cache);
 
