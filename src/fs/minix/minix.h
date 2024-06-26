@@ -34,7 +34,7 @@ typedef struct minix_super_t
     u16 log_zone_size; // log2(每逻辑块数据块数)
     u32 max_size;      // 文件最大长度
     u16 magic;         // 文件系统魔数
-} minix_sb_info_t;
+} minix_sb_info_t __attribute__((packed));
 
 typedef struct minix_inode_t
 {
