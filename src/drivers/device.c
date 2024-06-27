@@ -4,7 +4,6 @@
 #include "errno.h"
 #include "block.h"
 #include "disk.h"
-#include "device.h"
 #include "types.h"
 
 

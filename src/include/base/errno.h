@@ -92,4 +92,5 @@ immediately established */
 #define EWOULDBLOCK 80 /* Operation would block 将一个socket连接设置成非阻塞模式*/
 #define EXDEV 81       /* Improper link */
 
+#define EOK 0  /* 函数执行成功 */
 #endif

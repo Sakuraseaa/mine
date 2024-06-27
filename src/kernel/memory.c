@@ -454,7 +454,7 @@ unsigned long slab_destroy(struct Slab_cache *slab_cache)
     }
 
     if(slab_cache->cache_pool == NULL)
-        goto NO_SLAB_MEM
+        goto NO_SLAB_MEM;
     
 
     // 销毁Slab_cache里的每一个Slab
@@ -624,11 +624,11 @@ struct Slab *kmalloc_create(unsigned long size)
     case 1024: // 1kb
     case 2048:
     case 4096: // 4kb
-    case 8192:
-    case 16384:
+    case 8192:    // 8KB
+    case 16384:   //16KB
         /////////////////// color_map is a very short buffer
-    case 32768:
-    case 65536:
+    case 32768:  // 32 KB
+    case 65536:  // 64KB
     case 131072: // 128KB
     case 262144:
     case 524288:

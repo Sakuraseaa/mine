@@ -43,7 +43,8 @@
         "cstdint": "cpp",
         "assert.h": "c",
         "disk.h": "c",
-        "device.h": "c"
+        "device.h": "c",
+        "types.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

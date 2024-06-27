@@ -6,7 +6,7 @@
 #include "waitqueue.h"
 
 #define HASH_COUNT 64      //
-
+#define MAX_BUF_COUNT 4096
 
 
 #endif
