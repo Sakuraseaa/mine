@@ -17,10 +17,10 @@ struct super_block_operations MINIX_sb_ops;
 
 
 /**
- * @brief 为fat32文件系统编写的引导扇区解析方�?, 主�?�建立并初�?�化超级�?
+ * @brief 为fat32文件系统编写的引导扇区解析方�?, 主�?�建立并初�?�化超级�?
  *
  * @param DPTE MBR的分区表
- * @param buf fat32文件系统的引导扇�?
+ * @param buf fat32文件系统的引导扇�?
  * @return struct super_block* 超级块结构体
  */
 struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *buf)
@@ -43,7 +43,7 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + 2, 1, (unsigned char *)bbuf);
     
     memcpy(bbuf,sbp->private_sb_info, sizeof(minix_sb_info_t));
-    // ================================== 读取根目�? =====================================
+    // ================================== 读取根目�? =====================================
     color_printk(ORANGE, BLACK, "MINIX FSinfo\n Firstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\n \
 inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
                 minix_sb->firstdatazone,  minix_sb->inodes, minix_sb->log_zone_size, minix_sb->imap_blocks,

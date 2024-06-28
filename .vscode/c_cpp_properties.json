@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/*",
+                "${workspaceFolder}/**",
+                "${default}",
                 "${workspaceFolder}/src/*",
                 "${workspaceFolder}/src/**",
                 "${workspaceFolder}/src/include/*",
@@ -13,7 +14,8 @@
                 "${workspaceFolder}/src/include/drivers/*",
                 "${workspaceFolder}/src/include/base/*",
                 "${workspaceFolder}/src/include/lib/*",
-                "${workspaceFolder}/src/include/usr/*"
+                "${workspaceFolder}/src/include/usr/*",
+                "${workspaceFolder}/src/fs/minix/*"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

@@ -35,7 +35,7 @@ void list_add_to_behind(struct List *entry, struct List *pnew); ////add to entry
 void list_add_to_before(struct List *entry, struct List *pnew); ////add to entry behind
 
 void list_del(struct List *entry);
-
+bool list_search(list_t *list, list_t *node);
 // return: 1 = 空 ， 0 = 不空
 long list_is_empty(struct List *entry);
 

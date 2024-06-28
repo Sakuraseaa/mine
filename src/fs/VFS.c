@@ -1,3 +1,4 @@
+#include "types.h"
 #include "debug.h"
 #include "VFS.h"
 #include "fat32.h"
@@ -226,10 +227,12 @@ void DISK1_FAT32_FS_init()
     IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
     struct Disk_Partition_Table DPT = *(struct Disk_Partition_Table *)buf;
     
+    for(u8 i = 0; i < 4; i++) {
+        if(DPT[i].start_LBA == 0)
     DEBUGK("DPTE[0] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
     DEBUGK("DPTE[1] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[1].start_LBA, DPT.DPTE[1].type, DPT.DPTE[1].sectors_limit);
     // color_printk(BLUE, BLACK, "DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
-
+    }
     // 读 FAT32文件系统的引导扇区
     memset(buf, 0, 512);
     IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);
