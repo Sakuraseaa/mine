@@ -81,7 +81,15 @@ void list_init(struct List *list)
     list->prev = list;
     list->next = list;
 }
-
+bool list_search(list_t *list, list_t *node) {
+    
+    list_t* END = list;
+    for(;list->next != END; list = list->next) {
+        if(list == node)
+            return true;
+    }
+    return false;
+}
 void list_add_to_behind(struct List *entry, struct List *pnew) ////add to entry behind
 {
     pnew->next = entry->next;
