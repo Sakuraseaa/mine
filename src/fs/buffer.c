@@ -135,7 +135,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
     return 0;
 }
 
-// get free buffer_t
+/* get free buffer_t */
 static buffer_t* get_free_buffer(bdesc_t* desc) {
 
     // free_list 只由malloc能生产
