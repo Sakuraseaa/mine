@@ -138,7 +138,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
 /* get free buffer_t */
 static buffer_t* get_free_buffer(bdesc_t* desc) {
 
-    // free_list 只由malloc能生产
+    /* free_list 只由malloc能生产 */
     if(desc->count < MAX_BUF_COUNT && list_is_empty(&desc->free_list)) {
         buffer_alloc(desc);
     }
