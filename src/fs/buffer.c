@@ -52,7 +52,7 @@ static bdesc_t *get_desc(size_t sz) {
         if(bdescs[i].size == sz)
             return &bdescs[i];
     
-    panic("buffer_size %d has no buffer\n", sz);
+    // Run here. 证明程序出错了
     
     return NULL;
 }
@@ -103,7 +103,7 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
     // 此时该缓冲块又被命中，所以此处尝试从idle_list中移除 rnode
     // 如果 buf 在空闲列表中，则移除
     if(list_search(&desc->idle_list, &buf->rnode)) 
-        list_remove(&buf->rnode);
+        list_del(&buf->rnode);
 
     return buf;
 }
@@ -115,7 +115,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
     buffer_t* buf = NULL;
     for(char* i = addr; i < addr + 4096; i += desc->size) { 
         
-        buf = (buffer_t*)kmalloc(sizeof(buffer_t));
+        buf = (buffer_t*)kmalloc(sizeof(buffer_t), 0);
         
         buf->data = i;
         buf->block = 0;
@@ -132,20 +132,20 @@ static err_t buffer_alloc(bdesc_t *desc) {
     }
 
     LOGK("buffer desciptor update:: size %d count %d\n", desc->size, desc->count);
-    return
+    return 0;
 }
 
 // get free buffer_t
 static buffer_t* get_free_buffer(bdesc_t* desc) {
 
     // free_list 只由malloc能生产
-    if(desc->count < MAX_BUF_COUNT && list_is_empty(desc->free_list)) {
+    if(desc->count < MAX_BUF_COUNT && list_is_empty(&desc->free_list)) {
         buffer_alloc(desc);
     }
 
     if(!list_is_empty(&desc->free_list)) {
     // free_list 只由此处消费
-        buffer_t* buf = container_of(list_prev(&desc->free_list), buffer_t, rnode)
+        buffer_t* buf = container_of(list_prev(&desc->free_list), buffer_t, rnode);
         hash_remove(desc, buf);
         buf->valid = false;
         return buf;
@@ -158,7 +158,7 @@ static buffer_t* get_free_buffer(bdesc_t* desc) {
     }
 
     assert(!list_is_empty(&desc->idle_list));
-    buffer_t* buf = container_of(list_prev(&desc->idle_list), buffer_t, rnode)
+    buffer_t* buf = container_of(list_prev(&desc->idle_list), buffer_t, rnode);
     hash_remove(desc, buf);
     buf->valid = false;
     return buf;

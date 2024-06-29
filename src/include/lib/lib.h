@@ -1,6 +1,8 @@
 #ifndef __LIB_H__
 #define __LIB_H__
 
+#include "types.h"
+
 #define container_of(ptr, type, member)                                     \
 	({                                                                      \
 		typeof(((type *)0)->member) *p = (ptr);                             \
