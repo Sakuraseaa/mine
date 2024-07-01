@@ -9,8 +9,14 @@
 #include "minix.h"
 #include "printk.h"
 #include "buffer.h"
+struct super_block_operations minix_super_ops;
 
-struct super_block_operations MINIX_sb_ops;
+// 计算 inode nr 对应的块号
+static inline idx_t inode_block(minix_sb_info_t *desc, idx_t nr)
+{
+    // inode 编号 从 1 开始
+    return 2 + desc->imap_blocks + desc->zmap_blocks + (nr - 1) / BLOCK_INODES;
+}
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
 long minix_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
@@ -93,7 +99,7 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     sbp->type = FS_TYPE_MINIX;
     memset(sbp, 0, sizeof(struct super_block));
 
-    sbp->sb_ops = &MINIX_sb_ops;
+    sbp->sb_ops = &minix_super_ops;
     sbp->private_sb_info = minix_sb = (minix_sb_info_t *)kmalloc(sizeof(minix_sb_info_t), 0);
     memset(sbp->private_sb_info, 0, sizeof(minix_sb_info_t));
 
@@ -132,8 +138,13 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
 
     sbp->root->dir_inode = root;
 
-
-
+    
+    memset(bbuf, 0, sizeof(512));
+    IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + inode_block(minix_sb, 1)*2, 1, (unsigned char *)bbuf);
+    minix_inode_t* inode = (minix_inode_t*)bbuf;
+    for(; inode->size != 0 ;){
+        inode++;
+    }
     kfree(bbuf);
     return sbp;
 }

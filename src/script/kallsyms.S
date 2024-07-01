@@ -387,89 +387,90 @@ kallsyms_addresses:
 	.quad	0xffff800000119492
 	.quad	0xffff80000011957f
 	.quad	0xffff8000001195b4
-	.quad	0xffff8000001195cf
-	.quad	0xffff8000001195e6
-	.quad	0xffff8000001195f9
-	.quad	0xffff800000119610
-	.quad	0xffff800000119627
-	.quad	0xffff80000011963e
-	.quad	0xffff800000119659
-	.quad	0xffff800000119674
-	.quad	0xffff80000011968b
-	.quad	0xffff8000001196aa
-	.quad	0xffff8000001196c1
-	.quad	0xffff8000001196d7
-	.quad	0xffff8000001196ea
-	.quad	0xffff800000119704
-	.quad	0xffff80000011971b
-	.quad	0xffff80000011973a
-	.quad	0xffff800000119751
-	.quad	0xffff800000119768
-	.quad	0xffff800000119af6
-	.quad	0xffff800000119b4e
-	.quad	0xffff800000119c03
-	.quad	0xffff800000119ce3
-	.quad	0xffff800000119da7
-	.quad	0xffff800000119e3c
-	.quad	0xffff800000119ee5
-	.quad	0xffff800000119f5f
-	.quad	0xffff80000011a019
-	.quad	0xffff80000011a0f8
-	.quad	0xffff80000011a130
-	.quad	0xffff80000011a18a
-	.quad	0xffff80000011a24d
-	.quad	0xffff80000011a519
-	.quad	0xffff80000011a54f
-	.quad	0xffff80000011a8a8
-	.quad	0xffff80000011ab81
-	.quad	0xffff80000011ac5c
-	.quad	0xffff80000011acb1
-	.quad	0xffff80000011aeb6
-	.quad	0xffff80000011aecc
-	.quad	0xffff80000011aee2
-	.quad	0xffff80000011aef8
-	.quad	0xffff80000011af0e
-	.quad	0xffff80000011b16e
-	.quad	0xffff80000011b199
-	.quad	0xffff80000011b1fd
-	.quad	0xffff80000011b2fc
-	.quad	0xffff80000011b4b8
-	.quad	0xffff80000011b4fc
-	.quad	0xffff80000011b530
-	.quad	0xffff80000011b568
-	.quad	0xffff80000011b5dc
-	.quad	0xffff80000011b644
-	.quad	0xffff80000011b6ec
-	.quad	0xffff80000011b72f
-	.quad	0xffff80000011b7aa
-	.quad	0xffff80000011b7ba
-	.quad	0xffff80000011b7ca
-	.quad	0xffff80000011b7da
-	.quad	0xffff80000011b7ea
-	.quad	0xffff80000011b7fa
-	.quad	0xffff80000011b80a
-	.quad	0xffff80000011b81a
-	.quad	0xffff80000011b82a
-	.quad	0xffff80000011b83a
-	.quad	0xffff80000011b847
-	.quad	0xffff80000011b854
-	.quad	0xffff80000011b861
-	.quad	0xffff80000011b86e
-	.quad	0xffff80000011b87b
-	.quad	0xffff80000011b888
-	.quad	0xffff80000011b895
-	.quad	0xffff80000011b8a2
+	.quad	0xffff8000001195f3
+	.quad	0xffff80000011960e
+	.quad	0xffff800000119625
+	.quad	0xffff800000119638
+	.quad	0xffff80000011964f
+	.quad	0xffff800000119666
+	.quad	0xffff80000011967d
+	.quad	0xffff800000119698
+	.quad	0xffff8000001196b3
+	.quad	0xffff8000001196ca
+	.quad	0xffff8000001196e9
+	.quad	0xffff800000119700
+	.quad	0xffff800000119716
+	.quad	0xffff800000119729
+	.quad	0xffff800000119743
+	.quad	0xffff80000011975a
+	.quad	0xffff800000119779
+	.quad	0xffff800000119790
+	.quad	0xffff8000001197a7
+	.quad	0xffff800000119bbb
+	.quad	0xffff800000119c13
+	.quad	0xffff800000119cc8
+	.quad	0xffff800000119da8
+	.quad	0xffff800000119e6c
+	.quad	0xffff800000119f01
+	.quad	0xffff800000119faa
+	.quad	0xffff80000011a024
+	.quad	0xffff80000011a0de
+	.quad	0xffff80000011a1bd
+	.quad	0xffff80000011a1f5
+	.quad	0xffff80000011a24f
+	.quad	0xffff80000011a312
+	.quad	0xffff80000011a5de
+	.quad	0xffff80000011a614
+	.quad	0xffff80000011a96d
+	.quad	0xffff80000011ac46
+	.quad	0xffff80000011ad21
+	.quad	0xffff80000011ad76
+	.quad	0xffff80000011af7b
+	.quad	0xffff80000011af91
+	.quad	0xffff80000011afa7
+	.quad	0xffff80000011afbd
+	.quad	0xffff80000011afd3
+	.quad	0xffff80000011b233
+	.quad	0xffff80000011b25e
+	.quad	0xffff80000011b2c2
+	.quad	0xffff80000011b3c1
+	.quad	0xffff80000011b57d
+	.quad	0xffff80000011b5c1
+	.quad	0xffff80000011b5f5
+	.quad	0xffff80000011b62d
+	.quad	0xffff80000011b6a1
+	.quad	0xffff80000011b709
+	.quad	0xffff80000011b7b1
+	.quad	0xffff80000011b7f4
+	.quad	0xffff80000011b86f
+	.quad	0xffff80000011b87f
+	.quad	0xffff80000011b88f
+	.quad	0xffff80000011b89f
 	.quad	0xffff80000011b8af
-	.quad	0xffff80000011b8bc
-	.quad	0xffff80000011b8cc
-	.quad	0xffff80000011b8e9
-	.quad	0xffff80000011b8eb
+	.quad	0xffff80000011b8bf
+	.quad	0xffff80000011b8cf
+	.quad	0xffff80000011b8df
+	.quad	0xffff80000011b8ef
+	.quad	0xffff80000011b8ff
+	.quad	0xffff80000011b90c
+	.quad	0xffff80000011b919
+	.quad	0xffff80000011b926
+	.quad	0xffff80000011b933
+	.quad	0xffff80000011b940
+	.quad	0xffff80000011b94d
+	.quad	0xffff80000011b95a
+	.quad	0xffff80000011b967
+	.quad	0xffff80000011b974
+	.quad	0xffff80000011b981
+	.quad	0xffff80000011b991
+	.quad	0xffff80000011b9ae
+	.quad	0xffff80000011b9b0
 
 .globl kallsyms_syms_num
 .align 8
 
 kallsyms_syms_num:
-	.quad	460
+	.quad	461
 
 .globl kallsyms_index
 .align 8
@@ -858,83 +859,84 @@ kallsyms_index:
 	.quad	4925
 	.quad	4936
 	.quad	4948
-	.quad	4962
-	.quad	4973
-	.quad	4987
-	.quad	4998
-	.quad	5009
+	.quad	4960
+	.quad	4974
+	.quad	4985
+	.quad	4999
+	.quad	5010
 	.quad	5021
-	.quad	5032
+	.quad	5033
 	.quad	5044
 	.quad	5056
 	.quad	5068
-	.quad	5082
-	.quad	5095
-	.quad	5108
+	.quad	5080
+	.quad	5094
+	.quad	5107
 	.quad	5120
 	.quad	5132
-	.quad	5145
-	.quad	5159
-	.quad	5173
-	.quad	5195
-	.quad	5211
-	.quad	5224
+	.quad	5144
+	.quad	5157
+	.quad	5171
+	.quad	5185
+	.quad	5207
+	.quad	5223
 	.quad	5236
-	.quad	5249
-	.quad	5264
+	.quad	5248
+	.quad	5261
 	.quad	5276
 	.quad	5288
-	.quad	5299
-	.quad	5306
-	.quad	5314
+	.quad	5300
+	.quad	5311
+	.quad	5318
 	.quad	5326
-	.quad	5336
-	.quad	5345
-	.quad	5358
-	.quad	5375
-	.quad	5386
-	.quad	5397
+	.quad	5338
+	.quad	5348
+	.quad	5357
+	.quad	5370
+	.quad	5387
+	.quad	5398
 	.quad	5409
 	.quad	5421
-	.quad	5435
-	.quad	5446
-	.quad	5460
-	.quad	5474
-	.quad	5487
-	.quad	5502
-	.quad	5511
-	.quad	5521
-	.quad	5535
+	.quad	5433
+	.quad	5447
+	.quad	5458
+	.quad	5472
+	.quad	5486
+	.quad	5499
+	.quad	5514
+	.quad	5523
+	.quad	5533
 	.quad	5547
-	.quad	5552
-	.quad	5560
-	.quad	5567
+	.quad	5559
+	.quad	5564
 	.quad	5572
-	.quad	5580
-	.quad	5589
-	.quad	5597
-	.quad	5607
-	.quad	5612
-	.quad	5618
-	.quad	5623
-	.quad	5629
+	.quad	5579
+	.quad	5584
+	.quad	5592
+	.quad	5601
+	.quad	5609
+	.quad	5619
+	.quad	5624
+	.quad	5630
 	.quad	5635
-	.quad	5640
-	.quad	5646
-	.quad	5653
+	.quad	5641
+	.quad	5647
+	.quad	5652
 	.quad	5658
-	.quad	5664
-	.quad	5668
-	.quad	5675
-	.quad	5681
-	.quad	5690
-	.quad	5697
+	.quad	5665
+	.quad	5670
+	.quad	5676
+	.quad	5680
+	.quad	5687
+	.quad	5693
 	.quad	5702
-	.quad	5708
-	.quad	5715
-	.quad	5729
-	.quad	5752
-	.quad	5770
+	.quad	5709
+	.quad	5714
+	.quad	5720
+	.quad	5727
+	.quad	5741
+	.quad	5764
+	.quad	5782
 
 .globl kallsyms_names
 .align 8
@@ -1322,6 +1324,7 @@ kallsyms_names:
 	.asciz	"bitmap_scan"
 	.asciz	"bitmap_set"
 	.asciz	"get_current"
+	.asciz	"inode_block"
 	.asciz	"minix_compare"
 	.asciz	"minix_hash"
 	.asciz	"minix_release"

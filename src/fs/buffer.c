@@ -174,26 +174,26 @@ err_t brelse(buffer_t *buf) {}
 // 缓冲读
 buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
 
-        bdesc_t* m_desc = get_desc(size);
+    bdesc_t* m_desc = get_desc(size);
 
-        buffer_t* buf = getblk(m_desc, dev, block);
+    buffer_t* buf = getblk(m_desc, dev, block);
 
-        assert(buf != NULL);
-        if(buf->valid) 
-            return buf;
-        semaphore_down(&buf->lock);
-        
-        u64 block_size = m_desc->size; // 缓冲块大小
-        u64 sector_size =  1024;   //设备扇区大小
-        u64 bs = block_size / sector_size; // 读取的块数
-
-
-        device_read(dev, buf->data, bs, block * bs, 0);
-        buf->valid = true;
-        buf->dirty = false;
-        
-        semaphore_up(&buf->lock);
+    assert(buf != NULL);
+    if(buf->valid) 
         return buf;
+    semaphore_down(&buf->lock);
+        
+    u64 block_size = m_desc->size; // 缓冲块大小
+    u64 sector_size =  1024;   //设备扇区大小
+    u64 bs = block_size / sector_size; // 读取的块数
+
+
+    device_read(dev, buf->data, bs, block * bs, 0);
+    buf->valid = true;
+    buf->dirty = false;
+        
+    semaphore_up(&buf->lock);
+    return buf;
 
 rollback:
     semaphore_up(&buf->lock);
