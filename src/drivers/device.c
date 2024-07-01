@@ -1,3 +1,4 @@
+#include "VFS.h"
 #include "device.h"
 #include "assert.h"
 #include "debug.h"
@@ -49,7 +50,8 @@ int device_read(dev_t dev, void *buf, size_t count, idx_t lba, int flags)
     device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART) {
         block_dev_opt_t* bdo = (block_dev_opt_t*)device->device_ops;
-        return  bdo->transfer(ATA_READ_CMD, lba, count, buf);
+        ide_part_t* ipt = (ide_part_t*)device->ptr;
+        return  bdo->transfer(ATA_READ_CMD, ipt->start + lba, count, buf);
     }else if(1) {
     }
     LOGK("read of device %d not implemented!!!\n", dev);

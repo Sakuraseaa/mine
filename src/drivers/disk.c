@@ -272,10 +272,10 @@ void disk_init()
     struct IO_APIC_RET_entry entry;
     dev_t dev;
 
-    if(pNrDrives > 1){
-        dev = device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);
-    } else
-        dev = device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);
+    // if(pNrDrives > 1){
+    //     dev = device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);
+    // } else
+    //     dev = device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);
     
     entry.vector = 0x2f;
     entry.deliver_mode = APIC_ICR_IOAPIC_Fixed;

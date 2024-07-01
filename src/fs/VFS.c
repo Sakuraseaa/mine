@@ -1,3 +1,4 @@
+#include "device.h"
 #include "types.h"
 #include "debug.h"
 #include "VFS.h"
@@ -212,6 +213,9 @@ last_slash:     // 最后的斜杠
     return path;
 }
 
+
+ide_part_t part[4];
+dev_t DEV[4];
 extern struct file_system_type FAT32_fs_type;
 extern struct file_system_type MINIX_fs_type;
 void DISK1_FAT32_FS_init()
@@ -227,12 +231,17 @@ void DISK1_FAT32_FS_init()
     IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
     struct Disk_Partition_Table DPT = *(struct Disk_Partition_Table *)buf;
     
-    //for(u8 i = 0; i < 4; i++) {
-  //      if(DPT[i].start_LBA == 0)
-    DEBUGK("DPTE[0] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
-    DEBUGK("DPTE[1] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", DPT.DPTE[1].start_LBA, DPT.DPTE[1].type, DPT.DPTE[1].sectors_limit);
-    // color_printk(BLUE, BLACK, "DPTE[0] start_LBA:%#018lx\ttype:%#018lx\tsectors:%#018lx\n", DPT.DPTE[0].start_LBA, DPT.DPTE[0].type, DPT.DPTE[0].sectors_limit);
-   // }
+    for(u8 i = 0; i < 4; i++) {
+        
+        if(DPT.DPTE[i].start_LBA != 0) {
+            DEBUGK("DPTE[%d] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", i, DPT.DPTE[i].start_LBA, DPT.DPTE[i].type, DPT.DPTE[i].sectors_limit);
+            sprintf(&part[i].name, "1_part%d", i);
+            part[i].start = DPT.DPTE[i].start_LBA;
+            part[i].count = DPT.DPTE[i].sectors_limit;
+            part[i].system = DPT.DPTE[i].type;
+            DEV[i] = device_install(DEV_BLOCK, DEV_IDE_PART, &part[i], part[i].name, 0, &IDE_device_operation);
+        }
+    }
     // 读 FAT32文件系统的引导扇区
     memset(buf, 0, 512);
     IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);

@@ -3,7 +3,6 @@
 
 #include "lib.h"
 #include "block.h"
-#include "semaphore.h"
 #include "waitqueue.h"
 
 #define PORT_DISK0_DATA 0x1f0		 // Data			数据
@@ -359,15 +358,6 @@ struct request_queue
 	struct block_buffer_node *in_using; // 正在处理的硬盘操作请求
 	long block_request_count;			// 剩余请求数
 };
-
-typedef struct ide_part_t
-{
-    char name[8];            // 分区名称
-    struct ide_disk_t *disk; // 磁盘指针
-    u32 system;              // 分区类型
-    u32 start;               // 分区起始物理扇区号 LBA
-    u32 count;               // 分区占用的扇区数
-} ide_part_t;
 
 struct request_queue disk_request;
 extern struct block_device_operation IDE_device_operation;

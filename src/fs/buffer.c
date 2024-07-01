@@ -16,31 +16,6 @@ extern struct super_block *root_sb;
 
 #define BUFFER_DESC_NR 4 // 512 1024 2048 4096
 
-typedef struct block_buf{
-    
-    u64 count;                         
-    u64 size;                     
-
-    list_t free_list;                   // 已经申请但没使用的块
-    list_t idle_list;                   // 使用过，但被释放的块
-    wait_queue_T wait_list;             // 等待进程队列
-    list_t hash_table[HASH_COUNT];      // 缓冲哈希表
-}bdesc_t;
-
-typedef struct _buffer_
-{
-    char *data;          // 数据区
-    bdesc_t *desc;       // 描述符指针
-    dev_t dev;           // 设备号
-    idx_t block;         // 块号
-    int refer_count;     // 引用计数
-    semaphore_T lock;    // 锁
-    bool dirty;          // 是否与磁盘不一致
-    bool valid;          // 缓冲数据是否有效
-    list_t hnode;        // 哈希表拉链节点
-    list_t rnode;        // 缓冲节点
-} buffer_t;
-
 static bdesc_t bdescs[BUFFER_DESC_NR];
 #define hash(dev, block) ( ((dev)^(block)) % HASH_COUNT )
 
@@ -74,7 +49,7 @@ static void hash_remove(bdesc_t *desc, buffer_t* buf) {
     list_t* list = &desc->hash_table[idx];
 
     // 有 才 删除
-    if(list_search(list, &buf->hnode));
+    if(list_search(list, &buf->hnode))
         list_del(&buf->hnode);
 }
 
@@ -124,11 +99,15 @@ static err_t buffer_alloc(bdesc_t *desc) {
         buf->valid = false;
         buf->refer_count = 0;
         buf->dev = 0;
+        
+        list_init(&buf->hnode);
+        list_init(&buf->rnode);
+        
         semaphore_init(&buf->lock, 1);
 
         list_add_to_behind(&desc->free_list, &buf->rnode);
 
-        desc->count++;
+        desc->count++; // 增加空闲块计数
     }
 
     LOGK("buffer desciptor update:: size %d count %d\n", desc->size, desc->count);
@@ -190,6 +169,9 @@ err_t bwrite(buffer_t *buf){}
 // 释放缓冲
 err_t brelse(buffer_t *buf) {}
 
+
+
+// 缓冲读
 buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
 
         bdesc_t* m_desc = get_desc(size);

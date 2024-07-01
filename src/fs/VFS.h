@@ -4,10 +4,12 @@
 // 它们会根据自身情况和特点对这些操作方法予以实现
 #ifndef __VFS_H__
 #define __VFS_H__
-#include "buffer.h"
+
 #include "lib.h"
 #include "fat32.h"
 #include "types.h"
+#include "buffer.h"
+
 extern struct super_block *root_sb;
 
 
@@ -63,6 +65,14 @@ struct dir_entry_operations;
 struct file_operations;
 struct index_node;
 
+typedef struct ide_part_t
+{
+    char name[8];            // 分区名称
+    struct ide_disk_t *disk; // 磁盘指针
+    u32 system;              // 分区类型
+    u32 start;               // 分区起始物理扇区号 LBA
+    u32 count;               // 分区占用的扇区数
+} ide_part_t;
 
 // 记录着目标文件系统的引导扇区信息-操作系统为文件系统分配的资源信息
 struct super_block
@@ -77,7 +87,6 @@ struct super_block
     size_t sector_size;   // 扇区大小
     size_t block_size;    // 块大小
     list_t inode_list;    // 使用中 inode 链表
-    struct index_node *iroot;       // 根目录 inode
     struct index_node *imount;      // 安装到的 inode
 
     // 包含操作： superblock结构的读写, inode的写
@@ -127,7 +136,7 @@ typedef struct index_node
 #define FS_ATTR_DEVICE_KEYBOARD (1UL << 2) // 设备文件 - 键盘
 
 // 用于描述文件/目录在文件系统中的层级关系-目录项
-struct dir_entry
+typedef struct dir_entry
 {
     char *name;      // 文件名
     int name_length; // 文件长度
@@ -140,7 +149,7 @@ struct dir_entry
     struct dir_entry *parent;     // 父目录项
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：
-};
+}dir_entry_t;
 typedef int (*filldir_t)(void *buf,char *name, long namelen,long offset);
 
 

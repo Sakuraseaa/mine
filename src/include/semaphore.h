@@ -4,10 +4,12 @@
 #include "lib.h"
 #include "task.h"
 #include "atomic.h"
+#include "semaphore.h"
 #include "waitqueue.h"
 
+
 // 信号量
-typedef struct
+typedef struct SEMAPHORE
 {
     atomic_T conter;   // 原子量，记录信号量拥有的资源数量
     wait_queue_T wait; // 等待队列
