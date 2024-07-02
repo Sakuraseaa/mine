@@ -94,6 +94,10 @@ unsigned long kernel_mktime(struct time* tm) {
     return res;
 }
 
+// // 计算从  1970-1-1-0时 起到 现在 经过的秒数
+unsigned long NOW() {
+    return startup_time + (jiffies / 100);
+}
 // 更新时间
 void localtime(unsigned long stamp, struct time* tm) {
     // 确定秒

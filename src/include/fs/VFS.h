@@ -10,19 +10,8 @@
 #include "types.h"
 #include "buffer.h"
 
+extern list_t super_list;
 extern struct super_block *root_sb;
-
-
-enum
-{
-    FS_TYPE_NONE = 0,
-    FS_TYPE_PIPE,
-    FS_TYPE_SOCKET,
-    FS_TYPE_MINIX,
-    FS_TYPE_FAT32,
-    FS_TYPE_NUM,
-};
-
 
 // 硬盘分区表项
 struct Disk_Partition_Table_Entry
@@ -75,12 +64,13 @@ typedef struct ide_part_t
 } ide_part_t;
 
 // 记录着目标文件系统的引导扇区信息-操作系统为文件系统分配的资源信息
-struct super_block
+typedef struct super_block
 {
+    list_t node;          /* 所有超级块的链表_节点*/
     // 记录着根目录的目录项，此目录项在文件系统中并不存在实体结构， 是为了便于搜索特意抽象出来的
     struct dir_entry *root;
 
-    struct buffer_t *buf; // 超级块描述符 buffer
+    buffer_t *buf; // 超级块描述符 buffer
     dev_t dev;            // 设备号
     u32 count;            // 引用计数
     int type;             // 文件系统类型
@@ -94,7 +84,7 @@ struct super_block
 
     // 用于保存各类文件系统的特有数据信息
     void *private_sb_info; // 对于fat32文件系统来说，该指针连接的是 FAT32_sb_info 结构体
-};
+}super_t;
 
 // 记录文件在文件系统中的物理信息和文件在操作系统中的抽象信息
 typedef struct index_node
@@ -103,7 +93,7 @@ typedef struct index_node
     unsigned long blocks;    // 本文件占用了几个512B数据块 ？
     unsigned long attribute; // 用于保存目录项的属性
 
-    struct buffer_t *buf; // inode 描述符对应 buffer
+    buffer_t *buf; // inode 描述符对应 buffer
     
     dev_t dev;  // 设备号
     dev_t rdev; // 虚拟设备号
@@ -119,6 +109,8 @@ typedef struct index_node
 
     int uid; // 用户 id
     int gid; // 组 id
+
+    list_t i_sb_list; // 超级块链表
 
     struct task_struct *rxwaiter; // 读等待进程
     struct task_struct *txwaiter; // 写等待进程

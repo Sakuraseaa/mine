@@ -18,9 +18,6 @@
 #define INDIRECT2_BLOCK (INDIRECT1_BLOCK * INDIRECT1_BLOCK)            // 二级间接块数量
 #define TOTAL_BLOCK (DIRECT_BLOCK + INDIRECT1_BLOCK + INDIRECT2_BLOCK) // 全部块数量
 
-#define P_EXEC IXOTH
-#define P_READ IROTH
-#define P_WRITE IWOTH
 
 #define ACC_MODE(x) ("\004\002\006\377"[(x) & O_ACCMODE])
 

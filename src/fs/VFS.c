@@ -6,10 +6,12 @@
 #include "printk.h"
 #include "memory.h"
 #include "disk.h"
+#include "super.h"
 struct file_system_type filesystem = {"filesystem", 0};
 #define MAX_FILE_NAME_LEN PAGE_4K_SIZE
 // 当前文件系统的超级块
 struct super_block *root_sb = NULL;
+
 // 文件系统的注册
 /**
  * @brief
@@ -41,12 +43,14 @@ unsigned long register_filesystem(struct file_system_type *fs)
 struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf)
 {
     struct file_system_type *p = NULL;
-
+    struct super_block*  sb = NULL;
     for (p = &filesystem; p; p = p->next)
-        if (!strcmp(p->name, name))
-            return p->read_superblock(DPTE, buf);
-
-    return 0;
+        if (!strcmp(p->name, name)) {
+            sb = p->read_superblock(DPTE, buf);
+            list_add_to_behind(&super_list, &sb->node);
+            break;
+        }
+    return sb;
 }
 
 // 文件系统的注销
@@ -123,7 +127,6 @@ static int path_depth_cnt(char *pathname)
  * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
  * @return struct dir_entry* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
-
 struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file)
 {
     char *tmpname = NULL;
@@ -218,8 +221,12 @@ ide_part_t part[4];
 dev_t DEV[4];
 extern struct file_system_type FAT32_fs_type;
 extern struct file_system_type MINIX_fs_type;
-void DISK1_FAT32_FS_init()
+void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
 {
+    // --------VFS_init-----------
+    super_init();
+    // --------------------
+
     unsigned char buf[512];
 
     // 在VFS中注册FAT32文件系统
@@ -235,7 +242,7 @@ void DISK1_FAT32_FS_init()
         
         if(DPT.DPTE[i].start_LBA != 0) {
             DEBUGK("DPTE[%d] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", i, DPT.DPTE[i].start_LBA, DPT.DPTE[i].type, DPT.DPTE[i].sectors_limit);
-            sprintf(&part[i].name, "1_part%d", i);
+            sprintf(part[i].name, "1_part%d", i);
             part[i].start = DPT.DPTE[i].start_LBA;
             part[i].count = DPT.DPTE[i].sectors_limit;
             part[i].system = DPT.DPTE[i].type;

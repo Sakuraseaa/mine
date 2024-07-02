@@ -184,7 +184,7 @@ buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
     semaphore_down(&buf->lock);
         
     u64 block_size = m_desc->size; // 缓冲块大小
-    u64 sector_size =  1024;   //设备扇区大小
+    u64 sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
     u64 bs = block_size / sector_size; // 读取的块数
 
 
@@ -194,11 +194,6 @@ buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
         
     semaphore_up(&buf->lock);
     return buf;
-
-rollback:
-    semaphore_up(&buf->lock);
-    brelse(buf);
-    return NULL;
 }
 
 void buffer_init(void) {
@@ -213,7 +208,7 @@ void buffer_init(void) {
 
         list_init(&desc->free_list);
         list_init(&desc->idle_list);
-        list_init(&desc->wait_list);
+        wait_queue_init(&desc->wait_list, NULL);
 
         for (size_t i = 0; i < HASH_COUNT; i++)
         {

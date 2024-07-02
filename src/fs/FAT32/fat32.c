@@ -1,3 +1,4 @@
+#include "fs.h"
 #include "dirent.h"
 #include "disk.h"
 #include "fat32.h"
@@ -1063,7 +1064,7 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     // =============================== 建立 super block =====================================
     sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
     memset(sbp, 0, sizeof(struct super_block));
-
+    sbp->type = FS_TYPE_FAT32;
     sbp->sb_ops = &FAT32_sb_ops;
     sbp->private_sb_info = (struct FAT32_sb_info *)kmalloc(sizeof(struct FAT32_sb_info), 0);
     memset(sbp->private_sb_info, 0, sizeof(struct FAT32_sb_info));

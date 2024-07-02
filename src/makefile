@@ -12,7 +12,7 @@ CC	  = gcc
 CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack-protector -Wall \
 		-fno-builtin -fno-pie -fno-pic -nostdlib \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
-		-I $(SRC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ -I $(INC_DIR)/fs/minix/	\
+		-I $(INC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ -I $(SRC_DIR)/fs/minix/	\
 #被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
 		$(BUI_DIR)/trap.o $(BUI_DIR)/memory.o $(BUI_DIR)/interrupt.o $(BUI_DIR)/PIC.o \
@@ -22,7 +22,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/spinlock.o $(BUI_DIR)/fat32.o $(BUI_DIR)/syscalls.o $(BUI_DIR)/sys.o\
 		$(BUI_DIR)/VFS.o  $(BUI_DIR)/waitqueue.o   $(BUI_DIR)/switch_to.o $(BUI_DIR)/serial.o\
 		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o $(BUI_DIR)/debug.o $(BUI_DIR)/buffer.o\
-		$(BUI_DIR)/bitmap.o $(BUI_DIR)/minix.o  $(BUI_DIR)/device.o\
+		$(BUI_DIR)/bitmap.o $(BUI_DIR)/minix.o  $(BUI_DIR)/device.o $(BUI_DIR)/super.o $(BUI_DIR)/inode.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
 	
 
@@ -123,6 +123,10 @@ $(BUI_DIR)/sys.o: $(SRC_DIR)/kernel/sys.c
 $(BUI_DIR)/VFS.o: $(SRC_DIR)/fs/VFS.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/buffer.o: $(SRC_DIR)/fs/buffer.c
+	@$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/super.o: $(SRC_DIR)/fs/super.c
+	@$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/inode.o: $(SRC_DIR)/fs/inode.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	@$(CC) $(CFLAGS) $< -o $@
