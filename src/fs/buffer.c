@@ -117,6 +117,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
 /* get free buffer_t */
 static buffer_t* get_free_buffer(bdesc_t* desc) {
 
+    list_t* free_node = NULL;
     /* free_list 只由malloc能生产 */
     if(desc->count < MAX_BUF_COUNT && list_is_empty(&desc->free_list)) {
         buffer_alloc(desc);
@@ -124,7 +125,9 @@ static buffer_t* get_free_buffer(bdesc_t* desc) {
 
     if(!list_is_empty(&desc->free_list)) {
     // free_list 只由此处消费
-        buffer_t* buf = container_of(list_prev(&desc->free_list), buffer_t, rnode);
+        free_node = list_prev(&desc->free_list);
+        buffer_t* buf = container_of(free_node, buffer_t, rnode);
+        list_del(free_node);
         hash_remove(desc, buf);
         buf->valid = false;
         return buf;

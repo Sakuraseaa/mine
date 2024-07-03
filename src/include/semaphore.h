@@ -4,9 +4,8 @@
 #include "lib.h"
 #include "task.h"
 #include "atomic.h"
-#include "semaphore.h"
 #include "waitqueue.h"
-
+#include "semaphore.h"
 
 // 信号量
 typedef struct SEMAPHORE

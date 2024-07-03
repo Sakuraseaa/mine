@@ -7,7 +7,6 @@
 #include "lib.h"
 #include "ptrace.h"
 #include "printk.h"
-#include "VFS.h"
 #include "sched.h"
 #include "waitqueue.h"
 // 每个任务的文件描述符最大数

@@ -1,12 +1,13 @@
 #ifndef __MINIX_H__
 #define __MINIX_H__
 #include "types.h"
+#include "fcntl.h"
 #define BLOCK_SIZE 1024                       // 块大小
 #define SECTOR_SIZE 512                       // 扇区大小
 #define BLOCK_SECS (BLOCK_SIZE / SECTOR_SIZE) // 一块占 2 个扇区
 
 #define MINIX1_MAGIC 0x137F // 文件系统魔数
-#define MINIX1_NAME_LEN 14  // 文件名长度
+#define MINIX1_NAME_LEN 30  // 文件名长度
 
 #define BLOCK_BITS (BLOCK_SIZE * 8)                          // 块位图大小
 #define BLOCK_INODES (BLOCK_SIZE / sizeof(minix_inode_t))    // 块 inode 数量
@@ -21,7 +22,7 @@
 
 #define ACC_MODE(x) ("\004\002\006\377"[(x) & O_ACCMODE])
 
-typedef struct minix_super_t
+struct minix_super_t
 {
     u16 inodes;        // 节点数
     u16 zones;         // 逻辑块数
@@ -31,7 +32,9 @@ typedef struct minix_super_t
     u16 log_zone_size; // log2(每逻辑块数据块数)
     u32 max_size;      // 文件最大长度
     u16 magic;         // 文件系统魔数
-} minix_sb_info_t __attribute__((packed));
+} __attribute__((packed));
+
+typedef struct minix_super_t minix_sb_info_t;
 
 typedef struct minix_inode_t
 {

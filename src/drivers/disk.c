@@ -270,7 +270,7 @@ void disk_init()
     // color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
     /*在IO_APIC中，注册硬盘中断函数*/
     struct IO_APIC_RET_entry entry;
-    dev_t dev;
+    // dev_t dev;
 
     // if(pNrDrives > 1){
     //     dev = device_install(DEV_BLOCK, DEV_IDE_DISK, 0, "hd_1", 0, &IDE_device_operation);

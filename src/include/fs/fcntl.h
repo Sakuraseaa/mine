@@ -1,3 +1,6 @@
+#ifndef __FCNTL_H__
+#define __FCNTL_H__
+
 // open_flag参数如下，定义了一系列文件操作标志位宏
 #define O_RDONLY 00000000  /*Open read-only 00*/
 #define O_WRONLY 00000001  /*Open write-only 01*/
@@ -21,3 +24,5 @@
 #define O_SEARCH 00020000    /*Open directory for search only*/
 #define O_DIRECTORY 00040000 /*must be a directory*/
 #define O_NOFOLLOW 00100000  /*Do not follow symbolic links*/
+
+#endif

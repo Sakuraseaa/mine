@@ -90,28 +90,28 @@ static inode_t *iget(dev_t dev, idx_t nr)
         return inode;
     }
     super_t* super = get_super(dev);
-    minix_sb_info_t *minix_sb = (minix_sb_info_t*)super.private_sb_info;
+    minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
     
     inode = (inode_t*)kmalloc(sizeof(inode_t), 0);
-    inode->attribute = FS_ATTR_DIR;
+    inode->attribute = FS_ATTR_DIR; // 这个变量有点糟糕
+    inode->dev = dev;
     inode->inode_ops = &minix_inode_ops;
     inode->f_ops = &minix_file_ops;
-    inode->file_size = 0;
-    inode->blocks = (root->file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    inode->count = 1;
-    inode->gid = current->pid;
-    inode->nr = 1;
-    inode->atime = NOW();
-    inode->ctime = root->mtime = root->atime;
-    inode->rxwaiter = root->txwaiter = NULL;
+    inode->count = 1; // 该变量应该是 一个原子变量
+    inode->nr = nr;
     list_init(&inode->i_sb_list);
+    list_add_to_behind(&super->inode_list, &inode->i_sb_list);
     inode->sb = super;
 
-    inode->buf = bread(dev, inode_block(minix_sb, 1), BLOCK_SIZE);
-    minix_inode_t *m_inode = (minix_inode_t*)kmalloc(sizeof(minix_inode_t), 0);
-    minix_inode_t mit = &((minix_inode_t*)inode->buf->data)[(inode->nr - 1) % BLOCK_INODES];
-
-
+    inode->buf = bread(dev, inode_block(minix_sb, nr), BLOCK_SIZE);
+    minix_inode_t *mit = &((minix_inode_t*)inode->buf->data)[(inode->nr - 1) % BLOCK_INODES];
+    
+    inode->ctime = inode->mtime = inode->atime = mit->mtime;
+    inode->i_mode = mit->mode;
+    inode->file_size = mit->size;
+    inode->gid = mit->gid;
+    inode->uid = mit->uid;
+    inode->blocks = (inode->file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
     inode->private_index_info = mit;
     return inode;
@@ -121,7 +121,7 @@ static inode_t *iget(dev_t dev, idx_t nr)
 
 /**
  * @brief 为minix文件系统创建读超级块程序
- *
+ *          finished 2024-7-3 21:26 第一版
  * @param DPTE 分区表项
  * @param buf NULL
  * @return struct super_block* 超级块结构体
@@ -131,30 +131,30 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     struct super_block *sbp = NULL;
     minix_sb_info_t* minix_sb;
     unsigned char* bbuf = (unsigned char*)kmalloc(512, 0);
+    bbuf[0] = 0xff;
     // ===============================  读取super block =====================================
     sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
+    memset(sbp, 0, sizeof(struct super_block));
 
     sbp->dev = 2; // here need rewrite
-
     sbp->block_size = BLOCK_SIZE;
     sbp->sector_size = SECTOR_SIZE;
     sbp->type = FS_TYPE_MINIX;
-    memset(sbp, 0, sizeof(struct super_block));
-
+    sbp->count = 1;
+    list_init(&sbp->inode_list);
+    list_init(&sbp->node);
+    list_add_to_behind(&super_list, &sbp->node);
     sbp->sb_ops = &minix_super_ops;
+
     sbp->private_sb_info = minix_sb = (minix_sb_info_t *)kmalloc(sizeof(minix_sb_info_t), 0);
     memset(sbp->private_sb_info, 0, sizeof(minix_sb_info_t));
 
-    IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + 2, 1, (unsigned char *)bbuf);
-    
-    memcpy(bbuf, sbp->private_sb_info, sizeof(minix_sb_info_t));
-    
-    list_init(&sbp->node);
-    list_add_to_behind(&super_list, &sbp->node);
+    sbp->buf = bread(sbp->dev, 1, sbp->block_size);
+    memcpy(sbp->buf->data, sbp->private_sb_info, sizeof(minix_sb_info_t));
     
     // ================================== 读取根目录 =====================================
     color_printk(ORANGE, BLACK, "MINIX FSinfo\n Firstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\n \
-                                inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
+inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
                 minix_sb->firstdatazone,  minix_sb->inodes, minix_sb->log_zone_size, minix_sb->imap_blocks,
                 minix_sb->zmap_blocks, minix_sb->magic);
     
@@ -172,14 +172,7 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     
     // creat root inode
     sbp->root->dir_inode = iget(sbp->dev, 1);
-    
-    memset(bbuf, 0, sizeof(512));
-    IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + inode_block(minix_sb, 1)*2, 1, (unsigned char *)bbuf);
-    minix_inode_t* inode = (minix_inode_t*)bbuf;
-    for(; inode->size != 0 ;){
-        inode++;
-    }
-    kfree(bbuf);
+
     return sbp;
 }
 

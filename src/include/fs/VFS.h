@@ -77,7 +77,7 @@ typedef struct super_block
     size_t sector_size;   // 扇区大小
     size_t block_size;    // 块大小
     list_t inode_list;    // 使用中 inode 链表
-    struct index_node *imount;      // 安装到的 inode
+    // struct index_node *imount;      // 安装到的 inode
 
     // 包含操作： superblock结构的读写, inode的写
     struct super_block_operations *sb_ops;
@@ -89,9 +89,13 @@ typedef struct super_block
 // 记录文件在文件系统中的物理信息和文件在操作系统中的抽象信息
 typedef struct index_node
 {
-    size_t file_size; // 文件大小
+
+    list_t i_sb_list;        // 超级块链表
+    
+    mode_t i_mode;           // 文件模式
+    size_t file_size;        // 文件大小
     unsigned long blocks;    // 本文件占用了几个512B数据块 ？
-    unsigned long attribute; // 用于保存目录项的属性
+    unsigned long attribute; // 用于保存目录项的属性, 有了i_mode之后，该属性应该被修改删除。
 
     buffer_t *buf; // inode 描述符对应 buffer
     
@@ -109,8 +113,6 @@ typedef struct index_node
 
     int uid; // 用户 id
     int gid; // 组 id
-
-    list_t i_sb_list; // 超级块链表
 
     struct task_struct *rxwaiter; // 读等待进程
     struct task_struct *txwaiter; // 写等待进程
