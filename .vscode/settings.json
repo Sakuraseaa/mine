@@ -45,7 +45,8 @@
         "disk.h": "c",
         "device.h": "c",
         "types.h": "c",
-        "buffer.h": "c"
+        "buffer.h": "c",
+        "bitmap.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

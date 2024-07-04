@@ -12,7 +12,7 @@
  * @return true 1
  * @return false 0
  */
-static bool bitmap_scan_test(bitmap_t *btmp, u64 bit_idx) {
+bool bitmap_scan_test(bitmap_t *btmp, u64 bit_idx) {
     
     u64 byte_idx = bit_idx / BITMAP_DiGIT;
     u64 bit_odd = bit_idx % BITMAP_DiGIT;
@@ -26,6 +26,28 @@ void bitmap_init(bitmap_t *btmp, u64 bytes_len) {
     btmp->bits = kmalloc(bytes_len, 0);
     memset(btmp->bits, 0, bytes_len);
 }
+
+void bitmap_init(bitmap_t *btmp, char* data, u64 bytes_len) {
+    btmp->bits = data;
+    btmp->btmp_bytes_len = bytes_len;
+}
+
+/**
+ * @brief 将bitmap中的bit_idx位设置为value
+ *
+ * @param btmp 指向bitmap的指针
+ * @param bit_idx 要设置的位的索引
+ * @param value 要设置的值
+ */
+void bitmap_set(bitmap_t *btmp, u64 bit_idx, u8 value) {
+    assert(bit_idx < btmp->btmp_bytes_len * BITMAP_DiGIT)
+    if(value == 0)
+        btmp->bits[bit_idx / BITMAP_DiGIT]  &= ~(1 << (bit_idx % BITMAP_DiGIT)); // 设置为0
+    else
+        btmp->bits[bit_idx / BITMAP_DiGIT]  |= (1 << (bit_idx % BITMAP_DiGIT)); // 设置为1
+}
+
+
 
 /**
  * @brief 在位图中申请连续的cnt个位，若成功则返回起始位的下标，失败则返回-1
@@ -72,19 +94,4 @@ int64 bitmap_scan(bitmap_t *btmp, u64 cnt) {
     if(bit_next > all_byte) return -1;
 
     return bit_next - cnt + 1;
-}
-
-/**
- * @brief 将bitmap中的bit_idx位设置为value
- *
- * @param btmp 指向bitmap的指针
- * @param bit_idx 要设置的位的索引
- * @param value 要设置的值
- */
-void bitmap_set(bitmap_t *btmp, u64 bit_idx, u8 value) {
-    assert(bit_idx < btmp->btmp_bytes_len * BITMAP_DiGIT)
-    if(value == 0)
-        btmp->bits[bit_idx / BITMAP_DiGIT]  &= ~(1 << (bit_idx % BITMAP_DiGIT)); // 设置为0
-    else
-        btmp->bits[bit_idx / BITMAP_DiGIT]  |= (1 << (bit_idx % BITMAP_DiGIT)); // 设置为1
 }

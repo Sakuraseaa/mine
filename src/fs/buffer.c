@@ -140,8 +140,10 @@ static buffer_t* get_free_buffer(bdesc_t* desc) {
     }
 
     assert(!list_is_empty(&desc->idle_list));
-    buffer_t* buf = container_of(list_prev(&desc->idle_list), buffer_t, rnode);
+    free_node = list_prev(&desc->idle_list);
+    buffer_t* buf = container_of(free_node, buffer_t, rnode);
     hash_remove(desc, buf);
+    list_del(free_node);
     buf->valid = false;
     return buf;
 
@@ -168,11 +170,46 @@ static buffer_t *getblk(bdesc_t* desc, dev_t dev, idx_t block) {
 }
 
 // 写缓冲
-err_t bwrite(buffer_t *buf){}
+err_t bwrite(buffer_t *buf){
+
+    if (!buf->dirty)
+        return EOK;
+
+    bdesc_t *desc = buf->desc;
+
+    u64 block_size = desc->size;
+    u64 sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
+    u64 bs = block_size / sector_size; // 读取的块数
+    int ret - device_write(buf->dev, buf->data, bs, buf->block * bs, 0);
+
+    buf->dirty = false;
+    buf->valid = true;
+    return ret
+}
+
 // 释放缓冲
-err_t brelse(buffer_t *buf) {}
+err_t brelse(buffer_t *buf) {
+    
+    if(buf == NULL) return -1;
+
+    int ret = bwrite(buf); // 我觉得此处同步有点勉强
 
 
+    buf->refer_count--;
+    if(buf->refer_count) 
+        return ret;
+
+    // 该节点没有连接在free_list链表上
+    assert(list_search(&buf->desc->free_list, &buf->rnode) == 0);
+
+    bdesc_t* desc = buf->desc;
+    list_push(&desc->idle_list, &buf->rnode); // 此处可没卸载 哈希表上挂的节点
+
+    if(!wait_queue_is_empty(&desc->wait_list))
+        wakeup(&desc->wait_list, TASK_UNINTERRUPTIBLE);
+    
+    return 0;
+}
 
 // 缓冲读
 buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {

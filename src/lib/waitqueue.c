@@ -101,3 +101,8 @@ void wakeup_pid(wait_queue_T *wait_queue_head, long state, long pid)
     }
 }
 
+
+
+bool wait_queue_is_empty(wait_queue_T* wait_queue) {
+    return list_is_empty(&wait_queue->wait_list);
+}

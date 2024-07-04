@@ -12,6 +12,7 @@
 #include "buffer.h"
 #include "time.h"
 #include "inode.h"
+#include "bitmap.h"
 #include "super.h"
 struct super_block_operations minix_super_ops;
 
@@ -21,6 +22,130 @@ static inline idx_t inode_block(minix_sb_info_t *desc, idx_t nr)
     // inode 编号 从 1 开始
     return 2 + desc->imap_blocks + desc->zmap_blocks + (nr - 1) / BLOCK_INODES;
 }
+
+// 分配一个物理块
+static idx_t minix_balloc(super_t *super) {
+    
+    buffer_t *buf = NULL;
+    idx_t bit = 0;
+    bitmap_t map;
+    
+    minix_sb_info_t *m_sb = (minix_sb_info_t *)super.private_sb_info;
+    idx_t bidx = 2 + m_sb->imap_blocks; // 块位图的块号,启动块 超级块 inode位图块... 
+
+    for (size_t i = 0; i < m_sb->zmap_blocks; i++) {
+        buf = bread(super->dev, bidx + i, BLOCK_SIZE);
+
+        // 将整个缓冲区作为位图
+        bitmap_make(&map, buf->data, BLOCK_SIZE);
+
+        // 从位图中扫描一位
+        bit = bitmap_scan(&map, 1);
+        if (bit != -1) {
+            // 如果扫描成功，则 标记缓冲区脏，中止查找
+            bitmap_set(&map, bit, true);
+            buf->dirty = true;
+            break;
+        }
+    }
+    brelse(buf); // todo 调试期间强同步
+    return bit;
+}
+
+// 回收一个物理块
+static void minix_bfree(super_t* super, idx_t bit) {
+    
+    buffer_t *buf = NULL;
+    bitmap_t map;
+    minix_sb_info_t *m_sb = (minix_sb_info_t *)super.private_sb_info;
+    idx_t bidx = 2 + m_sb->imap_blocks; // 块位图的块号
+
+    for (size_t i = 0; i < m_sb->zmap_blocks; i++) {
+        
+        if(bit > BLOCK_BITS * (i + 1)) // 跳过开始块
+            continue;
+
+        buf = bread(super->dev, bidx + i, BLOCK_SIZE);
+
+        // 将整个缓冲区作为位图
+        bitmap_make(&map, buf->data, BLOCK_SIZE);
+        
+        // 必须置位
+        assert(bitmap_scan_test(&map, bit) == 1);
+        
+        bitmap_set(&map, bit, 0);
+
+        // 标记缓冲区脏
+        buf->dirty = true;
+        break;
+    }
+
+    brelse(buf); // todo 调试期间强同步
+}
+
+// 获取 inode 第 block 块的索引值
+// 如果不存在 且 create 为 true，则创建
+u16 minix_bmap(inode_t *inode, idx_t block, bool create) {
+    assert(block >= 0 && block < TOTAL_BLOCK);
+    u64 index = block;
+    minix_inode_t* m_inode = (minix_dentry_t*)inode->private_index_info;
+    u16 *array = m_inode->zone;
+    buffer_t* buf = NULL;
+
+    // 当前处理级别
+    int level = 0;
+
+    // 当前子级别块数量
+    int divider = 1;
+
+    // 直接块
+    if (block < DIRECT_BLOCK)
+        goto reckon;
+
+    block -= DIRECT_BLOCK;
+
+    // 一级间接块
+    if (block < INDIRECT1_BLOCK)
+    {
+        index = DIRECT_BLOCK;
+        level = 1;
+        divider = 1;
+        goto reckon;
+    }
+
+    block -= INDIRECT1_BLOCK;
+    assert(block < INDIRECT1_BLOCK);
+    index = DIRECT_BLOCK + 1;
+    level = 2;
+    divider = BLOCK_INDEXES;
+
+reckon:
+    for (; level >= 0; level--)
+    {
+        // 如果不存在 且 create 则申请一块文件块
+        if ((array[index] == 0 )&& create) {
+            
+            array[index] = minix_balloc(inode->super);
+            buf->dirty = true;
+        }
+
+        brelse(buf);
+
+        // 如果 level == 0 或者 索引不存在，直接返回
+        if (level == 0 || !array[index])
+            return array[index];
+
+        // level 不为 0，处理下一级索引
+        buf = bread(inode->dev, array[index], BLOCK_SIZE);
+        index = block / divider;
+        block = block % divider;
+        divider /= BLOCK_INDEXES;
+        array = (u16 *)buf->data;
+    }
+
+    return -1;
+}
+
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
 long minix_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
@@ -177,8 +302,7 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
 }
 
 
-struct file_system_type MINIX_fs_type =
-    {
+struct file_system_type MINIX_fs_type = {
         .name = "MINIX",
         .fs_flags = 0,
         .read_superblock = minix_read_superblock,

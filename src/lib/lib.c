@@ -81,6 +81,14 @@ void list_init(struct List *list)
     list->prev = list;
     list->next = list;
 }
+/**
+ * @brief 
+ * 
+ * @param list 
+ * @param node 
+ * @return true 找到了 则返回真
+ * @return false 
+ */
 bool list_search(list_t *list, list_t *node) {
     
     list_t* END = list;
