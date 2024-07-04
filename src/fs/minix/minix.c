@@ -184,7 +184,14 @@ struct file_operations minix_file_ops =
 
 
 long minix_create(struct index_node *inode, struct dir_entry *dentry, int mode) {}
-struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry) {}
+struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry) {
+    
+    minix_inode_t* m_inode = (minix_inode_t*)parent_inode->private_index_info;
+    u64 dentry_count = parent_inode->file_size / sizeof(minix_dentry_t);
+    for() {
+
+    }
+}
 long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { return 0; }
 long minix_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
 long minix_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
