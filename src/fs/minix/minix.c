@@ -14,6 +14,10 @@
 #include "inode.h"
 #include "bitmap.h"
 #include "super.h"
+#include "stat.h"
+#include "assert.h"
+
+inode_t *iget(dev_t dev, idx_t nr);
 struct super_block_operations minix_super_ops;
 
 // 计算 inode nr 对应的块号
@@ -30,7 +34,7 @@ static idx_t minix_balloc(super_t *super) {
     idx_t bit = 0;
     bitmap_t map;
     
-    minix_sb_info_t *m_sb = (minix_sb_info_t *)super.private_sb_info;
+    minix_sb_info_t *m_sb = (minix_sb_info_t *)super->private_sb_info;
     idx_t bidx = 2 + m_sb->imap_blocks; // 块位图的块号,启动块 超级块 inode位图块... 
 
     for (size_t i = 0; i < m_sb->zmap_blocks; i++) {
@@ -57,7 +61,7 @@ static void minix_bfree(super_t* super, idx_t bit) {
     
     buffer_t *buf = NULL;
     bitmap_t map;
-    minix_sb_info_t *m_sb = (minix_sb_info_t *)super.private_sb_info;
+    minix_sb_info_t *m_sb = (minix_sb_info_t *)super->private_sb_info;
     idx_t bidx = 2 + m_sb->imap_blocks; // 块位图的块号
 
     for (size_t i = 0; i < m_sb->zmap_blocks; i++) {
@@ -125,15 +129,17 @@ reckon:
         // 如果不存在 且 create 则申请一块文件块
         if ((array[index] == 0 )&& create) {
             
-            array[index] = minix_balloc(inode->super);
+            array[index] = minix_balloc(inode->sb);
             buf->dirty = true;
         }
 
         brelse(buf);
 
         // 如果 level == 0 或者 索引不存在，直接返回
-        if (level == 0 || !array[index])
+        if (level == 0)
             return array[index];
+        if(array[index] == 0)
+            return -1;
 
         // level 不为 0，处理下一级索引
         buf = bread(inode->dev, array[index], BLOCK_SIZE);
@@ -184,13 +190,40 @@ struct file_operations minix_file_ops =
 
 
 long minix_create(struct index_node *inode, struct dir_entry *dentry, int mode) {}
+
 struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry) {
     
     minix_inode_t* m_inode = (minix_inode_t*)parent_inode->private_index_info;
-    u64 dentry_count = parent_inode->file_size / sizeof(minix_dentry_t);
-    for() {
+    u64 dentries = parent_inode->file_size / sizeof(minix_dentry_t);
+    idx_t i = 0, block = 0;
+    buffer_t *buf = NULL;
+    minix_dentry_t *entry = NULL;
 
+
+    for(; i < dentries; entry++) {
+        if(!buf || (u32)entry >= (u32)buf->data + BLOCK_SIZE) {
+
+            brelse(buf);
+            block = minix_bmap(parent_inode, i / BLOCK_DENTRIES, false);
+            if(block == -1) {
+                i += BLOCK_DENTRIES;
+                continue;
+            }
+
+            buf = bread(parent_inode->dev, block, BLOCK_SIZE);
+            entry = buf->data;
+        }
+
+        if(entry->nr == 0)
+            continue;
+        
+        if(strncpy(entry->name, dest_dentry->name, dest_dentry->name_length) == 0) {
+            dest_dentry->dir_inode = iget(parent_inode->dev, entry->nr);
+        }
+        i++;
     }
+
+    return dest_dentry->dir_inode;
 }
 long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { return 0; }
 long minix_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
@@ -212,7 +245,7 @@ struct index_node_operations minix_inode_ops =
 
 
 // 获得设备 dev 的 nr inode
-static inode_t *iget(dev_t dev, idx_t nr)
+inode_t *iget(dev_t dev, idx_t nr)
 {
     inode_t *inode = find_inode(dev, nr);
     if (inode)
@@ -225,7 +258,6 @@ static inode_t *iget(dev_t dev, idx_t nr)
     minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
     
     inode = (inode_t*)kmalloc(sizeof(inode_t), 0);
-    inode->attribute = FS_ATTR_DIR; // 这个变量有点糟糕
     inode->dev = dev;
     inode->inode_ops = &minix_inode_ops;
     inode->f_ops = &minix_file_ops;
@@ -245,10 +277,14 @@ static inode_t *iget(dev_t dev, idx_t nr)
     inode->uid = mit->uid;
     inode->blocks = (inode->file_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
+    if(ISDIR(inode->i_mode)) 
+        inode->attribute = FS_ATTR_DIR;
+    else 
+        inode->attribute = FS_ATTR_DIR;
+
     inode->private_index_info = mit;
     return inode;
 }
-
 
 
 /**

@@ -5,8 +5,8 @@
 
 #define EOS '\0' // 字符串结尾
 
-#define false 0;
-#define true 1;
+#define false 0
+#define true 1
 typedef char bool;
 
 // 弱符号

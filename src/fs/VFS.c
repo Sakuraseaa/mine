@@ -9,8 +9,10 @@
 #include "super.h"
 struct file_system_type filesystem = {"filesystem", 0};
 #define MAX_FILE_NAME_LEN PAGE_4K_SIZE
+
+struct super_block * sb_vec[4];
 // 当前文件系统的超级块
-struct super_block *root_sb = NULL;
+struct super_block *current_sb = NULL;
 
 // 文件系统的注册
 /**
@@ -131,7 +133,7 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
 {
     char *tmpname = NULL;
     int tmpnamelen = 0, nameDep = 0, Count = 0;
-    struct dir_entry *parent = root_sb->root;
+    struct dir_entry *parent = current_sb->root;
     struct dir_entry *path = NULL;
 
     // 越过路径前的 '/'
@@ -221,6 +223,16 @@ ide_part_t part[4];
 dev_t DEV[4];
 extern struct file_system_type FAT32_fs_type;
 extern struct file_system_type MINIX_fs_type;
+
+void change_fs(void) {
+    
+    if (current_sb == sb_vec[0])
+        current_sb = sb_vec[1];
+    else
+        current_sb = sb_vec[0];
+
+}
+
 void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
 {
     // --------VFS_init-----------
@@ -254,7 +266,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);
 
     // 挂载fat32系统
-    root_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);
+    sb_vec[0] = current_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);
 
-    mount_fs("MINIX", &DPT.DPTE[1], 0);
+    sb_vec[1] = mount_fs("MINIX", &DPT.DPTE[1], 0);
 }

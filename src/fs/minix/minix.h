@@ -10,9 +10,9 @@
 #define MINIX1_NAME_LEN 30  // 文件名长度
 
 #define BLOCK_BITS (BLOCK_SIZE * 8)                          // 块位图大小
-#define BLOCK_INODES (BLOCK_SIZE / sizeof(minix_inode_t))    // 块 inode 数量
-#define BLOCK_DENTRIES (BLOCK_SIZE / sizeof(minix_dentry_t)) // 块 dentry 数量
-#define BLOCK_INDEXES (BLOCK_SIZE / sizeof(u16))             // 块索引数量
+#define BLOCK_INODES (BLOCK_SIZE / sizeof(minix_inode_t))    // 一个块中包含inode 数量
+#define BLOCK_DENTRIES (BLOCK_SIZE / sizeof(minix_dentry_t)) // 一个块中包含dentry 数量
+#define BLOCK_INDEXES (BLOCK_SIZE / sizeof(u16))             // 一个快中包含块索引数量
 
 #define DIRECT_BLOCK (7)                                               // 直接块数量
 #define INDIRECT1_BLOCK BLOCK_INDEXES                                  // 一级间接块数量

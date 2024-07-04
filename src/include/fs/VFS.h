@@ -11,7 +11,7 @@
 #include "buffer.h"
 
 extern list_t super_list;
-extern struct super_block *root_sb;
+extern struct super_block *current_sb;
 
 // 硬盘分区表项
 struct Disk_Partition_Table_Entry

@@ -10,7 +10,6 @@
 #include "waitqueue.h"
 #include "errno.h"
 
-extern struct super_block *root_sb; 
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -180,11 +179,11 @@ err_t bwrite(buffer_t *buf){
     u64 block_size = desc->size;
     u64 sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
     u64 bs = block_size / sector_size; // 读取的块数
-    int ret - device_write(buf->dev, buf->data, bs, buf->block * bs, 0);
+    int ret = device_write(buf->dev, buf->data, bs, buf->block * bs, 0);
 
     buf->dirty = false;
     buf->valid = true;
-    return ret
+    return ret;
 }
 
 // 释放缓冲
@@ -203,7 +202,7 @@ err_t brelse(buffer_t *buf) {
     assert(list_search(&buf->desc->free_list, &buf->rnode) == 0);
 
     bdesc_t* desc = buf->desc;
-    list_push(&desc->idle_list, &buf->rnode); // 此处可没卸载 哈希表上挂的节点
+    list_add_to_behind(&desc->idle_list, &buf->rnode); // 此处可没卸载 哈希表上挂的节点
 
     if(!wait_queue_is_empty(&desc->wait_list))
         wakeup(&desc->wait_list, TASK_UNINTERRUPTIBLE);
