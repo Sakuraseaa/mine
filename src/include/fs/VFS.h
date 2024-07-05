@@ -207,5 +207,7 @@ unsigned long register_filesystem(struct file_system_type *fs);
 unsigned long unregister_filesystem(struct file_system_type *fs);
 struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file);
 
+void change_fs(void);
 void DISK1_FAT32_FS_init();
+
 #endif

@@ -136,10 +136,9 @@ reckon:
         brelse(buf);
 
         // 如果 level == 0 或者 索引不存在，直接返回
-        if (level == 0)
+        if( level == 0 || array[index] == 0)
             return array[index];
-        if(array[index] == 0)
-            return -1;
+
 
         // level 不为 0，处理下一级索引
         buf = bread(inode->dev, array[index], BLOCK_SIZE);
@@ -205,7 +204,7 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
 
             brelse(buf);
             block = minix_bmap(parent_inode, i / BLOCK_DENTRIES, false);
-            if(block == -1) {
+            if(block == 0) {
                 i += BLOCK_DENTRIES;
                 continue;
             }
@@ -216,9 +215,9 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
 
         if(entry->nr == 0)
             continue;
-        
-        if(strncpy(entry->name, dest_dentry->name, dest_dentry->name_length) == 0) {
+        if(strncmp(entry->name, dest_dentry->name, dest_dentry->name_length) == 0) {
             dest_dentry->dir_inode = iget(parent_inode->dev, entry->nr);
+            break;
         }
         i++;
     }
@@ -280,7 +279,7 @@ inode_t *iget(dev_t dev, idx_t nr)
     if(ISDIR(inode->i_mode)) 
         inode->attribute = FS_ATTR_DIR;
     else 
-        inode->attribute = FS_ATTR_DIR;
+        inode->attribute = FS_ATTR_FILE;
 
     inode->private_index_info = mit;
     return inode;
@@ -298,8 +297,6 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
 {
     struct super_block *sbp = NULL;
     minix_sb_info_t* minix_sb;
-    unsigned char* bbuf = (unsigned char*)kmalloc(512, 0);
-    bbuf[0] = 0xff;
     // ===============================  读取super block =====================================
     sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
     memset(sbp, 0, sizeof(struct super_block));

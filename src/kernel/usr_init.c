@@ -53,9 +53,19 @@ void test_time() {
     ttmm.year, ttmm.month, ttmm.day, ttmm.week_day, ttmm.hour, ttmm.minute, ttmm.second);
 }
 
+#include "VFS.h"
+void test_minix() {
+	
+	change_fs();
+	char Path[] = "/if.c";
+	int fd = open(Path, 0);
+
+	change_fs();
+}
+
 int usr_init()
 {
-	test_time();
+	test_minix();
 
 	int fd = 0;
 	unsigned char buf[256] = {0};
