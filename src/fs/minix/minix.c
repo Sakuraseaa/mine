@@ -170,10 +170,115 @@ struct dir_entry_operations minix_dentry_ops =
 // 负责为访问文件数据提供操作方法
 long minix_open(struct index_node *inode, struct file *filp) { return 1; }
 long minix_close(struct index_node *inode, struct file *filp) { return 1; }
-long minix_read(struct file *filp, char *buf, unsigned long count, long *position) {}
-long minix_write(struct file *filp, char *buf, unsigned long count, long *position) {}
-// 设置文件指针的位置。这个函数的使用能否提升到VFS层面?
-long minix_lseek(struct file *filp, long offset, long origin) {}
+
+long minix_read(struct file *filp, char *buf, u64 count, int64 *position) {
+    
+    inode_t* inode = filp->dentry->dir_inode;
+    minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
+    minix_sb_info_t* m_sb = (minix_sb_info_t*)inode->sb->private_sb_info;
+
+    int64 index = *position / BLOCK_SIZE;
+    int64 offset = *position % BLOCK_SIZE;
+    u64 cnt = 0, length = 0, block = 0;
+    buffer_t* bh;
+    int64 ret = 0;
+
+    // B.计算出可读取数据长度
+    if (*position + count > inode->file_size)
+        cnt = count = inode->file_size - *position;
+    else
+        cnt = count;
+
+    assert(cnt > 0);
+    ret = cnt;    
+    // C. 循环体实现数据读取过程
+    do
+    {
+        block = minix_bmap(inode, index, 0);
+
+        bh = bread(inode->dev, block, BLOCK_SIZE);
+
+        // c.3. 计算本次从buffer缓冲区中复制给用户的数据长度
+        length = cnt <= (BLOCK_SIZE - offset) ? cnt : BLOCK_SIZE - offset;
+
+        // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
+        if ((unsigned long)buf < TASK_SIZE)
+            copy_to_user(bh->data + offset, buf, length);
+        else
+            memcpy(bh->data + offset, buf, length);
+        
+        bh->valid = true;
+
+        index++; // 下一个块
+        // c.5. 更新变量，进行下一次读取
+        cnt -= length;
+        offset -= offset; // 第二次循环后，offset = 0
+        *position += length; // 更新文件读取指针 位置
+
+        brelse(bh);
+
+    } while (cnt != 0);
+
+    inode->atime = NOW();
+    
+    return ret;
+}
+
+long minix_write(struct file *filp, char *buf, unsigned long count, long *position) {
+    
+    inode_t* inode = filp->dentry->dir_inode;
+    minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
+    minix_sb_info_t* m_sb = (minix_sb_info_t*)inode->sb->private_sb_info;
+
+    int64 index = *position / BLOCK_SIZE;
+    int64 offset = *position % BLOCK_SIZE;
+    u64 cnt = count, length = 0, block = 0;
+    buffer_t* bh;
+    int64 ret = 0;
+
+    ret = cnt;    
+    // C. 循环体实现数据读取过程
+    do
+    {
+        block = minix_bmap(inode, index, 1);
+
+        bh = bread(inode->dev, block, BLOCK_SIZE);
+
+        // c.3. 计算本次从buffer缓冲区中复制给用户的数据长度
+        length = cnt <= (BLOCK_SIZE - offset) ? cnt : BLOCK_SIZE - offset;
+
+        // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
+        if ((unsigned long)buf < TASK_SIZE)
+            copy_to_user(buf, bh->data + offset, length);
+        else
+            memcpy(buf, bh->data + offset, length);
+        
+        bh->dirty = true;
+
+        index++; // 下一个块
+        // c.5. 更新变量，进行下一次读取
+        cnt -= length;
+        offset -= offset; // 第二次循环后，offset = 0
+        *position += length; // 更新文件读取指针 位置
+
+        brelse(bh);
+
+    } while (cnt != 0);
+    
+    // B.更新文件数据长度和文件访问时间
+    if (*position + count > inode->file_size)
+        inode->file_size = *position + count;
+    
+    m_inode->mtime = inode->atime = inode->ctime = NOW();
+    // 标记inode已经被修改
+    inode->buf->dirty = true;
+    
+    // TODO: 写入磁盘 ？
+    bwrite(inode->buf);
+
+    return ret;
+}
+
 long minix_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) { return 0; }
 long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {}
 struct file_operations minix_file_ops =
@@ -182,7 +287,7 @@ struct file_operations minix_file_ops =
         .close = minix_close,
         .read = minix_read,
         .write = minix_write,
-        .lseek = minix_lseek,
+        .lseek = FS_lseek,
         .ioctl = minix_ioctl,
         .readdir = minix_readdir,
 };

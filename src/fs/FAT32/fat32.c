@@ -302,35 +302,6 @@ long FAT32_write(struct file *filp, char *buf, unsigned long count, long *positi
     return retval;
 }
 
-// 设置文件指针的位置。这个函数的使用能否提升到VFS层面?
-long FAT32_lseek(struct file *filp, long offset, long origin)
-{
-
-    long pos = 0;
-
-    switch (origin)
-    {
-    case SEEK_SET:
-        pos = offset;
-        break;
-    case SEEK_CUR:
-        pos = filp->position + offset;
-        break;
-    case SEEK_END:
-        pos = filp->dentry->dir_inode->file_size + offset;
-        break;
-    default:
-        return -EINVAL;
-        break;
-    }
-
-    if (pos < 0 || pos > filp->dentry->dir_inode->file_size)
-        return -EOVERFLOW; // 访问位置不正确
-
-    filp->position = pos;
-    // color_printk(GREEN, BLACK, "FAT32 FS(lseek) alert position:%d\n", filp->position);
-    return pos;
-}
 long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) { return 0; }
 
 int fill_dentry(void* buf, char*name, long namelen, long offset)
@@ -468,7 +439,7 @@ struct file_operations FAT32_file_ops =
         .close = FAT32_close,
         .read = FAT32_read,
         .write = FAT32_write,
-        .lseek = FAT32_lseek,
+        .lseek = FS_lseek,
         .ioctl = FAT32_ioctl,
         .readdir = FAT32_readdir,
 };

@@ -18,6 +18,8 @@
 static bdesc_t bdescs[BUFFER_DESC_NR];
 #define hash(dev, block) ( ((dev)^(block)) % HASH_COUNT )
 
+
+
 static bdesc_t *get_desc(size_t sz) {
 
     assert(sz >= 0);
@@ -234,6 +236,35 @@ buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
     semaphore_up(&buf->lock);
     return buf;
 }
+
+/**
+ * @brief 把高速缓冲区和硬盘进行同步
+ *      （比较耗时，3重循环）
+ */
+void sync(void) {
+    
+    list_t* head = NULL, *element = NULL;
+    size_t i = 0, j = 0;
+    buffer_t* buf = NULL;
+
+    for(i = 0; i < BUFFER_DESC_NR; i++) { // 遍历缓冲池
+        if(bdescs[i].count == 0)
+            continue;
+
+        for(j = 0; j < HASH_COUNT; j++) {  // 遍历缓冲池中的哈希表
+            head = &bdescs[i].hash_table[j];
+            if(list_is_empty(head))
+                continue;
+
+            for(element = head->next; element != head; element = element->next){ // 遍历哈希表链
+                buf = container_of(element, buffer_t, hnode);
+                bwrite(buf);
+            }
+        
+        }
+    }
+}
+
 
 void buffer_init(void) {
     LOGK("buffer_t size is %d\n", sizeof(buffer_t));

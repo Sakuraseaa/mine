@@ -5,12 +5,12 @@
 #include "waitqueue.h"
 #include "semaphore.h"
 
-#define HASH_COUNT 64      //
+#define HASH_COUNT 63      //
 #define MAX_BUF_COUNT 4096
 
 typedef struct block_buf{
     
-    u64 count;                         
+    u64 count;                     // 缓冲池中 缓冲块的数量
     u64 size;                     
 
     list_t free_list;                   // 已经申请但没使用的块

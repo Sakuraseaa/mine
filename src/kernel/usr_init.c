@@ -57,9 +57,14 @@ void test_time() {
 void test_minix() {
 	
 	change_fs();
+	
 	char Path[] = "/if.c";
+	char mem[5] = {0};
 	int fd = open(Path, 0);
-
+	read(fd, mem, 1);
+	lseek(fd, 0, SEEK_END);
+	write(fd, mem, 1);
+	
 	change_fs();
 }
 
