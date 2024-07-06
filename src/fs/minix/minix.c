@@ -426,7 +426,7 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
             entry = (minix_dentry_t*)buf->data;
             zone_idx++;
         }
-       
+        
         if(entry->nr == 0 && entry->name[0] == '\0') {
             
             memcpy(dent, entry, sizeof(minix_dentry_t));
@@ -514,7 +514,54 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
 
     return dest_dentry->dir_inode;
 }
-long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { return 0; }
+
+/**
+ * @brief
+ *
+ * @param inode 父目录的inode结点
+ * @param dentry 新文件的目录项
+ * @param mode
+ * @return long
+ */
+long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { 
+
+    super_t* sb = inode->sb;
+    minix_sb_info_t* minix_sb = inode->sb->private_sb_info;
+    u64 nr = 0;
+    char name[4] = {0};
+
+    if(dentry->name_length >= MINIX1_NAME_LEN)
+        return -1;
+
+    // A. 给新文件创建inode 并且初始化
+    nr = minix_ialloc(sb);
+    dentry->dir_inode = minix_new_node(sb->dev, nr, IFDIR);
+
+    // B. 给新文件创建 目录项
+    add_dentry(inode, dentry);
+
+
+    // C. 在新文件创建 "." 和 ".." 目录项
+    inode_t* i_child = dentry->dir_inode;
+
+    dir_entry_t* i_entry = (dir_entry_t*)kmalloc(sizeof(dir_entry_t), 0);
+    
+    i_entry->dir_inode = i_child;
+    i_entry->name_length = 1;
+    name[0] = '.';
+    i_entry->name = name;
+    add_dentry(i_child, i_entry);
+
+    i_entry->dir_inode = inode;
+    i_entry->name_length = 2;
+    name[1] = '0';
+    add_dentry(i_child, i_entry);
+
+    kfree(i_entry);
+    
+    return 0; 
+}
+
 long minix_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
 long minix_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
 long minix_getattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
