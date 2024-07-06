@@ -525,6 +525,10 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	tsk->pid = global_pid++;
 	tsk->preempt_count = 0; // 进程抢占计数值初始化
 	
+	tsk->gid = 64 + tsk->pid;
+	tsk->uid = 64 + tsk->pid;
+	tsk->umask = 0002;
+
 	// 拷贝信号
 	tsk->sigaction = (sigaction_T*)kmalloc(sizeof(sigaction_T) * (NSIG + 1), 0);
 	memcpy(current->sigaction, tsk->sigaction, sizeof(sigaction_T) * (NSIG + 1));

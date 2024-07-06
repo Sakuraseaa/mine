@@ -102,6 +102,11 @@ struct task_struct
 	/*	0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel, 对应第256个PML4页表项， 256 ~ 511 */
 
 	long pid;
+
+	u32 uid;				// 用户 id
+	u32 gid;				// 用户组 id
+	u16 umask;				// 进程用户文件掩码
+
 	long priority;			// 进程可用时间片
 	long vrun_time; 		// 记录进程虚拟运行时间的成员变量 vrun_time
 	long exit_code;
@@ -121,6 +126,7 @@ union task_union
 } __attribute__((aligned(8))); // 8Bytes align
 
 // ========================== 初始化内核进程的PCB ==============================
+// root
 #define INIT_TASK(tsk)                    \
 	{                                     \
 		.state = TASK_UNINTERRUPTIBLE,    \
@@ -138,6 +144,9 @@ union task_union
 		.file_struct = {0},               \
 		.next = &tsk,                     \
 		.parent = &tsk,                   \
+		.uid = 0,	\
+		.gid = 0,  \
+		.umask = 0022					\
 	}
 extern struct task_struct *init_task[NR_CPUS];
 extern union task_union init_task_union;

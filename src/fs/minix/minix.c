@@ -1,5 +1,6 @@
 #include "fs.h"
 #include "lib.h"
+#include "types.h"
 #include "VFS.h"
 #include "errno.h"
 #include "memory.h"
@@ -17,6 +18,9 @@
 #include "stat.h"
 #include "assert.h"
 
+static buffer_t* imap = NULL;
+static buffer_t* zmap[2] = {NULL};
+
 inode_t *iget(dev_t dev, idx_t nr);
 struct super_block_operations minix_super_ops;
 
@@ -25,6 +29,66 @@ static inline idx_t inode_block(minix_sb_info_t *desc, idx_t nr)
 {
     // inode 编号 从 1 开始
     return 2 + desc->imap_blocks + desc->zmap_blocks + (nr - 1) / BLOCK_INODES;
+}
+
+// 分配一个硬盘上的 inode
+static idx_t minix_ialloc(super_t *super) {
+    
+    buffer_t *buf = NULL;
+    idx_t bit = 0;
+    bitmap_t map;
+    
+    minix_sb_info_t *m_sb = (minix_sb_info_t *)super->private_sb_info;
+    idx_t bidx = 2; // 块位图的块号,启动块 超级块
+
+    for (size_t i = 0; i < m_sb->imap_blocks; i++) {
+        buf = bread(super->dev, bidx + i, BLOCK_SIZE);
+
+        // 将整个缓冲区作为位图
+        bitmap_make(&map, buf->data, BLOCK_SIZE);
+
+        // 从位图中扫描一位
+        bit = bitmap_scan(&map, 1);
+        if (bit != -1) {
+            // 如果扫描成功，则 标记缓冲区脏，中止查找
+            bitmap_set(&map, bit, true);
+            buf->dirty = true;
+            break;
+        }
+    }
+    
+    brelse(buf); // todo 调试期间强同步
+    return bit;
+}
+
+// 释放一个inode节点
+static void minix_ifree(super_t* super, idx_t bit) {
+    buffer_t *buf = NULL;
+    bitmap_t map;
+    minix_sb_info_t *m_sb = (minix_sb_info_t *)super->private_sb_info;
+    idx_t bidx = 2; // 块位图的块号
+
+    for (size_t i = 0; i < m_sb->imap_blocks; i++) {
+        
+        if(bit > BLOCK_BITS * (i + 1)) // 跳过开始块
+            continue;
+
+        buf = bread(super->dev, bidx + i, BLOCK_SIZE);
+
+        // 将整个缓冲区作为位图
+        bitmap_make(&map, buf->data, BLOCK_SIZE);
+        
+        // 必须置位
+        assert(bitmap_scan_test(&map, bit) == 1);
+        
+        bitmap_set(&map, bit, 0);
+
+        // 标记缓冲区脏
+        buf->dirty = true;
+        break;
+    }
+
+    brelse(buf); // todo 调试期间强同步
 }
 
 // 分配一个物理块
@@ -53,7 +117,7 @@ static idx_t minix_balloc(super_t *super) {
         }
     }
     brelse(buf); // todo 调试期间强同步
-    return bit;
+    return m_sb->firstdatazone + bit;
 }
 
 // 回收一个物理块
@@ -85,6 +149,39 @@ static void minix_bfree(super_t* super, idx_t bit) {
     }
 
     brelse(buf); // todo 调试期间强同步
+}
+
+// 得到一个 新 inode实体
+static inode_t *minix_new_node(dev_t dev, idx_t nr, int32 file_type) {
+
+    u16 umask = current->umask;
+    int32 mode = 0;
+    inode_t* inode = iget(dev, nr);
+    minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
+    
+    memset(m_inode, 0, sizeof(minix_inode_t));
+    inode->i_mode = inode->blocks = inode->file_size = 0;
+    inode->rdev = inode->type = 0;
+
+    m_inode->gid = inode->gid = current->gid;
+    m_inode->uid = inode->uid = current->uid;
+    m_inode->mtime = inode->atime = inode->ctime = inode->mtime = NOW();
+    m_inode->nlinks = 0; // 再为其创建目录项的时候 加1
+    
+    if(file_type == IFDIR)
+        inode->attribute = FS_ATTR_DIR;
+    else if(file_type == IFREG)
+        inode->attribute = FS_ATTR_FILE;
+    
+    // 设置文件类型和权限
+    mode |= (0777 & ~umask);
+    mode |= file_type;
+    m_inode->mode = inode->i_mode = mode;
+
+    // 同步本次inode
+    inode->buf->dirty = true;
+    bwrite(inode->buf);
+    return inode;
 }
 
 // 获取 inode 第 block 块的索引值
@@ -130,7 +227,8 @@ reckon:
         if ((array[index] == 0 )&& create) {
             
             array[index] = minix_balloc(inode->sb);
-            buf->dirty = true;
+            if(buf)
+                buf->dirty = true;
         }
 
         brelse(buf);
@@ -240,7 +338,7 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
     // C. 循环体实现数据读取过程
     do
     {
-        block = minix_bmap(inode, index, 1);
+        block = minix_bmap(inode, index, true);
 
         bh = bread(inode->dev, block, BLOCK_SIZE);
 
@@ -267,7 +365,7 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
     
     // B.更新文件数据长度和文件访问时间
     if (*position + count > inode->file_size)
-        inode->file_size = *position + count;
+        m_inode->size = inode->file_size = *position + count;
     
     m_inode->mtime = inode->atime = inode->ctime = NOW();
     // 标记inode已经被修改
@@ -292,8 +390,95 @@ struct file_operations minix_file_ops =
         .readdir = minix_readdir,
 };
 
+/**
+ * @brief 在目录中创建文件对应的 目录项
+ * 
+ * @param dir 目录的inode
+ * @param dentry 文件的inode
+ * @return buffer_t* 
+ */
+static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
 
-long minix_create(struct index_node *inode, struct dir_entry *dentry, int mode) {}
+    assert(dir->attribute == FS_ATTR_DIR)
+
+    // A. 准备好目录项
+    minix_dentry_t* dent = (minix_dentry_t*)kmalloc(sizeof(minix_dentry_t), 0); 
+    memset(dent, 0, sizeof(minix_dentry_t));
+
+    dent->nr = dentry->dir_inode->nr;
+    memcpy(dentry->name, dent->name, dentry->name_length);
+
+    // B. 遍历目录文件, 增加目录项
+    u64 zone_idx = 0, block = 0;
+    buffer_t* buf = NULL;
+    minix_inode_t* m_parent_inode = dir->private_index_info;
+    minix_inode_t* m_inode = dentry->dir_inode->private_index_info;
+    minix_dentry_t* entry = NULL;
+    while(true) {
+
+        if(!buf || ((u64)entry) > ((u64)(buf->data) + BLOCK_SIZE)) {
+            
+            brelse(buf);
+            block = minix_bmap(dir, zone_idx, true);
+            assert(block > 0);
+
+            buf = bread(dir->dev, block, BLOCK_SIZE);
+            entry = (minix_dentry_t*)buf->data;
+            zone_idx++;
+        }
+       
+        if(entry->nr == 0 && entry->name[0] == '\0') {
+            
+            memcpy(dent, entry, sizeof(minix_dentry_t));
+            
+            // 强制同步 目录的修改时间？目录的大小？
+            m_inode->nlinks++;                      // 更新文件的inode
+            dentry->dir_inode->buf->dirty = true;
+            bwrite(dentry->dir_inode->buf);
+            
+            dir->file_size += sizeof(minix_dentry_t); // 更新目录inode 节点信息
+            dir->buf->dirty = true;
+            m_parent_inode->size = dir->file_size;
+            m_parent_inode->mtime = dir->ctime;
+            dir->ctime = NOW();
+            bwrite(dir->buf);
+
+            buf->dirty = true;          // 更新目录项
+            brelse(buf);
+            break;
+        }
+
+        entry++;
+    }
+
+    return buf;
+}
+
+/**
+ * @brief
+ *
+ * @param inode 父目录的inode结点
+ * @param dentry 新文件的目录项
+ * @param mode
+ * @return long
+ */
+long minix_create(struct index_node *inode, struct dir_entry *dentry, int32 mode) {
+    super_t* sb = inode->sb;
+    minix_sb_info_t* minix_sb = inode->sb->private_sb_info;
+    u64 nr = 0;
+
+    if(dentry->name_length >= MINIX1_NAME_LEN)
+        return -1;
+
+    // A. 给新文件创建inode 并且初始化
+    nr = minix_ialloc(sb);
+    dentry->dir_inode = minix_new_node(sb->dev, nr, IFREG);
+    
+    // B. 给新文件创建 目录项
+    add_dentry(inode, dentry);
+
+    return 0;
+}
 
 struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry) {
     
@@ -305,7 +490,7 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
 
 
     for(; i < dentries; entry++) {
-        if(!buf || (u32)entry >= (u32)buf->data + BLOCK_SIZE) {
+        if(!buf || ((u64)entry) >= ((u64)buf->data + BLOCK_SIZE)) {
 
             brelse(buf);
             block = minix_bmap(parent_inode, i / BLOCK_DENTRIES, false);
@@ -315,10 +500,10 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
             }
 
             buf = bread(parent_inode->dev, block, BLOCK_SIZE);
-            entry = buf->data;
+            entry = (minix_dentry_t*)buf->data;
         }
 
-        if(entry->nr == 0)
+        if(entry->nr == 0 && entry->name[0] == '\0')
             continue;
         if(strncmp(entry->name, dest_dentry->name, dest_dentry->name_length) == 0) {
             dest_dentry->dir_inode = iget(parent_inode->dev, entry->nr);
@@ -347,6 +532,14 @@ struct index_node_operations minix_inode_ops =
 };
 
 
+// 同步该inode 到硬盘
+inode_t *iput(dev_t dev, idx_t nr) {
+
+    // super_t* super = get_super(dev);
+    // minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
+
+    // inode->buf = bread(dev, inode_block(minix_sb, nr), BLOCK_SIZE);
+}
 
 // 获得设备 dev 的 nr inode
 inode_t *iget(dev_t dev, idx_t nr)
@@ -360,7 +553,7 @@ inode_t *iget(dev_t dev, idx_t nr)
     }
     super_t* super = get_super(dev);
     minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
-    
+
     inode = (inode_t*)kmalloc(sizeof(inode_t), 0);
     inode->dev = dev;
     inode->inode_ops = &minix_inode_ops;
@@ -423,7 +616,7 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     memcpy(sbp->buf->data, sbp->private_sb_info, sizeof(minix_sb_info_t));
     
     // ================================== 读取根目录 =====================================
-    color_printk(ORANGE, BLACK, "MINIX FSinfo\n Firstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\n \
+    color_printk(ORANGE, BLACK, "MINIX FSinfo\nFirstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\n\
 inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
                 minix_sb->firstdatazone,  minix_sb->inodes, minix_sb->log_zone_size, minix_sb->imap_blocks,
                 minix_sb->zmap_blocks, minix_sb->magic);
@@ -442,7 +635,11 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
     
     // creat root inode
     sbp->root->dir_inode = iget(sbp->dev, 1);
-
+    // ==============调试期间,暂把inode位图 和 物理块位图都读入内存，便于观察=================
+    imap = bread(sbp->dev, 2,BLOCK_SIZE);
+    zmap[0] = bread(sbp->dev, 2 + minix_sb->imap_blocks, BLOCK_SIZE);
+    zmap[1] = bread(sbp->dev, 2 + minix_sb->imap_blocks + 1, BLOCK_SIZE);
+    // ==================================================
     return sbp;
 }
 

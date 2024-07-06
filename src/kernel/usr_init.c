@@ -58,18 +58,20 @@ void test_minix() {
 	
 	change_fs();
 	
-	char Path[] = "/if.c";
-	char mem[5] = {0};
+	char Path[] = "/lib/sk.txt";
+	char mem[12] = {0};
 	int fd = open(Path, 0);
-	read(fd, mem, 1);
-	lseek(fd, 0, SEEK_END);
-	write(fd, mem, 1);
+	write(fd, "Hello WORLD", 11);
+	lseek(fd, 0, SEEK_SET);
+	read(fd, mem, 11);
 	
 	change_fs();
 }
 
 int usr_init()
 {
+	printf("sk@Mine %d #:", sk);
+
 	test_minix();
 
 	int fd = 0;

@@ -60,16 +60,15 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
     list_t* list = &desc->hash_table[idx];
 
     buffer_t *buf = NULL;
-    while(!list_is_empty(list)) {
+    if(!list_is_empty(list)) {
+        for(list_t* node = list->next; node != list; node = node->next) {
+            buffer_t* ptr = container_of(node, buffer_t, hnode);
         
-        buffer_t* ptr = container_of(list_next(list), buffer_t, hnode);
-        
-        if(ptr->dev == dev && ptr->block == block) {
-            buf = ptr;
-            break;
+            if(ptr->dev == dev && ptr->block == block) {
+                buf = ptr;
+                break;
+            }
         }
-
-        list = list->next;
     }
     
     if(buf == NULL)

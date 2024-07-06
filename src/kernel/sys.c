@@ -121,11 +121,6 @@ unsigned long sys_open(char *filename, int flags)
 
     if (dentry == NULL)
         return -ENOENT;
-    if (!(flags & O_DIRECTORY) && dentry->dir_inode->attribute == FS_ATTR_DIR)
-        return -EISDIR;
-    if((flags & O_DIRECTORY) && (dentry->dir_inode->attribute != FS_ATTR_DIR))
-        return -ENOTDIR;
-
 
     if (flags & O_CREAT)
     {
@@ -135,7 +130,19 @@ unsigned long sys_open(char *filename, int flags)
             Parent_dentry->dir_inode->inode_ops->create(Parent_dentry->dir_inode, Child_dentry, 0);
         else
             return -EACCES;
+        
+        dentry = Child_dentry;
+        goto sys_open_over_judge;
     }
+
+
+
+    if (!(flags & O_DIRECTORY) && dentry->dir_inode->attribute == FS_ATTR_DIR)
+        return -EISDIR;
+    if((flags & O_DIRECTORY) && (dentry->dir_inode->attribute != FS_ATTR_DIR))
+        return -ENOTDIR;
+
+sys_open_over_judge:
     kfree(path);
 
     // c.为目标文件,目标进程创建文件描述符, filp什么意思？file description?

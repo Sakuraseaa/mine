@@ -188,6 +188,7 @@ struct dir_entry_operations
     long (*hash)(struct dir_entry *dentry, char *filename);                                              // 该函数为目录项生成散列值
     long (*release)(struct dir_entry *dentry);                                                           // 释放目录项对象
     long (*iput)(struct dir_entry *dentry, struct index_node *inode);                                    // 释放inode索引
+    long (*d_release)(struct dentry *dentry);
 };
 
 // 文件描述符

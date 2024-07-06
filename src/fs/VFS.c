@@ -127,7 +127,7 @@ static int path_depth_cnt(char *pathname)
  * @brief 搜索文件name。
  *
  * @param name 文件名称
- * @param flags 当形参flags = 1时, path_walk函数返回目标父目录的目录项，否则返回目标目录项
+ * @param flags 当形参flags = 1时, 表示创建文件.此时path_walk函数返回name's父目录的目录项，否则返回name's目录项
  * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
  * @return struct dir_entry* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
@@ -174,8 +174,6 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
         { // 查找失败，释放申请的内存资源，返回
             if ((flags & 1) && (Count == nameDep))
             {
-                // 如果是创建文件，即时是查找失败了，也继续进行循环
-                // 但如果此处是中间路径错误了怎么办？这里的逻辑重写的 日后
                 goto continue_for;
             }
 
