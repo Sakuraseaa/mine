@@ -230,11 +230,11 @@ u64 sys_mkdir(char* filename) {
         return -ENOENT;
     
     kfree(path);
-    assert(Child_dentry->parent != dentry);
+    assert(Child_dentry->parent == dentry);
     if(dentry->dir_inode->inode_ops && dentry->dir_inode->inode_ops->mkdir)
-        error = dentry->dir_inode->inode_ops->mkdir(dentry, Child_dentry, 0);
+        error = dentry->dir_inode->inode_ops->mkdir(dentry->dir_inode, Child_dentry, 0);
 
-    return error
+    return error;
 }
 
 /**

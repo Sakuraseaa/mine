@@ -39,6 +39,8 @@ SYSFUNC_DEF(KILL)
 SYSFUNC_DEF(sleep)
 SYSFUNC_DEF(getpid)
 
+SYSFUNC_DEF(mkdir)
+
 __asm__(
     "LABEL_SYSCALL:	\n\t"
     "pushq	%r10	\n\t"

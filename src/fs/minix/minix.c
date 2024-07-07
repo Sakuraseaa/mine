@@ -554,7 +554,7 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
 
     i_entry->dir_inode = inode;
     i_entry->name_length = 2;
-    name[1] = '0';
+    name[1] = '.';
     add_dentry(i_child, i_entry);
 
     kfree(i_entry);

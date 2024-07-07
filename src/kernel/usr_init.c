@@ -58,12 +58,13 @@ void test_minix() {
 	
 	change_fs();
 	
-	char Path[] = "/lib/sk.txt";
-	char mem[12] = {0};
-	int fd = open(Path, 0);
-	write(fd, "Hello WORLD", 11);
-	lseek(fd, 0, SEEK_SET);
-	read(fd, mem, 11);
+	char Path[] = "/home";
+	// char mem[12] = {0};
+	// int fd = open(Path, 0);
+	// write(fd, "Hello WORLD", 11);
+	// lseek(fd, 0, SEEK_SET);
+	// read(fd, mem, 11);
+	mkdir(Path);
 	
 	change_fs();
 }

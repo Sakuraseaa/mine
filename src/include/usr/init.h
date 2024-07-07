@@ -21,6 +21,7 @@ long read(int fildes, void *buf, long nbyte);
 long write(int fildes, const void *buf, long nbyte);
 long lseek(int fildes, long offset, int whence);
 int open(const char *path, int oflag);
+int mkdir(const char* path);
 int fork(void);
 int vfork(void);
 unsigned long reboot(unsigned long cmd,void * arg);
