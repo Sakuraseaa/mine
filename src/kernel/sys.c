@@ -126,21 +126,7 @@ char *sys_getcwd(char *buf, u64 size) {
     return buf;
 }
 
-/**
- * @brief 
- * 
- * @param filenalem 
- * @return char* 
- */
-char* named(char* pathname, u32 pathlen) {
 
-    if (!strcmp(pathname, "/") || !strcmp(pathname, "/.") || !strcmp(pathname, "/.."))
-    {
-        return pathname;
-    }
-	assert(pathname[0] == '/' && pathlen > 1 && pathlen < PAGE_4K_SIZE);
-
-}
 /**
  * @brief VFS的文件打开函数 = 给本进程要打开的文件filename创建文件描述符，文件描述符是进程私有的
  *  目录项结构,inode结构的缓存与释放是个问题
@@ -354,8 +340,6 @@ unsigned long sys_read(int fd, void *buf, long count)
     return ret;
 }
 
-int sys_stat(const char *pathname, struct stat *statbuf);
-int sys_fstat(int fd, struct stat *statbuf);
 
 // 写文件函数
 unsigned long sys_write(int fd, void *buf, long count)
@@ -600,9 +584,13 @@ unsigned long sys_exit(int exit_code)
     return do_exit(exit_code);
 }
 
+inode_t *namei(char* filename);
 unsigned long sys_stat(char* filename, stat_t* statbuf) {
 
     inode_t* inode = namei(filename);
+
+    if(inode == NULL)
+        return -ENOMEM;
 
     statbuf->size = inode->file_size;
     statbuf->uid = inode->uid;
@@ -612,6 +600,7 @@ unsigned long sys_stat(char* filename, stat_t* statbuf) {
     statbuf->gid = inode->gid;
     statbuf->nr = inode->nr;
     statbuf->dev = inode->dev;
+    statbuf->mode = inode->i_mode;
     statbuf->rdev = 0; // 这个虚拟设备时干嘛的？ 虚拟内存 供给内核高速申请的？
     if(inode->sb->type == FS_TYPE_MINIX) {
         
@@ -620,4 +609,9 @@ unsigned long sys_stat(char* filename, stat_t* statbuf) {
     
     }else
         statbuf->nlinks = 0;
+    
+    return 0;
 }
+
+
+int sys_fstat(int fd, struct stat *statbuf);

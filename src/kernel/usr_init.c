@@ -294,10 +294,97 @@ int cd_command(int argc, char **argv)
 }
 
 #include "stat.h"
+#include "time.h"
+static void strftime(time_t stamp, char *buf)
+{
+    tm time;
+    localtime(stamp, &time);
+    sprintf(buf, "%d-%02d-%02d %02d:%02d:%02d",
+            time.year,
+            time.month,
+            time.week_day,
+            time.hour,
+            time.minute,
+            time.second);
+}
+
+static void parsemode(int mode, char *buf)
+{
+    memset(buf, '-', 10);
+    buf[10] = '\0';
+    char *ptr = buf;
+
+    switch (mode & IFMT)
+    {
+    case IFREG:
+        *ptr = '-';
+        break;
+    case IFBLK:
+        *ptr = 'b';
+        break;
+    case IFDIR:
+        *ptr = 'd';
+        break;
+    case IFCHR:
+        *ptr = 'c';
+        break;
+    case IFIFO:
+        *ptr = 'p';
+        break;
+    case IFLNK:
+        *ptr = 'l';
+        break;
+    case IFSOCK:
+        *ptr = 's';
+        break;
+    default:
+        *ptr = '?';
+        break;
+    }
+    ptr++;
+
+    for (int i = 6; i >= 0; i -= 3)
+    {
+        int fmt = (mode >> i) & 07;
+        if (fmt & 0b100)
+        {
+            *ptr = 'r';
+        }
+        ptr++;
+        if (fmt & 0b010)
+        {
+            *ptr = 'w';
+        }
+        ptr++;
+        if (fmt & 0b001)
+        {
+            *ptr = 'x';
+        }
+        ptr++;
+    }
+}
+
+char qualifies[] = {'B', 'K', 'M', 'G', 'T'};
+
+void reckon_size(int *size, char *qualifer)
+{
+    int num = *size;
+    int i = 0;
+    *qualifer = 'B';
+
+    while (num)
+    {
+        *qualifer = qualifies[i];
+        *size = num;
+        num >>= 10; // num /= 1024
+        i++;
+    }
+}
 int ls_command(int argc, char **argv) 
 {
 	struct DIR* dir = NULL;
-	struct dirent* buf = NULL;
+	struct dirent* entry = NULL;
+	char* buf  = NULL;
 	char* path = NULL;
 	stat_t  statbuf;
 	bool isDetail = false;
@@ -307,8 +394,10 @@ int ls_command(int argc, char **argv)
 		if(str[0] != '-')		// 记录字符串
 			path = str;
 
-		if(strcmp(str, "-l") == 0)  // 检测 -l 标志
+		if(strcmp(str, "-l") == 0){  // 检测 -l 标志
 			isDetail = true;
+			buf = (char*)kmalloc(512, 0);
+		}
 	}
 	
 	assert(path != NULL);
@@ -321,22 +410,41 @@ int ls_command(int argc, char **argv)
 	}
 
 	// printf("ls_command opendir:%d\n", dir->fd);
-	buf = (struct dirent*)kmalloc(256, 0);
+	entry = (struct dirent*)kmalloc(256, 0);
 	// 直到该目录为空
 	while(1)
 	{
-		buf = readdir(dir);// 每次读一条目录项
-		if(buf == NULL)
+		entry = readdir(dir);// 每次读一条目录项
+		if(entry == NULL)
 			break;
-		if(buf->d_name[0] == '.') // 跳过隐藏文件
+		if(entry->d_name[0] == '.') // 跳过隐藏文件
 			continue;
-		
-		printf("%s\t", buf->d_name);
+		if(!isDetail)
+			printf("%s\t", entry->d_name);
 		
 		if(isDetail == false)
 			continue;
-	
-	
+
+		stat(entry->d_name, &statbuf);
+
+        parsemode(statbuf.mode, buf);
+        printf("%s ", buf);
+
+        strftime(statbuf.ctime, buf);
+
+        int size = statbuf.size;
+        char qualifier;
+        reckon_size(&size, &qualifier);
+
+        printf("% 2d % 2d % 2d % 4d%c %s %s\n",
+               statbuf.nlinks,
+               statbuf.uid,
+               statbuf.gid,
+               size,
+               qualifier,
+               buf,
+               entry->d_name);
+
 	}
 	printf("\n");
 	closedir(dir);

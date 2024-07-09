@@ -42,6 +42,7 @@ SYSFUNC_DEF(getpid)
 SYSFUNC_DEF(mkdir)
 
 SYSFUNC_DEF(getcwd)
+SYSFUNC_DEF(stat)
 
 __asm__(
     "LABEL_SYSCALL:	\n\t"

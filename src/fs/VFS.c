@@ -337,6 +337,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     catalogue->dir_inode = sb_vec[1]->root->dir_inode;
     catalogue->d_sb = sb_vec[1];
     catalogue->d_sb->s_flags = true;
+    catalogue->dir_ops = sb_vec[1]->root->dir_ops;
 
     // 设置init进程的当前文件系统路径 和 跟目录
     current->parent->i_pwd = current->i_pwd = sb_vec[0]->root;

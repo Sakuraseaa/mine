@@ -33,5 +33,6 @@
 #define __NR_mkdir 20
 
 #define __NR_getcwd 22
+#define __NR_stat 23
 
 #endif
