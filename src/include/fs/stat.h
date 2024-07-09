@@ -48,7 +48,7 @@
 #define IWOTH 00002 // 其他人写许可
 #define IXOTH 00001 // 其他人执行/搜索许可
 
-typedef struct stat_t
+typedef struct stat_T
 {
     dev_t dev;    // 含有文件的设备号
     idx_t nr;     // 文件 i 节点号

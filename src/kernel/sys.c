@@ -12,6 +12,8 @@
 #include "sys.h"
 #include "debug.h"
 #include "assert.h"
+#include "stat.h"
+#include "fs.h"
 // 系统调用有关
 /*
 normal
@@ -598,4 +600,24 @@ unsigned long sys_exit(int exit_code)
     return do_exit(exit_code);
 }
 
+unsigned long sys_stat(char* filename, stat_t* statbuf) {
 
+    inode_t* inode = namei(filename);
+
+    statbuf->size = inode->file_size;
+    statbuf->uid = inode->uid;
+    statbuf->atime = inode->atime;
+    statbuf->ctime = inode->ctime;
+    statbuf->mtime = inode->mtime;
+    statbuf->gid = inode->gid;
+    statbuf->nr = inode->nr;
+    statbuf->dev = inode->dev;
+    statbuf->rdev = 0; // 这个虚拟设备时干嘛的？ 虚拟内存 供给内核高速申请的？
+    if(inode->sb->type == FS_TYPE_MINIX) {
+        
+        char* buf = (char*)inode->private_index_info;
+        statbuf->nlinks = buf[13]; // minix文件系统的inode结构 中 第十三个字节记录着 本inode的目录项链接数
+    
+    }else
+        statbuf->nlinks = 0;
+}

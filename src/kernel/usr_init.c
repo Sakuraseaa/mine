@@ -310,6 +310,7 @@ int ls_command(int argc, char **argv)
 		if(strcmp(str, "-l") == 0)  // 检测 -l 标志
 			isDetail = true;
 	}
+	
 	assert(path != NULL);
 
 	if(path[0] == '/') 
@@ -320,7 +321,6 @@ int ls_command(int argc, char **argv)
 	}
 
 	// printf("ls_command opendir:%d\n", dir->fd);
-
 	buf = (struct dirent*)kmalloc(256, 0);
 	// 直到该目录为空
 	while(1)
@@ -328,11 +328,15 @@ int ls_command(int argc, char **argv)
 		buf = readdir(dir);// 每次读一条目录项
 		if(buf == NULL)
 			break;
-		if(buf->d_name[0] == '.')
+		if(buf->d_name[0] == '.') // 跳过隐藏文件
 			continue;
-		// fstat(dir->fd, &statbuf);
-		// 打印信息
+		
 		printf("%s\t", buf->d_name);
+		
+		if(isDetail == false)
+			continue;
+	
+	
 	}
 	printf("\n");
 	closedir(dir);

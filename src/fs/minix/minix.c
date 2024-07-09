@@ -703,14 +703,17 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
     // creat root inode
     sbp->root->dir_inode = iget(sbp->dev, 1);
 
-
     sbp->s_flags = false; // 标记挂载
+
     // ==============调试期间,暂把inode位图 和 物理块位图都读入内存，便于观察=================
     imap = bread(sbp->dev, 2,BLOCK_SIZE);
     zmap[0] = bread(sbp->dev, 2 + minix_sb->imap_blocks, BLOCK_SIZE);
     zmap[1] = bread(sbp->dev, 2 + minix_sb->imap_blocks + 1, BLOCK_SIZE);
     // ==================================================
+    
+    
     return sbp;
+
 }
 
 
