@@ -19,7 +19,7 @@ typedef struct block_buf{
     list_t hash_table[HASH_COUNT];      // 缓冲哈希表
 }bdesc_t;
 
-typedef struct _buffer_
+typedef struct buffer
 {
     char *data;          // 数据区
     bdesc_t *desc;       // 描述符指针

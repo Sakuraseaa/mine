@@ -41,6 +41,8 @@ SYSFUNC_DEF(getpid)
 
 SYSFUNC_DEF(mkdir)
 
+SYSFUNC_DEF(getcwd)
+
 __asm__(
     "LABEL_SYSCALL:	\n\t"
     "pushq	%r10	\n\t"

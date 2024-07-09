@@ -21,3 +21,5 @@ SYSCALL_COMMON(__NR_KILL, sys_kill)
 SYSCALL_COMMON(__NR_getpid,sys_getpid)
 SYSCALL_COMMON(__NR_sleep,sys_sleep)
 SYSCALL_COMMON(__NR_mkdir, sys_mkdir)
+
+SYSCALL_COMMON(__NR_getcwd, sys_getcwd)

@@ -287,7 +287,9 @@ long minix_read(struct file *filp, char *buf, u64 count, int64 *position) {
     else
         cnt = count;
 
-    assert(cnt > 0);
+    if(cnt == 0)
+        return ret;
+
     ret = cnt;    
     // C. 循环体实现数据读取过程
     do
@@ -378,7 +380,23 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
 }
 
 long minix_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) { return 0; }
-long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {}
+
+long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {
+    minix_dentry_t mentry;
+
+    int64 ret = -1;
+    if((ret = minix_read(filp, (char*)&mentry, sizeof(minix_dentry_t), &filp->position))!= sizeof(minix_dentry_t))
+        return -1;
+
+    struct dirent* dt = dirent;
+    dt->nr = mentry.nr;
+    dt->d_namelen = strlen(mentry.name);
+    dt->d_offset = 0;
+    memcpy(mentry.name, dt->d_name, dt->d_namelen);
+    
+    return ret;
+}
+
 struct file_operations minix_file_ops =
     {
         .open = minix_open,
@@ -610,6 +628,7 @@ inode_t *iget(dev_t dev, idx_t nr)
     list_init(&inode->i_sb_list);
     list_add_to_behind(&super->inode_list, &inode->i_sb_list);
     inode->sb = super;
+    inode->type = super->type; // 文件系统类型
 
     inode->buf = bread(dev, inode_block(minix_sb, nr), BLOCK_SIZE);
     minix_inode_t *mit = &((minix_inode_t*)inode->buf->data)[(inode->nr - 1) % BLOCK_INODES];
@@ -641,7 +660,7 @@ inode_t *iget(dev_t dev, idx_t nr)
 struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *buf)
 {
     struct super_block *sbp = NULL;
-    minix_sb_info_t* minix_sb;
+    minix_sb_info_t* minix_sb = NULL;
     // ===============================  读取super block =====================================
     sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
     memset(sbp, 0, sizeof(struct super_block));
@@ -679,9 +698,13 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
     sbp->root->name = (char*)kmalloc(2, 0);
     sbp->root->name[0] = '/';
     sbp->root->dir_ops = &minix_dentry_ops;
-    
+    sbp->root->d_sb = sbp;
+
     // creat root inode
     sbp->root->dir_inode = iget(sbp->dev, 1);
+
+
+    sbp->s_flags = false; // 标记挂载
     // ==============调试期间,暂把inode位图 和 物理块位图都读入内存，便于观察=================
     imap = bread(sbp->dev, 2,BLOCK_SIZE);
     zmap[0] = bread(sbp->dev, 2 + minix_sb->imap_blocks, BLOCK_SIZE);

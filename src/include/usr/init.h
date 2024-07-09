@@ -30,5 +30,5 @@ int printf(const char *fmt, ...);
 int execve(const char* path, char* const argv[], char* const envp[]);
 long getpid();
 void sleep(long);
-
+char *getcwd(char *buf, int size);
 #endif

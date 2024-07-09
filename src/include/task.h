@@ -9,6 +9,7 @@
 #include "printk.h"
 #include "sched.h"
 #include "waitqueue.h"
+#include "VFS.h"
 // 每个任务的文件描述符最大数
 #define TASK_FILE_MAX 10
 
@@ -116,6 +117,10 @@ struct task_struct
 	wait_queue_T wait_childexit;
 	struct task_struct *next;	// next 用于连接所有进程
 	struct task_struct *parent; // parent 用于记录当前进程的父进程
+
+	struct dir_entry *i_pwd;	 // 进程当前目录 inode program work directory
+	struct dir_entry *i_root; // 进程根目录 inode
+	struct index_node *i_exec; // 程序文件 inode
 };
 
 // 进程PCB和内核栈空间 32kb
@@ -146,7 +151,10 @@ union task_union
 		.parent = &tsk,                   \
 		.uid = 0,	\
 		.gid = 0,  \
-		.umask = 0022					\
+		.umask = 0022,					\
+		.i_pwd = NULL, \
+		.i_root = NULL, \
+		.i_exec = NULL \
 	}
 extern struct task_struct *init_task[NR_CPUS];
 extern union task_union init_task_union;

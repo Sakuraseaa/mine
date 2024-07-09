@@ -53,6 +53,7 @@ struct index_node_operations;
 struct dir_entry_operations;
 struct file_operations;
 struct index_node;
+struct dir_entry;
 
 typedef struct ide_part_t
 {
@@ -68,9 +69,9 @@ typedef struct super_block
 {
     list_t node;          /* 所有超级块的链表_节点*/
     // 记录着根目录的目录项，此目录项在文件系统中并不存在实体结构， 是为了便于搜索特意抽象出来的
-    struct dir_entry *root;
+    struct dir_entry *root; // directory mount point
 
-    buffer_t *buf; // 超级块描述符 buffer
+    struct buffer *buf; // 超级块描述符 buffer
     dev_t dev;            // 设备号
     u32 count;            // 引用计数
     int type;             // 文件系统类型
@@ -82,6 +83,7 @@ typedef struct super_block
     // 包含操作： superblock结构的读写, inode的写
     struct super_block_operations *sb_ops;
 
+    u64 s_flags; // mount mark
     // 用于保存各类文件系统的特有数据信息
     void *private_sb_info; // 对于fat32文件系统来说，该指针连接的是 FAT32_sb_info 结构体
 }super_t;
@@ -97,7 +99,7 @@ typedef struct index_node
     unsigned long blocks;    // 本文件占用了几个512B数据块 ？
     unsigned long attribute; // 用于保存目录项的属性, 有了i_mode之后，该属性应该被修改删除。
 
-    buffer_t *buf; // inode 描述符对应 buffer
+    struct buffer *buf; // inode 描述符对应 buffer
     
     dev_t dev;  // 设备号
     dev_t rdev; // 虚拟设备号
@@ -143,6 +145,7 @@ typedef struct dir_entry
     struct dir_entry *parent;     // 父目录项
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：
+    super_t*    d_sb; // 文件的超级块
 }dir_entry_t;
 typedef int (*filldir_t)(void *buf,char *name, long namelen,long offset);
 
@@ -157,7 +160,7 @@ struct file
 
     struct dir_entry *dentry; // 本文件对应的目录项
 
-    struct file_operations *f_ops;
+    struct file_operations *f_ops; 
 
     // 用于保存各类文件系统的特有数据信息-具体到每个文件
     void *private_data;

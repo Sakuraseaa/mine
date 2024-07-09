@@ -74,6 +74,72 @@ unsigned long sys_putstring(char *string)
 }
 
 /**
+ * @brief sys_getcwd用于将当前运行线程的工作目录的绝对路径写入到buf中
+ *
+ * @param buf 由调用者提供存储工作目录路径的缓冲区, 若为NULL则将由操作系统进行分配
+ * @param size 若调用者提供buf, 则size为buf的大小
+ * @return char* 若成功且buf为NULL, 则操作系统会分配存储工作目录路径的缓冲区, 并返回首地址; 若失败则为NULL
+ */
+char *sys_getcwd(char *buf, u64 size) {
+    assert(buf != NULL);
+
+    dir_entry_t* dir = current->i_pwd;
+    dir_entry_t* par_dir = dir->parent;
+    if(par_dir == dir) {
+        buf[0] = '/';
+        buf[1] = 0;
+        return buf;
+    }
+    // ERROR! :: 此处的buf是用户数据
+    //
+    memset(buf, 0, size);
+    char full_path_reverse[64] = {0}; // all right, i think here must use heap-memory and buffer mechanism
+    
+    // 从子目录开始逐层向上找, 一直找到根目录为止, 每次查找都会把当前的目录名复制到full_path_reverse中
+    // 例如子目录现在是"/fd1/fd1.1/fd1.1.1/fd1.1.1.1",
+    // 则运行结束之后, full_path_reverse为 "/fd1.1.1.1/fd1.1.1/fd1.1/fd1"
+    while(par_dir != dir) {
+        strcat(full_path_reverse, "/");
+        strcat(full_path_reverse, dir->name);
+        dir = par_dir;
+        par_dir = par_dir->parent;
+    }
+
+    /* 至此full_path_reverse中的路径是反着的,
+     * 即子目录在前(左),父目录在后(右) ,
+     * 现将full_path_reverse中的路径反置 */
+    char *last_slash = NULL; // 用于记录字符串中最后一个 / 的地址
+    
+    // 把full_path_reverse从后向前遇见 / 就截断一下
+    // 添加到buf尾巴后面
+    while ((last_slash = strrchr(full_path_reverse, '/')))
+    {
+        int len = strlen(buf);
+
+        strcpy(buf + len, last_slash);
+        // 最后一位设置为0, 这样就是下一次strrchr就从这里开始查起
+        *last_slash = 0;
+    }
+
+    return buf;
+}
+
+/**
+ * @brief 
+ * 
+ * @param filenalem 
+ * @return char* 
+ */
+char* named(char* pathname, u32 pathlen) {
+
+    if (!strcmp(pathname, "/") || !strcmp(pathname, "/.") || !strcmp(pathname, "/.."))
+    {
+        return pathname;
+    }
+	assert(pathname[0] == '/' && pathlen > 1 && pathlen < PAGE_4K_SIZE);
+
+}
+/**
  * @brief VFS的文件打开函数 = 给本进程要打开的文件filename创建文件描述符，文件描述符是进程私有的
  *  目录项结构,inode结构的缓存与释放是个问题
  *  为系统增加缓冲区功能
@@ -92,7 +158,7 @@ unsigned long sys_open(char *filename, int flags)
     struct file *filp = NULL;
     struct file **f = NULL;
     int fd = -1; // 文件描述符
-    int i;
+    int i = 0;
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)kmalloc(PAGE_4K_SIZE, 0);
@@ -428,7 +494,7 @@ unsigned long sys_chdir(char* filename)
     long pathlen = 0;
     struct dir_entry* dentry = NULL;
 
-    color_printk(GREEN, BLACK, "sys_chdir\n");
+    // color_printk(GREEN, BLACK, "sys_chdir\n");
     path = (char*) kmalloc(PAGE_4K_SIZE, 0);
     if(path == NULL)
         return -ENOMEM;
@@ -447,7 +513,10 @@ unsigned long sys_chdir(char* filename)
     strncpy_from_user(filename, path, pathlen);
     dentry = path_walk(path, 0, NULL);
     kfree(path);
-
+    
+    // 改变当前进程工作目录
+    current->i_pwd = dentry;
+    
     if(dentry == NULL)
         return -ENOENT;
     if(dentry->dir_inode->attribute != FS_ATTR_DIR)

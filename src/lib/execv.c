@@ -100,6 +100,9 @@ struct file *open_exec_file(char *path)
 	filp->mode = O_RDONLY;
 	filp->f_ops = dentry->dir_inode->f_ops;
 
+
+	current->i_exec = filp->dentry->dir_inode;
+
 	return filp;
 }
 
@@ -230,12 +233,12 @@ static unsigned long load(char *pathname)
 	Elf64_Phdr prog_header;
 	memset(&elf_header, 0, sizeof(Elf64_Ehdr));
 	memset(&prog_header, 0, sizeof(Elf64_Phdr));
-
 	
 	filp = open_exec_file(pathname);
 	if((unsigned long)filp > -0x1000UL) // 这是什么意思？
 		return (unsigned long)filp;
 	
+
 	// 读取程序头
 	filp->f_ops->read(filp, (void *)&elf_header, sizeof(Elf64_Ehdr), &filp->position);
 	

@@ -123,6 +123,26 @@ static int path_depth_cnt(char *pathname)
     return depth;
 }
 
+
+/**
+ * @brief 依据链表缓冲情况，在目录parent中寻找名称为path的文件。 
+ *      PS: Linux中此处的查找使用了链表 + 哈希表 + 目录项状态 等标志完成了目录项的缓冲标志，emmm
+ *          我先使用纯链表吧，然后先把 slab 融入到 目录项 和 inode 比较好
+ * @param parent 父目录项
+ * @param path 需要查找的文件名称
+ * @return dir_entry* 返回path文件的目录项
+ */
+static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32 pathLen) {
+    list_t* head = &parent->subdirs_list;
+    dir_entry_t* det = NULL;
+    for(list_t* node = head->next; node != head; node = node->next) {
+        det = container_of(node, dir_entry_t, child_node);
+        if((det->name_length == pathLen) && (strncmp(path, det->name, pathLen) == 0))
+            return det;
+    }
+    return NULL;
+}
+
 /**
  * @brief 搜索文件name。
  *
@@ -135,9 +155,9 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
 {
     char *tmpname = NULL;
     int tmpnamelen = 0, nameDep = 0, Count = 0;
-    struct dir_entry *parent = current_sb->root;
-    struct dir_entry *path = NULL;
-
+    struct dir_entry *parent = current_sb->root; // 父目录项
+    struct dir_entry *path = NULL;      // 子目录项
+    char filename[64];
     // 越过路径前的 '/'
     while (*name == '/')
         name++;
@@ -149,7 +169,7 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
 
     // 此处为路径上的一系列文件，都创建了dir_entry结构体
     for (;;)
-    {
+    {   
         Count++;
         // 取得一层目录名字,存入dentryname缓冲区
         tmpname = name;
@@ -157,6 +177,12 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
             name++;
         tmpnamelen = name - tmpname;
 
+        // 去缓存中找目录项
+        memcpy(tmpname, filename, tmpnamelen);
+        path = find_dir_childern(parent, filename, tmpnamelen);
+        if(path != NULL)
+            goto next_floder;
+        
         path = (struct dir_entry *)kmalloc(sizeof(struct dir_entry), 0);
         memset(path, 0, sizeof(struct dir_entry));
 
@@ -190,13 +216,17 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
         list_init(&path->subdirs_list);
         path->parent = parent; // 在当前路径中，记录父目录
         list_add_to_behind(&parent->subdirs_list, &path->child_node);
+        path->dir_ops = parent->dir_ops;
+        path->d_sb = parent->d_sb;
 
+    next_floder:
         if (!*name) // 检测字符串是否结束
             goto last_component;
         while (*name == '/') // 递增name到下一个路径名称
             name++;
         if (!*name)
             goto last_slash;
+
         parent = path;
     }
 
@@ -298,5 +328,17 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     // 挂载fat32系统
     sb_vec[0] = current_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);
 
+    // 挂载minix系统
     sb_vec[1] = mount_fs("MINIX", &DPT.DPTE[1], 0);
+    
+    // 把 minix 系统挂载在 /mnt
+    // 这样的挂载方式 我无法判断谁在那里挂载了哎
+    dir_entry_t* catalogue  = path_walk("/mnt" , 0, NULL);
+    catalogue->dir_inode = sb_vec[1]->root->dir_inode;
+    catalogue->d_sb = sb_vec[1];
+    catalogue->d_sb->s_flags = true;
+
+    // 设置init进程的当前文件系统路径 和 跟目录
+    current->parent->i_pwd = current->i_pwd = sb_vec[0]->root;
+    current->parent->i_root = current->i_root = sb_vec[0]->root;
 }

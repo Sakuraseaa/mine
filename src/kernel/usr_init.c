@@ -9,6 +9,7 @@
 #include "init.h"
 #include "dirent.h"
 #include "signal.h"
+#include "assert.h"
 
 extern int kill(long pid, long signum);
 extern sighadler_t signal(long signum, sighadler_t handler);
@@ -26,8 +27,6 @@ struct buildincmd
 	int (*cmd_funcPtr)(int, char **);
 };
 char *current_dir = NULL;
-int sk = 0;
-
 static void handler(long sig) {
 	
 	printf("The signal is %d\n", sig);
@@ -56,38 +55,35 @@ void test_time() {
 #include "VFS.h"
 void test_minix() {
 	
-	change_fs();
 	
-	char Path[] = "/home";
-	// char mem[12] = {0};
-	// int fd = open(Path, 0);
+	char Path[] = "/mnt/THd.c";
+	char mem[12] = {0};
+	int fd = open(Path, 0);
 	// write(fd, "Hello WORLD", 11);
 	// lseek(fd, 0, SEEK_SET);
-	// read(fd, mem, 11);
-	mkdir(Path);
-	
-	change_fs();
+	read(fd, mem, 11);
+	printf("%s\n", mem);
 }
 
 int usr_init()
 {
-	printf("sk@Mine %d #:", sk);
-
-	test_minix();
 
 	int fd = 0;
 	unsigned char buf[256] = {0};
 	char path[] = "/KEYBOARD.DEV";
 	int index = -1;
-	current_dir = "/";
+	current_dir = (char*)kmalloc(2, 0);
+	current_dir[0] = '/';
+
+	test_minix();
+
 	fd = open(path, 0);
 
 	while (1)
 	{
-		sk++;
 		int argc = 0;
 		char **argv = NULL;
-		printf("sk@Mine %d #:", sk);
+		printf("sk@Mine:%s#:", current_dir);
 		memset(buf, 0, 256);
 		// 命令读取
 		read_line(fd, buf);
@@ -99,6 +95,7 @@ int usr_init()
 			run_command(index, argc, argv); // 命令执行
 	}
 
+	kfree(current_dir);
 	close(fd);
 
 	while (1)
@@ -269,9 +266,11 @@ int cd_command(int argc, char **argv)
 			if(current_dir[i] == '/')
 				break;
 		current_dir[i] = '\0';
-		printf("pwd switch to %s\n", current_dir);
-		return 1;
+		// printf("pwd switch to %s\n", current_dir);
+		// return 1;
 	}
+
+	// 这里对path没有进行任何格外处理。。。。安全检查等等
 
 	i = len + strlen(argv[1]);
 	path = kmalloc(i + 2, 0);
@@ -280,14 +279,18 @@ int cd_command(int argc, char **argv)
 	if(len > 1)
 		path[len] = '/';
 	strcat(path, argv[1]);
-	printf("cd_command:%s\n", path);
+	// printf("cd_command:%s\n", path);
 
 	i = chdir(path);
-	if(!i)
+	if(!i) {
+		kfree(current_dir);
 		current_dir = path;
-	else
+	} else {
+		kfree(path);
 		printf("Can't Goto Dir %s\n", argv[1]);
-	printf("pwd switch to %s\n", current_dir);
+	}
+	// printf("pwd switch to %s\n", current_dir);
+	return 1;
 }
 
 #include "stat.h"
@@ -295,8 +298,27 @@ int ls_command(int argc, char **argv)
 {
 	struct DIR* dir = NULL;
 	struct dirent* buf = NULL;
+	char* path = NULL;
 	stat_t  statbuf;
-	dir=opendir(current_dir);
+	bool isDetail = false;
+	for(size_t i = 0; i < argc; i++) {
+		char* str = argv[i];
+
+		if(str[0] != '-')		// 记录字符串
+			path = str;
+
+		if(strcmp(str, "-l") == 0)  // 检测 -l 标志
+			isDetail = true;
+	}
+	assert(path != NULL);
+
+	if(path[0] == '/') 
+		dir = opendir(path[0]);
+	else {
+		getcwd(current_dir, 256);
+		dir = opendir(current_dir);
+	}
+
 	// printf("ls_command opendir:%d\n", dir->fd);
 
 	buf = (struct dirent*)kmalloc(256, 0);
@@ -306,6 +328,8 @@ int ls_command(int argc, char **argv)
 		buf = readdir(dir);// 每次读一条目录项
 		if(buf == NULL)
 			break;
+		if(buf->d_name[0] == '.')
+			continue;
 		// fstat(dir->fd, &statbuf);
 		// 打印信息
 		printf("%s\t", buf->d_name);
@@ -315,7 +339,8 @@ int ls_command(int argc, char **argv)
 }
 
 int pwd_command(int argc, char **argv)
-{
+{	
+	getcwd(current_dir, strlen(current_dir));
 	printf(current_dir);
 	printf("\n");
 }

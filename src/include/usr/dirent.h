@@ -14,6 +14,7 @@ struct DIR
 // direntory，抽象出来的目录文件属性
 struct dirent
 {
+    long nr;
     long d_offset;
     long d_namelen;
     char d_name[];

@@ -346,7 +346,7 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
     }
 
 next_cluster:
-    sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->bytes_per_sector;
+    sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster;
     if(!(IDE_device_operation.transfer(ATA_READ_CMD,sector, fsbi->bytes_per_cluster, buf)))
     {
         color_printk(RED, BLACK, "FS::FAT32_readdir read disk ERROR!!!\n");
@@ -607,6 +607,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
     dentry->dir_inode = p;
     return fld;
 }
+
 /**
  * @brief
  *
@@ -1093,6 +1094,7 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     sbp->root->name = (char *)kmalloc(2, 0);
     sbp->root->name[0] = '/';
     sbp->root->name_length = 1;
+    sbp->root->d_sb = sbp;
 
     // 根目录的 index node
     sbp->root->dir_inode = (struct index_node *)kmalloc(sizeof(struct index_node), 0);
@@ -1115,6 +1117,9 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     finode->create_time = 0;
     finode->write_date = 0;
     finode->write_time = 0;
+
+    sbp->s_flags = false; // 标记挂载
+
     return sbp;
 }
 
