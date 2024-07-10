@@ -9,11 +9,13 @@
 #include "reboot.h"
 #include "string.h"
 #include "signal.h"
+#include "command.h"
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
 void run_command(int index, int argc, char **argv);
 int parse_command(char *buf, int *argc, char ***argv);
+void print_prompt(void);
 
 extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
 
@@ -23,42 +25,46 @@ struct buildincmd
 	int (*cmd_funcPtr)(int, char **);
 };
 char *current_dir = NULL;
-int sk = 0;
 void sig_handler(int sig);
+
 
 int main()
 {
-	// signal(4 , sig_handler);
+	signal(4 , sig_handler);
 
-	// long pid = getpid();
-	// kill(pid, 4);
-	// printf("Pid: %d\n", pid);
+	long pid = getpid();
+	kill(pid, 4);
+	printf("Pid: %d\n", pid);
 	
-	// int fd = 0;
-	// unsigned char buf[256] = {0};
-	// char path[] = "/KEYBOARD.DEV";
-	// int index = -1;
-	// current_dir = "/";
-	// fd = open(path, 0);
+	int fd = 0;
+	unsigned char buf[256] = {0};
+	char path[] = "/KEYBOARD.DEV";
+	int index = -1;
+	current_dir = (char*)malloc(2, 0);
+	current_dir[0] = '/';
 
-	// while (1)
-	// {
-	// 	sk++;
-	// 	int argc = 0;
-	// 	char **argv = NULL;
-	// 	printf("sk@Mine %d #:", sk);
-	// 	memset(buf, 0, 256);
-	// 	// 命令读取
-	// 	read_line(fd, buf);
-	// 	// 命令解析
-	// 	index = parse_command(buf, &argc, &argv);
-	// 	if (index < 0)
-	// 		printf("Input Error, No Command Found!\n");
-	// 	else
-	// 		run_command(index, argc, argv); // 命令执行
-	// }
+	fd = open(path, 0);
 
-	// close(fd);
+	while (1)
+	{
+		int argc = 0;
+		char **argv = NULL;
+		
+		print_prompt();
+		
+		memset(buf, 0, 256);
+		// 命令读取
+		read_line(fd, buf);
+		// 命令解析
+		index = parse_command(buf, &argc, &argv);
+		if (index < 0)
+			printf("No Command Found!\n");
+		else
+			run_command(index, argc, argv); // 命令执行
+	}
+
+	kfree(current_dir);
+	close(fd);
 
 	while (1)
 	{
@@ -72,8 +78,13 @@ void sig_handler(int sig) {
 	printf("Catch signal is %d\n", sig);
 
 }
-
-
+void print_prompt(void) {
+	
+	color_printf(GREEN,"sk@mine");
+	printf(":");
+	color_printf(BLUE, "%s", current_dir);
+	printf("$ ");
+}
 /**
  * @brief 从键盘文件中读取键盘扫描码
  *
@@ -218,67 +229,6 @@ int analysis_keycode(int fd)
 			return key;
 	}
 	return 0;
-}
-
-int cd_command(int argc, char **argv) 
-{
-	char* path = NULL;
-	int len = 0;
-	int i = 0;
-	len = strlen(current_dir);
-
-	if(!strcmp(".", argv[1])) return 1;
-
-	if(!strcmp("..", argv[1]))
-	{
-		if(!strcmp("/", current_dir))
-			return 1;
-		for(i = len - 1; i > 1; i--)
-			if(current_dir[i] == '/')
-				break;
-		current_dir[i] = '\0';
-		printf("pwd switch to %s\n", current_dir);
-		return 1;
-	}
-
-	i = len + strlen(argv[1]);
-	path = malloc(i + 2, 0);
-	memset(path, 0, i + 2);
-	strcpy(path, current_dir);
-	if(len > 1)
-		path[len] = '/';
-	strcat(path, argv[1]);
-	printf("cd_command:%s\n", path);
-
-	i = chdir(path);
-	if(!i)
-		current_dir = path;
-	else
-		printf("Can't Goto Dir %s\n", argv[1]);
-	printf("pwd switch to %s\n", current_dir);
-}
-
-const char file_type[] = {'-', 's', 'd'};
-int ls_command(int argc, char **argv) 
-{
-	struct DIR* dir = NULL;
-	struct dirent* buf = NULL;
-
-	dir=opendir(current_dir);
-	// printf("ls_command opendir:%d\n", dir->fd);
-
-	buf = (struct dirent*)malloc(256, 0);
-	// 直到该目录为空
-	while(1)
-	{
-		buf = readdir(dir);// 每次读一条目录项
-		if(buf == NULL)
-			break;
-		
-		// 打印信息
-		printf("%c %d %s\t \n", file_type[buf->d_type], buf->d_namelen, buf->d_name);
-	}
-	closedir(dir);
 }
 
 int pwd_command(int argc, char **argv)

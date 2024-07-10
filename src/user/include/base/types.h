@@ -9,6 +9,20 @@
 #define true 1
 typedef char bool;
 
+// 弱符号
+#define weak __attribute__((__weak__))
+
+// 不会返回的函数
+#define noreturn __attribute__((__noreturn__))
+
+// 用于定义特殊的结构体
+#define _packed __attribute__((packed))
+
+// 用于省略函数的栈�?
+#define _ofp __attribute__((optimize("omit-frame-pointer")))
+
+#define _inline __attribute__((always_inline)) inline
+
 typedef unsigned long size_t;
 
 typedef char int8;

@@ -29,5 +29,9 @@
 #define __NR_getpid 18
 #define __NR_sleep 19
 
+#define __NR_mkdir 20
+
+#define __NR_getcwd 22
+#define __NR_stat 23
 
 #endif

@@ -17,7 +17,6 @@
 
 #define __PRINTF_H__
 
-#include <stdarg.h>
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */

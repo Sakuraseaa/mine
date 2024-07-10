@@ -46,7 +46,8 @@
         "device.h": "c",
         "types.h": "c",
         "buffer.h": "c",
-        "bitmap.h": "c"
+        "bitmap.h": "c",
+        "stat.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

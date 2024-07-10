@@ -91,9 +91,9 @@ void list_init(struct List *list)
  */
 bool list_search(list_t *list, list_t *node) {
     
-    list_t* END = list;
-    for(;list->next != END; list = list->next) {
-        if(list == node)
+    list_t* temp = list->next;
+    for(;temp != list; temp = temp->next) {
+        if(temp == node)
             return true;
     }
     return false;

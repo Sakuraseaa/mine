@@ -109,7 +109,7 @@ struct file *open_exec_file(char *path)
 /**
  * @brief pmle_addr用于获得虚拟地址vaddr对应的4级页表项指针，pte中有vaddr保存的物理页地址
  */
-unsigned long* pml4e_ptr(unsigned long vaddr)
+static unsigned long* pml4e_ptr(unsigned long vaddr)
 {
     unsigned long *pmle =  Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
 					  ((vaddr >> PAGE_GDT_SHIFT) & 0x1ff));
@@ -119,7 +119,7 @@ unsigned long* pml4e_ptr(unsigned long vaddr)
 /**
  * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录指针表(3级页表)项指针
  */
-unsigned long* pdpe_ptr(unsigned long vaddr)
+static unsigned long* pdpe_ptr(unsigned long vaddr)
 {
 	unsigned long *pdpe = Phy_To_Virt((unsigned long *)(*(pml4e_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
     return pdpe;
@@ -128,7 +128,7 @@ unsigned long* pdpe_ptr(unsigned long vaddr)
 /**
  * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
  */
-unsigned long* pde_ptr(unsigned long vaddr) {
+static unsigned long* pde_ptr(unsigned long vaddr) {
 	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pdpe_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_2M_SHIFT) & 0x1ff));
 	return pde;
 }

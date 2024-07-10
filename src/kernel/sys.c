@@ -67,10 +67,10 @@ long sys_getpid(void)
     return current->pid;
 }
 
-unsigned long sys_putstring(char *string)
+unsigned long sys_putstring(unsigned int FRcolor, char *string)
 {
-    color_printk(WHITE, BLACK, string);
-    // color_printk(ORANGE, WHITE, "%s", string);
+
+    color_printk(FRcolor, BLACK, string);
 
     return 0;
 }
@@ -480,7 +480,6 @@ unsigned long sys_chdir(char* filename)
     long pathlen = 0;
     struct dir_entry* dentry = NULL;
 
-    // color_printk(GREEN, BLACK, "sys_chdir\n");
     path = (char*) kmalloc(PAGE_4K_SIZE, 0);
     if(path == NULL)
         return -ENOMEM;

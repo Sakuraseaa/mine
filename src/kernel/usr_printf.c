@@ -146,6 +146,8 @@ unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 /*0x7f*/	0,		0,
 };
 
+
+
 int printf(const char *fmt, ...)
 {
 	char buf[1000];
@@ -155,7 +157,21 @@ int printf(const char *fmt, ...)
 	va_start(args, fmt);
 	count = vsprintf(buf, fmt, args);
 	va_end(args);
-	putstring(buf);
+	putstring(WHITE, buf);
+
+	return count;
+}
+
+int color_printf(unsigned int FRcolor, const char* fmt, ...) {
+	
+	char buf[1000];
+	int count = 0;
+	va_list args;
+
+	va_start(args, fmt);
+	count = vsprintf(buf, fmt, args);
+	va_end(args);
+	putstring(FRcolor, buf);
 
 	return count;
 }

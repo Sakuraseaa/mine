@@ -1,18 +1,3 @@
-/***************************************************
- *		版权声明
- *
- *	本操作系统名为：MINE
- *	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
- *	只允许个人学习以及公开交流使用
- *
- *	代码最终所有权及解释权归田宇所有；
- *
- *	本模块作者：	田宇
- *	EMail:		345538255@qq.com
- *
- *
- ***************************************************/
-
 #include <stdarg.h>
 #include "printf.h"
 #include "string.h"
@@ -318,7 +303,21 @@ int printf(const char *fmt, ...)
 	va_start(args, fmt);
 	count = vsprintf(buf, fmt, args);
 	va_end(args);
-	putstring(buf);
+	putstring(WHITE,buf);
+
+	return count;
+}
+
+int color_printf(unsigned int FRcolor, const char* fmt, ...) {
+	
+	char buf[1000];
+	int count = 0;
+	va_list args;
+
+	va_start(args, fmt);
+	count = vsprintf(buf, fmt, args);
+	va_end(args);
+	putstring(FRcolor, buf);
 
 	return count;
 }

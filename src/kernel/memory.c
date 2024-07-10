@@ -1107,21 +1107,21 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
     for (i = addr; i < addr + len; i += PAGE_2M_SIZE)
     {
         tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((i >> PAGE_GDT_SHIFT) & 0x1ff));
-        if (!(*tmp == 0))
+        if (*tmp == 0) // 这样比较可读性不好
         {
             virtual = kmalloc(PAGE_4K_SIZE, 0);
             memset(virtual, 0, PAGE_4K_SIZE);
             set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
         }
         tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_1G_SHIFT) & 0x1ff));
-        if (!(*tmp == 0))
+        if (*tmp == 0)
         {
             virtual = kmalloc(PAGE_4K_SIZE, 0);
             memset(virtual, 0, PAGE_4K_SIZE);
             set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
         }
         tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
-        if (!(*tmp & 1))
+        if (*tmp == 0)
         {
             p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
             if (p == NULL)

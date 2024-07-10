@@ -25,7 +25,7 @@ int mkdir(const char* path);
 int fork(void);
 int vfork(void);
 unsigned long reboot(unsigned long cmd,void * arg);
-int putstring(char *string);
+int putstring(unsigned int FRcolor,char *string);
 int printf(const char *fmt, ...);
 int execve(const char* path, char* const argv[], char* const envp[]);
 long getpid();

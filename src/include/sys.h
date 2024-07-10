@@ -2,7 +2,7 @@
 #define _SYS_H__
 
 unsigned long no_system_call(void);
-unsigned long sys_putstring(char *string);
+unsigned long sys_putstring(unsigned int FRcolor, char *string);
 unsigned long sys_open(char *filename, int flags);
 unsigned long sys_close(int fd);
 unsigned long sys_read(int fd, void *buf, long count);

@@ -313,7 +313,7 @@ int printf(const char *fmt, ...)
 	va_start(args, fmt);
 	count = vsprintf(buf,fmt, args);
 	va_end(args);
-	putstring(buf);
+	putstring(WHITE, buf);
 
 	return count;
 }
