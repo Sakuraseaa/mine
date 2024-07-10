@@ -1,6 +1,8 @@
 #ifndef _COMMOND_H__
 #define _COMMOND_H__
 
+void make_clear_abs_path(char *path, char *final_path);
+
 int ls_command(int argc, char **argv);
 int cd_command(int argc, char **argv);
 

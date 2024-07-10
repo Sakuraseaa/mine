@@ -62,5 +62,4 @@ typedef struct stat_T
     time_t mtime; // 最后修改时间
     time_t ctime; // 最后节点修改时间
 } stat_t;
-unsigned long stat(char* filename, stat_t* statbuf);
 #endif

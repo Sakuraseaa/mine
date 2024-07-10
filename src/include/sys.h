@@ -1,6 +1,6 @@
 #ifndef _SYS_H__
 #define _SYS_H__
-
+#include "stat.h"
 unsigned long no_system_call(void);
 unsigned long sys_putstring(unsigned int FRcolor, char *string);
 unsigned long sys_open(char *filename, int flags);
@@ -12,6 +12,14 @@ unsigned long sys_fork();
 unsigned long sys_vfork();
 unsigned long sys_brk(unsigned long brk);
 unsigned long sys_reboot(unsigned long cmd, void *arg);
+unsigned long sys_exit(int exit_code);
+unsigned long sys_stat(char* filename, stat_t* statbuf);
+char *sys_getcwd(char *buf, u64 size);
+unsigned long sys_chdir(char* filename);
+unsigned long sys_execve();
+unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage);
+u64 sys_mkdir(char* filename);
+
 
 #define SYSTEM_REBOOT (1UL << 0)
 #define SYSTEM_POWEROFF (1UL << 1)

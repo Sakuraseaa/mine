@@ -9,6 +9,7 @@
 #include "super.h"
 #include "stdio.h"
 #include "errno.h"
+#include "assert.h"
 struct file_system_type filesystem = {"filesystem", 0};
 #define MAX_FILE_NAME_LEN PAGE_4K_SIZE
 
@@ -203,7 +204,7 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
                 goto continue_for;
             }
 
-            color_printk(RED, WHITE, "can not find file or dir:%s\n", path->name);
+            DEBUGK("can not find file or dir:%s\n", path->name);
             kfree(path->name);
             kfree(path);
 
@@ -238,7 +239,7 @@ last_slash:     // 最后的斜杠
     {
         if (path->dir_inode)
         {
-            color_printk(BLACK, RED, "File already exit!!!");
+            DEBUGK("File already exit!!!");
             return NULL;
         }
         *create_file = path;
@@ -334,6 +335,8 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     // 把 minix 系统挂载在 /mnt
     // 这样的挂载方式 我无法判断谁在那里挂载了哎
     dir_entry_t* catalogue  = path_walk("/mnt" , 0, NULL);
+    assert(catalogue != NULL);
+    
     catalogue->dir_inode = sb_vec[1]->root->dir_inode;
     catalogue->d_sb = sb_vec[1];
     catalogue->d_sb->s_flags = true;

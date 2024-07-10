@@ -114,8 +114,10 @@ void make_clear_abs_path(char *path, char *final_path)
                 strcat(abs_path, "/");
         }
     }
+    
     strcat(abs_path, path);
     wash_path(abs_path, final_path);
+
 }
 
 int cd_command(int argc, char **argv) 
@@ -152,12 +154,13 @@ int cd_command(int argc, char **argv)
 
 
 	i = chdir(path);
+
 	if(!i) {
 		free(current_dir);
 		current_dir = path;
 	} else {
 		free(path);
-		printf("Can't  cd %s\n", argv[1]);
+		printf("cd: %s:No such file or directory", argv[1]);
 	}
 	return 1;
 }

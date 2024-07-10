@@ -328,7 +328,6 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
     
     inode_t* inode = filp->dentry->dir_inode;
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
-    minix_sb_info_t* m_sb = (minix_sb_info_t*)inode->sb->private_sb_info;
 
     int64 index = *position / BLOCK_SIZE;
     int64 offset = *position % BLOCK_SIZE;
@@ -482,7 +481,6 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
  */
 long minix_create(struct index_node *inode, struct dir_entry *dentry, int32 mode) {
     super_t* sb = inode->sb;
-    minix_sb_info_t* minix_sb = inode->sb->private_sb_info;
     u64 nr = 0;
 
     if(dentry->name_length >= MINIX1_NAME_LEN)
@@ -530,7 +528,7 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
         i++;
     }
 
-    return dest_dentry->dir_inode;
+    return dest_dentry;
 }
 
 /**
@@ -544,7 +542,6 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
 long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { 
 
     super_t* sb = inode->sb;
-    minix_sb_info_t* minix_sb = inode->sb->private_sb_info;
     u64 nr = 0;
     char name[4] = {0};
 

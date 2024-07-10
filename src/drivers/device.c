@@ -29,7 +29,7 @@ int device_ioctl(dev_t dev, int cmd, void *args, int flags)
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART)
     {
         block_dev_opt_t* bdo = (block_dev_opt_t*)device->device_ops;
-        return  bdo->ioctl(GET_IDENTIFY_DISK_CMD, args);
+        return  bdo->ioctl(GET_IDENTIFY_DISK_CMD, 0);
     }
     LOGK("ioctl of device %d not implemented!!!\n", dev);
     return -ENOSYS;

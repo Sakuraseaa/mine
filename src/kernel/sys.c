@@ -173,7 +173,6 @@ unsigned long sys_open(char *filename, int flags)
         path_flags = 1;
 
     dentry = path_walk(path, path_flags, &Child_dentry); // b.2得到目录项
-
     if (dentry == NULL)
         return -ENOENT;
 
@@ -279,7 +278,6 @@ u64 sys_mkdir(char* filename) {
 
 
     dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
-
     if (dentry == NULL)
         return -ENOENT;
     
@@ -486,17 +484,20 @@ unsigned long sys_chdir(char* filename)
     memset(path, 0, PAGE_4K_SIZE);
 
     pathlen = strnlen_user(filename, PAGE_4K_SIZE);
-    if(pathlen <= 0)
-    {
+    if(pathlen <= 0) {
         kfree(path);
         return -EFAULT;
-    } else if(pathlen >= PAGE_4K_SIZE)
-    {
+    } else if(pathlen >= PAGE_4K_SIZE) {
         kfree(path);
         return -ENAMETOOLONG;
     }
+
     strncpy_from_user(filename, path, pathlen);
+    
     dentry = path_walk(path, 0, NULL);
+    if (dentry == NULL)
+        return -ENOENT;
+    
     kfree(path);
     
     // 改变当前进程工作目录

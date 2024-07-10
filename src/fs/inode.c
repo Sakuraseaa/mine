@@ -38,7 +38,6 @@ inode_t *namei(char* filename) {
 
     // 由于filename可能是绝对路径的原因 所以我要拼凑出完整路径
     // 使用 filename 和 getcwd()的方式拼接，但布置到完成路径长度申请多长缓冲合适。 无情的4K
-    u64 pathlen = 0;
     char* path = NULL;
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)kmalloc(PAGE_4K_SIZE, 0);
