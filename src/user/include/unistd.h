@@ -2,6 +2,7 @@
 
 #define __UNISTD_H__
 
+int open(const char *path, int oflag);
 int close(int fildes);
 long read(int fildes, void *buf, long nbyte);
 long write(int fildes, const void *buf, long nbyte);

@@ -4,17 +4,15 @@
 #include "stdlib.h"
 #include "fcntl.h"
 #include "keyboard.h"
-#include "dirent.h"
 #include "wait.h"
-#include "reboot.h"
 #include "string.h"
 #include "signal.h"
 #include "command.h"
 
 int analysis_keycode(int fd);
-int read_line(int fd, char *buf);
+int read_line(int fd, unsigned char *buf);
 void run_command(int index, int argc, char **argv);
-int parse_command(char *buf, int *argc, char ***argv);
+int parse_command(unsigned char *buf, int *argc, char ***argv);
 void print_prompt(void);
 
 extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
@@ -25,7 +23,7 @@ struct buildincmd
 	int (*cmd_funcPtr)(int, char **);
 };
 char *current_dir = NULL;
-void sig_handler(int sig);
+void sig_handler(long sig);
 
 
 int main()
@@ -63,7 +61,7 @@ int main()
 			run_command(index, argc, argv); // 命令执行
 	}
 
-	kfree(current_dir);
+	free(current_dir);
 	close(fd);
 
 	while (1)
@@ -73,7 +71,7 @@ int main()
 	// issue:: init进程有能力执行exit函数吗？
 	exit(0);
 }
-void sig_handler(int sig) {
+void sig_handler(long sig) {
 	
 	printf("Catch signal is %d\n", sig);
 
@@ -231,78 +229,6 @@ int analysis_keycode(int fd)
 	return 0;
 }
 
-int pwd_command(int argc, char **argv)
-{
-	printf(current_dir);
-	printf("\n");
-}
-int cat_command(int argc, char **argv) 
-{
-	int len = 0;
-	char* filename = NULL;
-	int fd = 0;
-	char* buf = NULL;
-	int i = 0;
-
-	len = strlen(current_dir);
-	i = len + strlen(argv[1]);
-	filename = malloc(i + 2, 0);
-	memset(filename, 0, i + 2);
-	strcpy(filename, current_dir);
-	if(len > 1)
-		filename[len] = '/';
-	strcat(filename, argv[1]);
-	// printf("cat_command filename:%s\n", filename);
-
-	fd = open(filename, 0);
-	i = lseek(fd, 0, SEEK_END);
-	lseek(fd, 0 , SEEK_SET);
-	buf = malloc(i + 1, 0);
-	memset(buf, 0 , i + 1);
-	len = read(fd, buf, i);
-	printf("length:%d\t%s\n",len,buf);
-
-	close(fd);
-}
-int touch_command(int argc, char **argv) {}
-int rm_command(int argc, char **argv) {}
-int mkdir_command(int argc, char **argv) {}
-int rmdir_command(int argc, char **argv) {}
-int exec_command(int argc, char **argv)
-{
-	int errno = 0;
-	int retval = 0;
-	int len = 0;
-	char* filename = 0;
-	int i = 0;
-
-	errno = fork();
-	if(errno ==  0 ) {
-		printf("child process\n");
-		len = strlen(current_dir);
-		i = len + strlen(argv[1]);
-		filename = malloc(i + 2, 0);
-		memset(filename, 0, i + 2);
-		strcpy(filename, current_dir);
-		if(len > 1)
-			filename[len] = '/';
-		strcat(filename, argv[1]);
-
-		printf("exec_command filename:%s\n", filename);
-		for(i = 0; i < argc; i++)
-			printf("argv[%d]:%s\n", i, argv[i]);
-		
-		execve(filename, argv, NULL);
-
-		exit(0);
-	} else {
-		printf("parent process childpid:%#d\n", errno);
-		waitpid(errno, &retval, 0);
-		printf("parent process waitpid:%#018lx\n", retval);
-	}
-}
-int reboot_command(int argc, char **argv) { reboot(SYSTEM_REBOOT, NULL); }
-
 struct buildincmd shell_internal_cmd[] =
 	{
 		{"cd", cd_command},
@@ -326,7 +252,7 @@ int find_cmd(char *cmd_name)
 	return -1;
 }
 
-int read_line(int fd, char *buf)
+int read_line(int fd, unsigned char *buf)
 {
 	char key = 0;
 	int count = 0;
@@ -358,7 +284,7 @@ int read_line(int fd, char *buf)
 	}
 }
 
-int parse_command(char *buf, int *argc, char ***argv)
+int parse_command(unsigned char *buf, int *argc, char ***argv)
 {
 	int i = 0, j = 0;
 

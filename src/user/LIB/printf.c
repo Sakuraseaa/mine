@@ -50,11 +50,12 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 		sign = (type & PLUS) ? '+' : ((type & SPACE) ? ' ' : 0);
 	if (sign)
 		size--;
-	if (type & SPECIAL)
+	if (type & SPECIAL) {
 		if (base == 16)
 			size -= 2;
 		else if (base == 8)
 			size--;
+	}
 	i = 0;
 	if (num == 0)
 		tmp[i++] = '0';
@@ -292,6 +293,8 @@ int sprintf(char *buf, const char *fmt, ...)
 
 int puts(const char *string)
 {
+	putstring(WHITE, string);
+	return strlen(string);
 }
 
 int printf(const char *fmt, ...)

@@ -24,9 +24,10 @@ static unsigned long brk_end_address = 0;
 
 #define	SIZE_ALIGN	(8 * sizeof(unsigned long))
 
+
+extern unsigned long brk(unsigned long brk);
 void * malloc(unsigned long size, int invalid)
 {
-	char buf[1000];
 	unsigned long address = 0;
 
 	if(size <= 0)

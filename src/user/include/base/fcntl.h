@@ -34,6 +34,4 @@
 #define	O_DIRECTORY	00040000	/* must be a directory */
 #define	O_NOFOLLOW	00100000	/* Do not follow symbolic links */
 
-int open(const char *path, int oflag);
-
 #endif

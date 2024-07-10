@@ -14,7 +14,7 @@ sighadler_t signal(long signum, sighadler_t handler) {
     return SIGNAL(signum, handler, sig_restore);
 }
 
-
+extern int KILL(long pid, long signum);
 int kill(long pid, long signum) {
     if(signum < 1 && signum > NSIG) {
         printf("ERROR!!!! invaild signal_value");

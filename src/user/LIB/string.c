@@ -1,3 +1,4 @@
+#include "types.h"
 #include "string.h"
 /*
 		From => To memory copy Num bytes
@@ -46,6 +47,37 @@ int memcmp(void *FirstPart, void *SecondPart, long Count)
 						 :);
 	return __res;
 }
+/* 从左到右查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
+char *strchr(const char *str, const char ch)
+{
+    while (*str != 0)
+    {
+        if (*str == ch)
+        {
+         return (char *)str; // 需要强制转化成和返回值类型一样,否则编译器会报const属性丢失,下同.
+        }
+        str++;
+    }
+    return NULL;
+}
+
+/* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
+char *strrchr(const char *str, const char ch)
+{
+
+    const char *last_char = NULL;
+    /* 从头到尾遍历一次,若存在ch字符,last_char总是该字符最后一次出现在串中的地址(不是下标,是地址)*/
+    while (*str != 0)
+    {
+        if (*str == ch)
+        {
+            last_char = str;
+        }
+        str++;
+    }
+    return (char *)last_char;
+}
+
 
 /*
 		set memory at Address with C ,number is Count

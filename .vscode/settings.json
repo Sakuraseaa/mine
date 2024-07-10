@@ -47,7 +47,8 @@
         "types.h": "c",
         "buffer.h": "c",
         "bitmap.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "command.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

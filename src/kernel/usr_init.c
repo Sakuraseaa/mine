@@ -524,7 +524,7 @@ int ls_command(int argc, char **argv)
 	assert(path != NULL);
 
 	if(path[0] == '/') 
-		dir = opendir(path[0]);
+		dir = opendir(path);
 	else {
 		getcwd(current_dir, 256);
 		dir = opendir(current_dir);
