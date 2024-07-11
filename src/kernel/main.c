@@ -43,7 +43,7 @@ void Start_Kernel(void)
 	global_pid = 1;
 
 	Pos.XResolution = 1440;
-	Pos.YResolution = 700;
+	Pos.YResolution = 850;
 	Pos.XPosition = 0;
 	Pos.YPosition = 0;
 
@@ -117,6 +117,8 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "Timer init \n");
 	timer_init();
 
+	VFS_init();
+
 	// color_printk(RED, BLACK, "task init \n");
 	DEBUGK("task init \n");
 	task_init();
@@ -127,7 +129,7 @@ void Start_Kernel(void)
 	// 此处的while用于线程同步
 	while (!shell_up)
 		;
-	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 
 	while (1)
 	{

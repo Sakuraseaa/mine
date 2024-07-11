@@ -613,7 +613,13 @@ int cat_command(int argc, char **argv)
 
 	close(fd);
 }
-int touch_command(int argc, char **argv) { return 0;}
+
+extern void sys_dirTree(void);
+int touch_command(int argc, char **argv) { 
+	tree(); 
+	return 0;
+}
+
 int rm_command(int argc, char **argv) { return 0; }
 int mkdir_command(int argc, char **argv) { return 0;}
 int rmdir_command(int argc, char **argv) { return 0;}

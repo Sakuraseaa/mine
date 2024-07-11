@@ -272,8 +272,6 @@ long minix_close(struct index_node *inode, struct file *filp) { return 1; }
 long minix_read(struct file *filp, char *buf, u64 count, int64 *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
-    minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
-    minix_sb_info_t* m_sb = (minix_sb_info_t*)inode->sb->private_sb_info;
 
     int64 index = *position / BLOCK_SIZE;
     int64 offset = *position % BLOCK_SIZE;
@@ -498,7 +496,6 @@ long minix_create(struct index_node *inode, struct dir_entry *dentry, int32 mode
 
 struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry) {
     
-    minix_inode_t* m_inode = (minix_inode_t*)parent_inode->private_index_info;
     u64 dentries = parent_inode->file_size / sizeof(minix_dentry_t);
     idx_t i = 0, block = 0;
     buffer_t *buf = NULL;
@@ -559,7 +556,7 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
     // C. 在新文件创建 "." 和 ".." 目录项
     inode_t* i_child = dentry->dir_inode;
 
-    dir_entry_t* i_entry = (dir_entry_t*)kmalloc(sizeof(dir_entry_t), 0);
+    dir_entry_t* i_entry = (dir_entry_t*)slab_malloc(Dir_Entry_Pool, 0);
     
     i_entry->dir_inode = i_child;
     i_entry->name_length = 1;
@@ -596,6 +593,14 @@ struct index_node_operations minix_inode_ops =
 
 // 同步该inode 到硬盘
 inode_t *iput(dev_t dev, idx_t nr) {
+    
+    inode_t *inode = find_inode(dev, nr);
+    if (inode)
+    {
+        inode->count--;
+        inode->atime = NOW();
+        return inode;
+    }
 
     // super_t* super = get_super(dev);
     // minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
@@ -685,11 +690,8 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
                 minix_sb->zmap_blocks, minix_sb->magic);
     
     // directory entry 
-    sbp->root = (dir_entry_t*)kmalloc(sizeof(dir_entry_t), 0);
-    memset(sbp->root, 0, sizeof(dir_entry_t));
+    sbp->root = (dir_entry_t*)slab_malloc(Dir_Entry_Pool, 0);
 
-    list_init(&sbp->root->child_node);
-    list_init(&sbp->root->subdirs_list);
     sbp->root->parent = sbp->root;
     sbp->root->name_length = 1;
     sbp->root->name = (char*)kmalloc(2, 0);

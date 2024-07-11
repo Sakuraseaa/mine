@@ -28,41 +28,41 @@ void sig_handler(long sig);
 
 int main()
 {
-	signal(4 , sig_handler);
+	// signal(4 , sig_handler);
 
-	long pid = getpid();
-	kill(pid, 4);
-	printf("Pid: %d\n", pid);
+	// long pid = getpid();
+	// kill(pid, 4);
+	// printf("Pid: %d\n", pid);
 	
-	int fd = 0;
-	unsigned char buf[256] = {0};
-	char path[] = "/KEYBOARD.DEV";
-	int index = -1;
-	current_dir = (char*)malloc(2, 0);
-	current_dir[0] = '/';
+	// int fd = 0;
+	// unsigned char buf[256] = {0};
+	// char path[] = "/KEYBOARD.DEV";
+	// int index = -1;
+	// current_dir = (char*)malloc(2, 0);
+	// current_dir[0] = '/';
 
-	fd = open(path, 0);
+	// fd = open(path, 0);
 
-	while (1)
-	{
-		int argc = 0;
-		char **argv = NULL;
+	// while (1)
+	// {
+	// 	int argc = 0;
+	// 	char **argv = NULL;
 		
-		print_prompt();
+	// 	print_prompt();
 		
-		memset(buf, 0, 256);
-		// 命令读取
-		read_line(fd, buf);
-		// 命令解析
-		index = parse_command(buf, &argc, &argv);
-		if (index < 0)
-			printf("No Command Found!\n");
-		else
-			run_command(index, argc, argv); // 命令执行
-	}
+	// 	memset(buf, 0, 256);
+	// 	// 命令读取
+	// 	read_line(fd, buf);
+	// 	// 命令解析
+	// 	index = parse_command(buf, &argc, &argv);
+	// 	if (index < 0)
+	// 		printf("No Command Found!\n");
+	// 	else
+	// 		run_command(index, argc, argv); // 命令执行
+	// }
 
-	free(current_dir);
-	close(fd);
+	// free(current_dir);
+	// close(fd);
 
 	while (1)
 	{

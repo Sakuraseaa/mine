@@ -333,7 +333,6 @@ unsigned long sys_read(int fd, void *buf, long count)
     if (filp->f_ops && filp->f_ops->read)
         ret = filp->f_ops->read(filp, buf, count, &filp->position);
 
-    DEBUGK("read_fd:%d read_size:%d\n", fd, ret);
 
     return ret;
 }
@@ -355,7 +354,6 @@ unsigned long sys_write(int fd, void *buf, long count)
         ret = filp->f_ops->write(filp, buf, count, &filp->position);
 
 
-    DEBUGK("written_fd:%d written_size:%d\n", fd, ret);
 
     return ret; // 成功的话返回的是写入的字节数
 }

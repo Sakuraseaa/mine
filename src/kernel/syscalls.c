@@ -9,7 +9,7 @@ SYSCALL_COMMON(0, no_system_call)
 
 // 第二次SYSCALL_COMMON用于把第一次声明的处理函数加入到系统调用表里面
 #define SYSCALL_COMMON(nr, sym) [nr] = sym,
-#define MAX_SYSTEM_CALL_NR 128
+#define MAX_SYSTEM_CALL_NR 256
 typedef unsigned long (*system_call_t)(void);
 
 system_call_t system_call_table[MAX_SYSTEM_CALL_NR] = {

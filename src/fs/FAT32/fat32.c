@@ -1084,11 +1084,8 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
 
     // ================================== 创建根目录 =====================================
     // directory entry
-    sbp->root = (struct dir_entry *)kmalloc(sizeof(struct dir_entry), 0);
-    memset(sbp->root, 0, sizeof(struct dir_entry));
+    sbp->root = (struct dir_entry *)slab_malloc(Dir_Entry_Pool, 0);
 
-    list_init(&sbp->root->child_node);
-    list_init(&sbp->root->subdirs_list);
     sbp->root->parent = sbp->root; // 根目录的父目录是自己
     sbp->root->dir_ops = &FAT32_dentry_ops;
     sbp->root->name = (char *)kmalloc(2, 0);

@@ -17,6 +17,34 @@ struct super_block * sb_vec[4];
 // 当前文件系统的超级块
 struct super_block *current_sb = NULL;
 
+Slab_cache_t* Dir_Entry_Pool = NULL;
+static void* dir_entry_consturctor(void* Vaddr, u64 arg) { // 目录项构造函数。
+
+    dir_entry_t* dir = Vaddr;
+    memset(dir, 0, sizeof(dir_entry_t));
+
+    list_init(&dir->child_node);
+    list_init(&dir->subdirs_list);
+    
+    return (void*)dir;
+
+}
+static void* dir_entry_desturctor(void* Vaddr, u64 arg) { // 目录项析构函数。
+
+    dir_entry_t* dir = Vaddr;
+    if(dir->name_length)
+        kfree(dir->name);
+    
+    list_del(&dir->child_node);
+    list_del(&dir->subdirs_list);
+
+    return (void*)dir;
+
+}
+void VFS_init(void) {
+    Dir_Entry_Pool = slab_create(sizeof(dir_entry_t), dir_entry_consturctor, dir_entry_desturctor, 0);
+}
+
 // 文件系统的注册
 /**
  * @brief
@@ -144,6 +172,36 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32 pathL
     return NULL;
 }
 
+
+void dir_Tree(dir_entry_t* cur, int depth) {
+    color_printk(WHITE, BLACK, "| %s\n",cur->name);
+    dir_entry_t* child = NULL;
+
+    list_t* End = &cur->subdirs_list;
+    list_t* node = End->next;
+    for(; node != End; node = node->next) {
+        child = container_of(node, dir_entry_t, child_node);
+
+        for(int i = 0; i < depth; i++)
+            color_printk(WHITE, BLACK, "-");
+        color_printk(WHITE, BLACK, "->");
+
+        dir_Tree(child, depth + 1);
+    }
+}
+
+void sys_tree() {
+    // struct dir_entry *parent = current_sb->root; // 父目录项
+    // dir_Tree(parent, 0);
+
+    // 清屏命令
+    memset(Pos.FB_addr,0, Pos.FB_length);
+	Pos.XPosition = 0;
+	Pos.YPosition = 0;
+
+}
+
+
 /**
  * @brief 搜索文件name。
  *
@@ -184,8 +242,7 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
         if(path != NULL)
             goto next_floder;
         
-        path = (struct dir_entry *)kmalloc(sizeof(struct dir_entry), 0);
-        memset(path, 0, sizeof(struct dir_entry));
+        path = (struct dir_entry *)slab_malloc(Dir_Entry_Pool, 0);
 
         // 准备好要找的文件名
         path->name = kmalloc(tmpnamelen + 1, 0);
@@ -213,9 +270,7 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
     continue_for:
         // child_node 来记录我是谁的子文件, 加入到父目录的列表中
         // suddires_list 来记录我的子文件都有谁
-        list_init(&path->child_node);
-        list_init(&path->subdirs_list);
-        path->parent = parent; // 在当前路径中，记录父目录
+        path->parent = parent; 
         list_add_to_behind(&parent->subdirs_list, &path->child_node);
         path->dir_ops = parent->dir_ops;
         path->d_sb = parent->d_sb;
@@ -285,15 +340,6 @@ dev_t DEV[4];
 extern struct file_system_type FAT32_fs_type;
 extern struct file_system_type MINIX_fs_type;
 
-void change_fs(void) {
-    
-    if (current_sb == sb_vec[0])
-        current_sb = sb_vec[1];
-    else
-        current_sb = sb_vec[0];
-
-}
-
 void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
 {
     // --------VFS_init-----------
@@ -345,4 +391,8 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     // 设置init进程的当前文件系统路径 和 跟目录
     current->parent->i_pwd = current->i_pwd = sb_vec[0]->root;
     current->parent->i_root = current->i_root = sb_vec[0]->root;
+}
+
+void VFS_destory(void) {
+
 }

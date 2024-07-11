@@ -422,7 +422,7 @@ void frame_buffer_init()
 		set_pdt(tmp1, mk_pdpt(phy, PAGE_KERNEL_Page | PAGE_PWT | PAGE_PCD));
 	}
 
-	Pos.FB_addr = (int *)Phy_To_Virt(VBE_Phy_address);
+	Pos.FB_addr = (unsigned int *)Phy_To_Virt(VBE_Phy_address);
 
 	flush_tlb();
 }

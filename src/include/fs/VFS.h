@@ -9,9 +9,11 @@
 #include "fat32.h"
 #include "types.h"
 #include "buffer.h"
+#include "memory.h"
 
 extern list_t super_list;
 extern struct super_block *current_sb;
+extern Slab_cache_t* Dir_Entry_Pool;
 
 // 硬盘分区表项
 struct Disk_Partition_Table_Entry
@@ -138,6 +140,9 @@ typedef struct dir_entry
     int name_length; // 文件长度
 
     // 描述目录项之间的层级关系
+
+    // child_node 来记录我是谁的子文件, 加入到父目录的列表中
+    // suddires_list 来记录我的子文件都有谁
     struct List child_node;
     struct List subdirs_list; // subdirectory - 子目录
 
@@ -212,8 +217,7 @@ unsigned long unregister_filesystem(struct file_system_type *fs);
 struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file);
 long FS_lseek(struct file *filp, long offset, long origin);
 
-
-void change_fs(void);
-void DISK1_FAT32_FS_init();
-
+void sys_dirTree(void);
+void DISK1_FAT32_FS_init(void);
+void VFS_init(void);
 #endif

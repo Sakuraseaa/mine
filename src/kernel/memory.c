@@ -258,9 +258,10 @@ void *slab_malloc(struct Slab_cache *Slab_cache, unsigned long arg)
     struct Slab *tmp_slab = NULL;
     int j = 0;
 
+
+    // a.内存池中没有Slab可用了, 申请一个物理页，加入内存池
     if (Slab_cache->total_free == 0 || slab_p == NULL)
     {
-        // a.内存池中没有Slab可用了, 申请一个物理页，加入内存池
         tmp_slab = init_Slab(Slab_cache->size);
         if (tmp_slab == NULL)
         {
@@ -432,10 +433,7 @@ struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Va
     slab_cache->constructor = constructor;
     slab_cache->destructor = destructor;
 
-    // 为Slab申请内存
-    // slab_cache->cache_pool = init_Slab(slab_cache->size);
     slab_cache->cache_pool = NULL;
-    slab_cache->total_free = slab_cache->cache_pool->free_count;
 
     return slab_cache;
 }
