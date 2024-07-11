@@ -621,14 +621,22 @@ unsigned long sys_cleanScreen(void) {
 }
 
 void dir_Tree(dir_entry_t* cur, int depth) {
-    color_printk(WHITE, BLACK, "| %s\n",cur->name);
+    color_printk(WHITE, BLACK, "|");
+    
     dir_entry_t* child = NULL;
 
     list_t* End = &cur->subdirs_list;
     list_t* node = End->next;
+    if (cur->dir_inode->attribute == FS_ATTR_DIR)
+    {
+        color_printk(INDIGO, BLACK, " %s\n",cur->name);
+    } else 
+        color_printk(WHITE, BLACK, " %s\n",cur->name);
     for(; node != End; node = node->next) {
         child = container_of(node, dir_entry_t, child_node);
 
+        for(int i = 0; i < depth; i++)
+            color_printk(WHITE, BLACK, "  ");
         for(int i = 0; i < depth; i++)
             color_printk(WHITE, BLACK, "-");
         color_printk(WHITE, BLACK, "->");
