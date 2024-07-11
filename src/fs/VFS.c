@@ -173,35 +173,6 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32 pathL
 }
 
 
-void dir_Tree(dir_entry_t* cur, int depth) {
-    color_printk(WHITE, BLACK, "| %s\n",cur->name);
-    dir_entry_t* child = NULL;
-
-    list_t* End = &cur->subdirs_list;
-    list_t* node = End->next;
-    for(; node != End; node = node->next) {
-        child = container_of(node, dir_entry_t, child_node);
-
-        for(int i = 0; i < depth; i++)
-            color_printk(WHITE, BLACK, "-");
-        color_printk(WHITE, BLACK, "->");
-
-        dir_Tree(child, depth + 1);
-    }
-}
-
-void sys_tree() {
-    // struct dir_entry *parent = current_sb->root; // 父目录项
-    // dir_Tree(parent, 0);
-
-    // 清屏命令
-    memset(Pos.FB_addr,0, Pos.FB_length);
-	Pos.XPosition = 0;
-	Pos.YPosition = 0;
-
-}
-
-
 /**
  * @brief 搜索文件name。
  *

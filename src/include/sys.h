@@ -1,6 +1,8 @@
 #ifndef _SYS_H__
 #define _SYS_H__
 #include "stat.h"
+#include "types.h"
+
 unsigned long no_system_call(void);
 unsigned long sys_putstring(unsigned int FRcolor, char *string);
 unsigned long sys_open(char *filename, int flags);
@@ -19,6 +21,9 @@ unsigned long sys_chdir(char* filename);
 unsigned long sys_execve();
 unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage);
 u64 sys_mkdir(char* filename);
+
+unsigned long sys_tree(void);
+unsigned long sys_cleanScreen(void);
 
 
 #define SYSTEM_REBOOT (1UL << 0)

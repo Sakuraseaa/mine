@@ -26,3 +26,4 @@ SYSCALL_COMMON(__NR_getcwd, sys_getcwd)
 SYSCALL_COMMON(__NR_stat, sys_stat)
 
 SYSCALL_COMMON(__NR_tree, sys_tree)
+SYSCALL_COMMON(__NR_cleanScreen, sys_cleanScreen)

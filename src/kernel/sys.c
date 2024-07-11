@@ -611,5 +611,37 @@ unsigned long sys_stat(char* filename, stat_t* statbuf) {
     return 0;
 }
 
+unsigned long sys_cleanScreen(void) {
+    // 清屏命令
+    memset(Pos.FB_addr,0, Pos.FB_length);
+	Pos.XPosition = 0;
+	Pos.YPosition = 0;
 
-int sys_fstat(int fd, struct stat *statbuf);
+    return 0;
+}
+
+void dir_Tree(dir_entry_t* cur, int depth) {
+    color_printk(WHITE, BLACK, "| %s\n",cur->name);
+    dir_entry_t* child = NULL;
+
+    list_t* End = &cur->subdirs_list;
+    list_t* node = End->next;
+    for(; node != End; node = node->next) {
+        child = container_of(node, dir_entry_t, child_node);
+
+        for(int i = 0; i < depth; i++)
+            color_printk(WHITE, BLACK, "-");
+        color_printk(WHITE, BLACK, "->");
+
+        dir_Tree(child, depth + 1);
+    }
+}
+
+unsigned long sys_tree() {
+    struct dir_entry *parent = current_sb->root; // 父目录项
+    dir_Tree(parent, 0);
+    return 0;
+}
+
+
+unsigned long sys_fstat(int fd, struct stat *statbuf);

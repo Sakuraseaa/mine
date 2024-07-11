@@ -221,6 +221,9 @@ int analysis_keycode(int fd)
 			column = 1;
 
 		key = keyrow[column];
+		
+		if(ctrl_l && (key == 'l')) // ctrl_l + l 是清屏幕的命令
+			key = 'l' - 'a';
 
 		switch (x & 0x7F)
 		{
@@ -614,7 +617,6 @@ int cat_command(int argc, char **argv)
 	close(fd);
 }
 
-extern void sys_dirTree(void);
 int touch_command(int argc, char **argv) { 
 	tree(); 
 	return 0;
@@ -705,6 +707,10 @@ int read_line(int fd, char *buf)
 				count--;
 				printf("%c", key);
 			}
+			break;
+		case 'l' - 'a':
+			cleanScreen();
+			print_prompt();
 			break;
 		default:
 			buf[count++] = key;
