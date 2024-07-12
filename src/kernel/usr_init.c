@@ -11,6 +11,7 @@
 #include "signal.h"
 #include "assert.h"
 #include "printf.h"
+#include "errno.h"
 
 extern int kill(long pid, long signum);
 extern sighadler_t signal(long signum, sighadler_t handler);
@@ -582,6 +583,8 @@ int ls_command(int argc, char **argv)
 	closedir(dir);
 }
 
+extern int errno;
+
 int pwd_command(int argc, char **argv)
 {	
 	getcwd(current_dir, strlen(current_dir));
@@ -596,17 +599,24 @@ int cat_command(int argc, char **argv)
 	char* buf = NULL;
 	int i = 0;
 
+	// 拼凑绝对路径
 	len = strlen(current_dir);
 	i = len + strlen(argv[1]);
 	filename = kmalloc(i + 2, 0);
 	memset(filename, 0, i + 2);
-	strcpy(filename, current_dir);
-	if(len > 1)
-		filename[len] = '/';
-	strcat(filename, argv[1]);
-	// printf("cat_command filename:%s\n", filename);
+
+	if(argv[1][0] == '/') // 是绝对路径
+		strcpy(filename, argv[1]);
+	else 
+		make_clear_abs_path(argv[1], filename); // 是相对路径 把相对路径转换成绝对路径
 
 	fd = open(filename, 0);
+	
+	if(errno == -ENOENT) {
+	
+		color_printf(RED, "cat: %s:No such file or directory\n", argv[1]);
+		return -1;
+	}
 	i = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0 , SEEK_SET);
 	buf = kmalloc(i + 1, 0);
@@ -615,26 +625,33 @@ int cat_command(int argc, char **argv)
 	printf("length:%d\t%s\n",len,buf);
 
 	close(fd);
+    return 0;
 }
 
 int touch_command(int argc, char **argv) { 
-	tree(); 
 	return 0;
 }
+
+// ==========Update==========
+int tree_command(int argc, char **argv){
+	tree();
+	return 0;
+}
+// =======================
 
 int rm_command(int argc, char **argv) { return 0; }
 int mkdir_command(int argc, char **argv) { return 0;}
 int rmdir_command(int argc, char **argv) { return 0;}
 int exec_command(int argc, char **argv)
 {
-	int errno = 0;
+	int pid = 0;
 	long retval = 0;
 	int len = 0;
 	char* filename = 0;
 	int i = 0;
 
-	errno = fork();
-	if(errno ==  0 ) {
+	pid = fork();
+	if(pid ==  0 ) {
 		printf("child process\n");
 		len = strlen(current_dir);
 		i = len + strlen(argv[1]);
@@ -673,6 +690,7 @@ struct buildincmd shell_internal_cmd[] =
 		{"rmdir", rmdir_command},
 		{"exec", exec_command},
 		{"reboot", reboot_command},
+		{"tree", tree_command},
 };
 
 int find_cmd(char *cmd_name)
@@ -711,6 +729,7 @@ int read_line(int fd, char *buf)
 		case 'l' - 'a':
 			cleanScreen();
 			print_prompt();
+			printf(buf);
 			break;
 		default:
 			buf[count++] = key;

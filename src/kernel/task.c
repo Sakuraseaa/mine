@@ -431,7 +431,7 @@ out:
  */
 void exit_mm(struct task_struct *tsk)
 {
-	unsigned long code_start_addr = 0x800000;
+	unsigned long code_start_addr = tsk->mm->start_code;
 	unsigned long *tmp4, *tmp3, *tmp2;
 
 	if (tsk->flags & PF_VFORK)

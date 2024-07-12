@@ -64,7 +64,7 @@ struct mm_struct
 	unsigned long start_rodata, end_rodata; // rodata(read-only-data) segment space
 	unsigned long start_bss, end_bss;
 	unsigned long start_brk, end_brk; // 堆空间-动态内存分配区
-	unsigned long start_stack;		  // 应用层栈基地址
+	unsigned long start_stack, stack_length;		  // 应用层栈基地址
 };
 
 struct thread_struct

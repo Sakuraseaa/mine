@@ -217,6 +217,72 @@ static bool segment_load(struct file* filp, unsigned long offset, unsigned long 
 }
 
 unsigned long code_start_addr = 0;
+
+/**
+ * @brief analysis The Section Table
+ * 
+ * @param filp 
+ * @param elf_header 
+ * @return unsigned long 
+ */
+static unsigned long section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
+    
+	Elf64_Half	s_size = elf_header->e_shentsize;		/* Section header table entry size */  
+    Elf64_Half	s_num = elf_header->e_shnum;		    /* Section header table entry count */
+	Elf64_Off	s_off = elf_header->e_shoff; 			/* Section header table file offset */
+	
+    unsigned int sect_idx = 0;
+	Elf64_Shdr *section_header = (Elf64_Shdr*)kmalloc(s_num * s_size, 0);
+	Elf64_Shdr *shstr_entry = NULL;
+	char* s_name_table = NULL;
+
+	// read Section Header
+
+	memset(section_header, 0, s_num * s_size);
+	filp->f_ops->lseek(filp, s_off, SEEK_SET);
+	filp->f_ops->read(filp, (char*)section_header, s_num * s_size, &filp->position);
+
+
+	// read secontion Header string table
+	shstr_entry = &section_header[elf_header->e_shstrndx];
+	s_name_table = kmalloc(shstr_entry->sh_size, 0);
+	memset(s_name_table, 0, shstr_entry->sh_size);
+	filp->f_ops->lseek(filp, shstr_entry->sh_offset, SEEK_SET);
+	filp->f_ops->read(filp, s_name_table, shstr_entry->sh_size, &filp->position);
+	
+	//  为 mm_struct 文件赋值
+	struct mm_struct* mm = current->mm;
+	while(sect_idx < s_num) {
+	
+		char* s_name = s_name_table + (section_header[sect_idx].sh_name);
+		if(!strcmp(s_name, ".text")) {
+		
+			mm->start_code = section_header[sect_idx].sh_addr;
+			mm->end_code = mm->start_code + section_header[sect_idx].sh_size;
+		
+		} else if (!strcmp(s_name, ".rodata")) {
+		
+			mm->start_rodata = section_header[sect_idx].sh_addr;
+			mm->end_rodata = mm->start_rodata + section_header[sect_idx].sh_size;
+
+		} else if(!strcmp(s_name,".data")) {
+		
+			mm->start_data = section_header[sect_idx].sh_addr;
+			mm->end_data = mm->start_data + section_header[sect_idx].sh_size;
+		
+		} else if(!strcmp(s_name, ".bss")) {
+			
+			mm->start_bss = section_header[sect_idx].sh_addr;
+			mm->end_bss = mm->start_bss + section_header[sect_idx].sh_size;
+		
+		}
+		
+		sect_idx++;
+	}
+
+	return 0;
+}
+
 /**
  * @brief load用于将filename指向的程序文件加载到内存中
  *
@@ -263,7 +329,9 @@ static unsigned long load(char *pathname)
     }
 
 	code_start_addr = elf_header.e_entry; // 程序的入口地址
-
+	
+	section_analysis(filp,&elf_header);
+	
 	Elf64_Half prog_header_size = elf_header.e_phentsize;
     Elf64_Off prog_header_offset = elf_header.e_phoff;
     // 遍历所有程序头表
@@ -324,20 +392,14 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 	if (!(current->flags & PF_KTHREAD))
 		current->addr_limit = TASK_SIZE;
 
-	// 此处我目前不打算解析段表，因为解析出来也用不到。所以此处多数项我暂且赋值为0
-	current->mm->start_code = code_start_addr;
-	current->mm->end_code = 0;
-	current->mm->start_data = 0;
-	current->mm->end_data = 0;
-	current->mm->start_rodata = 0;
-	current->mm->end_rodata = 0;
-	current->mm->start_bss = 0;
 	current->mm->end_bss = retval;
 
 	// 设置用户堆 起始地址
 	current->mm->start_brk = current->mm->end_brk = PAGE_2M_ALIGN(current->mm->end_bss); 
 	// 设置用户栈 起始地址
 	current->mm->start_stack = stack_start_addr;
+	current->mm->stack_length = PAGE_2M_SIZE;
+
 	// 映射栈地址, 目前刚启动为栈分配2MB （有点多？）
 	// issue:: 栈空气不够了，如何扩充？ （缺页中断！）
 	virtual_map(stack_start_addr - PAGE_2M_SIZE);

@@ -29,6 +29,7 @@ static void* dir_entry_consturctor(void* Vaddr, u64 arg) { // 目录项构造函
     return (void*)dir;
 
 }
+
 static void* dir_entry_desturctor(void* Vaddr, u64 arg) { // 目录项析构函数。
 
     dir_entry_t* dir = Vaddr;
@@ -41,6 +42,7 @@ static void* dir_entry_desturctor(void* Vaddr, u64 arg) { // 目录项析构函�
     return (void*)dir;
 
 }
+
 void VFS_init(void) {
     Dir_Entry_Pool = slab_create(sizeof(dir_entry_t), dir_entry_consturctor, dir_entry_desturctor, 0);
 }
