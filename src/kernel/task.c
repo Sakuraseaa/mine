@@ -431,14 +431,15 @@ out:
  */
 void exit_mm(struct task_struct *tsk)
 {
-	unsigned long code_start_addr = 0x800000;
+	unsigned long code_start_addr = tsk->mm->start_code;
 	unsigned long *tmp4, *tmp3, *tmp2;
 
 	if (tsk->flags & PF_VFORK)
 		return;
 
 	if (tsk->mm->pgd != NULL)
-	{ // PDPT内存
+	{ 	
+		// PDPT内存
 		tmp4 = Phy_To_Virt((unsigned long *)((unsigned long)tsk->mm->pgd & (~0xfffUL)) + ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
 		// PDT内存
 		tmp3 = Phy_To_Virt((unsigned long *)(*tmp4 & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
@@ -449,8 +450,10 @@ void exit_mm(struct task_struct *tsk)
 		free_pages(Phy_to_2M_Page(*tmp2), 1);
 		kfree(Phy_To_Virt(*tmp3));
 		kfree(Phy_To_Virt(*tmp4));
-		kfree(Phy_To_Virt(tsk->mm->pgd));
 	}
+
+
+	kfree(Phy_To_Virt(tsk->mm->pgd));
 
 	if (tsk->mm != NULL)
 		kfree(tsk->mm);

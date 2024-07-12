@@ -1131,3 +1131,5 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
     flush_tlb();
     return i;
 }
+
+unsigned long do_wp_page(unsigned )

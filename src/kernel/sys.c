@@ -632,15 +632,22 @@ void dir_Tree(dir_entry_t* cur, int depth) {
         color_printk(INDIGO, BLACK, " %s\n",cur->name);
     } else 
         color_printk(WHITE, BLACK, " %s\n",cur->name);
+    
     for(; node != End; node = node->next) {
         child = container_of(node, dir_entry_t, child_node);
 
+        // here is format print according to depth
         for(int i = 0; i < depth; i++)
             color_printk(WHITE, BLACK, "  ");
+        
+        color_printk(WHITE, BLACK, "+");
+        
         for(int i = 0; i < depth; i++)
             color_printk(WHITE, BLACK, "-");
+        
         color_printk(WHITE, BLACK, "->");
-
+        //=======================================
+        
         dir_Tree(child, depth + 1);
     }
 }
