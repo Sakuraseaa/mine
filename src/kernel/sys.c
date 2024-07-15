@@ -544,6 +544,52 @@ unsigned long sys_execve()
     return error;
 }
 
+/**
+ * @brief 释放内存空间结构体，
+ * 		exit_mm()与copy_mm()的分配空间分布结构体初始化过程相逆
+ * @param tsk
+ */
+void exit_mm(struct task_struct *tsk)
+{
+	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL,  *tmp1 = NULL;
+	size_t i = 0, j = 0, k = 0;
+	struct Page* p = NULL;
+	if (tsk->flags & PF_VFORK)
+		return;
+
+	struct mm_struct *newmm = tsk->mm;
+	tmp4 = newmm->pgd;
+
+	u64 vaddr = 0;
+	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
+		if((*(tmp4 + i)) & PAGE_Present) {
+			tmp3 = Phy_To_Virt(*(tmp4 + i));
+			
+			for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
+				if((*(tmp3 + j)) & PAGE_Present) {
+					
+					tmp2 = Phy_To_Virt(*(tmp3 + j)); //遍历 PDT 页表项
+					for(k = 0; k < 512; k++)
+						if((*(tmp2 + k)) & PAGE_Present) {
+							tmp1 = tmp2 + k;
+							p = (memory_management_struct.pages_struct + (*tmp1  >> PAGE_2M_SHIFT));
+                            free_pages(p, 1);
+                        }
+
+					kfree(Phy_To_Virt(*tmp2));
+				}
+			}
+
+			kfree(Phy_To_Virt(*tmp3));
+		}
+	}
+
+	kfree(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
+
+	if (tsk->mm != NULL)
+		kfree(tsk->mm);
+}
+
 unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage)
 {
     long retval = 0;

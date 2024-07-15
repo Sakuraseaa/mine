@@ -132,6 +132,9 @@ typedef struct
 // 7,2,1,0
 #define PAGE_USER_Page (PAGE_PS | PAGE_U_S | PAGE_R_W | PAGE_Present)
 
+// 7,2,0 , only read
+#define PAGE_USER_Page_OR (PAGE_PS | PAGE_U_S | PAGE_Present)
+
 /*ARDS, Address Range Descriptor Structure, 每个结构20字节*/
 struct Memory_E820_Formate
 {
@@ -318,4 +321,9 @@ unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned l
 unsigned long do_brk(unsigned long addr, unsigned long len);
 void pagetable_init();
 void init_memory();
+unsigned long* pde_ptr(unsigned long vaddr);
+unsigned long* pml4e_ptr(unsigned long vaddr);
+unsigned long* pdpe_ptr(unsigned long vaddr);
+u64 do_wp_page(u64 virtual_address);
+void do_no_page(u64 virtual_address);
 #endif

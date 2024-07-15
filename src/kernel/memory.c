@@ -1132,4 +1132,100 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
     return i;
 }
 
-unsigned long do_wp_page(unsigned )
+/**
+ * @brief pmle_addr用于获得虚拟地址vaddr对应的4级页表项指针，pte中有vaddr保存的物理页地址
+ */
+unsigned long* pml4e_ptr(unsigned long vaddr)
+{
+    unsigned long *pmle =  Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
+					  ((vaddr >> PAGE_GDT_SHIFT) & 0x1ff));
+    return pmle;
+}
+
+/**
+ * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录指针表(3级页表)项指针
+ */
+unsigned long* pdpe_ptr(unsigned long vaddr)
+{
+	unsigned long *pdpe = Phy_To_Virt((unsigned long *)(*(pml4e_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
+    return pdpe;
+}
+
+/**
+ * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
+ */
+unsigned long* pde_ptr(unsigned long vaddr) {
+	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pdpe_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_2M_SHIFT) & 0x1ff));
+	return pde;
+}
+
+/**
+ * @brief addr_v2p用于将虚拟地址转为物理地址
+ *
+ * @param vaddr 需要转换的虚拟地址
+ * @return uint32_t 虚拟地址对应的物理地址
+ */
+u64 addr_v2p(u64 vaddr) {
+    unsigned long* pde = pde_ptr(vaddr);
+    return ((*pde) & (PAGE_2M_MASK));
+}
+
+/**
+ * @brief 写保护页面处理
+ *    配合fork()
+ * 
+ * @param virtual_address The addresss that caused the exception
+ * @return unsigned long 
+ */
+u64 do_wp_page(u64 virtual_address) {
+
+    u64 attr, phy_addr = addr_v2p(virtual_address);
+    u64* tmp = pde_ptr(virtual_address);
+    struct Page* page = (struct Page*)(memory_management_struct.pages_struct + (phy_addr >> PAGE_2M_SHIFT));
+    struct Page* new_page = NULL;
+
+	attr = (*tmp & (0xfffUL)); // get parent privilege
+	attr = (attr | (PAGE_R_W)); // delet PW right
+
+    if(page->reference_count == 1) {
+        // 物理页独享 - 修改页面权限返回，
+		set_pdt(tmp, mk_pdt(page->PHY_address, attr));
+        return 0;
+    }
+
+    // 分配新页面给进程，在进程用的时候给进程分配页面,给子进程分配新的页面
+    new_page = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
+    memcpy(Phy_To_Virt(page->PHY_address), Phy_To_Virt(new_page->PHY_address), PAGE_2M_SIZE);
+    set_pdt(tmp, mk_pdt(new_page->PHY_address, attr));
+    page->reference_count--;
+
+    return 0;
+}
+
+
+
+/**
+ * @brief 缺页处理
+ *配合exec
+ * @param address The address that cause the exception
+ */
+void do_no_page(u64 virtual_address)
+{
+}
+
+/**
+ * @brief page_table_pte_remove用于将vaddr指向的虚拟内存地址所在的虚拟页从对应的页表中取消和物理页的映射
+ *
+ * @param vaddr 要取消映射的虚拟地址
+ */
+// static void page_table_pte_remove(u64 vaddr)
+// {
+//    u64 *pte = pte_ptr(vaddr);
+//    *pte &= ~PG_P_1;
+//    // invlpg update tlb
+//    asm volatile(
+//        "invlpg %0"
+//        :
+//        : "m"(vaddr)
+//        : "memory");
+// }

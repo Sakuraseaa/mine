@@ -14,4 +14,8 @@ int vfork(void);
 int execve(const char* path, char* const argv[], char* const envp[]);
 int wait4(int pid, int* status, int options);
 
+
+int tree(void);
+int cleanScreen(void);
+
 #endif

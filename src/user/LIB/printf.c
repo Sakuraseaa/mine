@@ -2,22 +2,8 @@
 #include "printf.h"
 #include "string.h"
 #include "stdio.h"
-/*
 
-*/
-int strlen(char *String)
-{
-	register int __res;
-	__asm__ __volatile__("cld	\n\t"
-						 "repne	\n\t"
-						 "scasb	\n\t"
-						 "notl	%0	\n\t"
-						 "decl	%0	\n\t"
-						 : "=c"(__res)
-						 : "D"(String), "a"(0), "0"(0xffffffff)
-						 :);
-	return __res;
-}
+
 int skip_atoi(const char **s)
 {
 	int i = 0;
@@ -73,8 +59,7 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 	if (type & SPECIAL)
 		if (base == 8)
 			*str++ = '0';
-		else if (base == 16)
-		{
+		else if (base == 16) {
 			*str++ = '0';
 			*str++ = digits[33];
 		}

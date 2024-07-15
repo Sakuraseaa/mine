@@ -19,7 +19,7 @@
 #define INDIGO 0x0000ffff // 靛
 #define PURPLE 0x008000ff // 紫
 
-int putstring(unsigned int FRcolor, char *string);
+int putstring(unsigned int FRcolor, const char *string);
 int printf(const char *fmt, ...);
 int sprintf(char * buf,const char * fmt,...);
 int color_printf(unsigned int FRcolor, const char* fmt, ...);

@@ -106,32 +106,7 @@ struct file *open_exec_file(char *path)
 	return filp;
 }
 
-/**
- * @brief pmle_addr用于获得虚拟地址vaddr对应的4级页表项指针，pte中有vaddr保存的物理页地址
- */
-static unsigned long* pml4e_ptr(unsigned long vaddr)
-{
-    unsigned long *pmle =  Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
-					  ((vaddr >> PAGE_GDT_SHIFT) & 0x1ff));
-    return pmle;
-}
 
-/**
- * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录指针表(3级页表)项指针
- */
-static unsigned long* pdpe_ptr(unsigned long vaddr)
-{
-	unsigned long *pdpe = Phy_To_Virt((unsigned long *)(*(pml4e_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
-    return pdpe;
-}
-
-/**
- * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
- */
-static unsigned long* pde_ptr(unsigned long vaddr) {
-	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pdpe_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_2M_SHIFT) & 0x1ff));
-	return pde;
-}
 
 /**
  * @brief 进行虚拟地址的映射
@@ -396,13 +371,14 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 
 	// 设置用户堆 起始地址
 	current->mm->start_brk = current->mm->end_brk = PAGE_2M_ALIGN(current->mm->end_bss); 
-	// 设置用户栈 起始地址
-	current->mm->start_stack = stack_start_addr;
-	current->mm->stack_length = PAGE_2M_SIZE;
 
 	// 映射栈地址, 目前刚启动为栈分配2MB （有点多？）
 	// issue:: 栈空气不够了，如何扩充？ （缺页中断！）
 	virtual_map(stack_start_addr - PAGE_2M_SIZE);
+
+	// 设置用户栈 起始地址
+	current->mm->start_stack = stack_start_addr - PAGE_2M_SIZE;
+	current->mm->stack_length = PAGE_2M_SIZE;
 
 	exit_files(current);
 

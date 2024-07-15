@@ -326,5 +326,7 @@ int ls_command(int argc, char **argv)
 	}
 	printf("\n");
 	closedir(dir);
+
+    return 1;
 }
 

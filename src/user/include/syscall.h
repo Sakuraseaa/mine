@@ -34,4 +34,7 @@
 #define __NR_getcwd 22
 #define __NR_stat 23
 
+#define __NR_tree 196
+#define __NR_cleanScreen 197
+
 #endif

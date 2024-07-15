@@ -6,7 +6,7 @@ ASM   = nasm
 CC	  = gcc
 
 CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib\
-		-fno-builtin -fno-pie -fno-pic  -I $(USR_INC_DIR) \
+		-fno-builtin -fno-pie -fno-pic -g -I $(USR_INC_DIR) \
 		-c -I $(USR_INC_DIR)/base \
 
 #被链接的文件

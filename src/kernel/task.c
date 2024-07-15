@@ -14,6 +14,7 @@
 #include "errno.h"
 #include "execv.h"
 #include "debug.h"
+#include "assert.h"
 // ----------- DEBUGE -------------------
 #include "sys.h"
 // ----------- DEBUGE -------------------
@@ -235,53 +236,6 @@ unsigned long shell_boot(unsigned long arg)
 }
 //--------------------DEBUG----------------------
 
-// 创建内核线程的PCB
-unsigned long do_fork_old(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size)
-{
-	struct task_struct *tsk = NULL;
-	struct thread_struct *thd = NULL;
-	struct Page *p = NULL;
-
-	// 为创建的进程的PCB申请内存
-	// 此处既然是为了创建PCB, 目前内存系统已经完善，为何不使用kmalloc()函数申请数据呢 ？
-	p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped | PG_Active | PG_Kernel);
-
-	tsk = (struct task_struct *)Phy_To_Virt(p->PHY_address);
-	color_printk(WHITE, BLACK, "struct task_struct address:%#018lx\n", (unsigned long)tsk);
-
-	memset(tsk, 0, sizeof(*tsk));
-	*tsk = *current; // 复制了当前进程的结构体
-
-	// 修改一定的参数
-	list_init(&tsk->list);
-	tsk->priority = 2;
-	tsk->preempt_count = 0;
-	tsk->pid++;
-	tsk->state = TASK_UNINTERRUPTIBLE;
-	// 设置线程栈，初始化线程栈
-	thd = (struct thread_struct *)(tsk + 1);
-	tsk->thread = thd;
-	// 把准备好的中断栈拷贝到进程PCB内存的上部, 这里是中断栈实体
-	memcpy(regs, (void *)((unsigned long)tsk + STACK_SIZE - sizeof(struct pt_regs)), sizeof(struct pt_regs));
-
-	// 这里是描述中断栈的结构体
-	thd->rsp0 = (unsigned long)tsk + STACK_SIZE;						 // 使得rsp0指向PCB内存的最高处
-	thd->rip = regs->rip;												 // 使得中断栈和中断栈结构体中记录的rip相等，都是 = kernel_thread_func
-	thd->rsp = (unsigned long)tsk + STACK_SIZE - sizeof(struct pt_regs); // 使得rsp0 指向PCB中最上端，中断栈的最顶部，可从此处退出中断栈
-	thd->fs = KERNEL_DS;
-	thd->gs = KERNEL_DS;
-
-	// 不属于内核程序,则从系统中断返回
-	if (!(tsk->flags & PF_KTHREAD))
-		thd->rip = regs->rip = (unsigned long)ret_system_call;
-
-	tsk->state = TASK_RUNNING;
-
-	insert_task_queue(tsk);
-
-	return 1;
-}
-
 void switch_mm(struct task_struct *prev, struct task_struct *next)
 {
 	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(next->mm->pgd)
@@ -363,6 +317,7 @@ void exit_files(struct task_struct *tsk)
  * @param tsk 子进程PCB
  * @return unsigned long
  */
+/*
 unsigned long copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 {
 	int error = 0;
@@ -422,42 +377,152 @@ unsigned long copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 out:
 	tsk->mm = newmm;
 	return error;
+} */
+
+
+static void copy_pageTables(struct mm_struct* newmm, u64 addr, bool copy){
+	
+	// here is only copy Page Table. 
+	// when page_fault occur, allcot memory and copy user data
+	u64 *tmp = NULL, *virtual = NULL, *parent_tmp;
+	u64 attr = 0;
+	struct Page *p = NULL;
+
+	// alter page directory entry of parent_process(current_process)
+	// here requires atomic execution
+	parent_tmp = pde_ptr(addr);
+	p = (memory_management_struct.pages_struct + (*parent_tmp  >> PAGE_2M_SHIFT));
+	assert(p->PHY_address == (*parent_tmp & PAGE_2M_MASK))
+	if(p->PHY_address == 0)
+		return;
+
+
+	// 申请PDPT内存，填充PML4页表项 for child_process
+	tmp = Phy_To_Virt((unsigned long *)((unsigned long)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	if(!(*tmp & PAGE_Present)) {
+		virtual = kmalloc(PAGE_4K_SIZE, 0);
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
+
+	// 申请PDT内存，填充PDPT页表项 for child_process
+	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
+	if(!(*tmp & PAGE_Present)) {
+		virtual = kmalloc(PAGE_4K_SIZE, 0);
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
+
+	// 填充 PDT 页表项 for child_process
+	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
+	if(!(*tmp & PAGE_Present)) {
+
+		attr = (*parent_tmp & (0xfffUL)); // get parent privilege
+		if(!copy) {
+			attr = (attr & (~PAGE_R_W)); // delet PW right
+			// set parent and child's Page privilege, parent and child share the Page
+			set_pdt(tmp, mk_pdt(p->PHY_address, attr));
+			set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
+			// add Page_struct count
+			p->reference_count++;
+		} else {
+			p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
+			memcpy(addr, Phy_To_Virt(p->PHY_address),PAGE_2M_SIZE);
+			set_pdt(tmp, mk_pdt(p->PHY_address, attr));
+		}
+	}
+	return;
 }
 
-/**
- * @brief 释放内存空间结构体，
- * 		exit_mm()与copy_mm()的分配空间分布结构体初始化过程相逆
- * @param tsk
- */
-void exit_mm(struct task_struct *tsk)
+unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 {
-	unsigned long code_start_addr = tsk->mm->start_code;
-	unsigned long *tmp4, *tmp3, *tmp2;
+	int error = 0;
+	struct mm_struct *newmm = NULL;
+	unsigned long *tmp;
+	unsigned long *virtual = NULL;
+	struct Page *p = NULL;
+	if (clone_flags & CLONE_VM)
+	{
+		newmm = current->mm;
+		goto out;
+	}
 
+	newmm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
+	memcpy(current->mm, newmm, sizeof(struct mm_struct));
+
+	// copy kernel space, 创建了PML4页表
+	newmm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
+	memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
+	memset(Phy_To_Virt(newmm->pgd), 0, PAGE_4K_SIZE / 2); // clear user memory space
+
+	u64 vaddr = 0;
+	
+	for(vaddr = newmm->start_code; vaddr < newmm->end_code; vaddr += PAGE_2M_SIZE) // 代码段
+		copy_pageTables(newmm, vaddr, false);
+	for(vaddr = newmm->start_data; vaddr < newmm->end_data; vaddr += PAGE_2M_SIZE) // 数据
+		copy_pageTables(newmm, vaddr, false);
+	for(vaddr = newmm->start_rodata; vaddr < newmm->end_rodata; vaddr += PAGE_2M_SIZE) // 只读数据
+		copy_pageTables(newmm, vaddr, false);
+	for(vaddr = newmm->start_bss; vaddr < newmm->end_bss; vaddr += PAGE_2M_SIZE) // bss段
+		copy_pageTables(newmm, vaddr, false);
+	for(vaddr = newmm->start_brk; vaddr < newmm->end_brk; vaddr += PAGE_2M_SIZE) // brk 段
+		copy_pageTables(newmm, vaddr, false);
+	
+	// 栈段, 这里的栈段共享不成。
+	// 父进程返回用户态后，会破坏用户栈，但竟没有触发保护异常。
+	// 没有触发异常，导致子进程运行失败.
+	// 为什么会出现这种情况 ？ 
+	for(vaddr = newmm->start_stack; vaddr < (newmm->start_stack + newmm->stack_length); vaddr += PAGE_2M_SIZE)
+		copy_pageTables(newmm, vaddr, false);
+
+	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
+out:
+	tsk->mm = newmm;
+	return error;
+}
+
+void exit_mm_fork(struct task_struct *tsk)
+{
+	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL,  *tmp1 = NULL;
+	size_t i = 0, j = 0, k = 0;
+	struct Page* p = NULL;
 	if (tsk->flags & PF_VFORK)
 		return;
 
-	if (tsk->mm->pgd != NULL)
-	{ 	
-		// PDPT内存
-		tmp4 = Phy_To_Virt((unsigned long *)((unsigned long)tsk->mm->pgd & (~0xfffUL)) + ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-		// PDT内存
-		tmp3 = Phy_To_Virt((unsigned long *)(*tmp4 & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
-		// 用户进程占用的内存
-		tmp2 = Phy_To_Virt((unsigned long *)(*tmp3 & (~0xfffUL)) + ((code_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
+	struct mm_struct *newmm = tsk->mm;
+	tmp4 = (u64*)newmm->pgd;
 
-		// 这里明显写的太不标准，你怎么确定用户进程只占用2MB内存的
-		free_pages(Phy_to_2M_Page(*tmp2), 1);
-		kfree(Phy_To_Virt(*tmp3));
-		kfree(Phy_To_Virt(*tmp4));
+	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
+		if((*(tmp4 + i)) & PAGE_Present) {
+			tmp3 = Phy_To_Virt(*(tmp4 + i));
+			
+			for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
+				if((*(tmp3 + j)) & PAGE_Present) {
+					
+					tmp2 = Phy_To_Virt(*(tmp3 + j)); //遍历 PDT 页表项
+					for(k = 0; k < 512; k++)
+						if((*(tmp2 + k)) & PAGE_Present) {
+							tmp1 = tmp2 + k;
+							p = (memory_management_struct.pages_struct + (*tmp1  >> PAGE_2M_SHIFT));
+							assert(p->reference_count > 1);
+							p->PHY_address--;
+							// for parent_process's page_table privilege, give page_fault solve. 
+						}
+
+					kfree(Phy_To_Virt(*tmp2));
+				}
+			}
+
+			kfree(Phy_To_Virt(*tmp3));
+		}
 	}
 
-
-	kfree(Phy_To_Virt(tsk->mm->pgd));
+	kfree(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
 
 	if (tsk->mm != NULL)
 		kfree(tsk->mm);
 }
+
 
 // 为子进程伪造应用层执行现场
 unsigned long copy_thread(unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size, struct task_struct *tsk, struct pt_regs *regs)
@@ -496,6 +561,7 @@ unsigned long copy_thread(unsigned long clone_flags, unsigned long stack_start, 
 }
 
 void exit_thread(struct task_struct *tsk) {}
+
 /**
  * @brief a.do_fork函数会先为PCB分配存储空间并对其进行初步赋值
  *		  b. 根据clone_flags参数进行克隆或共享工作
@@ -548,13 +614,13 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	if (copy_flags(clone_flags, tsk))
 		goto copy_flags_fail;
 	// copy mm struct
-	if (copy_mm(clone_flags, tsk))
+	if (copy_mm_fork(clone_flags, tsk))
 		goto copy_mm_fail;
 	// copy file struct
 	if (copy_files(clone_flags, tsk))
 		goto copy_files_fail;
 	// copy thread struct
-	if (copy_thread(clone_flags, stack_start, stack_size, tsk, regs))
+	if (copy_thread(clone_flags, stack_start, tsk->mm->stack_length, tsk, regs))
 		goto copy_thread_fail;
 	retval = tsk->pid;
 	wakeup_process(tsk);
@@ -567,7 +633,7 @@ copy_thread_fail:
 copy_files_fail:
 	exit_files(tsk);
 copy_mm_fail:
-	exit_mm(tsk);
+	exit_mm_fork(tsk);
 copy_flags_fail:
 alloc_copy_task_fail:
 	kfree(tsk);
@@ -625,7 +691,7 @@ int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigne
 
 // 被switch_to宏调用, 用来切换任务
 void __switch_to(struct task_struct *prev, struct task_struct *next)
-{
+{	
 	// 切换进程的TSS 和 数据段选择子
 	init_tss[0].rsp0 = next->thread->rsp0;
 

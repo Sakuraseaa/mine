@@ -44,7 +44,6 @@ struct task_struct *tsk = NULL;
 // 调度器
 void schedule()
 {
-	//struct task_struct *tsk = NULL;
 	cli();							  // 关闭外中断·
 	current->flags &= ~NEED_SCHEDULE; // 复位调度标志
 	tsk = get_next_task();			  // 从准备就绪队列中取出下一个待执行的进程
@@ -57,6 +56,9 @@ void schedule()
 		// 只有当前进程是正在运行状态，才能进入就绪队列
 		if (current->state == TASK_RUNNING)
 			insert_task_queue(current);
+
+		// if(tsk->pid > 1)
+		//	color_printk(WHITE, BLACK, "%d\n", tsk->gid);
 
 		// 按照进程优先级，给即将执行的进程计算PCB
 		if (!task_schedule.CPU_exec_task_jiffies)

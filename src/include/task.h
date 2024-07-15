@@ -251,7 +251,6 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 void task_init();
 void switch_mm(struct task_struct *prev, struct task_struct *next);
 void wakeup_process(struct task_struct *tsk);
-void exit_mm(struct task_struct *tsk);
 void exit_files(struct task_struct *tsk);
 void __switch_to(struct task_struct *prev, struct task_struct *next);
 

@@ -69,7 +69,7 @@ int exec_command(int argc, char **argv)
 	int i = 0;
 
 	errno = fork();
-	if(errno ==  0 ) {
+	if( errno ==  0 ) {
 		printf("child process\n");
 		len = strlen(current_dir);
 		i = len + strlen(argv[1]);
@@ -84,15 +84,18 @@ int exec_command(int argc, char **argv)
 		for(i = 0; i < argc; i++)
 			printf("argv[%d]:%s\n", i, argv[i]);
 		
-		execve(filename, argv, NULL);
+		// execve(filename, argv, NULL);
 
-		exit(0);
+		// exit(0);
 	} else {
 		printf("parent process childpid:%#d\n", errno);
-		waitpid(errno, &retval, 0);
+		// waitpid(errno, &retval, 0);
 		printf("parent process waitpid:%#018lx\n", retval);
 	}
     return 0;
 }
 int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }
 
+int tree_command(int argc, char **argv) {
+	return tree();
+}
