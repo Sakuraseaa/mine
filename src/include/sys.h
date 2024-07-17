@@ -21,10 +21,12 @@ unsigned long sys_chdir(char* filename);
 unsigned long sys_execve();
 unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage);
 u64 sys_mkdir(char* filename);
+void exit_mm(struct task_struct *tsk);
+
 
 unsigned long sys_tree(void);
 unsigned long sys_cleanScreen(void);
-
+unsigned long sys_getNow(void);
 
 #define SYSTEM_REBOOT (1UL << 0)
 #define SYSTEM_POWEROFF (1UL << 1)

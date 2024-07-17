@@ -191,7 +191,7 @@ static bool segment_load(struct file* filp, unsigned long offset, unsigned long 
     return true;
 }
 
-unsigned long code_start_addr = 0;
+static unsigned long code_start_addr = 0;
 
 /**
  * @brief analysis The Section Table
@@ -351,7 +351,6 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		memset(current->mm, 0, sizeof(struct mm_struct));
 		current->mm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
 		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
-		// color_printk(RED, BLACK, "load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
 		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
 		// copy kernel space
 		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);

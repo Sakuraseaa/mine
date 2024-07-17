@@ -173,7 +173,7 @@ static void strftime(time_t stamp, char *buf)
     sprintf(buf, "%d-%02d-%02d %02d:%02d:%02d",
             time.year,
             time.month,
-            time.week_day,
+            time.day,
             time.hour,
             time.minute,
             time.second);

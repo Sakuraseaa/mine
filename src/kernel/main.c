@@ -133,8 +133,6 @@ void Start_Kernel(void)
 
 	while (1)
 	{
-		// if (p_mouse->count)
-		// 	analysis_mousecode();
-		;
+		// 这里可以遍历所有进程，寻找僵尸进程。释放他。
 	}
 }

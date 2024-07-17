@@ -51,7 +51,12 @@ static unsigned long elapsed_leap_years(int year)
 }
 
 
-// 更新时间
+/**
+ * @brief 解析时间
+ * 
+ * @param stamp 1970年 到 目前位置的秒数 
+ * @param tm 传出参数
+ */
 void localtime(unsigned long stamp, struct time* tm)
 {
 

@@ -1,25 +1,14 @@
-#/***************************************************
-#		版权声明
-#
-#	本操作系统名为：MINE
-#	该操作系统未经授权不得以盈利或非盈利为目的进行开发，
-#	只允许个人学习以及公开交流使用
-#
-#	代码最终所有权及解释权归田宇所有；
-#
-#	本模块作者：	田宇
-#	EMail:		345538255@qq.com
-#
-#
-#***************************************************/
 
-CFLAGS := -mcmodel=large -fno-builtin -m64 -fno-stack-protector
+CFLAGS := -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib\
+		-fno-builtin -fno-pie -fno-pic
 
-all: system_api_lib
-	objcopy -I elf64-x86-64 -S -R ".eh_frame" -R ".comment" -O binary system_api_lib test.bin
+all: test.bin
+	sudo mount /dev/dm-0 /mnt -o uid=$$USER,gid=$$USER
+	sudo cp ./test.bin /mnt -v
+	sudo umount /mnt
 
-system_api_lib: test.o lib.o errno.o printf.o  
-	ld -b elf64-x86-64 -z muldefs -o system_api_lib test.o lib.o errno.o printf.o -T User.lds
+test.bin: test.o lib.o errno.o printf.o  
+	ld -b elf64-x86-64 -z muldefs -o test.bin test.o lib.o errno.o printf.o
 
 test.o: test.c
 	gcc  $(CFLAGS) -c test.c

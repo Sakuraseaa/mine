@@ -15,7 +15,7 @@ int rmdir_command(int argc, char **argv);
 int exec_command(int argc, char **argv);
 int reboot_command(int argc, char **argv);
 int tree_command(int argc, char **argv);
-
+int date_command(int argc, char **argv);
 
 
 #endif

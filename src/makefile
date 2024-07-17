@@ -32,14 +32,14 @@ OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
 ALL:$(BUI_DIR)/Kernel.bin 
 
 $(BUI_DIR)/Kernel.bin:$(OBJS) $(OBJS_SCRIPT)
-	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds  -Map $(BUI_DIR)/Kernel.map
+	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  /home/steven/mine/src/Kernel.lds  -Map $(BUI_DIR)/Kernel.map
 	@sudo mount -o loop $(BOCHS)/boot.img /mnt
 	@sudo cp $(BUI_DIR)/Kernel.bin /mnt -v
 	@sudo umount /mnt
 	@echo '感谢世界!系统编译构建完成！ ^_^'
 
 $(BUI_DIR)/kernel.bin:$(OBJS)
-	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T Kernel.lds -Map $(BUI_DIR)/kernel.map
+	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T /home/steven/mine/src/Kernel.lds -Map $(BUI_DIR)/kernel.map
 
 $(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c
 #	$(CC) $(CFLAGS) $< -o $@

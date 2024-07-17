@@ -37,4 +37,5 @@
 
 #define __NR_tree 196
 #define __NR_cleanScreen 197
+#define __NR_getNow 198
 #endif

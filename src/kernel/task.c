@@ -472,6 +472,8 @@ unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 	// 父进程返回用户态后，会破坏用户栈，但竟没有触发保护异常。
 	// 没有触发异常，导致子进程运行失败.
 	// 为什么会出现这种情况 ？ 
+
+	// 24-7-17-10:16: 因为你没有刷新快表
 	for(vaddr = newmm->start_stack; vaddr < (newmm->start_stack + newmm->stack_length); vaddr += PAGE_2M_SIZE)
 		copy_pageTables(newmm, vaddr, false);
 
@@ -483,7 +485,8 @@ out:
 
 void exit_mm_fork(struct task_struct *tsk)
 {
-	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL,  *tmp1 = NULL;
+	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+	unsigned long tmp1 = NULL;
 	size_t i = 0, j = 0, k = 0;
 	struct Page* p = NULL;
 	if (tsk->flags & PF_VFORK)
@@ -494,25 +497,22 @@ void exit_mm_fork(struct task_struct *tsk)
 
 	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
 		if((*(tmp4 + i)) & PAGE_Present) {
-			tmp3 = Phy_To_Virt(*(tmp4 + i));
+			tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
 			
 			for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
 				if((*(tmp3 + j)) & PAGE_Present) {
 					
-					tmp2 = Phy_To_Virt(*(tmp3 + j)); //遍历 PDT 页表项
-					for(k = 0; k < 512; k++)
-						if((*(tmp2 + k)) & PAGE_Present) {
-							tmp1 = tmp2 + k;
-							p = (memory_management_struct.pages_struct + (*tmp1  >> PAGE_2M_SHIFT));
+					tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
+					for(k = 0; k < 512; k++) {
+							tmp1 = (*(tmp2 + k));
+							p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
 							assert(p->reference_count > 1);
 							p->PHY_address--;
 							// for parent_process's page_table privilege, give page_fault solve. 
 						}
-
 					kfree(Phy_To_Virt(*tmp2));
 				}
 			}
-
 			kfree(Phy_To_Virt(*tmp3));
 		}
 	}
@@ -648,7 +648,7 @@ void exit_notify(void)
 unsigned long do_exit(unsigned long exit_code)
 {
 	struct task_struct *tsk = current;
-	// color_printk(RED, BLACK, "exit task is running,arg:%#018lx\n", exit_code);
+	DEBUGK("exit task is running,arg:%#018lx\n", exit_code);
 	
 
 	cli();
@@ -656,6 +656,11 @@ unsigned long do_exit(unsigned long exit_code)
 	tsk->exit_code = exit_code;
 	exit_thread(tsk);
 	exit_files(tsk);
+	// 回收信号，回收pid, recycle all resource
+	if(tsk->sigaction)
+		kfree(tsk->sigaction);
+	exit_mm(tsk);
+
 	sti();
 
 do_exit_again:
@@ -663,7 +668,7 @@ do_exit_again:
 	exit_notify();
 	schedule();
 	goto do_exit_again;
-
+	// 不会执行到这里的
 	return 0;
 }
 

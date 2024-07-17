@@ -33,9 +33,9 @@
             //         "ignoreFailures": true
             //     }
             ],
-            //"preLaunchTask": "make-all",
+            "preLaunchTask":  "Run-Qemu!",
             "miDebuggerPath": "/usr/bin/gdb",
-            // "postDebugTask": "make-clean"
+            "postDebugTask": "make-clean"
         },
         {
             "name": "test",

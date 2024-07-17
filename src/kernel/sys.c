@@ -1,5 +1,4 @@
 #include "time.h"
-#include "stab.h"
 #include "execv.h"
 #include "errno.h"
 #include "printk.h"
@@ -14,6 +13,7 @@
 #include "assert.h"
 #include "stat.h"
 #include "fs.h"
+#include "types.h"
 // 系统调用有关
 /*
 normal
@@ -337,6 +337,9 @@ unsigned long sys_read(int fd, void *buf, long count)
     return ret;
 }
 
+unsigned long sys_getNow(void) {
+    return NOW();
+}
 
 // 写文件函数
 unsigned long sys_write(int fd, void *buf, long count)
@@ -517,7 +520,7 @@ unsigned long sys_execve()
     long error = 0;
     struct pt_regs* regs = (struct pt_regs*)current->thread->rsp0 - 1;
     
-    // color_printk(GREEN, BLACK, "sys_execve\n");
+    DEBUGK("sys_execve\n");
 
     pathname = (char*)kmalloc(PAGE_4K_SIZE, 0);
     if(pathname == NULL)
@@ -551,36 +554,38 @@ unsigned long sys_execve()
  */
 void exit_mm(struct task_struct *tsk)
 {
-	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL,  *tmp1 = NULL;
+	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+    unsigned long tmp1 = 0; // page address
 	size_t i = 0, j = 0, k = 0;
 	struct Page* p = NULL;
 	if (tsk->flags & PF_VFORK)
 		return;
 
 	struct mm_struct *newmm = tsk->mm;
-	tmp4 = newmm->pgd;
+	tmp4 = Phy_To_Virt(newmm->pgd);
 
+    /* recycle all memory pages. these include Data, Code, Stack, Heap...*/
+    /* 这里操作页表，还是有一点点小难度的。些许风霜罢了*/
 	u64 vaddr = 0;
 	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
 		if((*(tmp4 + i)) & PAGE_Present) {
-			tmp3 = Phy_To_Virt(*(tmp4 + i));
+			tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
 			
 			for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
 				if((*(tmp3 + j)) & PAGE_Present) {
 					
-					tmp2 = Phy_To_Virt(*(tmp3 + j)); //遍历 PDT 页表项
-					for(k = 0; k < 512; k++)
+					tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
+					for(k = 0; k < 512; k++) {
 						if((*(tmp2 + k)) & PAGE_Present) {
-							tmp1 = tmp2 + k;
-							p = (memory_management_struct.pages_struct + (*tmp1  >> PAGE_2M_SHIFT));
-                            free_pages(p, 1);
+							tmp1 = (*(tmp2 + k)); // 得到物理页
+							p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
+                            free_pages(p, 1); // 释放物理页
                         }
-
-					kfree(Phy_To_Virt(*tmp2));
+                    }
+					kfree(tmp2); // 释放 PDT表
 				}
 			}
-
-			kfree(Phy_To_Virt(*tmp3));
+			kfree(tmp3); // 释放 PDPT 表 
 		}
 	}
 
@@ -616,15 +621,14 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
 
     copy_to_user(&child->exit_code, status, sizeof(long));
     tsk->next = child->next; // 在PCB列表中，删除掉当前进程PCB
-    exit_mm(child);
-    kfree(child);
+    kfree(child); // 回收PCB, 内核栈
 
     return retval;
 }
 
 unsigned long sys_exit(int exit_code)
 {
-    // color_printk(GREEN, BLACK, "sys_exit\n");
+    DEBUGK("sys_exit\n");
     return do_exit(exit_code);
 }
 
@@ -705,4 +709,7 @@ unsigned long sys_tree() {
 }
 
 
-unsigned long sys_fstat(int fd, struct stat *statbuf);
+unsigned long sys_fstat(int fd, struct stat *statbuf)
+{
+
+}

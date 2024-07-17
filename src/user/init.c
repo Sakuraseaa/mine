@@ -245,6 +245,7 @@ struct buildincmd shell_internal_cmd[] =
 		{"exec", exec_command},
 		{"reboot", reboot_command},
 		{"tree", tree_command},
+		{"date", date_command},
 };
 
 int find_cmd(char *cmd_name)

@@ -10,6 +10,7 @@
 #include "errno.h"
 #include "command.h"
 #include "printf.h"
+#include "time.h"
 extern char* current_dir;
 
 int pwd_command(int argc, char **argv)
@@ -81,15 +82,15 @@ int exec_command(int argc, char **argv)
 		strcat(filename, argv[1]);
 
 		printf("exec_command filename:%s\n", filename);
-		for(i = 0; i < argc; i++)
-			printf("argv[%d]:%s\n", i, argv[i]);
+		// for(i = 0; i < argc; i++)
+		// 	printf("argv[%d]:%s\n", i, argv[i]);
 		
-		// execve(filename, argv, NULL);
+		execve(filename, argv, NULL);
 
-		// exit(0);
+		exit(0);
 	} else {
 		printf("parent process childpid:%#d\n", errno);
-		// waitpid(errno, &retval, 0);
+		waitpid(errno, &retval, 0);
 		printf("parent process waitpid:%#018lx\n", retval);
 	}
     return 0;
@@ -98,4 +99,28 @@ int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); 
 
 int tree_command(int argc, char **argv) {
 	return tree();
+}
+// Monday Tuesday Wednesday Thursday Friday Saturday Sunday
+static const char* week[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+
+//January February March April May June July August September October November December
+static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+
+
+int date_command(int argc, char **argv)
+{
+	u64 seconds = getNow();
+    tm time;
+    localtime(seconds, &time);
+    printf("%d-%02d-%02d %s-%s %02d:%02d:%02d \n",
+            time.year,
+            time.month,
+            time.day,
+			months[time.month - 1],
+			week[time.week_day - 1],
+            time.hour,
+            time.minute,
+            time.second);
+	return 1;
 }

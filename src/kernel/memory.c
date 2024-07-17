@@ -1185,7 +1185,7 @@ u64 do_wp_page(u64 virtual_address) {
     struct Page* new_page = NULL;
 
 	attr = (*tmp & (0xfffUL)); // get parent privilege
-	attr = (attr | (PAGE_R_W)); // delet PW right
+	attr = (attr | (PAGE_R_W)); // add PW right
 
     if(page->reference_count == 1) {
         // 物理页独享 - 修改页面权限返回，
