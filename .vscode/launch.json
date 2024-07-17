@@ -22,18 +22,18 @@
                 "text": "set arch i386:x86-64:intel",
                 "ignoreFailures": false
             },
-            //     {
-            //         "description": "Enable pretty-printing for gdb",
-            //         "text": "-enable-pretty-printing -target-select",
-            //         "ignoreFailures": true
-            //     },
-            //     {
-            //         "description": "Set Disassembly Flavor to Intel",
-            //         "text": "-gdb-set disassembly-flavor intel",
-            //         "ignoreFailures": true
-            //     }
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing -target-select",
+                "ignoreFailures": true
+            },
+            {
+                "description": "Set Disassembly Flavor to Intel",
+                "text": "-gdb-set disassembly-flavor intel",
+                "ignoreFailures": true
+            }
             ],
-            "preLaunchTask":  "Run-Qemu!",
+            "preLaunchTask": "Run-Qemu!",
             "miDebuggerPath": "/usr/bin/gdb",
             "postDebugTask": "make-clean"
         },
