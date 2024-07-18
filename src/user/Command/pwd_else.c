@@ -13,6 +13,20 @@
 #include "time.h"
 extern char* current_dir;
 
+char* get_filename_whole(char* buf, char* reletive_path) {
+
+	int len = 0;
+	// 拼凑绝对路径
+	len = strlen(current_dir);
+	len = len + strlen(reletive_path);
+	buf = malloc(len + 2, 0);
+	memset(buf, 0, len + 2);
+
+	make_clear_abs_path(reletive_path, buf); // 是相对路径 把相对路径转换成绝对路径
+
+	return buf;
+}
+
 int pwd_command(int argc, char **argv)
 {	
     int ret = 0;
@@ -35,10 +49,7 @@ int cat_command(int argc, char **argv)
 	filename = malloc(i + 2, 0);
 	memset(filename, 0, i + 2);
 
-	if(argv[1][0] == '/') // 是绝对路径
-		strcpy(filename, argv[1]);
-	else 
-		make_clear_abs_path(argv[1], filename); // 是相对路径 把相对路径转换成绝对路径
+	make_clear_abs_path(argv[1], filename); // 是相对路径 把相对路径转换成绝对路径
 
 	fd = open(filename, 0);
 	
@@ -71,19 +82,9 @@ int exec_command(int argc, char **argv)
 
 	errno = fork();
 	if( errno ==  0 ) {
-		printf("child process\n");
-		len = strlen(current_dir);
-		i = len + strlen(argv[1]);
-		filename = malloc(i + 2, 0);
-		memset(filename, 0, i + 2);
-		strcpy(filename, current_dir);
-		if(len > 1)
-			filename[len] = '/';
-		strcat(filename, argv[1]);
-
+		// printf("child process\n");
+		filename = get_filename_whole(filename, argv[1]);
 		printf("exec_command filename:%s\n", filename);
-		// for(i = 0; i < argc; i++)
-		// 	printf("argv[%d]:%s\n", i, argv[i]);
 		
 		execve(filename, argv, NULL);
 

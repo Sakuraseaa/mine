@@ -335,7 +335,7 @@ static void wash_path(char *old_abs_path, char *new_abs_path)
                 *(slash_ptr + 1) = 0;
             // 当前目录不是 '.' ,就将name拼接到new_abs_path
         }
-        else if (strcmp(".", name))
+        else if (strcmp(".", name) != 0)
         {
             if (strcmp(new_abs_path, "/")) // 如果new_abs_path不是"/",就拼接一个"/",此处的判断是为了避免路径开头变成这样"//"
                 strcat(new_abs_path, "/");
@@ -642,6 +642,21 @@ int tree_command(int argc, char **argv){
 int rm_command(int argc, char **argv) { return 0; }
 int mkdir_command(int argc, char **argv) { return 0;}
 int rmdir_command(int argc, char **argv) { return 0;}
+
+static char* get_filename_whole(char* buf, char* reletive_path) {
+
+	int len = 0;
+	// 拼凑绝对路径
+	len = strlen(current_dir);
+	len = len + strlen(reletive_path);
+	buf = kmalloc(len + 2, 0);
+	memset(buf, 0, len + 2);
+
+	make_clear_abs_path(reletive_path, buf); // 是相对路径 把相对路径转换成绝对路径
+
+	return buf;
+}
+
 int exec_command(int argc, char **argv)
 {
 	int pid = 0;
@@ -650,30 +665,11 @@ int exec_command(int argc, char **argv)
 	char* filename = 0;
 	int i = 0;
 
-	pid = fork();
-	if(pid ==  0 ) {
-		printf("child process\n");
-		len = strlen(current_dir);
-		i = len + strlen(argv[1]);
-		filename = kmalloc(i + 2, 0);
-		memset(filename, 0, i + 2);
-		strcpy(filename, current_dir);
-		if(len > 1)
-			filename[len] = '/';
-		strcat(filename, argv[1]);
+	printf("child process\n");
+	filename = get_filename_whole(filename, argv[1]);
+	printf("exec_command filename:%s\n", filename);
+	
 
-		printf("exec_command filename:%s\n", filename);
-		for(i = 0; i < argc; i++)
-			printf("argv[%d]:%s\n", i, argv[i]);
-		
-		execve(filename, argv, NULL);
-
-		exit(0);
-	} else {
-		printf("parent process childpid:%#d\n", errno);
-		waitpid(errno, &retval, 0);
-		printf("parent process waitpid:%#018lx\n", retval);
-	}
 	return errno;
 }
 int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }

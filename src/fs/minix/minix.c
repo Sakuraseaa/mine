@@ -312,6 +312,7 @@ long minix_read(struct file *filp, char *buf, u64 count, int64 *position) {
         cnt -= length;
         offset -= offset; // 第二次循环后，offset = 0
         *position += length; // 更新文件读取指针 位置
+        buf += length;
 
         brelse(bh);
 
@@ -357,6 +358,7 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
         cnt -= length;
         offset -= offset; // 第二次循环后，offset = 0
         *position += length; // 更新文件读取指针 位置
+        buf += length;
 
         brelse(bh);
 

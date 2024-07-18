@@ -564,8 +564,10 @@ void exit_mm(struct task_struct *tsk)
 	struct mm_struct *newmm = tsk->mm;
 	tmp4 = Phy_To_Virt(newmm->pgd);
 
+    // 😟 😋 🤬
+
     /* recycle all memory pages. these include Data, Code, Stack, Heap...*/
-    /* 这里操作页表，还是有一点点小难度的。些许风霜罢了*/
+    /* 这里操作页表，还是有一点点小难度的。些许风霜罢了 🧐*/
 	u64 vaddr = 0;
 	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
 		if((*(tmp4 + i)) & PAGE_Present) {

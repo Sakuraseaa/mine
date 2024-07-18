@@ -156,7 +156,7 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
 .plt.sec
  *(.plt.sec)
 
-.text           0x0000000000401000     0x39d2
+.text           0x0000000000401000     0x3975
  *(.text.unlikely .text.*_unlikely .text.unlikely.*)
  *(.text.exit .text.exit.*)
  *(.text.startup .text.startup.*)
@@ -243,17 +243,18 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
                 0x0000000000403b39                cd_command
                 0x0000000000403fa7                reckon_size
                 0x0000000000404004                ls_command
- .text          0x000000000040437b      0x657 /home/steven/mine/src/user/Build/pwd_else.o
-                0x000000000040437b                pwd_command
-                0x0000000000404418                cat_command
-                0x0000000000404669                touch_command
-                0x000000000040467f                rm_command
-                0x0000000000404695                mkdir_command
-                0x00000000004046ab                rmdir_command
-                0x00000000004046c1                exec_command
-                0x00000000004048cc                reboot_command
-                0x00000000004048f7                tree_command
-                0x0000000000404918                date_command
+ .text          0x000000000040437b      0x5fa /home/steven/mine/src/user/Build/pwd_else.o
+                0x000000000040437b                get_filename_whole
+                0x000000000040442c                pwd_command
+                0x00000000004044c9                cat_command
+                0x00000000004046e5                touch_command
+                0x00000000004046fb                rm_command
+                0x0000000000404711                mkdir_command
+                0x0000000000404727                rmdir_command
+                0x000000000040473d                exec_command
+                0x000000000040486f                reboot_command
+                0x000000000040489a                tree_command
+                0x00000000004048bb                date_command
  *(.gnu.warning)
 
 .fini
@@ -264,7 +265,7 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
                 0x0000000000405000                . = ALIGN (CONSTANT (MAXPAGESIZE))
                 0x0000000000405000                . = SEGMENT_START ("rodata-segment", (ALIGN (CONSTANT (MAXPAGESIZE)) + (. & (CONSTANT (MAXPAGESIZE) - 0x1))))
 
-.rodata         0x0000000000405000      0x5b4
+.rodata         0x0000000000405000      0x5a4
  *(.rodata .rodata.* .gnu.linkonce.r.*)
  .rodata        0x0000000000405000       0x7e /home/steven/mine/src/user/Build/init.o
  .rodata        0x000000000040507e       0x12 /home/steven/mine/src/user/Build/malloc.o
@@ -273,7 +274,7 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
  *fill*         0x0000000000405427        0x1 
  .rodata        0x0000000000405428       0x73 /home/steven/mine/src/user/Build/ls_cd.o
  *fill*         0x000000000040549b        0x5 
- .rodata        0x00000000004054a0      0x114 /home/steven/mine/src/user/Build/pwd_else.o
+ .rodata        0x00000000004054a0      0x104 /home/steven/mine/src/user/Build/pwd_else.o
 
 .rodata1
  *(.rodata1)
@@ -282,27 +283,27 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
  *(.eh_frame_hdr)
  *(.eh_frame_entry .eh_frame_entry.*)
 
-.eh_frame       0x00000000004055b8      0x740
+.eh_frame       0x00000000004055a8      0x760
  *(.eh_frame)
- .eh_frame      0x00000000004055b8      0x138 /home/steven/mine/src/user/Build/init.o
- .eh_frame      0x00000000004056f0       0x40 /home/steven/mine/src/user/Build/malloc.o
+ .eh_frame      0x00000000004055a8      0x138 /home/steven/mine/src/user/Build/init.o
+ .eh_frame      0x00000000004056e0       0x40 /home/steven/mine/src/user/Build/malloc.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000405730       0xe0 /home/steven/mine/src/user/Build/printf.o
+ .eh_frame      0x0000000000405720       0xe0 /home/steven/mine/src/user/Build/printf.o
                                          0xf8 (size before relaxing)
- .eh_frame      0x0000000000405810      0x168 /home/steven/mine/src/user/Build/string.o
+ .eh_frame      0x0000000000405800      0x168 /home/steven/mine/src/user/Build/string.o
                                         0x180 (size before relaxing)
- .eh_frame      0x0000000000405978       0x60 /home/steven/mine/src/user/Build/dirent.o
+ .eh_frame      0x0000000000405968       0x60 /home/steven/mine/src/user/Build/dirent.o
                                          0x78 (size before relaxing)
- .eh_frame      0x00000000004059d8       0x40 /home/steven/mine/src/user/Build/wait.o
+ .eh_frame      0x00000000004059c8       0x40 /home/steven/mine/src/user/Build/wait.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000405a18       0x40 /home/steven/mine/src/user/Build/signal.o
+ .eh_frame      0x0000000000405a08       0x40 /home/steven/mine/src/user/Build/signal.o
                                          0x58 (size before relaxing)
- .eh_frame      0x0000000000405a58       0x60 /home/steven/mine/src/user/Build/time.o
+ .eh_frame      0x0000000000405a48       0x60 /home/steven/mine/src/user/Build/time.o
                                          0x78 (size before relaxing)
- .eh_frame      0x0000000000405ab8      0x100 /home/steven/mine/src/user/Build/ls_cd.o
+ .eh_frame      0x0000000000405aa8      0x100 /home/steven/mine/src/user/Build/ls_cd.o
                                         0x118 (size before relaxing)
- .eh_frame      0x0000000000405bb8      0x140 /home/steven/mine/src/user/Build/pwd_else.o
-                                        0x158 (size before relaxing)
+ .eh_frame      0x0000000000405ba8      0x160 /home/steven/mine/src/user/Build/pwd_else.o
+                                        0x178 (size before relaxing)
  *(.eh_frame.*)
 
 .gcc_except_table
@@ -547,7 +548,7 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x0000000000000000     0x300f
+.debug_info     0x0000000000000000     0x300b
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x0000000000000000      0x8cb /home/steven/mine/src/user/Build/init.o
  .debug_info    0x00000000000008cb       0x44 /home/steven/mine/src/user/Build/errno.o
@@ -561,9 +562,9 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
  .debug_info    0x0000000000001a63       0x28 /home/steven/mine/src/user/Build/sig_restore.o
  .debug_info    0x0000000000001a8b      0x20d /home/steven/mine/src/user/Build/time.o
  .debug_info    0x0000000000001c98      0xaeb /home/steven/mine/src/user/Build/ls_cd.o
- .debug_info    0x0000000000002783      0x88c /home/steven/mine/src/user/Build/pwd_else.o
+ .debug_info    0x0000000000002783      0x888 /home/steven/mine/src/user/Build/pwd_else.o
 
-.debug_abbrev   0x0000000000000000      0xe27
+.debug_abbrev   0x0000000000000000      0xe38
  *(.debug_abbrev)
  .debug_abbrev  0x0000000000000000      0x239 /home/steven/mine/src/user/Build/init.o
  .debug_abbrev  0x0000000000000239       0x3d /home/steven/mine/src/user/Build/errno.o
@@ -577,9 +578,9 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
  .debug_abbrev  0x0000000000000942       0x14 /home/steven/mine/src/user/Build/sig_restore.o
  .debug_abbrev  0x0000000000000956      0x128 /home/steven/mine/src/user/Build/time.o
  .debug_abbrev  0x0000000000000a7e      0x21e /home/steven/mine/src/user/Build/ls_cd.o
- .debug_abbrev  0x0000000000000c9c      0x18b /home/steven/mine/src/user/Build/pwd_else.o
+ .debug_abbrev  0x0000000000000c9c      0x19c /home/steven/mine/src/user/Build/pwd_else.o
 
-.debug_line     0x0000000000000000     0x1392
+.debug_line     0x0000000000000000     0x137e
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x0000000000000000      0x38b /home/steven/mine/src/user/Build/init.o
  .debug_line    0x000000000000038b        0x0 /home/steven/mine/src/user/Build/syscall.o
@@ -594,12 +595,12 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
  .debug_line    0x0000000000000c3b       0x57 /home/steven/mine/src/user/Build/sig_restore.o
  .debug_line    0x0000000000000c92      0x147 /home/steven/mine/src/user/Build/time.o
  .debug_line    0x0000000000000dd9      0x3cd /home/steven/mine/src/user/Build/ls_cd.o
- .debug_line    0x00000000000011a6      0x1ec /home/steven/mine/src/user/Build/pwd_else.o
+ .debug_line    0x00000000000011a6      0x1d8 /home/steven/mine/src/user/Build/pwd_else.o
 
 .debug_frame
  *(.debug_frame)
 
-.debug_str      0x0000000000000000      0x77b
+.debug_str      0x0000000000000000      0x79c
  *(.debug_str)
  .debug_str     0x0000000000000000      0x2eb /home/steven/mine/src/user/Build/init.o
                                         0x30e (size before relaxing)
@@ -624,8 +625,8 @@ LOAD /home/steven/mine/src/user/Build/pwd_else.o
                                         0x18d (size before relaxing)
  .debug_str     0x0000000000000605      0x128 /home/steven/mine/src/user/Build/ls_cd.o
                                         0x379 (size before relaxing)
- .debug_str     0x000000000000072d       0x4e /home/steven/mine/src/user/Build/pwd_else.o
-                                        0x2a6 (size before relaxing)
+ .debug_str     0x000000000000072d       0x6f /home/steven/mine/src/user/Build/pwd_else.o
+                                        0x2b9 (size before relaxing)
 
 .debug_loc
  *(.debug_loc)

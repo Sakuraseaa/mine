@@ -88,9 +88,10 @@ struct file *open_exec_file(char *path)
 	dentry = path_walk(path, 0, 0);
 	if (dentry == NULL)
 		return (void *)-ENOENT;
-	if (dentry->dir_inode->attribute == FS_ATTR_DIR)
+	if (dentry->dir_inode->attribute == FS_ATTR_DIR) {
+		color_printk(RED, BLACK, "bash: %s: Is a directory\n", path);
 		return (void *)-ENOTDIR;
-
+	}
 	filp = (struct file *)kmalloc(sizeof(struct file), 0);
 	if (filp == NULL)
 		return (void *)-ENOMEM;
@@ -381,7 +382,7 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 
 	exit_files(current);
 
-	// 在用户空间，复制进程运行参数
+	// 在用户空间，复制进程运行参数, rewriter:: this is argc locked 10. all right.
 	if( argv != NULL ) {
 		int len = 0, i = 0;
 		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
