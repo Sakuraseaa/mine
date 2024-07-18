@@ -3,7 +3,8 @@
         "stab.h": "c",
         "types.h": "c",
         "keyboard.h": "c",
-        "syscalls.h": "c"
+        "syscalls.h": "c",
+        "errno.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

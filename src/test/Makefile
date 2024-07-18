@@ -3,7 +3,7 @@ CFLAGS := -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib\
 		-fno-builtin -fno-pie -fno-pic
 
 all: test.bin
-	sudo mount /dev/dm-0 /mnt -o uid=$$USER,gid=$$USER
+	sudo mount /dev/dm-1 /mnt -o uid=$$USER,gid=$$USER
 	sudo cp ./test.bin /mnt -v
 	sudo umount /mnt
 

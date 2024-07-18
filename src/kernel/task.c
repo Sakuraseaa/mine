@@ -380,7 +380,7 @@ out:
 } */
 
 
-static void copy_pageTables(struct mm_struct* newmm, u64 addr, bool copy){
+static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	
 	// here is only copy Page Table. 
 	// when page_fault occur, allcot memory and copy user data
@@ -418,18 +418,13 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr, bool copy){
 	if(!(*tmp & PAGE_Present)) {
 
 		attr = (*parent_tmp & (0xfffUL)); // get parent privilege
-		if(!copy) {
-			attr = (attr & (~PAGE_R_W)); // delet PW right
-			// set parent and child's Page privilege, parent and child share the Page
-			set_pdt(tmp, mk_pdt(p->PHY_address, attr));
-			set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
-			// add Page_struct count
-			p->reference_count++;
-		} else {
-			p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-			memcpy(addr, Phy_To_Virt(p->PHY_address),PAGE_2M_SIZE);
-			set_pdt(tmp, mk_pdt(p->PHY_address, attr));
-		}
+		
+		attr = (attr & (~PAGE_R_W)); // delet PW right
+		// set parent and child's Page privilege, parent and child share the Page
+		set_pdt(tmp, mk_pdt(p->PHY_address, attr));
+		set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
+		// add Page_struct count
+		p->reference_count++;
 	}
 	return;
 }
@@ -458,15 +453,15 @@ unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 	u64 vaddr = 0;
 	
 	for(vaddr = newmm->start_code; vaddr < newmm->end_code; vaddr += PAGE_2M_SIZE) // 代码段
-		copy_pageTables(newmm, vaddr, false);
+		copy_pageTables(newmm, vaddr);
 	for(vaddr = newmm->start_data; vaddr < newmm->end_data; vaddr += PAGE_2M_SIZE) // 数据
-		copy_pageTables(newmm, vaddr, false);
+		copy_pageTables(newmm, vaddr);
 	for(vaddr = newmm->start_rodata; vaddr < newmm->end_rodata; vaddr += PAGE_2M_SIZE) // 只读数据
-		copy_pageTables(newmm, vaddr, false);
+		copy_pageTables(newmm, vaddr);
 	for(vaddr = newmm->start_bss; vaddr < newmm->end_bss; vaddr += PAGE_2M_SIZE) // bss段
-		copy_pageTables(newmm, vaddr, false);
+		copy_pageTables(newmm, vaddr);
 	for(vaddr = newmm->start_brk; vaddr < newmm->end_brk; vaddr += PAGE_2M_SIZE) // brk 段
-		copy_pageTables(newmm, vaddr, false);
+		copy_pageTables(newmm, vaddr);
 	
 	// 栈段, 这里的栈段共享不成。
 	// 父进程返回用户态后，会破坏用户栈，但竟没有触发保护异常。
@@ -475,9 +470,10 @@ unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 
 	// 24-7-17-10:16: 因为你没有刷新快表
 	for(vaddr = newmm->start_stack; vaddr < (newmm->start_stack + newmm->stack_length); vaddr += PAGE_2M_SIZE)
-		copy_pageTables(newmm, vaddr, false);
+		copy_pageTables(newmm, vaddr);
 
-	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
+	// 刷新快表，很多错误发生在快表没有及时刷新
+	flush_tlb();
 out:
 	tsk->mm = newmm;
 	return error;
@@ -516,7 +512,6 @@ void exit_mm_fork(struct task_struct *tsk)
 			kfree(Phy_To_Virt(*tmp3));
 		}
 	}
-
 	kfree(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
 
 	if (tsk->mm != NULL)

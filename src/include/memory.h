@@ -270,6 +270,7 @@ struct Slab_cache kmalloc_cache_size[16] =
 #define SIZEOF_LONG_ALIGN(size) ((size + sizeof(long) - 1) & ~(sizeof(long) - 1))
 #define SIZEOF_INT_ALIGN(size) ((size + sizeof(int) - 1) & ~(sizeof(int) - 1))
 
+// Transaltion_Lookaside_Buffer, 刷新虚拟地址 vaddr 的 块表 TLB
 #define flush_tlb_one(addr)                                   \
     __asm__ __volatile__("invlpg	(%0)	\n\t" ::"r"(addr) \
                          : "memory")

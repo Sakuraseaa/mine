@@ -1190,14 +1190,16 @@ u64 do_wp_page(u64 virtual_address) {
     if(page->reference_count == 1) {
         // 物理页独享 - 修改页面权限返回，
 		set_pdt(tmp, mk_pdt(page->PHY_address, attr));
-        return 0;
+        
+    }else {
+        // 分配新页面给进程，在进程用的时候给进程分配页面,给子进程分配新的页面 :happy
+        new_page = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
+        memcpy(Phy_To_Virt(page->PHY_address), Phy_To_Virt(new_page->PHY_address), PAGE_2M_SIZE);
+        set_pdt(tmp, mk_pdt(new_page->PHY_address, attr));
+        page->reference_count--;
     }
 
-    // 分配新页面给进程，在进程用的时候给进程分配页面,给子进程分配新的页面
-    new_page = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-    memcpy(Phy_To_Virt(page->PHY_address), Phy_To_Virt(new_page->PHY_address), PAGE_2M_SIZE);
-    set_pdt(tmp, mk_pdt(new_page->PHY_address, attr));
-    page->reference_count--;
+    flush_tlb_one(virtual_address);
 
     return 0;
 }

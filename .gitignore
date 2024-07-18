@@ -1,5 +1,6 @@
 /src/Build
 /src/tmp
+/bochs/boot.img
 *.o
 *.s~
 *.s
