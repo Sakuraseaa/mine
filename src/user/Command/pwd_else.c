@@ -11,6 +11,8 @@
 #include "command.h"
 #include "printf.h"
 #include "time.h"
+#include "fcntl.h"
+
 extern char* current_dir;
 
 char* get_filename_whole(char* buf, char* reletive_path) {
@@ -43,7 +45,7 @@ int cat_command(int argc, char **argv)
 	char* buf = NULL;
 	int i = 0;
 
-	filename = get_filename_whole(argv[1], filename); // 是相对路径 把相对路径转换成绝对路径
+	filename = get_filename_whole(filename, argv[1]); 
 
 	fd = open(filename, 0);
 	
@@ -62,12 +64,21 @@ int cat_command(int argc, char **argv)
 	close(fd);
     return 0;
 }
-int touch_command(int argc, char **argv) {return 1; }
+int touch_command(int argc, char **argv) {
+	char* filename = NULL;
+	int ret = 0;
+
+	filename = get_filename_whole(filename, argv[1]); 
+
+	ret = open(filename, O_CREAT);
+
+	return ret; 
+}
 int rm_command(int argc, char **argv) { 
 	char* filename = NULL;
 	int ret = 0;
 
-	filename = get_filename_whole(argv[1], filename); 
+	filename = get_filename_whole(filename, argv[1]); 
 
 	ret = unlink(filename);
 
@@ -77,7 +88,7 @@ int mkdir_command(int argc, char **argv) {
 	char* filename = NULL;
 	int ret = 0;
 
-	filename = get_filename_whole(argv[1], filename); 
+	filename = get_filename_whole(filename, argv[1]); 
 
 	ret = mkdir(filename);
 
@@ -88,9 +99,7 @@ int exec_command(int argc, char **argv)
 {
 	int errno = 0;
 	int retval = 0;
-	int len = 0;
 	char* filename = 0;
-	int i = 0;
 
 	errno = fork();
 	if( errno ==  0 ) {
@@ -137,3 +146,4 @@ int date_command(int argc, char **argv)
             time.second);
 	return 1;
 }
+

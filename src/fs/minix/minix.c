@@ -263,7 +263,7 @@ long minix_delete(struct dir_entry *dentry) {
 
         list_del(&dentry->child_node);
 
-        kfree(dentry);
+        slab_free(Dir_Entry_Pool, dentry, 0); // 这一句话应该再 VFS 层实现
     } else if (ISDIR(dentry->dir_inode->i_mode)) {
 
     }
@@ -632,7 +632,7 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
     name[1] = '.';
     add_dentry(i_child, i_entry);
 
-    kfree(i_entry);
+    slab_free(Dir_Entry_Pool, i_entry, 0);
     
     return 0; 
 }
@@ -643,7 +643,7 @@ long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
     long ret = -1;
     u64 index = 0, i = 0, j = 0;
     u16 block = 0, *blk_indexs = NULL;
-    minix_sb_info_t* minix_sb = (minix_sb_info_t*)dentry->d_sb->private_sb_info;
+    super_t* minix_sb = dentry->d_sb;
     minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
     buffer_t* buf = NULL;
     
@@ -677,7 +677,7 @@ long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
     // b. 释放文件占用硬盘的inode
     minix_ifree(minix_sb, dentry->dir_inode->nr);
     
-    // c. 修改文件父母
+    // c. 修改文件目录
     del_dentry(dir, dentry->dir_inode->nr, dentry->name);
     
     // d. 删除 inode 在超级块中的索引

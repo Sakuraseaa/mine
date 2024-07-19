@@ -6,7 +6,9 @@
         "syscalls.h": "c",
         "errno.h": "c",
         "printk.h": "c",
-        "spinlock.h": "c"
+        "spinlock.h": "c",
+        "stdio.h": "c",
+        "command.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

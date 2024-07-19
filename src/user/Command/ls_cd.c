@@ -5,6 +5,7 @@
 #include "stdlib.h"
 #include "dirent.h"
 #include "string.h"
+#include "command.h"
 
 #define MAX_FILE_NAME_LEN 64
 #define MAX_PATH_LEN 256
@@ -141,7 +142,7 @@ int cd_command(int argc, char **argv)
 		return i;
 	}
 
-	path = get_filename_whole(argv[1], path);
+	path = get_filename_whole(path, argv[1]);
 
 	i = chdir(path);
 
@@ -150,7 +151,7 @@ int cd_command(int argc, char **argv)
 		current_dir = path;
 	} else {
 		free(path);
-		printf("cd: %s:No such file or directory", argv[1]);
+		color_printf(RED, "cd: %s:No such file or directory\n", argv[1]);
 	}
 	return 1;
 }

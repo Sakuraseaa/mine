@@ -180,6 +180,8 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32 pathL
  *
  * @param name 文件名称
  * @param flags 当形参flags = 1时, 表示创建文件.此时path_walk函数返回name's父目录的目录项，否则返回name's目录项
+ *              当形参flags = 2时, 表示获得文件的目录项 和 文件目录的目录项
+ *  
  * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
  * @return struct dir_entry* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
@@ -262,7 +264,7 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
 last_component: // 最后的组成成分
 last_slash:     // 最后的斜杠
 
-    // 当形参flags = 1时, path_walk函数返回目标父目录的目录项，否则返回目标目录项
+    // 当形参flags = 1时, path_walk函数返回目标父目录的目录项，并且填冲要创建文件的inode， 表示创建文件
     if (flags & 1)
     {
         if (path->dir_inode)
@@ -273,7 +275,15 @@ last_slash:     // 最后的斜杠
         *create_file = path;
         return parent;
     }
+    
+    // 当形参flags = 2时, 表示获得文件的目录项 和 文件目录的目录项
+    if (flags ==  2)
+    {
+        *create_file = path;
+        return parent;
+    }
 
+    // 其余情况返回文件的目录项
     return path;
 }
 

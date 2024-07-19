@@ -319,14 +319,14 @@ u64 sys_unlink(char* filename) {
     strncpy(path, filename, pathlen);
 
 
-    dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
+    dentry = path_walk(path, 2, &Child_dentry); 
     if (dentry == NULL)
         return -ENOENT;
     
     kfree(path);
     assert(Child_dentry->parent == dentry);
 
-    if(Child_dentry->dir_inode->attribute == FS_ATTR_DIR) {
+    if(ISDIR(Child_dentry->dir_inode->i_mode)) {
         
         color_printk(RED, WHITE, "Can't remove dir. please user \'mkdir\' again. "); 
         // 其实这句错误信息，应该在户空间通过得到的erron 输出，不适合使用内核输出

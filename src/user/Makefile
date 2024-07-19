@@ -1,6 +1,7 @@
 USR_SRC_DIR=/home/steven/mine/src/user
-USR_BUI_DIR=/home/steven/mine/src/user/Build
+USR_BUI_DIR=/home/steven/mine/src/Build
 USR_INC_DIR = /home/steven/mine/src/user/include
+INC_DIR = /home/steven/mine/src/include
 
 ASM   = nasm
 CC	  = gcc

@@ -2,6 +2,8 @@
 
 #define __UNISTD_H__
 
+#include "types.h"
+
 int open(const char *path, int oflag);
 int close(int fildes);
 long read(int fildes, void *buf, long nbyte);
@@ -19,5 +21,6 @@ int mkdir(const char* path);
 
 int tree(void);
 int cleanScreen(void);
+u64 getNow(void);
 
 #endif

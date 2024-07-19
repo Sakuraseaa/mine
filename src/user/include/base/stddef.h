@@ -2,6 +2,6 @@
 
 #define __STDDEF_H__
 
-#define NULL 0
+// #define NULL 0
 
 #endif

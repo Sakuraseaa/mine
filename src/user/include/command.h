@@ -2,10 +2,11 @@
 #define _COMMOND_H__
 
 void make_clear_abs_path(char *path, char *final_path);
+char* get_filename_whole(char* buf, char* reletive_path);
+
 
 int ls_command(int argc, char **argv);
 int cd_command(int argc, char **argv);
-
 int pwd_command(int argc, char **argv);
 int cat_command(int argc, char **argv);
 int touch_command(int argc, char **argv);

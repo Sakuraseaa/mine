@@ -21,6 +21,7 @@ int read_line(int fd, char *buf);
 void run_command(int index, int argc, char **argv);
 int parse_command(char *buf, int *argc, char ***argv);
 
+static char* get_filename_whole(char* buf, char* reletive_path);
 extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
 
 struct buildincmd
@@ -395,18 +396,8 @@ int cd_command(int argc, char **argv)
 		return i;
 	}
 
-	// 给路径 申请缓冲
-	i = len + strlen(argv[1]);
-	path = kmalloc(i + 2, 0);
-	memset(path, 0, i + 2);
-
+	path = get_filename_whole(path, argv[1]);
 	
-	if(argv[1][0] == '/') // 是绝对路径
-		strcpy(path, argv[1]);
-	else 
-		make_clear_abs_path(argv[1], path); // 是相对路径 把相对路径转换成绝对路径
-
-
 	i = chdir(path);
 	if(!i) {
 		kfree(current_dir);
