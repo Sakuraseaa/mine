@@ -43,13 +43,7 @@ int cat_command(int argc, char **argv)
 	char* buf = NULL;
 	int i = 0;
 
-	// 拼凑绝对路径
-	len = strlen(current_dir);
-	i = len + strlen(argv[1]);
-	filename = malloc(i + 2, 0);
-	memset(filename, 0, i + 2);
-
-	make_clear_abs_path(argv[1], filename); // 是相对路径 把相对路径转换成绝对路径
+	filename = get_filename_whole(argv[1], filename); // 是相对路径 把相对路径转换成绝对路径
 
 	fd = open(filename, 0);
 	
@@ -69,8 +63,26 @@ int cat_command(int argc, char **argv)
     return 0;
 }
 int touch_command(int argc, char **argv) {return 1; }
-int rm_command(int argc, char **argv) { return 0; }
-int mkdir_command(int argc, char **argv) { return 0; }
+int rm_command(int argc, char **argv) { 
+	char* filename = NULL;
+	int ret = 0;
+
+	filename = get_filename_whole(argv[1], filename); 
+
+	ret = unlink(filename);
+
+	return ret; 
+}
+int mkdir_command(int argc, char **argv) { 
+	char* filename = NULL;
+	int ret = 0;
+
+	filename = get_filename_whole(argv[1], filename); 
+
+	ret = mkdir(filename);
+
+	return ret; 
+}
 int rmdir_command(int argc, char **argv) { return 0; }
 int exec_command(int argc, char **argv)
 {

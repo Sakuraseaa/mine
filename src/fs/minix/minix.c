@@ -121,16 +121,17 @@ static idx_t minix_balloc(super_t *super) {
 }
 
 // 回收一个物理块
-static void minix_bfree(super_t* super, idx_t bit) {
+static void minix_bfree(super_t* super,u16 block) {
     
     buffer_t *buf = NULL;
     bitmap_t map;
     minix_sb_info_t *m_sb = (minix_sb_info_t *)super->private_sb_info;
     idx_t bidx = 2 + m_sb->imap_blocks; // 块位图的块号
+    block -= m_sb->firstdatazone;
 
     for (size_t i = 0; i < m_sb->zmap_blocks; i++) {
         
-        if(bit > BLOCK_BITS * (i + 1)) // 跳过开始块
+        if(block > BLOCK_BITS * (i + 1)) // 跳过开始块
             continue;
 
         buf = bread(super->dev, bidx + i, BLOCK_SIZE);
@@ -139,9 +140,9 @@ static void minix_bfree(super_t* super, idx_t bit) {
         bitmap_make(&map, buf->data, BLOCK_SIZE);
         
         // 必须置位
-        assert(bitmap_scan_test(&map, bit) == 1);
+        assert(bitmap_scan_test(&map, block) == 1);
         
-        bitmap_set(&map, bit, 0);
+        bitmap_set(&map, block, 0);
 
         // 标记缓冲区脏
         buf->dirty = true;
@@ -255,12 +256,27 @@ long minix_compare(struct dir_entry *parent_dentry, char *source_filename, char 
 long minix_hash(struct dir_entry *dentry, char *filename) { return 0; }
 long minix_release(struct dir_entry *dentry) { return 0; }                        // 释放目录项
 long minix_iput(struct dir_entry *dentry, struct index_node *inode) { return 0; } // 释放inode索引
+long minix_delete(struct dir_entry *dentry) { 
+
+    if(ISREG(dentry->dir_inode->i_mode)) {
+        kfree(dentry->dir_inode);
+
+        list_del(&dentry->child_node);
+
+        kfree(dentry);
+    } else if (ISDIR(dentry->dir_inode->i_mode)) {
+
+    }
+    return 0; 
+
+} 
 struct dir_entry_operations minix_dentry_ops =
     {
         .compare = minix_compare,
         .hash = minix_hash,
         .release = minix_release,
         .iput = minix_iput,
+        .d_delete = minix_delete,
 };
 
 
@@ -471,6 +487,51 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
     return buf;
 }
 
+
+static void del_dentry(inode_t* dir, u16 nr, char* name) {
+    assert(dir->attribute == FS_ATTR_DIR)
+
+    //遍历目录文件, 寻找目录项
+    u64 zone_idx = 0, block = 0;
+    buffer_t* buf = NULL;
+    minix_inode_t* m_parent_inode = dir->private_index_info;
+    minix_dentry_t* entry = NULL;
+    while(true) {
+
+        if(!buf || ((u64)entry) > ((u64)(buf->data) + BLOCK_SIZE)) {
+            
+            brelse(buf);
+            block = minix_bmap(dir, zone_idx, true);
+            assert(block > 0);
+
+            buf = bread(dir->dev, block, BLOCK_SIZE);
+            entry = (minix_dentry_t*)buf->data;
+            zone_idx++;
+        }
+        
+        if(entry->nr == nr && (strcmp(entry->name, name) == 0)) {
+            
+            dir->file_size -= sizeof(minix_dentry_t); // 更新目录inode 节点信息
+            m_parent_inode->size = dir->file_size;
+            m_parent_inode->mtime = dir->ctime;
+            dir->ctime = NOW();
+            dir->buf->dirty = true;
+            bwrite(dir->buf);
+            
+            entry->nr = 0;
+            entry->name[0] = '\0';
+            buf->dirty = true;          // 更新目录文件
+            brelse(buf);
+            break;
+        }
+
+        entry++;
+    }
+
+    return buf;
+}
+
+
 /**
  * @brief
  *
@@ -577,6 +638,57 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
 }
 
 long minix_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
+
+long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
+    long ret = -1;
+    u64 index = 0, i = 0, j = 0;
+    u16 block = 0, *blk_indexs = NULL;
+    minix_sb_info_t* minix_sb = (minix_sb_info_t*)dentry->d_sb->private_sb_info;
+    minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
+    buffer_t* buf = NULL;
+    
+    // a. 释放文件数据
+    for(;index < DIRECT_BLOCK ; index++) { // 直接块
+        block = m_inode->zone[index];
+        if(block != 0)
+            minix_bfree(minix_sb, block);
+    }
+
+    if(m_inode->zone[index] != 0) { // 间接块
+        block = m_inode->zone[index];
+        buf = bread(dir->dev, block, BLOCK_SIZE);
+        blk_indexs = (u16*)buf->data;
+        
+        for(; i < INDIRECT1_BLOCK; i++) { // 释放块内存
+            if(blk_indexs[i] != 0 )
+                minix_bfree(minix_sb, blk_indexs[i]);
+        }
+        
+        minix_bfree(minix_sb, block); // 释放间接块内存
+        index++;
+    }
+
+    if(m_inode->zone[index] != 0) { // 双重间接块
+        // waiting rewrite
+        // 这里的实现 需要三重循环，有没有什么方法。可以减少时间复杂度
+        assert(0);
+    }
+    
+    // b. 释放文件占用硬盘的inode
+    minix_ifree(minix_sb, dentry->dir_inode->nr);
+    
+    // c. 修改文件父母
+    del_dentry(dir, dentry->dir_inode->nr, dentry->name);
+    
+    // d. 删除 inode 在超级块中的索引
+    list_del(&dentry->dir_inode->i_sb_list);
+    
+    // f. 释放 inode 私有引用
+    brelse(dentry->dir_inode->buf);
+
+    return ret;
+}
+
 long minix_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
 long minix_getattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
 long minix_setattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
@@ -590,6 +702,7 @@ struct index_node_operations minix_inode_ops =
         .rename = minix_rename,
         .getattr = minix_getattr,
         .setattr = minix_setattr,
+        .unlink = minix_unlink,
 };
 
 

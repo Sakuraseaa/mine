@@ -30,9 +30,12 @@
 #define __NR_sleep 19
 
 #define __NR_mkdir 20
+#define __NR_rmdir 21
 
 #define __NR_getcwd 22
 #define __NR_stat 23
+
+#define __NR_unlink 24
 
 #define __NR_tree 196
 #define __NR_cleanScreen 197

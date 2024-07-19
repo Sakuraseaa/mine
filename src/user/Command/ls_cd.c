@@ -141,17 +141,7 @@ int cd_command(int argc, char **argv)
 		return i;
 	}
 
-	// 给路径 申请缓冲
-	i = len + strlen(argv[1]);
-	path = malloc(i + 2, 0);
-	memset(path, 0, i + 2);
-
-	
-	if(argv[1][0] == '/') // 是绝对路径
-		strcpy(path, argv[1]);
-	else 
-		make_clear_abs_path(argv[1], path); // 是相对路径 把相对路径转换成绝对路径
-
+	path = get_filename_whole(argv[1], path);
 
 	i = chdir(path);
 

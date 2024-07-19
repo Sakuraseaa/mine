@@ -289,6 +289,62 @@ u64 sys_mkdir(char* filename) {
     return error;
 }
 
+u64 sys_unlink(char* filename) {
+        char *path = NULL;
+    long pathlen = 0;
+    long error = 0;
+    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
+    int path_flags = 0;
+    struct dir_entry *dentry = NULL;
+    struct file *filp = NULL;
+    struct file **f = NULL;
+    int fd = -1; // 文件描述符
+
+    // a. 把目标路径名从应用层复制到内核层
+    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    if (path == NULL)
+        return -ENOMEM;
+    memset(path, 0, PAGE_4K_SIZE);
+    pathlen = strlen(filename);
+    // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
+    if (pathlen <= 0) {
+        kfree(path);
+        return -EFAULT;
+    }
+    else if (pathlen >= PAGE_4K_SIZE) {
+        kfree(path);
+        return -ENAMETOOLONG;
+    }
+    // strncpy_from_user(filename, path, pathlen);
+    strncpy(path, filename, pathlen);
+
+
+    dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
+    if (dentry == NULL)
+        return -ENOENT;
+    
+    kfree(path);
+    assert(Child_dentry->parent == dentry);
+
+    if(Child_dentry->dir_inode->attribute == FS_ATTR_DIR) {
+        
+        color_printk(RED, WHITE, "Can't remove dir. please user \'mkdir\' again. "); 
+        // 其实这句错误信息，应该在户空间通过得到的erron 输出，不适合使用内核输出
+        
+        return -EISDIR;
+    }
+        
+
+    if(dentry->dir_inode->inode_ops && (dentry->dir_inode->inode_ops->unlink && Child_dentry->dir_ops->d_delete)) {
+    
+        error = dentry->dir_inode->inode_ops->unlink(dentry->dir_inode, Child_dentry); // delete file
+        Child_dentry->dir_ops->d_delete(Child_dentry); // delete dir entry
+    
+    }
+
+    return error;
+}
+
 /**
  * @brief 关闭文件描述符 = 释放文件描述符拥有的资源，切断进程和文件描述符之间的关联
  *

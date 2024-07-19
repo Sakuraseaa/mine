@@ -49,6 +49,7 @@ SYSFUNC_DEF(stat)
 SYSFUNC_DEF(tree)
 SYSFUNC_DEF(cleanScreen)
 SYSFUNC_DEF(getNow)
+SYSFUNC_DEF(unlink)
 
 __asm__	(
 "LABEL_SYSCALL:	\n\t"		

@@ -953,6 +953,7 @@ struct index_node_operations FAT32_inode_ops =
         .rename = FAT32_rename,
         .getattr = FAT32_getattr,
         .setattr = FAT32_setattr,
+        .unlink = NULL,
 };
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
@@ -966,6 +967,7 @@ struct dir_entry_operations FAT32_dentry_ops =
         .hash = FAT32_hash,
         .release = FAT32_release,
         .iput = FAT32_iput,
+        .d_delete = NULL,
 };
 
 // 修改超级块？

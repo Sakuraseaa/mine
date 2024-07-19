@@ -94,7 +94,7 @@ typedef struct super_block
 typedef struct index_node
 {
 
-    list_t i_sb_list;        // 超级块链表
+    list_t i_sb_list;        // 超级块链表_结点
     
     mode_t i_mode;           // 文件模式
     size_t file_size;        // 文件大小
@@ -188,6 +188,7 @@ struct index_node_operations
     long (*rename)(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry); // 移动文件
     long (*getattr)(struct dir_entry *dentry, unsigned long *attr);                                                                         // 在通知所有节点需要对磁盘中更新时，VFS会调用该函数
     long (*setattr)(struct dir_entry *dentry, unsigned long *attr);                                                                         // 在修改索引节点后，通知发生了”改变事件“
+    long (*unlink)(struct index_node *dir, struct dentry* dentry); // 删除文件
 };
 
 struct dir_entry_operations
@@ -196,7 +197,7 @@ struct dir_entry_operations
     long (*hash)(struct dir_entry *dentry, char *filename);                                              // 该函数为目录项生成散列值
     long (*release)(struct dir_entry *dentry);                                                           // 释放目录项对象
     long (*iput)(struct dir_entry *dentry, struct index_node *inode);                                    // 释放inode索引
-    long (*d_release)(struct dentry *dentry);
+    long (*d_delete)(struct dentry *dentry);
 };
 
 // 文件描述符
