@@ -1,17 +1,17 @@
-USR_SRC_DIR=/home/steven/mine/src/user
-USR_BUI_DIR=/home/steven/mine/src/Build
-USR_INC_DIR = /home/steven/mine/src/user/include
+USR_SRC_DIR=/home/steven/mine/user
+USR_BUI_DIR=/home/steven/mine/build
+USR_INC_DIR = /home/steven/mine/user/include
 INC_DIR = /home/steven/mine/src/include
 
 ASM   = nasm
 CC	  = gcc
 
 CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib\
-		-fno-builtin -fno-pie -fno-pic -g -I $(USR_INC_DIR) \
-		-c -I $(USR_INC_DIR)/base \
+		-fno-builtin -fno-pie -fno-pic -g -I $(USR_INC_DIR)  -I $(INC_DIR)/base \
+		-c -I $(USR_INC_DIR)/base -I $(INC_DIR) \
 
 #被链接的文件
-OBJS =    $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/syscall.o $(USR_BUI_DIR)/errno.o   \
+OBJS =  $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/syscall.o $(USR_BUI_DIR)/errno.o   \
 		$(USR_BUI_DIR)/malloc.o $(USR_BUI_DIR)/keyboard.o $(USR_BUI_DIR)/printf.o \
 		$(USR_BUI_DIR)/string.o $(USR_BUI_DIR)/dirent.o $(USR_BUI_DIR)/wait.o \
 		$(USR_BUI_DIR)/signal.o $(USR_BUI_DIR)/sig_restore.o $(USR_BUI_DIR)/time.o $(USR_BUI_DIR)/ls_cd.o   \

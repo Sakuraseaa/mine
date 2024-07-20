@@ -2,7 +2,7 @@
 #include "types.h"
 #include "debug.h"
 // #include "unistd.h"
-#include "stdio.h"
+#include "lib.h"
 #include "fcntl.h"
 #include "keyboard.h"
 #include "memory.h"

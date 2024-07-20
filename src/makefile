@@ -1,8 +1,8 @@
 SRC_DIR=/home/steven/mine/src
-BUI_DIR=/home/steven/mine/src/Build
+BUI_DIR=/home/steven/mine/build
 BOCHS = /home/steven/mine/bochs
 INC_DIR = /home/steven/mine/src/include
-
+SCI_DIR = /home/steven/mine/script
 
 
 PIC   := PIC
@@ -132,11 +132,13 @@ $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/execv.o: $(SRC_DIR)/lib/execv.c
 	@$(CC) $(CFLAGS) $< -o $@
+
+
 # =============  SCRIPT ============
-$(BUI_DIR)/kallsyms.o: $(SRC_DIR)/script/kallsyms.c $(BUI_DIR)/kernel.bin
-	@$(CC) -o $(BUI_DIR)/kallsyms $(SRC_DIR)/script/kallsyms.c
-	@nm -n $(BUI_DIR)/kernel.bin | $(BUI_DIR)/kallsyms > $(SRC_DIR)/script/kallsyms.S
-	@$(CC) -c -o $(BUI_DIR)/kallsyms.o $(SRC_DIR)/script/kallsyms.S
+$(BUI_DIR)/kallsyms.o: $(SCI_DIR)/kallsyms.c $(BUI_DIR)/kernel.bin
+	@$(CC) -o $(BUI_DIR)/kallsyms $(SCI_DIR)/kallsyms.c
+	@nm -n $(BUI_DIR)/kernel.bin | $(BUI_DIR)/kallsyms > $(SCI_DIR)/kallsyms.S
+	@$(CC) -c -o $(BUI_DIR)/kallsyms.o $(SCI_DIR)/kallsyms.S
 # ============= SCRIPT ============
 
 

@@ -6,7 +6,6 @@
 #include "lib.h"
 #include "VFS.h"
 #include "fat32.h"
-#include "stdio.h"
 #include "keyboard.h"
 #include "sys.h"
 #include "debug.h"

@@ -8,7 +8,12 @@
         "printk.h": "c",
         "spinlock.h": "c",
         "stdio.h": "c",
-        "command.h": "c"
+        "command.h": "c",
+        "string.h": "c",
+        "assert.h": "c",
+        "debug.h": "c",
+        "stddef.h": "c",
+        "time.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

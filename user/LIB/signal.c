@@ -1,5 +1,4 @@
 #include "signal.h"
-#include "stddef.h"
 #include "stdio.h"
 #include "types.h"
 extern sighadler_t SIGNAL(long signum, sighadler_t  hander, void (*restorer)(void));

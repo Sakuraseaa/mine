@@ -10,7 +10,6 @@
 #include "task.h"
 #include "unistd.h"
 #include "fcntl.h"
-#include "stdio.h"
 #include "errno.h"
 #include "execv.h"
 #include "debug.h"

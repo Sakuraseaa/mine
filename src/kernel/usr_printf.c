@@ -2,7 +2,6 @@
 #include "init.h"
 #include <stdarg.h>
 #include "printf.h"
-#include "stdio.h"
 
 
 unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //

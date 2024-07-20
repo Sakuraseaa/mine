@@ -6,7 +6,6 @@
 #include "VFS.h"
 #include "errno.h"
 #include "memory.h"
-#include "stdio.h"
 #include "debug.h"
 
 #define FAT_DENRY_SIZE 32

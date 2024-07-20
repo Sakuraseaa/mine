@@ -62,5 +62,5 @@ int strncmp(char *FirstPart, char *SecondPart, long Count);
 char *strchr(const char *str, const char ch);
 char *strrchr(const char *str, const char ch);
 int strlen(const char *String);
-
+extern int errno;
 #endif

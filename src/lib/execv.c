@@ -4,7 +4,6 @@
 #include "memory.h"
 #include "task.h"
 #include "fcntl.h"
-#include "stdio.h"
 #include "printk.h"
 #include "lib.h"
 #include "debug.h"

@@ -1,5 +1,5 @@
-/src/Build
-/src/tmp
+/build
+/tmp
 /bochs/boot.img
 *.o
 *.s~
@@ -12,8 +12,8 @@ Kernel.lds~
 kernel.bin
 *.ini
 *.bin
-*.sh
 hd.img
 vhd.img
 hd.qcow2
 system_api_lib
+*.txt

@@ -7,9 +7,9 @@
 #include "memory.h"
 #include "disk.h"
 #include "super.h"
-#include "stdio.h"
 #include "errno.h"
 #include "assert.h"
+#include "lib.h"
 struct file_system_type filesystem = {"filesystem", 0};
 #define MAX_FILE_NAME_LEN PAGE_4K_SIZE
 

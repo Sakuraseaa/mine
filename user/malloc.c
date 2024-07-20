@@ -1,5 +1,4 @@
 #include "stddef.h"
-#include "limits.h"
 #include "stdio.h"
 #include "string.h"
 #include "types.h"
@@ -9,7 +8,8 @@ static unsigned long brk_used_address = 0;
 static unsigned long brk_end_address = 0;
 
 #define	SIZE_ALIGN	(8 * sizeof(unsigned long))
-
+#define	PAGESIZE	(1UL << 21)
+#define	PAGE_SIZE	PAGESIZE
 
 extern unsigned long brk(unsigned long brk);
 void * malloc(unsigned long size, int invalid)

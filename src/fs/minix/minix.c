@@ -4,7 +4,6 @@
 #include "VFS.h"
 #include "errno.h"
 #include "memory.h"
-#include "stdio.h"
 #include "debug.h"
 #include "dirent.h"
 #include "disk.h"
