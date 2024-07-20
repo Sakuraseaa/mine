@@ -18,21 +18,8 @@
                 "${workspaceFolder}/src/include/usr/*",
                 "${workspaceFolder}/src/include/fs/*",
                 "${workspaceFolder}/src/fs/minix/*",
-                "${workspaceFolder}/src/user/include/base/*",
-                "${workspaceFolder}/src/user/include/*"
-            ],
-            "defines": [],
-            "compilerPath": "/usr/bin/gcc",
-            "cStandard": "gnu17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64",
-            "forcedInclude": []
-        },
-        {
-            "name": "Linux2",
-            "includePath": [
-                "${workspaceFolder}/src/user/include/base/*",
-                "${workspaceFolder}/src/user/include/*"
+                "${workspaceFolder}/user/include/base/*",
+                "${workspaceFolder}/user/include/*"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
