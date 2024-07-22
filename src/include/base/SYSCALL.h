@@ -1,5 +1,5 @@
-#ifndef __UNISTD_H__
-#define __UNISTD_H__
+#ifndef __UNISTD_SYSCALL_H__
+#define __UNISTD_SYSCALL_H__
 
 #define __NR_putstring 1
 

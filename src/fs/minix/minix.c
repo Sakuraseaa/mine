@@ -256,7 +256,7 @@ long minix_hash(struct dir_entry *dentry, char *filename) { return 0; }
 long minix_release(struct dir_entry *dentry) { return 0; }                        // 释放目录项
 long minix_iput(struct dir_entry *dentry, struct index_node *inode) { return 0; } // 释放inode索引
 long minix_delete(struct dir_entry *dentry) { 
-
+    // 当然这里是需要重写的
     if(ISREG(dentry->dir_inode->i_mode)) {
         kfree(dentry->dir_inode);
 
@@ -487,7 +487,15 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
 }
 
 
-static void del_dentry(inode_t* dir, u16 nr, char* name) {
+/**
+ * @brief 删除文件名为name的文件，所对应的目录项
+ * 
+ * @param dir   被删除文件所在 目录
+ * @param inode 被删除文件的inode
+ * @param nr  
+ * @param name 被删除文件的 文件名
+ */
+static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char* name) {
     assert(dir->attribute == FS_ATTR_DIR)
 
     //遍历目录文件, 寻找目录项
@@ -511,11 +519,14 @@ static void del_dentry(inode_t* dir, u16 nr, char* name) {
         if(entry->nr == nr && (strcmp(entry->name, name) == 0)) {
             
             dir->file_size -= sizeof(minix_dentry_t); // 更新目录inode 节点信息
+            assert(m_parent_inode->nlinks > 0);
             m_parent_inode->size = dir->file_size;
             m_parent_inode->mtime = dir->ctime;
             dir->ctime = NOW();
             dir->buf->dirty = true;
             bwrite(dir->buf);
+
+            m_child_inode->nlinks--; // 这里是否存在同步问题？
             
             entry->nr = 0;
             entry->name[0] = '\0';
@@ -530,6 +541,48 @@ static void del_dentry(inode_t* dir, u16 nr, char* name) {
     return buf;
 }
 
+
+/**
+ * @brief 释放m_inode所描述文件占有所有物理块
+ * 
+ * @param minix_sb 
+ * @param m_inode 
+ */
+static void realse_file_data(super_t* minix_sb, minix_inode_t* m_inode) {
+    
+    u64 index = 0, i = 0, j = 0;
+    u16 block = 0, *blk_indexs = NULL;
+    buffer_t* buf = NULL;
+    
+    // a. 释放文件数据
+    for(;index < DIRECT_BLOCK ; index++) { // 直接块
+        block = m_inode->zone[index];
+        if(block != 0)
+            minix_bfree(minix_sb, block);
+    }
+
+    if(m_inode->zone[index] != 0) { // 间接块
+        block = m_inode->zone[index];
+        buf = bread(minix_sb->dev, block, BLOCK_SIZE);
+        blk_indexs = (u16*)buf->data;
+        
+        for(; i < INDIRECT1_BLOCK; i++) { // 释放块内存
+            if(blk_indexs[i] != 0 )
+                minix_bfree(minix_sb, blk_indexs[i]);
+        }
+        
+        minix_bfree(minix_sb, block); // 释放间接块内存
+        index++;
+    }
+
+    if(m_inode->zone[index] != 0) { // 双重间接块
+        // waiting rewrite
+        // 这里的实现 需要三重循环，有没有什么方法。可以减少时间复杂度
+        assert(0);
+    }
+
+
+}
 
 /**
  * @brief
@@ -636,53 +689,62 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
     return 0; 
 }
 
-long minix_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
-
-long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
+long minix_rmdir(struct index_node *dir, struct dir_entry *dentry) { 
     long ret = -1;
-    u64 index = 0, i = 0, j = 0;
-    u16 block = 0, *blk_indexs = NULL;
+
     super_t* minix_sb = dentry->d_sb;
     minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
-    buffer_t* buf = NULL;
     
-    // a. 释放文件数据
-    for(;index < DIRECT_BLOCK ; index++) { // 直接块
-        block = m_inode->zone[index];
-        if(block != 0)
-            minix_bfree(minix_sb, block);
-    }
-
-    if(m_inode->zone[index] != 0) { // 间接块
-        block = m_inode->zone[index];
-        buf = bread(dir->dev, block, BLOCK_SIZE);
-        blk_indexs = (u16*)buf->data;
-        
-        for(; i < INDIRECT1_BLOCK; i++) { // 释放块内存
-            if(blk_indexs[i] != 0 )
-                minix_bfree(minix_sb, blk_indexs[i]);
-        }
-        
-        minix_bfree(minix_sb, block); // 释放间接块内存
-        index++;
-    }
-
-    if(m_inode->zone[index] != 0) { // 双重间接块
-        // waiting rewrite
-        // 这里的实现 需要三重循环，有没有什么方法。可以减少时间复杂度
-        assert(0);
+    if(m_inode->size != (sizeof(minix_dentry_t) * 2)) {
+        color_printk(RED, BLACK, "rmdir: filed to remove: Directory not empty!\n");
+        return -ENOTEMPTY;
     }
     
-    // b. 释放文件占用硬盘的inode
+    // a. 释放目录数据
+    realse_file_data(minix_sb, m_inode); // "." 和 ".."的目录项
+    
+    // b. here have joker. 我把父目录的m_inode传入了，进行 n_link链接减一的操作。
+    del_dentry(dir, dir->private_index_info, dentry->dir_inode->nr, dentry->name);
+    
+    // c. 释放文件占用硬盘的inode
     minix_ifree(minix_sb, dentry->dir_inode->nr);
-    
-    // c. 修改文件目录
-    del_dentry(dir, dentry->dir_inode->nr, dentry->name);
     
     // d. 删除 inode 在超级块中的索引
     list_del(&dentry->dir_inode->i_sb_list);
     
-    // f. 释放 inode 私有引用
+    // e. 释放 inode 私有引用
+    ret = brelse(dentry->dir_inode->buf);
+    
+    return ret;
+}
+
+/**
+ * @brief 删除文件。
+ * 
+ * @param dir 
+ * @param dentry 
+ * @return long 
+ */
+long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
+    long ret = -1;
+
+    super_t* minix_sb = dentry->d_sb;
+    minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
+    
+    // a. 释放文件数据
+    realse_file_data(minix_sb, m_inode);
+
+    // c. 删除文件对应目录项
+    del_dentry(dir, m_inode, dentry->dir_inode->nr, dentry->name);
+    
+    assert(m_inode->nlinks == 0);
+    // b. 释放文件占用硬盘的inode
+    minix_ifree(minix_sb, dentry->dir_inode->nr);
+        
+    // d. 删除 inode 在超级块中的索引
+    list_del(&dentry->dir_inode->i_sb_list);
+    
+    // e. 释放 inode 私有引用
     brelse(dentry->dir_inode->buf);
 
     return ret;

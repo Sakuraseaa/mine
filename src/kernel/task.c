@@ -8,7 +8,6 @@
 #include "gate.h"
 #include "schedule.h"
 #include "task.h"
-#include "unistd.h"
 #include "fcntl.h"
 #include "errno.h"
 #include "execv.h"
@@ -54,107 +53,6 @@ struct task_struct *get_task(long pid)
 	}
 
 	return NULL;
-}
-
-// 用户进程 执行一次系统调用, 已经过时了
-void user_level_function()
-{
-	long errno = 0;
-	// 这里会出现截断现象, 但如果我给string的内存配置大一点就不会 这是为甚么？
-	char path[7] = "/a.txt";
-	char buf[50];
-	char str[] = "YSKM";
-	int fd = -1;
-	// call sys_open
-	// int open(const char* path, int oflag)
-
-	// sysenter 不会保护当前环境，依据sysexit的用法，
-	// 我们需要保存需要恢复的rip到rdx,需要恢复的rsp到rcx
-	// rax寄存器把执行结果返回到应用层并保存在变量ret中
-	__asm__ __volatile__("sub $0x100, %%rsp \n\t"
-						 "pushq %%r10 \n\t"
-						 "pushq %%r11 \n\t"
-						 "leaq sysexit_return_address0(%%rip), %%r10 \n\t" // 保存应用层的rip
-						 "movq %%rsp, %%r11 \n\t"						   // 保存应用层的rsp
-						 "sysenter \n\t"								   // 进入内核层，跳转到entry.S的system_call
-						 "sysexit_return_address0:  \n\t"
-						 "xchgq %%rdx, %%r10 \n\t"
-						 "xchgq %%rcx, %%r11 \n\t"
-						 "popq %%r11 \n\t"
-						 "popq %%r10 \n\t"
-						 : "=a"(errno)
-						 : "0"(__NR_open), "D"(path), "S"(O_APPEND)
-						 : "memory");
-	fd = errno; // 文件描述符
-
-	// call sys_write
-	// long write(int fildes, void* buf, long nbyte);
-	__asm__ __volatile__("pushq %%r10 \n\t"
-						 "pushq %%r11 \n\t"
-						 "leaq sysexit_return_address2(%%rip), %%r10 \n\t" // 再次执行的rip
-						 "movq %%rsp, %%r11 \n\t"						   // 再次执行的rsp
-						 "sysenter \n\t"								   // 进入内核层，跳转到entry.S的system_call
-						 "sysexit_return_address2:  \n\t"
-						 "xchgq %%rdx, %%r10 \n\t"
-						 "xchgq %%rcx, %%r11 \n\t"
-						 "popq %%r11 \n\t"
-						 "popq %%r10 \n\t"
-						 : "=a"(errno), "+D"(fd)
-						 : "0"(__NR_write), "S"(str), "d"(4)
-						 : "memory");
-
-	// call sys_lseek
-	// long lseek(int fildes, void* buf, long nbyte);
-	__asm__ __volatile__("pushq %%r10 \n\t"
-						 "pushq %%r11 \n\t"
-						 "leaq sysexit_return_address22(%%rip), %%r10 \n\t" // 再次执行的rip
-						 "movq %%rsp, %%r11 \n\t"							// 再次执行的rsp
-						 "sysenter \n\t"									// 进入内核层，跳转到entry.S的system_call
-						 "sysexit_return_address22:  \n\t"
-						 "xchgq %%rdx, %%r10 \n\t"
-						 "xchgq %%rcx, %%r11 \n\t"
-						 "popq %%r11 \n\t"
-						 "popq %%r10 \n\t"
-						 : "=a"(errno), "+D"(fd)
-						 : "0"(__NR_lseek), "S"(0), "d"(SEEK_SET)
-						 : "memory");
-
-	// call sys_read
-	// long read(int fildes, void* buf, long nbyte);
-	__asm__ __volatile__("pushq %%r10 \n\t"
-						 "pushq %%r11 \n\t"
-						 "leaq sysexit_return_address21(%%rip), %%r10 \n\t" // 再次执行的rip
-						 "movq %%rsp, %%r11 \n\t"							// 再次执行的rsp
-						 "sysenter \n\t"									// 进入内核层，跳转到entry.S的system_call
-						 "sysexit_return_address21:  \n\t"
-						 "xchgq %%rdx, %%r10 \n\t"
-						 "xchgq %%rcx, %%r11 \n\t"
-						 "popq %%r11 \n\t"
-						 "popq %%r10 \n\t"
-						 : "=a"(errno), "+D"(fd)
-						 : "0"(__NR_read), "S"(buf), "d"(50)
-						 : "memory");
-	// call sys_close
-	// int close(int fildes);
-	__asm__ __volatile__("pushq %%r10 \n\t"
-						 "pushq %%r11 \n\t"
-						 "leaq sysexit_return_address1(%%rip), %%r10 \n\t" // 再次执行的rip
-						 "movq %%rsp, %%r11 \n\t"						   // 再次执行的rsp
-						 "sysenter \n\t"								   // 进入内核层，跳转到entry.S的system_call
-						 "sysexit_return_address1:  \n\t"
-						 "xchgq %%rdx, %%r10 \n\t"
-						 "xchgq %%rcx, %%r11 \n\t"
-						 "popq %%r11 \n\t"
-						 "popq %%r10 \n\t"
-						 : "=a"(errno), "+D"(fd)
-						 : "0"(__NR_close)
-						 : "memory");
-	/////////////////////////////////////////////////////////////////////////////////
-
-	// 不知道为什么，这里不能打印
-	// color_printk(RED, BLACK, "user_level_function task called sysenter,errno:%d\n", errno);
-	while (1)
-		;
 }
 
 // 内核线程，该线程会进入特权级3

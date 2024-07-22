@@ -9,8 +9,6 @@
 #include "wait.h"
 #include "errno.h"
 #include "command.h"
-#include "printf.h"
-#include "time.h"
 #include "fcntl.h"
 
 extern char* current_dir;
@@ -29,14 +27,6 @@ char* get_filename_whole(char* buf, char* reletive_path) {
 	return buf;
 }
 
-int pwd_command(int argc, char **argv)
-{	
-    int ret = 0;
-	getcwd(current_dir, strlen(current_dir));
-	ret = printf(current_dir);
-	printf("\n");
-    return ret;
-}
 int cat_command(int argc, char **argv) 
 {
 	int len = 0;
@@ -59,11 +49,13 @@ int cat_command(int argc, char **argv)
 	buf = malloc(i + 1, 0);
 	memset(buf, 0 , i + 1);
 	len = read(fd, buf, i);
-	printf("length:%d\t%s\n",len,buf);
+	color_printf(ORANGE,"length:%d\t", len);
+	printf("%s\n", buf);
 
 	close(fd);
     return 0;
 }
+
 int touch_command(int argc, char **argv) {
 	char* filename = NULL;
 	int ret = 0;
@@ -74,6 +66,7 @@ int touch_command(int argc, char **argv) {
 
 	return ret; 
 }
+
 int rm_command(int argc, char **argv) { 
 	char* filename = NULL;
 	int ret = 0;
@@ -84,6 +77,7 @@ int rm_command(int argc, char **argv) {
 
 	return ret; 
 }
+
 int mkdir_command(int argc, char **argv) { 
 	char* filename = NULL;
 	int ret = 0;
@@ -94,7 +88,18 @@ int mkdir_command(int argc, char **argv) {
 
 	return ret; 
 }
-int rmdir_command(int argc, char **argv) { return 0; }
+
+int rmdir_command(int argc, char **argv) { 
+	char* filename = NULL;
+	int ret = 0;
+
+	filename = get_filename_whole(filename, argv[1]); 
+
+	ret = rmdir(filename);
+
+	return ret; 
+}
+
 int exec_command(int argc, char **argv)
 {
 	int errno = 0;
@@ -117,33 +122,6 @@ int exec_command(int argc, char **argv)
 	}
     return 0;
 }
+
 int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }
-
-int tree_command(int argc, char **argv) {
-	return tree();
-}
-// Monday Tuesday Wednesday Thursday Friday Saturday Sunday
-static const char* week[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-
-//January February March April May June July August September October November December
-static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
-
-
-int date_command(int argc, char **argv)
-{
-	u64 seconds = getNow();
-    tm time;
-    localtime(seconds, &time);
-    printf("%d-%02d-%02d %s-%s %02d:%02d:%02d \n",
-            time.year,
-            time.month,
-            time.day,
-			months[time.month - 1],
-			week[time.week_day - 1],
-            time.hour,
-            time.minute,
-            time.second);
-	return 1;
-}
 

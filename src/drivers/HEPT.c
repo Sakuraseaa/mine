@@ -25,7 +25,7 @@ wait_queue_T sleep_queue_head;
 
 unsigned long volatile jiffies = 0; // ticks是内核自中断开启以来总共的嘀嗒数
 extern struct timer_list timer_list_head;
-extern struct time Time;
+extern struct time time;
 
 hw_int_controller HPET_int_controller =
     {
@@ -138,9 +138,11 @@ void HEPT_init()
    // 初始化睡眠队列 等待头
    list_init(&sleep_queue_head.wait_list);
    
-   get_cmos_time(&Time);
+   get_cmos_time(&time);
    color_printk(RED, BLACK, "year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d\n",
-   Time.year, Time.month, Time.day, Time.week_day, Time.hour, Time.minute, Time.second);
+   time.year, time.month, time.day, time.week_day, time.hour, time.minute, time.second);
+   // color_printk(RED, BLACK, "year:%#010x, month:%#010x, day:%#010x,  week:%#010x, hour:%#010x, mintue:%#010x, second:%#010x\n",
+   //  Time.year, Time.month, Time.day, Time.week_day, Time.hour, Time.minute, Time.second);
 }
 
 /* 以毫秒为单位的sleep   1秒= 1000毫秒 */

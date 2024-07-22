@@ -37,7 +37,7 @@ typedef enum std_fd_t
     STDERR_FILENO,
 } std_fd_t;
 
-typedef int32 off_t; // 文件偏移
+// typedef int32 off_t; // 文件偏移 , 与标准库
 
 typedef int err_t; // 错�??类型
 

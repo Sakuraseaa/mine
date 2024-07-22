@@ -9,6 +9,7 @@ int ls_command(int argc, char **argv);
 int cd_command(int argc, char **argv);
 int pwd_command(int argc, char **argv);
 int cat_command(int argc, char **argv);
+int echo_command(int argc, char **argv);
 int touch_command(int argc, char **argv);
 int rm_command(int argc, char **argv);
 int mkdir_command(int argc, char **argv);

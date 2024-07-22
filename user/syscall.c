@@ -42,6 +42,7 @@ SYSFUNC_DEF(sleep)
 SYSFUNC_DEF(getpid)
 
 SYSFUNC_DEF(mkdir)
+SYSFUNC_DEF(rmdir)
 
 SYSFUNC_DEF(getcwd)
 SYSFUNC_DEF(stat)

@@ -18,6 +18,7 @@ int wait4(int pid, int* status, int options);
 
 int unlink(const char* path);
 int mkdir(const char* path);
+int rmdir(const char* path);
 
 int tree(void);
 int cleanScreen(void);

@@ -1,7 +1,6 @@
-#include "printk.h"
-#include "init.h"
 #include <stdarg.h>
-#include "printf.h"
+#include "init.h"
+#include "printk.h"
 
 
 unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
@@ -158,6 +157,7 @@ int printf(const char *fmt, ...)
 	va_end(args);
 	putstring(WHITE, buf);
 
+	//putstring(0x00ffffff, buf);
 	return count;
 }
 

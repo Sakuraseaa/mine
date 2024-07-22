@@ -9,7 +9,7 @@
 #include "types.h"
 
 extern struct timer_list timer_list_head;
-struct time Time;
+struct time time;
 
 #define COMS_READ(addr) ({ \
     io_out8(0x70, 0x80 | addr); \
@@ -201,7 +201,7 @@ void timer_init()
 
     jiffies = 0;
     // +++++++++++++++实在不知道放哪里初始化了,就姑且放这里吧+++++++++++++
-    startup_time = kernel_mktime(&Time);
+    startup_time = kernel_mktime(&time);
     // ==============================================
     init_timer(&timer_list_head, NULL, NULL, -1UL);
     // 注册0号软中断

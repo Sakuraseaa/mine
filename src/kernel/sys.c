@@ -172,6 +172,8 @@ unsigned long sys_open(char *filename, int flags)
         path_flags = 1;
 
     dentry = path_walk(path, path_flags, &Child_dentry); // b.2得到目录项
+    kfree(path);
+    
     if (dentry == NULL)
         return -ENOENT;
 
@@ -189,14 +191,12 @@ unsigned long sys_open(char *filename, int flags)
     }
 
 
-
     if (!(flags & O_DIRECTORY) && dentry->dir_inode->attribute == FS_ATTR_DIR)
         return -EISDIR;
     if((flags & O_DIRECTORY) && (dentry->dir_inode->attribute != FS_ATTR_DIR))
         return -ENOTDIR;
 
 sys_open_over_judge:
-    kfree(path);
 
     // c.为目标文件,目标进程创建文件描述符, filp什么意思？file description?
     filp = (struct file *)kmalloc(sizeof(struct file), 0);
@@ -277,16 +277,68 @@ u64 sys_mkdir(char* filename) {
 
 
     dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
+    kfree(path);
     if (dentry == NULL)
         return -ENOENT;
     
-    kfree(path);
     assert(Child_dentry->parent == dentry);
     if(dentry->dir_inode->inode_ops && dentry->dir_inode->inode_ops->mkdir)
         error = dentry->dir_inode->inode_ops->mkdir(dentry->dir_inode, Child_dentry, 0);
 
     return error;
 }
+
+u64 sys_rmdir(char* filename) {
+    char *path = NULL;
+    long pathlen = 0;
+    long error = 0;
+    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
+    int path_flags = 0;
+    struct dir_entry *dentry = NULL;
+    struct file *filp = NULL;
+    struct file **f = NULL;
+    int fd = -1; // 文件描述符
+
+    // a. 把目标路径名从应用层复制到内核层
+    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    if (path == NULL)
+        return -ENOMEM;
+    memset(path, 0, PAGE_4K_SIZE);
+    pathlen = strlen(filename);
+    // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
+    if (pathlen <= 0) {
+        kfree(path);
+        return -EFAULT;
+    }
+    else if (pathlen >= PAGE_4K_SIZE) {
+        kfree(path);
+        return -ENAMETOOLONG;
+    }
+    // strncpy_from_user(filename, path, pathlen);
+    strncpy(path, filename, pathlen);
+
+
+    dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
+    kfree(path);
+    
+    if (dentry == NULL)
+        return -ENOENT;
+    
+    assert(ISDIR(Child_dentry->dir_inode->i_mode));
+    assert(Child_dentry->parent == dentry);
+    if(dentry->dir_inode->inode_ops && dentry->dir_inode->inode_ops->rmdir)
+        error = dentry->dir_inode->inode_ops->rmdir(dentry->dir_inode, Child_dentry);
+
+    kfree(Child_dentry->dir_inode);
+
+    list_del(&Child_dentry->child_node);
+
+    slab_free(Dir_Entry_Pool, Child_dentry, 0);
+
+    return error;
+}
+
+
 
 u64 sys_unlink(char* filename) {
         char *path = NULL;
@@ -319,10 +371,10 @@ u64 sys_unlink(char* filename) {
 
 
     dentry = path_walk(path, 2, &Child_dentry); 
+    kfree(path);
     if (dentry == NULL)
         return -ENOENT;
     
-    kfree(path);
     assert(Child_dentry->parent == dentry);
 
     if(ISDIR(Child_dentry->dir_inode->i_mode)) {
@@ -332,7 +384,8 @@ u64 sys_unlink(char* filename) {
         
         return -EISDIR;
     }
-        
+    
+    assert(ISREG(Child_dentry->dir_inode->i_mode));
 
     if(dentry->dir_inode->inode_ops && (dentry->dir_inode->inode_ops->unlink && Child_dentry->dir_ops->d_delete)) {
     

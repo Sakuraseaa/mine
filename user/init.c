@@ -3,7 +3,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "fcntl.h"
-#include "keyboard.h"
+#include "Keyboard.h"
 #include "wait.h"
 #include "string.h"
 #include "signal.h"
@@ -28,6 +28,7 @@ void sig_handler(long sig);
 
 int main()
 {
+	while(1);
 	signal(4 , sig_handler);
 
 	long pid = getpid();
@@ -68,14 +69,16 @@ int main()
 	{
 		/* code */
 	}
-	// issue:: init进程有能力执行exit函数吗？
+	// issue:: init进程有能力执行exit函数吗？ 有的需要编写一定的代码
 	exit(0);
 }
+
 void sig_handler(long sig) {
 	
 	printf("Catch signal is %d\n", sig);
 
 }
+
 void print_prompt(void) {
 	
 	color_printf(GREEN,"sk@mine");
@@ -246,6 +249,7 @@ struct buildincmd shell_internal_cmd[] =
 		{"reboot", reboot_command},
 		{"tree", tree_command},
 		{"date", date_command},
+		{"echo", echo_command},
 };
 
 int find_cmd(char *cmd_name)

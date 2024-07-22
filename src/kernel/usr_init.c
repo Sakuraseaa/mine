@@ -1,7 +1,6 @@
 #include "wait.h"
 #include "types.h"
 #include "debug.h"
-// #include "unistd.h"
 #include "lib.h"
 #include "fcntl.h"
 #include "keyboard.h"
@@ -10,7 +9,6 @@
 #include "dirent.h"
 #include "signal.h"
 #include "assert.h"
-#include "printf.h"
 #include "errno.h"
 
 extern int kill(long pid, long signum);
@@ -64,18 +62,6 @@ void test_time() {
 }
 
 #include "VFS.h"
-void test_minix() {
-	
-	
-	char Path[] = "/mnt/THd.c";
-	char mem[12] = {0};
-	int fd = open(Path, 0);
-	// write(fd, "Hello WORLD", 11);
-	// lseek(fd, 0, SEEK_SET);
-	read(fd, mem, 11);
-	printf("%s\n", mem);
-}
-
 int usr_init()
 {
 
@@ -86,7 +72,6 @@ int usr_init()
 	current_dir = (char*)kmalloc(2, 0);
 	current_dir[0] = '/';
 
-	test_minix();
 
 	fd = open(path, 0);
 
@@ -397,14 +382,15 @@ int cd_command(int argc, char **argv)
 	}
 
 	path = get_filename_whole(path, argv[1]);
-	
+
 	i = chdir(path);
+
 	if(!i) {
 		kfree(current_dir);
 		current_dir = path;
 	} else {
 		kfree(path);
-		printf("Can't  cd %s\n", argv[1]);
+		color_printf(RED, "cd: %s:No such file or directory\n", argv[1]);
 	}
 	return 1;
 }
@@ -521,7 +507,7 @@ int ls_command(int argc, char **argv)
 	if(path[0] == '/') 
 		dir = opendir(path);
 	else {
-		getcwd(current_dir, 256);
+		getcwd(current_dir, strlen(current_dir));
 		dir = opendir(current_dir);
 	}
 
@@ -664,7 +650,24 @@ int exec_command(int argc, char **argv)
 	return errno;
 }
 int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }
+int echo_command(int argc, char **argv) {
+    int ret = 0, fd = 0;
+    char* filename = NULL;
+    
+    char* p = argv[3];
+    if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
+        
+		filename = get_filename_whole(filename, argv[4]);
+        fd = open(filename, O_RDWR | O_APPEND);
+        ret = strlen(argv[4]);
+        write(fd, argv[4], ret);
 
+    } else {
+
+        ret = printf("%s\n",argv[1]);
+    }
+    return ret;
+}
 struct buildincmd shell_internal_cmd[] =
 	{
 		{"cd", cd_command},
@@ -678,6 +681,7 @@ struct buildincmd shell_internal_cmd[] =
 		{"exec", exec_command},
 		{"reboot", reboot_command},
 		{"tree", tree_command},
+		{"echo", echo_command},
 };
 
 int find_cmd(char *cmd_name)
@@ -729,20 +733,40 @@ int read_line(int fd, char *buf)
 int parse_command(char *buf, int *argc, char ***argv)
 {
 	int i = 0, j = 0;
-
+	bool is_cmpstr_ing = false;
 	// 越过前导空格
 	while (buf[j] == ' ')
 		j++;
 
-	// 统计参数个数
+	// 统计参数个数 , 此处的识别有问题需要重写
 	for (i = j; i < 256; i++)
-	{
+	{		
 		if (!buf[i])
 			break;
+
+		if(is_cmpstr_ing == false && (buf[i] == '\"' || buf[i] == '\'')) {
+			is_cmpstr_ing = true;	// 开始引号匹配
+			continue;
+		}
+		
+		if(is_cmpstr_ing == true && (buf[i] == '\"' || buf[i] == '\'')) {
+			is_cmpstr_ing = 1 - is_cmpstr_ing; // 结束引号匹配
+			(*argc)++;
+			continue;
+		}
+		
+		if(is_cmpstr_ing)
+			continue;
+
 		if (buf[i] != ' ' && (buf[i + 1] == ' ' || buf[i + 1] == '\0'))
 			(*argc)++;
 	}
-	// printf("parse_common argc: %d\n", *argc);
+
+	// 说明 ' 和 " 没有成对的匹配，
+	if(is_cmpstr_ing) {
+		printf(" \' or \" not a perfect mathc\n");
+		return;
+	}
 
 	if (!*argc)
 		return -1;
@@ -750,14 +774,28 @@ int parse_command(char *buf, int *argc, char ***argv)
 	// printf("parse_command argv:%#018lx, *argv:%#018lx\n", argv, *argv);
 
 	for (i = 0; i < *argc && j < 256; i++)
-	{
-		*((*argv) + i) = &buf[j];
-		while (buf[j] && buf[j] != ' ')
+	{	
+		if(buf[j] == '\'' || buf[j] == '\"') {
 			j++;
+			is_cmpstr_ing = true;
+		}
+
+		*((*argv) + i) = &buf[j];
+
+		// 这里有5个 && 有些许丑陋了  🥺 😖
+		while ((is_cmpstr_ing == false) && (buf[j] && buf[j] != ' '))
+			j++;
+
+		while((is_cmpstr_ing && buf[j] ) && (buf[j] != '\'' && buf[j] != '\"'))
+			j++;
+		
+
 		buf[j++] = '\0';
+	
 		while (buf[j] == ' ')
 			j++;
-		// printf("%s\n", (*argv)[i]);
+
+		is_cmpstr_ing = false;
 	}
 
 	return find_cmd(**argv);

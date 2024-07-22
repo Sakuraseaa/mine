@@ -15,7 +15,7 @@ OBJS =  $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/syscall.o $(USR_BUI_DIR)/errno.o   
 		$(USR_BUI_DIR)/malloc.o $(USR_BUI_DIR)/keyboard.o $(USR_BUI_DIR)/printf.o \
 		$(USR_BUI_DIR)/string.o $(USR_BUI_DIR)/dirent.o $(USR_BUI_DIR)/wait.o \
 		$(USR_BUI_DIR)/signal.o $(USR_BUI_DIR)/sig_restore.o $(USR_BUI_DIR)/time.o $(USR_BUI_DIR)/ls_cd.o   \
-		$(USR_BUI_DIR)/pwd_else.o \
+		$(USR_BUI_DIR)/rm_cat_exec.o  $(USR_BUI_DIR)/echo_tree_date.o\
 
 
 
@@ -54,9 +54,10 @@ $(USR_BUI_DIR)/sig_restore.o: $(USR_SRC_DIR)/LIB/sig_restore.S
 	@$(CC) $(CFLAGS) $< -o $@
 $(USR_BUI_DIR)/ls_cd.o: $(USR_SRC_DIR)/Command/ls_cd.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(USR_BUI_DIR)/pwd_else.o: $(USR_SRC_DIR)/Command/pwd_else.c
+$(USR_BUI_DIR)/rm_cat_exec.o: $(USR_SRC_DIR)/Command/rm_cat_exec.c
 	@$(CC) $(CFLAGS) $< -o $@
-
+$(USR_BUI_DIR)/echo_tree_date.o: $(USR_SRC_DIR)/Command/echo_tree_date.c
+	@$(CC) $(CFLAGS) $< -o $@
 
 Hd_Path=/home/steven/mine/bochs/hd.img
 .PHONY: clean update

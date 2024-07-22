@@ -1,4 +1,4 @@
-#include "unistd.h"
+#include "SYSCALL.h"
 
 // 这里SYSCALL_COMMON定义了两次，若是未来的我怀疑了，使用gcc -E 本文件，看一下就行
 // 第一次用于定义系统调用向量表system_call_table的处理函数名
