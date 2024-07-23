@@ -380,8 +380,8 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
     } while (cnt != 0);
     
     // B.更新文件数据长度和文件访问时间
-    if (*position + count > inode->file_size)
-        m_inode->size = inode->file_size = *position + count;
+    if (*position > inode->file_size)
+        m_inode->size = inode->file_size = *position;
     
     m_inode->mtime = inode->atime = inode->ctime = NOW();
     // 标记inode已经被修改
@@ -518,6 +518,8 @@ static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char*
         
         if(entry->nr == nr && (strcmp(entry->name, name) == 0)) {
             
+            m_child_inode->nlinks--; // 这里是否存在同步问题？
+
             dir->file_size -= sizeof(minix_dentry_t); // 更新目录inode 节点信息
             assert(m_parent_inode->nlinks > 0);
             m_parent_inode->size = dir->file_size;
@@ -526,8 +528,6 @@ static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char*
             dir->buf->dirty = true;
             bwrite(dir->buf);
 
-            m_child_inode->nlinks--; // 这里是否存在同步问题？
-            
             entry->nr = 0;
             entry->name[0] = '\0';
             buf->dirty = true;          // 更新目录文件
@@ -689,8 +689,15 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
     return 0; 
 }
 
+/**
+ * @brief rmdir 实现的有些潦草。以至于这种写法不能给目录创建链接。
+ * 
+ * @param dir 
+ * @param dentry 
+ * @return long 
+ */
 long minix_rmdir(struct index_node *dir, struct dir_entry *dentry) { 
-    long ret = -1;
+    long ret = OKay;
 
     super_t* minix_sb = dentry->d_sb;
     minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
@@ -713,7 +720,7 @@ long minix_rmdir(struct index_node *dir, struct dir_entry *dentry) {
     list_del(&dentry->dir_inode->i_sb_list);
     
     // e. 释放 inode 私有引用
-    ret = brelse(dentry->dir_inode->buf);
+    brelse(dentry->dir_inode->buf);
     
     return ret;
 }
@@ -726,19 +733,22 @@ long minix_rmdir(struct index_node *dir, struct dir_entry *dentry) {
  * @return long 
  */
 long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
-    long ret = -1;
+    long ret = OKay;
 
     super_t* minix_sb = dentry->d_sb;
     minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
     
-    // a. 释放文件数据
-    realse_file_data(minix_sb, m_inode);
 
-    // c. 删除文件对应目录项
+    // a. 删除文件对应目录项
     del_dentry(dir, m_inode, dentry->dir_inode->nr, dentry->name);
     
-    assert(m_inode->nlinks == 0);
-    // b. 释放文件占用硬盘的inode
+    if(m_inode->nlinks > 0) // 仍然有连接数，返回。
+        return ret;
+
+    // b. 释放文件数据
+    realse_file_data(minix_sb, m_inode);
+
+    // c. 释放文件占用硬盘的inode
     minix_ifree(minix_sb, dentry->dir_inode->nr);
         
     // d. 删除 inode 在超级块中的索引

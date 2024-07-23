@@ -323,7 +323,11 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 	i = vsprintf(buf, fmt, args);
 
 	va_end(args);
-
+	
+	// 这里光标的设置略感丑陋 😋 
+	// 删除上次光标位置
+	putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, WHITE, BLACK, 0);
+	
 	for (count = 0; count < i || line; count++)
 	{
 		////	add \n \b \t
@@ -375,6 +379,9 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 		}
 	}
 
+	// 显示光标
+	putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, WHITE, BLACK, 255);
+	
 	if (get_rflags() & 0x200UL)
 		spin_unlock(&Pos.printk_lock);
 

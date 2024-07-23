@@ -1,6 +1,5 @@
 #ifndef _spinlock_h_
 #define _spinlock_h_
-#include "task.h"
 #include "preempt.h"
 // 本文件定义自旋锁，自旋锁用来防止多核侵略存储区
 typedef struct

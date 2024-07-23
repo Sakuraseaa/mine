@@ -318,7 +318,7 @@ u64 sys_rmdir(char* filename) {
     strncpy(path, filename, pathlen);
 
 
-    dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
+    dentry = path_walk(path, 2, &Child_dentry); // b.2得到目录项
     kfree(path);
     
     if (dentry == NULL)
@@ -328,20 +328,20 @@ u64 sys_rmdir(char* filename) {
     assert(Child_dentry->parent == dentry);
     if(dentry->dir_inode->inode_ops && dentry->dir_inode->inode_ops->rmdir)
         error = dentry->dir_inode->inode_ops->rmdir(dentry->dir_inode, Child_dentry);
+    if(error == OKay) {
+        kfree(Child_dentry->dir_inode);
 
-    kfree(Child_dentry->dir_inode);
+        list_del(&Child_dentry->child_node);
 
-    list_del(&Child_dentry->child_node);
-
-    slab_free(Dir_Entry_Pool, Child_dentry, 0);
-
+        slab_free(Dir_Entry_Pool, Child_dentry, 0);
+    }
     return error;
 }
 
 
 
 u64 sys_unlink(char* filename) {
-        char *path = NULL;
+    char *path = NULL;
     long pathlen = 0;
     long error = 0;
     struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
@@ -379,7 +379,7 @@ u64 sys_unlink(char* filename) {
 
     if(ISDIR(Child_dentry->dir_inode->i_mode)) {
         
-        color_printk(RED, WHITE, "Can't remove dir. please user \'mkdir\' again. "); 
+        color_printk(RED, WHITE, "Can't remove dir. please user \'mkdir\' again.\n"); 
         // 其实这句错误信息，应该在户空间通过得到的erron 输出，不适合使用内核输出
         
         return -EISDIR;

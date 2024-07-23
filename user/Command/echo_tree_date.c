@@ -49,14 +49,15 @@ int echo_command(int argc, char **argv)
     int ret = 0, fd = 0;
     char* filename = NULL;
     
-    filename = get_filename_whole(filename, argv[1]);
-    
-    if(argc == 4 && (strcmp(argv[3], ">>") == 0)) {
+    char* p = argv[3];
+    if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
         
+		filename = get_filename_whole(filename, argv[3]);
         fd = open(filename, O_RDWR | O_APPEND);
-        ret = strlen(argv[4]);
-        write(fd, argv[4], ret);
-
+        ret = strlen(argv[1]);
+        write(fd, argv[1], ret);
+		close(fd);
+	
     } else {
 
         ret = printf("%s\n",argv[1]);

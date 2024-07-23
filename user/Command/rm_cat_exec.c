@@ -33,7 +33,7 @@ int cat_command(int argc, char **argv)
 	char* filename = NULL;
 	int fd = 0;
 	char* buf = NULL;
-	int i = 0;
+	int i = 0, j = 0;
 
 	filename = get_filename_whole(filename, argv[1]); 
 
@@ -49,9 +49,14 @@ int cat_command(int argc, char **argv)
 	buf = malloc(i + 1, 0);
 	memset(buf, 0 , i + 1);
 	len = read(fd, buf, i);
-	color_printf(ORANGE,"length:%d\t", len);
-	printf("%s\n", buf);
+	color_printf(ORANGE,"length:%d\n", len);
 
+
+	while(j < i)
+		printf("%c", buf[j++]);
+	
+	printf("\n");
+	
 	close(fd);
     return 0;
 }

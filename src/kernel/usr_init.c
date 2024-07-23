@@ -574,7 +574,7 @@ int cat_command(int argc, char **argv)
 	char* filename = NULL;
 	int fd = 0;
 	char* buf = NULL;
-	int i = 0;
+	int i = 0, j = 0;
 
 	// 拼凑绝对路径
 	len = strlen(current_dir);
@@ -599,8 +599,13 @@ int cat_command(int argc, char **argv)
 	buf = kmalloc(i + 1, 0);
 	memset(buf, 0 , i + 1);
 	len = read(fd, buf, i);
-	printf("length:%d\t%s\n",len,buf);
+	printf("length:%d\n",len);
 
+	while(j < i)
+		printf("%c", buf[j++]);
+	
+	printf("\n");
+	
 	close(fd);
     return 0;
 }
@@ -657,11 +662,12 @@ int echo_command(int argc, char **argv) {
     char* p = argv[3];
     if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
         
-		filename = get_filename_whole(filename, argv[4]);
+		filename = get_filename_whole(filename, argv[3]);
         fd = open(filename, O_RDWR | O_APPEND);
-        ret = strlen(argv[4]);
-        write(fd, argv[4], ret);
-
+        ret = strlen(argv[1]);
+        write(fd, argv[1], ret);
+		close(fd);
+	
     } else {
 
         ret = printf("%s\n",argv[1]);

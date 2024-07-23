@@ -129,10 +129,11 @@ void Start_Kernel(void)
 	// 此处的while用于线程同步
 	while (!shell_up)
 		;
-	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 
 	while (1)
 	{
 		// 这里可以遍历所有进程，寻找僵尸进程。释放他。
+		// 但是这种做法有点笨，来点消息通知就好了
 	}
 }

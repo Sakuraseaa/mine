@@ -300,13 +300,7 @@ int ls_command(int argc, char **argv)
         char qualifier;
         reckon_size(&size, &qualifier);
 
-        printf("%-2d %-4d %-4d %-d%-c\t%-s  ",
-               statbuf.nlinks,
-               statbuf.uid,
-               statbuf.gid,
-               size,
-               qualifier,
-               buf);
+        printf("%-2d %-4d %-4d %-d%-c\t%-s  ",statbuf.nlinks, statbuf.uid, statbuf.gid, size, qualifier, buf);
 		
 		if(isDirectory == false)
 			printf("%-s\n", entry->d_name);

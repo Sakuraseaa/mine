@@ -28,7 +28,7 @@ void sig_handler(long sig);
 
 int main()
 {
-	while(1);
+	// while(1);
 	signal(4 , sig_handler);
 
 	long pid = getpid();
@@ -301,20 +301,40 @@ int read_line(int fd, unsigned char *buf)
 int parse_command(unsigned char *buf, int *argc, char ***argv)
 {
 	int i = 0, j = 0;
-
+	bool is_cmpstr_ing = false;
 	// 越过前导空格
 	while (buf[j] == ' ')
 		j++;
 
-	// 统计参数个数
+	// 统计参数个数 , 此处的识别有问题需要重写
 	for (i = j; i < 256; i++)
-	{
+	{		
 		if (!buf[i])
 			break;
+
+		if(is_cmpstr_ing == false && (buf[i] == '\"' || buf[i] == '\'')) {
+			is_cmpstr_ing = true;	// 开始引号匹配
+			continue;
+		}
+		
+		if(is_cmpstr_ing == true && (buf[i] == '\"' || buf[i] == '\'')) {
+			is_cmpstr_ing = 1 - is_cmpstr_ing; // 结束引号匹配
+			(*argc)++;
+			continue;
+		}
+		
+		if(is_cmpstr_ing)
+			continue;
+
 		if (buf[i] != ' ' && (buf[i + 1] == ' ' || buf[i + 1] == '\0'))
 			(*argc)++;
 	}
-	// printf("parse_common argc: %d\n", *argc);
+
+	// 说明 ' 和 " 没有成对的匹配，
+	if(is_cmpstr_ing) {
+		printf(" \' or \" not a perfect mathc\n");
+		return -1;
+	}
 
 	if (!*argc)
 		return -1;
@@ -322,14 +342,28 @@ int parse_command(unsigned char *buf, int *argc, char ***argv)
 	// printf("parse_command argv:%#018lx, *argv:%#018lx\n", argv, *argv);
 
 	for (i = 0; i < *argc && j < 256; i++)
-	{
-		*((*argv) + i) = &buf[j];
-		while (buf[j] && buf[j] != ' ')
+	{	
+		if(buf[j] == '\'' || buf[j] == '\"') {
 			j++;
+			is_cmpstr_ing = true;
+		}
+
+		*((*argv) + i) = &buf[j];
+
+		// 这里有5个 && 有些许丑陋了  🥺 😖
+		while ((is_cmpstr_ing == false) && (buf[j] && buf[j] != ' '))
+			j++;
+
+		while((is_cmpstr_ing && buf[j] ) && (buf[j] != '\'' && buf[j] != '\"'))
+			j++;
+		
+
 		buf[j++] = '\0';
+	
 		while (buf[j] == ' ')
 			j++;
-		// printf("%s\n", (*argv)[i]);
+
+		is_cmpstr_ing = false;
 	}
 
 	return find_cmd(**argv);
@@ -339,6 +373,7 @@ void run_command(int index, int argc, char **argv)
 {
 	// printf("run_command %s\n", shell_internal_cmd[index].cmd_name);
 	shell_internal_cmd[index].cmd_funcPtr(argc, argv);
+	free(argv);
 }
 
 
