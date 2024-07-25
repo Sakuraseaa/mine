@@ -20,7 +20,7 @@ int unlink(const char* path);
 int mkdir(const char* path);
 int rmdir(const char* path);
 
-int tree(void);
+int info(const char order);
 int cleanScreen(void);
 u64 getNow(void);
 

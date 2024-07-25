@@ -26,7 +26,7 @@ u64 sys_unlink(char* filename);
 void exit_mm(struct task_struct *tsk);
 
 
-unsigned long sys_tree(void);
+unsigned long sys_info(char order);
 unsigned long sys_cleanScreen(void);
 unsigned long sys_getNow(void);
 

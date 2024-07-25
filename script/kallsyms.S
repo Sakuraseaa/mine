@@ -342,186 +342,187 @@ kallsyms_addresses:
 	.quad	0xffff800000117177
 	.quad	0xffff8000001171db
 	.quad	0xffff8000001173cf
-	.quad	0xffff80000011740f
-	.quad	0xffff800000117421
-	.quad	0xffff800000117456
-	.quad	0xffff8000001174c3
-	.quad	0xffff800000117534
-	.quad	0xffff80000011757c
-	.quad	0xffff800000117611
-	.quad	0xffff8000001176c1
-	.quad	0xffff800000117732
-	.quad	0xffff8000001177ab
-	.quad	0xffff80000011785b
-	.quad	0xffff8000001178fb
-	.quad	0xffff800000117c83
-	.quad	0xffff800000117d3b
-	.quad	0xffff8000001182b3
-	.quad	0xffff8000001182be
-	.quad	0xffff800000118329
-	.quad	0xffff8000001183b2
-	.quad	0xffff800000118432
-	.quad	0xffff8000001184c8
-	.quad	0xffff80000011858a
-	.quad	0xffff8000001185af
-	.quad	0xffff8000001185d6
-	.quad	0xffff8000001185db
-	.quad	0xffff8000001185f0
-	.quad	0xffff800000118684
-	.quad	0xffff80000011870c
-	.quad	0xffff800000118727
-	.quad	0xffff8000001187b5
-	.quad	0xffff8000001189f2
-	.quad	0xffff800000118a3c
-	.quad	0xffff800000118afc
-	.quad	0xffff800000118b0b
-	.quad	0xffff800000118b40
-	.quad	0xffff800000118ba3
-	.quad	0xffff800000118c39
-	.quad	0xffff800000118f22
-	.quad	0xffff800000118f57
-	.quad	0xffff800000119098
-	.quad	0xffff80000011929a
-	.quad	0xffff800000119400
-	.quad	0xffff800000119799
-	.quad	0xffff800000119a39
-	.quad	0xffff800000119f54
-	.quad	0xffff80000011a0d5
-	.quad	0xffff80000011a155
-	.quad	0xffff80000011a1c1
-	.quad	0xffff80000011a2c2
-	.quad	0xffff80000011a384
-	.quad	0xffff80000011a4ce
-	.quad	0xffff80000011a668
-	.quad	0xffff80000011a83c
-	.quad	0xffff80000011a973
-	.quad	0xffff80000011aa15
-	.quad	0xffff80000011ab3e
-	.quad	0xffff80000011ac7f
-	.quad	0xffff80000011adb0
-	.quad	0xffff80000011aee9
-	.quad	0xffff80000011af2f
-	.quad	0xffff80000011af91
+	.quad	0xffff800000117447
+	.quad	0xffff800000117459
+	.quad	0xffff80000011748e
+	.quad	0xffff8000001174fb
+	.quad	0xffff80000011756c
+	.quad	0xffff8000001175b4
+	.quad	0xffff800000117649
+	.quad	0xffff8000001176f9
+	.quad	0xffff80000011776a
+	.quad	0xffff8000001177e3
+	.quad	0xffff800000117893
+	.quad	0xffff800000117933
+	.quad	0xffff800000117cbb
+	.quad	0xffff800000117d73
+	.quad	0xffff8000001182eb
+	.quad	0xffff8000001182f6
+	.quad	0xffff800000118361
+	.quad	0xffff8000001183ea
+	.quad	0xffff80000011846a
+	.quad	0xffff800000118500
+	.quad	0xffff8000001185c2
+	.quad	0xffff8000001185e7
+	.quad	0xffff80000011860e
+	.quad	0xffff800000118613
+	.quad	0xffff800000118628
+	.quad	0xffff8000001186bc
+	.quad	0xffff800000118744
+	.quad	0xffff80000011875f
+	.quad	0xffff8000001187ed
+	.quad	0xffff800000118a2a
+	.quad	0xffff800000118a74
+	.quad	0xffff800000118b34
+	.quad	0xffff800000118b43
+	.quad	0xffff800000118b78
+	.quad	0xffff800000118bdb
+	.quad	0xffff800000118c71
+	.quad	0xffff800000118f5a
+	.quad	0xffff800000118f8f
+	.quad	0xffff8000001190d0
+	.quad	0xffff800000119316
+	.quad	0xffff80000011947c
+	.quad	0xffff800000119815
+	.quad	0xffff800000119ab5
+	.quad	0xffff80000011a02a
+	.quad	0xffff80000011a1ab
+	.quad	0xffff80000011a22b
+	.quad	0xffff80000011a297
+	.quad	0xffff80000011a398
+	.quad	0xffff80000011a45a
+	.quad	0xffff80000011a5a4
+	.quad	0xffff80000011a73e
+	.quad	0xffff80000011a912
+	.quad	0xffff80000011aa49
+	.quad	0xffff80000011aaeb
+	.quad	0xffff80000011ac14
+	.quad	0xffff80000011ad55
+	.quad	0xffff80000011ae86
 	.quad	0xffff80000011afbf
-	.quad	0xffff80000011b0ac
-	.quad	0xffff80000011b208
-	.quad	0xffff80000011b23d
-	.quad	0xffff80000011b27c
-	.quad	0xffff80000011b38e
-	.quad	0xffff80000011b4e3
-	.quad	0xffff80000011b60f
-	.quad	0xffff80000011b781
-	.quad	0xffff80000011b978
-	.quad	0xffff80000011bbd9
-	.quad	0xffff80000011bbf4
-	.quad	0xffff80000011bc0b
-	.quad	0xffff80000011bc1e
-	.quad	0xffff80000011bc35
-	.quad	0xffff80000011bcbd
-	.quad	0xffff80000011bcd4
-	.quad	0xffff80000011bceb
-	.quad	0xffff80000011bf20
-	.quad	0xffff80000011c186
-	.quad	0xffff80000011c1a5
-	.quad	0xffff80000011c270
-	.quad	0xffff80000011c570
-	.quad	0xffff80000011c80f
-	.quad	0xffff80000011c9a7
-	.quad	0xffff80000011ca4b
-	.quad	0xffff80000011cbce
-	.quad	0xffff80000011cd4a
-	.quad	0xffff80000011ce6d
-	.quad	0xffff80000011cf5b
-	.quad	0xffff80000011cf7a
-	.quad	0xffff80000011cf91
-	.quad	0xffff80000011cfa8
-	.quad	0xffff80000011d013
-	.quad	0xffff80000011d292
-	.quad	0xffff80000011d628
-	.quad	0xffff80000011d680
-	.quad	0xffff80000011d733
-	.quad	0xffff80000011d813
-	.quad	0xffff80000011d8f3
-	.quad	0xffff80000011d988
-	.quad	0xffff80000011da31
-	.quad	0xffff80000011daab
-	.quad	0xffff80000011db65
-	.quad	0xffff80000011dbc9
-	.quad	0xffff80000011dbed
-	.quad	0xffff80000011dc70
-	.quad	0xffff80000011ddcc
-	.quad	0xffff80000011deb0
-	.quad	0xffff80000011df96
-	.quad	0xffff80000011dfce
-	.quad	0xffff80000011e06b
-	.quad	0xffff80000011e0c5
-	.quad	0xffff80000011e188
-	.quad	0xffff80000011e424
-	.quad	0xffff80000011e45a
-	.quad	0xffff80000011e7d0
-	.quad	0xffff80000011e849
-	.quad	0xffff80000011ebc1
-	.quad	0xffff80000011edd8
-	.quad	0xffff80000011eff3
-	.quad	0xffff80000011f061
-	.quad	0xffff80000011f1c1
-	.quad	0xffff80000011f21e
-	.quad	0xffff80000011f5ea
-	.quad	0xffff80000011f67b
-	.quad	0xffff80000011f930
-	.quad	0xffff80000011f946
-	.quad	0xffff80000011f971
-	.quad	0xffff80000011f987
-	.quad	0xffff80000011f99d
-	.quad	0xffff80000011f9b3
-	.quad	0xffff80000011fa64
-	.quad	0xffff80000011fb12
-	.quad	0xffff80000011fb3d
-	.quad	0xffff80000011fc74
-	.quad	0xffff80000011fcd8
-	.quad	0xffff80000011fe2e
-	.quad	0xffff800000120132
-	.quad	0xffff800000120176
-	.quad	0xffff8000001201aa
-	.quad	0xffff8000001201e2
-	.quad	0xffff800000120256
-	.quad	0xffff8000001202be
-	.quad	0xffff800000120366
-	.quad	0xffff8000001203a9
-	.quad	0xffff800000120424
-	.quad	0xffff800000120434
-	.quad	0xffff800000120444
-	.quad	0xffff800000120454
-	.quad	0xffff800000120464
-	.quad	0xffff800000120474
-	.quad	0xffff800000120484
-	.quad	0xffff800000120494
-	.quad	0xffff8000001204a4
-	.quad	0xffff8000001204b4
-	.quad	0xffff8000001204c4
-	.quad	0xffff8000001204d4
-	.quad	0xffff8000001204e4
-	.quad	0xffff8000001204f4
-	.quad	0xffff800000120504
-	.quad	0xffff800000120511
-	.quad	0xffff80000012051e
-	.quad	0xffff80000012052b
-	.quad	0xffff800000120538
-	.quad	0xffff800000120545
-	.quad	0xffff800000120552
-	.quad	0xffff80000012055f
-	.quad	0xffff80000012056c
-	.quad	0xffff800000120579
-	.quad	0xffff800000120586
-	.quad	0xffff800000120596
-	.quad	0xffff8000001205b3
-	.quad	0xffff8000001205b5
+	.quad	0xffff80000011b005
+	.quad	0xffff80000011b067
+	.quad	0xffff80000011b095
+	.quad	0xffff80000011b182
+	.quad	0xffff80000011b2de
+	.quad	0xffff80000011b313
+	.quad	0xffff80000011b352
+	.quad	0xffff80000011b464
+	.quad	0xffff80000011b5b9
+	.quad	0xffff80000011b6e5
+	.quad	0xffff80000011b857
+	.quad	0xffff80000011ba4e
+	.quad	0xffff80000011bcaf
+	.quad	0xffff80000011bcca
+	.quad	0xffff80000011bce1
+	.quad	0xffff80000011bcf4
+	.quad	0xffff80000011bd0b
+	.quad	0xffff80000011bd93
+	.quad	0xffff80000011bdaa
+	.quad	0xffff80000011bdc1
+	.quad	0xffff80000011bff6
+	.quad	0xffff80000011c25c
+	.quad	0xffff80000011c27b
+	.quad	0xffff80000011c346
+	.quad	0xffff80000011c646
+	.quad	0xffff80000011c8e5
+	.quad	0xffff80000011ca7d
+	.quad	0xffff80000011cb21
+	.quad	0xffff80000011cca4
+	.quad	0xffff80000011ce20
+	.quad	0xffff80000011cf43
+	.quad	0xffff80000011d031
+	.quad	0xffff80000011d050
+	.quad	0xffff80000011d067
+	.quad	0xffff80000011d07e
+	.quad	0xffff80000011d0e9
+	.quad	0xffff80000011d368
+	.quad	0xffff80000011d6fe
+	.quad	0xffff80000011d756
+	.quad	0xffff80000011d809
+	.quad	0xffff80000011d8e9
+	.quad	0xffff80000011d9c9
+	.quad	0xffff80000011da5e
+	.quad	0xffff80000011db07
+	.quad	0xffff80000011db81
+	.quad	0xffff80000011dc3b
+	.quad	0xffff80000011dc9f
+	.quad	0xffff80000011dcc3
+	.quad	0xffff80000011dd46
+	.quad	0xffff80000011dea2
+	.quad	0xffff80000011df86
+	.quad	0xffff80000011e06c
+	.quad	0xffff80000011e0a4
+	.quad	0xffff80000011e141
+	.quad	0xffff80000011e19b
+	.quad	0xffff80000011e25e
+	.quad	0xffff80000011e4fa
+	.quad	0xffff80000011e530
+	.quad	0xffff80000011e8a6
+	.quad	0xffff80000011e91f
+	.quad	0xffff80000011ec97
+	.quad	0xffff80000011eeae
+	.quad	0xffff80000011f0c9
+	.quad	0xffff80000011f137
+	.quad	0xffff80000011f297
+	.quad	0xffff80000011f2f4
+	.quad	0xffff80000011f6c0
+	.quad	0xffff80000011f751
+	.quad	0xffff80000011fa06
+	.quad	0xffff80000011fa1c
+	.quad	0xffff80000011fa47
+	.quad	0xffff80000011fa5d
+	.quad	0xffff80000011fa73
+	.quad	0xffff80000011fa89
+	.quad	0xffff80000011fb3a
+	.quad	0xffff80000011fbe8
+	.quad	0xffff80000011fc13
+	.quad	0xffff80000011fd4a
+	.quad	0xffff80000011fdae
+	.quad	0xffff80000011ff04
+	.quad	0xffff800000120208
+	.quad	0xffff80000012024c
+	.quad	0xffff800000120280
+	.quad	0xffff8000001202b8
+	.quad	0xffff80000012032c
+	.quad	0xffff800000120394
+	.quad	0xffff80000012043c
+	.quad	0xffff80000012047f
+	.quad	0xffff8000001204fa
+	.quad	0xffff80000012050a
+	.quad	0xffff80000012051a
+	.quad	0xffff80000012052a
+	.quad	0xffff80000012053a
+	.quad	0xffff80000012054a
+	.quad	0xffff80000012055a
+	.quad	0xffff80000012056a
+	.quad	0xffff80000012057a
+	.quad	0xffff80000012058a
+	.quad	0xffff80000012059a
+	.quad	0xffff8000001205aa
+	.quad	0xffff8000001205ba
+	.quad	0xffff8000001205ca
+	.quad	0xffff8000001205da
+	.quad	0xffff8000001205e7
+	.quad	0xffff8000001205f4
+	.quad	0xffff800000120601
+	.quad	0xffff80000012060e
+	.quad	0xffff80000012061b
+	.quad	0xffff800000120628
+	.quad	0xffff800000120635
+	.quad	0xffff800000120642
+	.quad	0xffff80000012064f
+	.quad	0xffff80000012065c
+	.quad	0xffff80000012066c
+	.quad	0xffff800000120689
+	.quad	0xffff80000012068b
+	.quad	0xffff800000120bd6
 
 .globl kallsyms_syms_num
 .align 8
 
 kallsyms_syms_num:
-	.quad	512
+	.quad	513
 
 .globl kallsyms_index
 .align 8
@@ -1039,6 +1040,7 @@ kallsyms_index:
 	.quad	6262
 	.quad	6285
 	.quad	6303
+	.quad	6321
 
 .globl kallsyms_names
 .align 8
@@ -1381,7 +1383,7 @@ kallsyms_names:
 	.asciz	"sys_stat"
 	.asciz	"sys_cleanScreen"
 	.asciz	"dir_Tree"
-	.asciz	"sys_tree"
+	.asciz	"sys_info"
 	.asciz	"sys_fstat"
 	.asciz	"get_current"
 	.asciz	"dir_entry_consturctor"
@@ -1509,7 +1511,7 @@ kallsyms_names:
 	.asciz	"pwd_command"
 	.asciz	"cat_command"
 	.asciz	"touch_command"
-	.asciz	"tree_command"
+	.asciz	"info_command"
 	.asciz	"rm_command"
 	.asciz	"mkdir_command"
 	.asciz	"rmdir_command"
@@ -1550,10 +1552,11 @@ kallsyms_names:
 	.asciz	"mkdir"
 	.asciz	"getcwd"
 	.asciz	"stat"
-	.asciz	"tree"
+	.asciz	"info"
 	.asciz	"cleanScreen"
 	.asciz	"LABEL_SYSCALL"
 	.asciz	"sysexit_return_address"
 	.asciz	"LABEL_SYSCALL_RET"
+	.asciz	"test_show_vir_phy"
 	.asciz	"_etext"
 

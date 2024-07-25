@@ -615,8 +615,8 @@ int touch_command(int argc, char **argv) {
 }
 
 // ==========Update==========
-int tree_command(int argc, char **argv){
-	tree();
+int info_command(int argc, char **argv){
+	info();
 	return 0;
 }
 // =======================
@@ -686,7 +686,7 @@ struct buildincmd shell_internal_cmd[] =
 		{"rmdir", rmdir_command},
 		{"exec", exec_command},
 		{"reboot", reboot_command},
-		{"tree", tree_command},
+		{"info", info_command},
 		{"echo", echo_command},
 };
 

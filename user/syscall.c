@@ -47,7 +47,7 @@ SYSFUNC_DEF(rmdir)
 SYSFUNC_DEF(getcwd)
 SYSFUNC_DEF(stat)
 
-SYSFUNC_DEF(tree)
+SYSFUNC_DEF(info)
 SYSFUNC_DEF(cleanScreen)
 SYSFUNC_DEF(getNow)
 SYSFUNC_DEF(unlink)

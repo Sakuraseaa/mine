@@ -247,7 +247,7 @@ struct buildincmd shell_internal_cmd[] =
 		{"rmdir", rmdir_command},
 		{"exec", exec_command},
 		{"reboot", reboot_command},
-		{"tree", tree_command},
+		{"info", info_command},
 		{"date", date_command},
 		{"echo", echo_command},
 };

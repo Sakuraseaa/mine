@@ -3,7 +3,6 @@
 
 #include "types.h"
 #include "lib.h"
-
 //	8Bytes per cell, 页表项个数
 #define PTRS_PER_PAGE 512
 
@@ -15,8 +14,14 @@
 #define PAGE_2M_SHIFT 21 // 2的21次方是2MB
 #define PAGE_4K_SHIFT 12 // 2的12次方是4KB
 
+#define PGTB_ENTRY 512
 #define PAGE_2M_SIZE (1UL << PAGE_2M_SHIFT)
 #define PAGE_4K_SIZE (1UL << PAGE_4K_SHIFT)
+
+#define PGTB_DTB_MANAGE_SIZE PAGE_2M_SIZE * PGTB_ENTRY           // 1GB
+#define PGTB_DPTB_MANAGE_SIZE PGTB_DTB_MANAGE_SIZE * PGTB_ENTRY  // 512 GB
+#define PGTB_PML4_MANAGE_SIZE PGTB_DPTB_MANAGE_SIZE * PGTB_ENTRY // 256 TB
+
 
 #define PAGE_2M_MASK (~(PAGE_2M_SIZE - 1)) // 用于屏蔽低2MB的数值
 #define PAGE_4K_MASK (~(PAGE_4K_SIZE - 1))
@@ -123,6 +128,7 @@ typedef struct
 // 7,1,0
 #define PAGE_KERNEL_Page (PAGE_PS | PAGE_R_W | PAGE_Present)
 
+#define PAGE_USER_PML4 (PAGE_U_S | PAGE_R_W | PAGE_Present)
 // 1,0
 #define PAGE_USER_GDT (PAGE_U_S | PAGE_R_W | PAGE_Present)
 
@@ -327,4 +333,6 @@ unsigned long* pml4e_ptr(unsigned long vaddr);
 unsigned long* pdpe_ptr(unsigned long vaddr);
 u64 do_wp_page(u64 virtual_address);
 void do_no_page(u64 virtual_address);
+
+
 #endif

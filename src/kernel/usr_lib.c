@@ -44,7 +44,7 @@ SYSFUNC_DEF(mkdir)
 SYSFUNC_DEF(getcwd)
 SYSFUNC_DEF(stat)
 
-SYSFUNC_DEF(tree)
+SYSFUNC_DEF(info)
 SYSFUNC_DEF(cleanScreen)
 
 __asm__(

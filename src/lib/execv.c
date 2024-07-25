@@ -126,7 +126,10 @@ static void virtual_map(unsigned long user_addr){
 	{
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
-		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
+
+		set_pdpt(virtual + 511, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+
+		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
@@ -134,6 +137,8 @@ static void virtual_map(unsigned long user_addr){
 	{
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
+
+		set_pdt(virtual + 511, mk_pdt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
 	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
@@ -355,6 +360,9 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		// copy kernel space
 		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
 		
+		// 在最后一项，填上页表的地址。
+		set_mpl4t(Phy_To_Virt(current->mm->pgd) + 511, mk_mpl4t(current->mm->pgd, PAGE_USER_PML4));
+		
 		current->flags &= ~PF_VFORK;
 		__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
 	}
@@ -413,6 +421,9 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 	regs->r10 = code_start_addr; // RIP
 	regs->r11 = stack_start_addr; // RSP
 	regs->rax = 1;
+	
+	flush_tlb();
+	
 	// go to ret_system_call
 	return retval;
 }

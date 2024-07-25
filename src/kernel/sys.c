@@ -13,6 +13,8 @@
 #include "stat.h"
 #include "fs.h"
 #include "types.h"
+#include "test.h"
+
 // 系统调用有关
 /*
 normal
@@ -83,7 +85,7 @@ unsigned long sys_putstring(unsigned int FRcolor, char *string)
  */
 char *sys_getcwd(char *buf, u64 size) {
     assert(buf != NULL);
-
+    
     dir_entry_t* dir = current->i_pwd;
     dir_entry_t* par_dir = dir->parent;
     if(par_dir == dir) {
@@ -337,8 +339,6 @@ u64 sys_rmdir(char* filename) {
     }
     return error;
 }
-
-
 
 u64 sys_unlink(char* filename) {
     char *path = NULL;
@@ -812,9 +812,21 @@ void dir_Tree(dir_entry_t* cur, int depth) {
     }
 }
 
-unsigned long sys_tree() {
-    struct dir_entry *parent = current_sb->root; // 父目录项
-    dir_Tree(parent, 0);
+unsigned long sys_info(char order) {
+    
+    switch (order)
+    {
+    case 'A':  // 显示系统目录项树
+        struct dir_entry *parent = current_sb->root; // 父目录项
+        dir_Tree(parent, 0);
+        break;
+    case 'B':// 显示本进程的虚拟内存 到 物理内存的映射
+        test_show_vir_phy(current);
+        break;
+    default:
+        break;
+    }
+
     return 0;
 }
 

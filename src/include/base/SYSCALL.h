@@ -38,7 +38,7 @@
 
 #define __NR_unlink 24
 
-#define __NR_tree 196
+#define __NR_info 196
 #define __NR_cleanScreen 197
 #define __NR_getNow 198
 #endif

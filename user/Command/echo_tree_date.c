@@ -5,11 +5,21 @@
 #include "fcntl.h"
 #include "string.h"
 #include "command.h"
+#include "stdlib.h"
 
 extern char* current_dir;
 
-int tree_command(int argc, char **argv) {
-	return tree();
+int info_command(int argc, char **argv) {
+
+    for (size_t i = 1; i < argc; i++)
+    {
+        if(!strcmp("tree", argv[i]))
+            info('A');
+        else if(!strcmp("tab", argv[i]))
+            info('B');
+    }
+
+    return 0;
 }
 
 // Monday Tuesday Wednesday Thursday Friday Saturday Sunday
@@ -49,7 +59,6 @@ int echo_command(int argc, char **argv)
     int ret = 0, fd = 0;
     char* filename = NULL;
     
-    char* p = argv[3];
     if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
         
 		filename = get_filename_whole(filename, argv[3]);

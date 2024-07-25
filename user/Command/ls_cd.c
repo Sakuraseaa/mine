@@ -38,6 +38,7 @@ static char *path_parse(char *pathname, char *name_store)
 
     return pathname;
 }
+
 /**
  * @brief wash_path用于将包含相对路径的old_path转换为绝对路径后存入new_abs_path.
  *        例如将 /a/b/../c/./d 转换为/a/c/d

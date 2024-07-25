@@ -28,6 +28,6 @@ SYSCALL_COMMON(__NR_stat, sys_stat)
 
 SYSCALL_COMMON(__NR_unlink, sys_unlink)
 
-SYSCALL_COMMON(__NR_tree, sys_tree)
+SYSCALL_COMMON(__NR_info, sys_info)
 SYSCALL_COMMON(__NR_cleanScreen, sys_cleanScreen)
 SYSCALL_COMMON(__NR_getNow, sys_getNow)

@@ -38,6 +38,7 @@ extern unsigned long shell_boot(unsigned long arg);
 extern int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigned long flags);
 extern int shell_up;
 
+#include "test.h"
 void Start_Kernel(void)
 {
 	global_pid = 1;
@@ -130,7 +131,7 @@ void Start_Kernel(void)
 	while (!shell_up)
 		;
 	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
-
+	
 	while (1)
 	{
 		// 这里可以遍历所有进程，寻找僵尸进程。释放他。

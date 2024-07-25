@@ -18,7 +18,7 @@ extern int KILL(long pid, long signum);
 int kill(long pid, long signum) {
     if(signum < 1 && signum > NSIG) {
         printf("ERROR!!!! invaild signal_value");
-        return NULL;
+        return -1;
     }
 
     return KILL(pid, signum);
