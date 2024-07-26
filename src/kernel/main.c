@@ -81,6 +81,8 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "frame buffer init \n");
 	frame_buffer_init();
 
+	color_printk(RED, BLACK,"hello\n");
+	
 	// color_printk(RED, BLACK, "pagetable init \n");
 	pagetable_init();
 

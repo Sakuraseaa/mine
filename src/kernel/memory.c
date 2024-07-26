@@ -818,9 +818,9 @@ unsigned long kfree(void *address)
  */
 void pagetable_init()
 {
-    unsigned long i, j;
+    unsigned long i, j, k;
     unsigned long *tmp = NULL;
-
+    unsigned long virtual_addr = 0;
     // Global_CR3 = Get_gdt();
     // tmp = (unsigned long *)(Phy_To_Virt((unsigned long)Global_CR3 & (~0xfffUL)) + 256);
     // color_printk(YELLOW, BLACK, "1:%#018lx, %018lx\t\t", (unsigned long)tmp, *tmp);
@@ -840,37 +840,43 @@ void pagetable_init()
 
         // 遍历该内存区域的物理页
         for (j = 0; j < z->pages_length; j++, p++)
-        {
-            // 获取该虚拟地址对应的PML(page map level 4, 4级页表)中的页表项指针
-            tmp = (unsigned long *)((unsigned long)Phy_To_Virt((unsigned long)Global_CR3 & (~0xfffUL)) +
-                                    (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_GDT_SHIFT) & 0x1ff) * 8);
+        {   
+            for(k = 0; k < 4; k++) {
+                
+                virtual_addr = (unsigned long)Phy_To_Virt(p->PHY_address + (k * PAGE_4K_SIZE));
 
-            if (*tmp == 0)
-            { // 页表项为空，则分配4kbPDPT页表,填充该表项
-                unsigned long *virtual_addrees = kmalloc(PAGE_4K_SIZE, 0);
-                // set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_KERNEL_GDT));
-                set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_USER_GDT));
+                // 获取该虚拟地址对应的PML(page map level 4, 4级页表)中的页表项指针
+                tmp = (unsigned long *)((unsigned long)Phy_To_Virt((unsigned long)Global_CR3 & (~0xfffUL)) + ((virtual_addr >> PAGE_GDT_SHIFT) & 0x1ff) * 8);
+
+                if (*tmp == 0)
+                { // 页表项为空，则分配4kbPDPT页表,填充该表项
+                    unsigned long *virtual_addrees = kmalloc(PAGE_4K_SIZE, 0);
+                    // set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_KERNEL_GDT));
+                    set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual_addrees), PAGE_USER_GDT));
+                }
+                //=======================================================================================
+
+                // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
+                tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_1G_SHIFT) & 0x1ff) * 8);
+                if (*tmp == 0)
+                { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
+                    unsigned long *virtual_address = kmalloc(PAGE_4K_SIZE, 0);
+                    set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual_address), PAGE_USER_Dir));
+                }
+
+                // ========================================================================================
+                // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
+                tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_2M_SHIFT) & 0x1ff) * 8);
+                if (*tmp == 0)
+                { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
+                    unsigned long *virtual_address = kmalloc(PAGE_4K_SIZE, 0);
+                    set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual_address), PAGE_USER_Dir));
+                }
+                // ========================================================================================
+                // 获取该虚拟地址对应的PT(page table)中的页表项指针
+                tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) +((virtual_addr >> PAGE_4K_SHIFT) & 0x1ff) * 8);
+                set_pt(tmp, mk_pt(p->PHY_address + (k * PAGE_4K_SIZE), PAGE_USER_Page_4K));
             }
-            //=======================================================================================
-
-            // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-            tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) +
-                                    (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_1G_SHIFT) & 0x1ff) * 8);
-            if (*tmp == 0)
-            { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
-                unsigned long *virtual_address = kmalloc(PAGE_4K_SIZE, 0);
-                set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual_address), PAGE_USER_Dir));
-            }
-
-            // ========================================================================================
-            // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
-            tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) +
-                                    (((unsigned long)Phy_To_Virt(p->PHY_address) >> PAGE_2M_SHIFT) & 0x1ff) * 8);
-            // 在页表中填写对应的物理页
-            set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
-
-            // if (j % 50 == 0)
-            //   color_printk(GREEN, BLACK, "@:%#018lx,%#018lx\t\n", (unsigned long)tmp, *tmp);
         }
     }
 
@@ -1121,10 +1127,17 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
         tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
         if (*tmp == 0)
         {
-            p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-            if (p == NULL)
-                return -ENOMEM;
-            set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
+		    virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
+            memset(virtual, 0, PAGE_4K_SIZE);
+            set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+        }
+
+    	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_4K_SHIFT) & 0x1ff));
+        if (*tmp == 0)
+        {
+		    virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
+            memset(virtual, 0, PAGE_4K_SIZE);
+            set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
         }
     }
     current->mm->end_brk = i;
@@ -1159,6 +1172,13 @@ unsigned long* pde_ptr(unsigned long vaddr) {
 	return pde;
 }
 
+/**
+ * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
+ */
+unsigned long* pte_ptr(unsigned long vaddr) {
+	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pde_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_4K_SHIFT) & 0x1ff));
+	return pde;
+}
 /**
  * @brief addr_v2p用于将虚拟地址转为物理地址
  *

@@ -18,9 +18,10 @@
 #define PAGE_2M_SIZE (1UL << PAGE_2M_SHIFT)
 #define PAGE_4K_SIZE (1UL << PAGE_4K_SHIFT)
 
-#define PGTB_DTB_MANAGE_SIZE PAGE_2M_SIZE * PGTB_ENTRY           // 1GB
-#define PGTB_DPTB_MANAGE_SIZE PGTB_DTB_MANAGE_SIZE * PGTB_ENTRY  // 512 GB
-#define PGTB_PML4_MANAGE_SIZE PGTB_DPTB_MANAGE_SIZE * PGTB_ENTRY // 256 TB
+#define PGTB_TB_MANAGE_SIZE     PAGE_4K_SIZE * PGTB_ENTRY           // 2MB
+#define PGTB_DTB_MANAGE_SIZE    PGTB_TB_MANAGE_SIZE * PGTB_ENTRY    // 1GB
+#define PGTB_DPTB_MANAGE_SIZE   PGTB_DTB_MANAGE_SIZE * PGTB_ENTRY   // 512 GB
+#define PGTB_PML4_MANAGE_SIZE   PGTB_DPTB_MANAGE_SIZE * PGTB_ENTRY  // 256 TB
 
 
 #define PAGE_2M_MASK (~(PAGE_2M_SIZE - 1)) // 用于屏蔽低2MB的数值
@@ -134,7 +135,8 @@ typedef struct
 
 // 2,1,0
 #define PAGE_USER_Dir (PAGE_U_S | PAGE_R_W | PAGE_Present)
-
+// 2,1,0
+#define PAGE_USER_Page_4K (PAGE_U_S | PAGE_R_W | PAGE_Present)
 // 7,2,1,0
 #define PAGE_USER_Page (PAGE_PS | PAGE_U_S | PAGE_R_W | PAGE_Present)
 
@@ -331,6 +333,7 @@ void init_memory();
 unsigned long* pde_ptr(unsigned long vaddr);
 unsigned long* pml4e_ptr(unsigned long vaddr);
 unsigned long* pdpe_ptr(unsigned long vaddr);
+unsigned long* pte_ptr(unsigned long vaddr);
 u64 do_wp_page(u64 virtual_address);
 void do_no_page(u64 virtual_address);
 
