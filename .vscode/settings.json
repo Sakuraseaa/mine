@@ -18,7 +18,8 @@
         "memory.h": "c",
         "unistd.h": "c",
         "fcntl.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "lib.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

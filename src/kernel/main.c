@@ -81,8 +81,6 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "frame buffer init \n");
 	frame_buffer_init();
 
-	color_printk(RED, BLACK,"hello\n");
-	
 	// color_printk(RED, BLACK, "pagetable init \n");
 	pagetable_init();
 
@@ -125,7 +123,11 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "task init \n");
 	DEBUGK("task init \n");
 	task_init();
-
+	
+	// // 4K映射
+	// pagetable_4K_init();
+	// frame_buffer_init();
+	
 	sti();
 
 

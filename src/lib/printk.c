@@ -400,12 +400,14 @@ void frame_buffer_init()
 	unsigned long *tmp;
 	unsigned long *tmp1, *tmp2;
 	unsigned long FB_addr = PAGE_OFFSET + VBE_Phy_address;
-	unsigned long *virtual;
+	unsigned long *virtual = NULL;
+
+	unsigned long *test;
 	Global_CR3 = Get_gdt();
 
     for(i = 0; i < Pos.FB_length; i += PAGE_4K_SIZE) {
-
-		tmp = Phy_To_Virt((unsigned long *)((*Phy_To_Virt(Global_CR3)) & (~0xfffUL)) + ((FB_addr + i >> PAGE_GDT_SHIFT) & 0x1ff));
+		test = (unsigned long*)(((unsigned long)Phy_To_Virt(Global_CR3)) & (~0xfffUL));
+		tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) + ((FB_addr + i >> PAGE_GDT_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
 			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
@@ -415,7 +417,7 @@ void frame_buffer_init()
 		}
 	
 		// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((FB_addr + i >> PAGE_1G_SHIFT) & 0x1ff));
+		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + ((FB_addr + i >> PAGE_1G_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
 			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
@@ -426,28 +428,23 @@ void frame_buffer_init()
 	
 		// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 		// 申请用户占用的内存,填充页表, 填充PDT内存
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((FB_addr + i >> PAGE_2M_SHIFT) & 0x1ff));
+		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + ((FB_addr + i >> PAGE_2M_SHIFT) & 0x1ff);
 		if (*tmp == 0)
-		{
+		{	
 			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
 			memset(virtual, 0, PAGE_4K_SIZE);
 			set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 		}
 
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((FB_addr + i >> PAGE_4K_SHIFT) & 0x1ff));
+		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + ((FB_addr + i >> PAGE_4K_SHIFT) & 0x1ff);
 
 		set_pt(tmp, mk_pdpt(VBE_Phy_address + i, PAGE_USER_Page_4K));
 	
     }
 
-	Pos.FB_addr = (unsigned int *)Phy_To_Virt(VBE_Phy_address);
+	Pos.FB_addr = Phy_To_Virt(VBE_Phy_address);
 	flush_tlb();
 
-
-    // 清屏命令
-    memset(Pos.FB_addr,0, Pos.FB_length);
-	Pos.XPosition = 0;
-	Pos.YPosition = 0;
 
     return 0;
 }
