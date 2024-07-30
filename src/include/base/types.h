@@ -26,6 +26,7 @@ typedef int32 dev_t;
 
 typedef u64 time_t;
 typedef u64 idx_t;
+typedef u64 cpuflg_t;
 
 typedef u16 mode_t; // 文件权限
 

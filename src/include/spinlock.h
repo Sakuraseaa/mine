@@ -6,6 +6,18 @@ typedef struct
 {
     __volatile__ unsigned long lock;
 } spinlock_T;
+
+// 排队自旋锁 
+typedef struct equity_spinlock_t{
+    union {
+        __volatile__ u32 slock;//真正的锁值变量
+        struct {
+            volatile u16 owner;
+            volatile u16 next;
+        };
+    };
+}fair_spinlock_t;
+
 void spin_init(spinlock_T *lock);
 void spin_lock(spinlock_T *lock);
 void spin_unlock(spinlock_T *lock);

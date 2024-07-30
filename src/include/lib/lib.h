@@ -8,21 +8,17 @@
 		typeof(((type *)0)->member) *p = (ptr);                             \
 		(type *)((unsigned long)p - (unsigned long)&(((type *)0)->member)); \
 	})
-#define hlt() __asm__ __volatile__("hlt \n\t" :: \
-									   : "memory")
+#define hlt() __asm__ __volatile__("hlt \n\t" ::: "memory")
 
 // 允许中断发生
-#define sti() __asm__ __volatile__("sti	\n\t" :: \
-									   : "memory")
+#define sti() __asm__ __volatile__("sti	\n\t" ::: "memory")
 
 // clear interrupt 禁止中断发生
-#define cli() __asm__ __volatile__("cli	\n\t" :: \
-									   : "memory")
+#define cli() __asm__ __volatile__("cli	\n\t" ::: "memory")
 
 #define nop() __asm__ __volatile__("nop	\n\t")
 // 保证系统在后面的memory访问之前，先前的memory访问都以及结束
-#define io_mfence() __asm__ __volatile__("mfence	\n\t" :: \
-											 : "memory")
+#define io_mfence() __asm__ __volatile__("mfence	\n\t" ::: "memory")
 
 typedef struct List
 {
