@@ -55,7 +55,7 @@ void Start_Kernel(void)
 	Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
 
 	semaphore_init(&visual_lock, 1);
-	spin_init(&Pos.printk_lock);
+	fair_spin_init(&Pos.printk_lock);
 
 	load_TR(10);
 

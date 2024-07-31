@@ -106,8 +106,6 @@ struct file *open_exec_file(char *path)
 	return filp;
 }
 
-
-
 /**
  * @brief 进行虚拟地址的映射
  * 
@@ -127,10 +125,9 @@ static void virtual_map(unsigned long user_addr){
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 
-		set_pdpt(virtual + 511, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-
 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
+	
 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if (*tmp == 0)
@@ -138,21 +135,29 @@ static void virtual_map(unsigned long user_addr){
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 
-		set_pdt(virtual + 511, mk_pdt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
+	
 	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 	// 申请用户占用的内存,填充页表, 填充PDT内存
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
 	if (*tmp == 0)
 	{
-		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
+		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
+		memset(virtual, 0, PAGE_4K_SIZE);
 
-		// 清理地址空间脏数据
-		memset((char*)(user_addr & PAGE_2M_MASK), 0, PAGE_2M_SIZE);
+		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
-	
+
+	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
+	if (*tmp == 0)
+	{
+		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
+		memset(virtual, 0, PAGE_4K_SIZE);
+
+		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Page_4K));
+	}
+
 }
 
 /**
@@ -170,23 +175,25 @@ static bool segment_load(struct file* filp, unsigned long offset, unsigned long 
     // 计算段将要加载到的虚拟页
     unsigned long vaddr_first_page = vaddr & TASK_SIZE;
     // 表示文件在第一个页框中占用的字节大小
-    long size_in_first_page = PAGE_2M_SIZE - (vaddr & (PAGE_2M_SIZE - 1));
+    long size_in_first_page = PAGE_4K_SIZE - (vaddr & (PAGE_4K_SIZE - 1));
 
     // 如果虚拟页内装不下, 则计算额外需要的页数
     unsigned long occupy_pages = 1; // 计算本次加载要占用的物理页数
     if (filesz > size_in_first_page) {
         unsigned long left_size = filesz - size_in_first_page;
-        occupy_pages = PAGE_2M_ALIGN(left_size / PAGE_2M_SIZE) + 1;
+        occupy_pages = (PAGE_4K_ALIGN(left_size) / PAGE_4K_SIZE) + 1;
     }
 
     unsigned long page_idx = 0;
     unsigned long vaddr_page = vaddr_first_page;
 	do
     { 	
-		if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) || !(*pde_ptr(vaddr_page) & 0x01)) {
+		if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) 
+			|| !(*pde_ptr(vaddr_page) & 0x01) || !(*pte_ptr(vaddr_page) & 0x01)) 
+		{
 			virtual_map(vaddr_page); // 映射地址，若虚拟地址对应的实际地址为空，则分配物理面
 		}
-        vaddr_page += PAGE_2M_SIZE;
+        vaddr_page += PAGE_4K_SIZE;
         page_idx++;
     } while (page_idx < occupy_pages);
 	
@@ -360,8 +367,6 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		// copy kernel space
 		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
 		
-		// 在最后一项，填上页表的地址。
-		set_mpl4t(Phy_To_Virt(current->mm->pgd) + 511, mk_mpl4t(current->mm->pgd, PAGE_USER_PML4));
 		
 		current->flags &= ~PF_VFORK;
 		__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
@@ -381,11 +386,11 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 
 	// 映射栈地址, 目前刚启动为栈分配2MB （有点多？）
 	// issue:: 栈空气不够了，如何扩充？ （缺页中断！）
-	virtual_map(stack_start_addr - PAGE_2M_SIZE);
+	virtual_map(stack_start_addr - PAGE_4K_SIZE);
 
 	// 设置用户栈 起始地址
-	current->mm->start_stack = stack_start_addr - PAGE_2M_SIZE;
-	current->mm->stack_length = PAGE_2M_SIZE;
+	current->mm->start_stack = stack_start_addr - PAGE_4K_SIZE;
+	current->mm->stack_length = PAGE_4K_SIZE;
 
 	exit_files(current);
 
@@ -423,8 +428,10 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 	regs->rax = 1;
 	
 	flush_tlb();
-	
+
 	// go to ret_system_call
 	return retval;
 }
+
+
 

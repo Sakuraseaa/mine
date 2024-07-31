@@ -318,7 +318,7 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 	// 通过IF位，来判断是否是中断处理程序，中断处理程序的IF位是0
 	// 不是中断处理程序，那么我们就进行自旋锁
 	if (get_rflags() & 0x200UL)
-		spin_lock(&Pos.printk_lock);
+		fair_spin_lock(&Pos.printk_lock);
 
 	i = vsprintf(buf, fmt, args);
 
@@ -383,7 +383,7 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 	putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, WHITE, BLACK, 255);
 	
 	if (get_rflags() & 0x200UL)
-		spin_unlock(&Pos.printk_lock);
+		fair_spin_unlock(&Pos.printk_lock);
 
 	return i;
 }

@@ -50,7 +50,7 @@ struct position
 	unsigned int *FB_addr;
 	unsigned long FB_length;
 
-	spinlock_T printk_lock;
+	fair_spinlock_t printk_lock;
 } Pos;
 
 void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, unsigned int BKcolor, unsigned char font);

@@ -7,11 +7,14 @@
 *.S~
 *.c~
 *.h~
+boot.img
+kallsyms.S
 system
 Kernel.lds~
 kernel.bin
 *.ini
 *.bin
+*.img
 hd.img
 vhd.img
 hd.qcow2
