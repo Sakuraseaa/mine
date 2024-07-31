@@ -42,9 +42,9 @@ void bitmap_make(bitmap_t *btmp, char* data, u64 bytes_len) {
 void bitmap_set(bitmap_t *btmp, u64 bit_idx, u8 value) {
     assert(bit_idx < btmp->btmp_bytes_len * BITMAP_DiGIT)
     if(value == 0)
-        btmp->bits[bit_idx / BITMAP_DiGIT]  &= ~(1 << (bit_idx % BITMAP_DiGIT)); // 设置为0
+        btmp->bits[bit_idx / BITMAP_DiGIT]  &= ~(1UL << (bit_idx % BITMAP_DiGIT)); // 设置为0
     else
-        btmp->bits[bit_idx / BITMAP_DiGIT]  |= (1 << (bit_idx % BITMAP_DiGIT)); // 设置为1
+        btmp->bits[bit_idx / BITMAP_DiGIT]  |= (1UL << (bit_idx % BITMAP_DiGIT)); // 设置为1
 }
 
 

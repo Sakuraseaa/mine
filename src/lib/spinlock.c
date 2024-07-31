@@ -40,3 +40,4 @@ long spin_trylock(spinlock_T *lock)
         preempt_enable();
     return tmp_value;
 }
+

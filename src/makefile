@@ -32,7 +32,7 @@ OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
 ALL:$(BUI_DIR)/Kernel.bin 
 
 $(BUI_DIR)/Kernel.bin:$(OBJS) $(OBJS_SCRIPT)
-	ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  /home/steven/mine/src/Kernel.lds  -Map $(BUI_DIR)/Kernel.map
+	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  /home/steven/mine/src/Kernel.lds  -Map $(BUI_DIR)/Kernel.map
 	@sudo mount -o loop $(BOCHS)/boot.img /mnt
 	@sudo cp $(BUI_DIR)/Kernel.bin /mnt -v
 	@sudo umount /mnt

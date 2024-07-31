@@ -448,3 +448,45 @@ void frame_buffer_init()
 
     return 0;
 }
+
+
+// void frame_buffer_init()
+// {
+// 	/////// re init frame buffer
+// 	unsigned long i;
+// 	unsigned long *tmp;
+// 	unsigned long *tmp1;
+// 	unsigned int *FB_addr = (unsigned int *)Phy_To_Virt(VBE_Phy_address);
+// 	unsigned long *vir_address;
+// 	Global_CR3 = Get_gdt();
+
+// 	// 获取该虚拟地址对应的PML(page map level 4, 4级页表)中的页表项指针
+// 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) +
+// 		  (((unsigned long)FB_addr >> PAGE_GDT_SHIFT) & 0x1ff);
+// 	if (*tmp == 0)
+// 	{ // 页表项为空，则分配4kbPDPT页表,填充该表项
+// 		vir_address = kmalloc(PAGE_4K_SIZE, 0);
+// 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(vir_address), PAGE_KERNEL_GDT));
+// 	}
+// 	//=======================================================================================
+
+// 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
+// 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((unsigned long)FB_addr >> PAGE_1G_SHIFT) & 0x1ff);
+// 	if (*tmp == 0)
+// 	{
+// 		vir_address = kmalloc(PAGE_4K_SIZE, 0);
+// 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(vir_address), PAGE_KERNEL_Dir));
+// 	}
+// 	//============================================================
+// 	for (i = 0; i < Pos.FB_length; i += PAGE_2M_SIZE)
+// 	{ // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
+// 		tmp1 = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((unsigned long)FB_addr + i >> PAGE_2M_SHIFT) & 0x1ff);
+// 		// 填写该表项
+// 		unsigned long phy = VBE_Phy_address + i;
+// 		set_pdt(tmp1, mk_pdpt(phy, PAGE_KERNEL_Page | PAGE_PWT | PAGE_PCD));
+// 	}
+
+// 	Pos.FB_addr = (unsigned int *)Phy_To_Virt(VBE_Phy_address);
+
+// 	flush_tlb();
+// }

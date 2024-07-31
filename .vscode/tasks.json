@@ -7,7 +7,6 @@
                 "-f",
                 "/home/steven/mine/src/makefile",
             ],
-            "dependsOn": "make-clean"
         },
         // {
         //     "label": "Run-Qemu!",

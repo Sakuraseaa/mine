@@ -15,62 +15,59 @@ typedef struct{
  * @param tsk 
  */
 void User_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
-    u64 *Directory_Ptr = 0, *Directory = 0, *PTE = 0;
+    u64 *PTDPE = 0, *PTDE = 0, *PTE = 0;
 	size_t i = 0, j = 0, k = 0, z = 0;
 
     u64 start_vir = 0, end_vir = 0;
     u64 start_phy = 0, end_phy = 0;
     u64 tmp = 0;
-	for(i = 0; i <256; i++) {	// 遍历四级页表
+	for(i = 0; i <512; i++) {	// 遍历四级页表
         start_vir = 0;    
-        
-        if(i == 255)
-            i = 255;
+
+		// u64* sk_addr = PML4 + i;
+        if(i > 255)
+            start_vir = ((unsigned long)0xffff000000000000);
         
         if((*(PML4 + i)) & PAGE_Present) {
-			Directory_Ptr = Phy_To_Virt(*(PML4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
+			PTDPE = Phy_To_Virt(*(PML4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
+            if(PTDPE == NULL)
+                continue;
+            
             start_vir += (i * PGTB_DPTB_MANAGE_SIZE);
 			
             for (j = 0; j < 512; j++) { // 遍历页目录指针页表
-                if(j == 511)
-                    j = 511;
-				if((*(Directory_Ptr + j)) & PAGE_Present) {
+				if((*(PTDPE + j)) & PAGE_Present) {
 					start_vir +=  (j * PGTB_DTB_MANAGE_SIZE);
-                    Directory = Phy_To_Virt(*(Directory_Ptr + j) & ~(0xfffUL)) ; //遍历页目录表项
-					
+                    PTDE = Phy_To_Virt(*(PTDPE + j) & ~(0xfffUL)) ; //遍历页目录表项
+                    
                     for(k = 0; k < 512; k++) {
-                        if(k == 268)
-                            k = 268;
-						if((*(Directory + k)) & PAGE_Present) {
+						if((*(PTDE + k)) & PAGE_Present) {
                             
                             start_vir += (k * PGTB_TB_MANAGE_SIZE);
-                            PTE = Phy_To_Virt(*(Directory + k) & ~(0xfffUL)) ; //遍历页表项
-                            
+                            PTE = Phy_To_Virt(*(PTDE + k) & ~(0xfffUL)) ; //遍历页表项
+                            if(PTE == NULL)
+                                continue;
                             for(z = 0; z < 512; z++) {
-                                if(z == 511)
-                                    z = 511;
                                 if((*(PTE + z)) & PAGE_Present) {
-                                tmp = start_vir +  z * PAGE_4K_SIZE;
-                                end_vir = tmp + PAGE_4K_SIZE;
+                                    tmp = start_vir +  z * PAGE_4K_SIZE;
+                                    end_vir = tmp + PAGE_4K_SIZE;
 
-                                start_phy = ((*(PTE + z)) & PAGE_4K_MASK); // 得到物理页
+                                    start_phy = ((*(PTE + z)) & PAGE_4K_MASK); // 得到物理页
 
-                                if(start_phy > (PGTB_DTB_MANAGE_SIZE / 2))
-                                    continue;
+                                    end_phy = start_phy + PAGE_4K_SIZE;
+                                    
+                                    map_entry_t* sk_addr = &map[(*i_m) - 1];
 
-                                end_phy = start_phy + PAGE_4K_SIZE;
-
-                                if(((*i_m) > 0) && (map[(*i_m) - 1].end_vir == tmp && map[(*i_m) - 1].end_phy == start_phy)) 
-                                {
-                                    map[(*i_m) - 1].end_vir = end_vir; // 连续页
-                                    map[(*i_m) - 1].end_phy = end_phy;
-                                } else {
-                                    map[(*i_m)].start_vir = tmp; // 非连续页 新创建一项
-                                    map[(*i_m)].end_vir = end_vir;
-                                    map[(*i_m)].start_phy = start_phy;
-                                    map[(*i_m)].end_phy = end_phy;
-                                    (*i_m)++;
-                                }
+                                    if(((*i_m) > 0) && (map[(*i_m) - 1].end_vir == tmp && map[(*i_m) - 1].end_phy == start_phy))  {
+                                        map[(*i_m) - 1].end_vir = end_vir; // 连续页
+                                        map[(*i_m) - 1].end_phy = end_phy;
+                                    } else {
+                                        map[(*i_m)].start_vir = tmp; // 非连续页 新创建一项
+                                        map[(*i_m)].end_vir = end_vir;
+                                        map[(*i_m)].start_phy = start_phy;
+                                        map[(*i_m)].end_phy = end_phy;
+                                        (*i_m)++;
+                                    }
                                 }
                             }
                         }
@@ -83,7 +80,7 @@ void User_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
 
 
 void Kelner_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
-    u64 *Directory_Ptr = 0, *Directory = 0;
+    u64 *PTDPE = 0, *PTDE = 0;
 	size_t i = 0, j = 0, k = 0;
 
     u64 start_vir = 0, end_vir = 0;
@@ -96,21 +93,21 @@ void Kelner_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
             i = 511;
         
         if((*(PML4 + i)) & PAGE_Present) {
-			Directory_Ptr = Phy_To_Virt(*(PML4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
+			PTDPE = Phy_To_Virt(*(PML4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
 
             start_vir += i * PGTB_DPTB_MANAGE_SIZE;
 			
             for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
-				if((*(Directory_Ptr + j)) & PAGE_Present) {
+				if((*(PTDPE + j)) & PAGE_Present) {
 					start_vir +=  j * PGTB_DTB_MANAGE_SIZE;
-                    Directory = Phy_To_Virt(*(Directory_Ptr + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
+                    PTDE = Phy_To_Virt(*(PTDPE + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
 					
                     for(k = 0; k < 512; k++) {
-						if((*(Directory + k)) & PAGE_Present) {
+						if((*(PTDE + k)) & PAGE_Present) {
                             tmp = start_vir +  k * PAGE_2M_SIZE;
                             end_vir = tmp + PAGE_2M_SIZE;
 
-                            start_phy = ((*(Directory + k)) & PAGE_2M_MASK); // 得到物理页
+                            start_phy = ((*(PTDE + k)) & PAGE_2M_MASK); // 得到物理页
                             end_phy = start_phy + PAGE_2M_SIZE;
 
                             if(((*i_m) > 0) && (map[(*i_m) - 1].end_vir == tmp && map[(*i_m) - 1].end_phy == start_phy)) {
@@ -138,10 +135,10 @@ void test_show_vir_phy(struct task_struct *tsk) {
 	struct mm_struct *newmm = tsk->mm;
 	u64* PML4 = Phy_To_Virt(newmm->pgd);
 
-    map_entry_t* map = kmalloc(sizeof(map_entry_t) * 100, 0);
+    map_entry_t* map = kmalloc(sizeof(map_entry_t) * 15, 0);
 
     User_Map(PML4, map, &i_m);
-    Kelner_Map(PML4, map, &i_m);
+    // Kelner_Map(PML4, map, &i_m);
 
     // User
     for(i = 0; i < i_m; i++) {
@@ -163,4 +160,5 @@ void test_show_vir_phy(struct task_struct *tsk) {
         color_printk(BLUE, BLACK, " == ");
         color_printk(WHITE, BLACK, "[%d, %d)MB\n", 2 * (map[i].start_phy >> PAGE_2M_SHIFT), 2 * (map[i].end_phy >> PAGE_2M_SHIFT));
     }   
+    kfree(map);
 }

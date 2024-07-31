@@ -366,8 +366,8 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
 		// copy kernel space
 		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
-		
-		
+		u64* sk_addr = Phy_To_Virt(current->mm->pgd) + 256;
+		u64* sk_addr_kernel = Phy_To_Virt(init_task[0]->mm->pgd) + 256;
 		current->flags &= ~PF_VFORK;
 		__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
 	}

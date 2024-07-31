@@ -48,11 +48,11 @@ extern char* kallsyms_names __attribute((__weak__));
 #define PF_VFORK (1UL << 2)		 // 当前进程的资源是否存在共享，区分fork与vfork创建出的进程
 
 // 定义进程状态
-#define TASK_RUNNING (1 << 0)
-#define TASK_INTERRUPTIBLE (1 << 1)
-#define TASK_UNINTERRUPTIBLE (1 << 2)
-#define TASK_ZOMBIE (1 << 3)
-#define TASK_STOPPED (1 << 4)
+#define TASK_RUNNING (1UL << 0)
+#define TASK_INTERRUPTIBLE (1UL << 1)
+#define TASK_UNINTERRUPTIBLE (1UL << 2)
+#define TASK_ZOMBIE (1UL << 3)
+#define TASK_STOPPED (1UL << 4)
 // =================================== 定义关于进程的结构体 =======================
 // 描述进程占用内存的结构体
 struct mm_struct

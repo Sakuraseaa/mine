@@ -111,11 +111,11 @@ void Local_APIC_init()
 	get_cpuid(1, 0, &a, &b, &c, &d);
 	// void get_cpuid(unsigned int Mop,unsigned int Sop,unsigned int * a,unsigned int * b,unsigned int * c,unsigned int * d)
 	color_printk(WHITE, BLACK, "CPUID\t01,eax:%#010x,ebx:%#010x,ecx:%#010x,edx:%#010x\n", a, b, c, d);
-	if ((1 << 9) & d)
+	if ((1UL << 9) & d)
 		color_printk(WHITE, BLACK, "HW support APIC&xAPIC\t");
 	else
 		color_printk(WHITE, BLACK, "HW NO support APIC&xAPIC\t");
-	if ((1 << 21) & c)
+	if ((1Ul << 21) & c)
 		color_printk(WHITE, BLACK, "HW support x2APIC\n");
 	else
 		color_printk(WHITE, BLACK, "HW NO support x2APIC\n");
