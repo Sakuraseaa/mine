@@ -908,9 +908,8 @@ void pagetable_4K_init()
         }
 
         // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp) + ((virtual_addr >> PAGE_1G_SHIFT) & 0x1ff) * 8);
-        if (*tmp == 0)
-        { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
+        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_1G_SHIFT) & 0x1ff) * 8);
+        if (*tmp == 0) {  // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
             unsigned long *PDT = kmalloc(PAGE_4K_SIZE, 0);
             memset(PDT, 0, PAGE_4K_SIZE);
             set_pdpt(tmp, mk_pdpt(Virt_To_Phy(PDT), PAGE_USER_Dir));
@@ -918,7 +917,7 @@ void pagetable_4K_init()
 
         // ========================================================================================
         // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
-        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp) + ((virtual_addr >> PAGE_2M_SHIFT) & 0x1ff) * 8);
+        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_2M_SHIFT) & 0x1ff) * 8);
         if (*tmp == 0)
         { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
             unsigned long *PT= kmalloc(PAGE_4K_SIZE, 0);
@@ -928,14 +927,15 @@ void pagetable_4K_init()
 
         // ========================================================================================
         // 获取该虚拟地址对应的PT(page table)中的页表项指针
-        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp) +((virtual_addr >> PAGE_4K_SHIFT) & 0x1ff) * 8);
+        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_4K_SHIFT) & 0x1ff) * 8);
         if(*tmp == 0)
             set_pt(tmp, mk_pt(i, PAGE_USER_Page_4K));
     }
 
-	u64* sk_addr_kernel = Phy_To_Virt(Global_CR3) + 256;
     flush_tlb();             
     
+    unsigned long*  sk_addr = Phy_To_Virt(toMem  - PAGE_4K_SIZE);
+    *sk_addr = 0xff;
     return;
 }
 

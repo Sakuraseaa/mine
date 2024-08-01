@@ -35,7 +35,7 @@
             ],
             "preLaunchTask": "Run-Qemu!",
             "miDebuggerPath": "/usr/bin/gdb",
-            "postDebugTask": "make-clean"
+            //"postDebugTask": "make-clean"
         },
         {
             "name": "test",

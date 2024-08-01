@@ -154,7 +154,12 @@ $(BUI_DIR)/usr_LIB.o: $(SRC_DIR)/kernel/usr_LIB.c
 
 $(BUI_DIR)/mem_test.o: $(SRC_DIR)/../test/mem_test.c
 	@$(CC) $(CFLAGS) $< -o $@
+
+addr ?= 0
 # ============= DEBUGE ============
-.PHONY: clean
+.PHONY: clean a2l
 clean:
 	rm -rf $(BUI_DIR)/*
+a2l:
+	addr2line -e $(BUI_DIR)/Kernel.bin $(addr)
+

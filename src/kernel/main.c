@@ -122,8 +122,6 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "task init \n");
 	DEBUGK("task init \n");
 	task_init();
-	
-	
 	sti();
 
 

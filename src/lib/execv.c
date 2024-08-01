@@ -118,34 +118,27 @@ static void virtual_map(unsigned long user_addr){
 	struct Page *p = NULL;
 	
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
-	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) +
-					  ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	if (*tmp == 0)
-	{
+	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	if (*tmp == 0) {
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
-
 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
 	
 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	if (*tmp == 0)
-	{
+	if (*tmp == 0) {
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
-
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
 	
 	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 	// 申请用户占用的内存,填充页表, 填充PDT内存
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
-	if (*tmp == 0)
-	{
+	if (*tmp == 0) {
 		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
-
 		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
 
