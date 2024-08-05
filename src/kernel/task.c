@@ -626,7 +626,7 @@ void task_init()
 	{
 		tmp = vaddr + i;
 		if (*tmp == 0)
-		{
+		{	
 			unsigned long *virtual = kmalloc(PAGE_4K_SIZE, 0);
 			memset(virtual, 0, PAGE_4K_SIZE);
 			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));

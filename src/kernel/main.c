@@ -78,20 +78,16 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "slab init \n");
 	slab_init();
 
-	// color_printk(RED, BLACK, "frame buffer init \n");
 	frame_buffer_init();
-
-	// color_printk(RED, BLACK, "pagetable init \n");
-	pagetable_init();
+	
+	pagetable_4K_init();
 
 	device_init();
 
 	buffer_init();
 
-	// color_printk(RED, BLACK, "HPET init \n");
 	HEPT_init();
 
-	// color_printk(RED, BLACK, "interrupt init \n");
 #if APIC
 	APIC_IOAPIC_init();
 #else
@@ -100,30 +96,22 @@ void Start_Kernel(void)
 
 	serial_init();
 
-	// color_printk(RED, BLACK, "keyboard init \n");
 	keyboard_init();
 
-	// color_printk(RED, BLACK, "mouse init \n");
 	mouse_init();
 
-	// color_printk(RED, BLACK, "disk init \n");
 	disk_init();
 
-	// color_printk(RED, BLACK, "schedule init \n");
 	schedule_init();
 
-	// color_printk(RED, BLACK, "Soft IRQ init \n");
 	softirq_init();
 
-	// color_printk(RED, BLACK, "Timer init \n");
 	timer_init();
 
 	VFS_init();
 
-	// color_printk(RED, BLACK, "task init \n");
 	DEBUGK("task init \n");
 	task_init();
-
 	sti();
 
 

@@ -8,7 +8,7 @@ SECTIONS
 	.text :
 	{
 		_text = .;
-		/home/steven/mine/build/head.o(.text)
+		/home/steven/mine/build/kernel/head.o(.text)
 		*(.text)
 		_etext = .;
 	}

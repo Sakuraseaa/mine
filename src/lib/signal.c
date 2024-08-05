@@ -46,7 +46,7 @@ int sys_kill(long pid, int signum)
     if(tsk == NULL)
         return -1;
 
-    tsk->signal |= (1 << signum); // 设置信号位图-表示接收信号
+    tsk->signal |= (1UL << signum); // 设置信号位图-表示接收信号
 
    //  current->signal |= (1 << signum); // 设置信号位图-表示接收信号
     return 0;
@@ -64,7 +64,7 @@ void do_signal(struct pt_regs* regs)
 
     for(; signr < NSIG; signr++)  
         if((signal >> signr) & 1) {
-            signal = signal & (~(1 << signr));
+            signal = signal & (~(1UL << signr));
             break;
         }
     
