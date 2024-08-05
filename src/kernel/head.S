@@ -287,6 +287,7 @@ __PDE:
 	.quad	0xfde00087
 	.fill	480,8,0
 */
+
 .org 0x3000
 
 __PDE:

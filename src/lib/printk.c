@@ -398,15 +398,12 @@ void frame_buffer_init()
 	/////// re init frame buffer
 	unsigned long i;
 	unsigned long *tmp;
-	unsigned long *tmp1, *tmp2;
 	unsigned long FB_addr = PAGE_OFFSET + VBE_Phy_address;
 	unsigned long *virtual = NULL;
 
-	unsigned long *test;
 	Global_CR3 = Get_gdt();
 
     for(i = 0; i < Pos.FB_length; i += PAGE_4K_SIZE) {
-		test = (unsigned long*)(((unsigned long)Phy_To_Virt(Global_CR3)) & (~0xfffUL));
 		tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) + ((FB_addr + i >> PAGE_GDT_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
@@ -443,10 +440,12 @@ void frame_buffer_init()
     }
 
 	Pos.FB_addr = Phy_To_Virt(VBE_Phy_address);
+
+	u64* old_map = Phy_To_Virt(0x103000  + 23 * 8); 
+	memset(old_map, 0, 8 * 9);
+	
 	flush_tlb();
-
-
-    return 0;
+	return;
 }
 
 

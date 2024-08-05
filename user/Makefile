@@ -1,5 +1,5 @@
 USR_SRC_DIR=/home/steven/mine/user
-USR_BUI_DIR=/home/steven/mine/build
+USR_BUI_DIR=/home/steven/mine/build/user
 USR_INC_DIR = /home/steven/mine/user/include
 INC_DIR = /home/steven/mine/src/include
 

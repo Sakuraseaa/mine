@@ -1,9 +1,9 @@
 SRC_DIR=/home/steven/mine/src
-BUI_DIR=/home/steven/mine/build
+BUI_DIR=/home/steven/mine/build/kernel
 BOCHS = /home/steven/mine/bochs
 INC_DIR = /home/steven/mine/src/include
 SCI_DIR = /home/steven/mine/script
-
+TET_DIR = /home/steven/mine/test
 
 PIC   := PIC
 ASM   = nasm
@@ -32,14 +32,14 @@ OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
 ALL:$(BUI_DIR)/Kernel.bin 
 
 $(BUI_DIR)/Kernel.bin:$(OBJS) $(OBJS_SCRIPT)
-	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  /home/steven/mine/src/Kernel.lds  -Map $(BUI_DIR)/Kernel.map
+	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  /home/steven/mine/src/Kernel.lds  -Map $(BUI_DIR)/../Kernel.map
 	@sudo mount -o loop $(BOCHS)/boot.img /mnt
 	@sudo cp $(BUI_DIR)/Kernel.bin /mnt -v
 	@sudo umount /mnt
 	@echo '感谢世界!系统编译构建完成！ ^_^'
 
 $(BUI_DIR)/kernel.bin:$(OBJS)
-	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T /home/steven/mine/src/Kernel.lds -Map $(BUI_DIR)/kernel.map
+	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T /home/steven/mine/src/Kernel.lds -Map $(BUI_DIR)/../kernel.map
 
 $(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c
 #	$(CC) $(CFLAGS) $< -o $@
@@ -155,11 +155,14 @@ $(BUI_DIR)/usr_LIB.o: $(SRC_DIR)/kernel/usr_LIB.c
 $(BUI_DIR)/mem_test.o: $(SRC_DIR)/../test/mem_test.c
 	@$(CC) $(CFLAGS) $< -o $@
 
-addr ?= 0
+a ?= 0
+n ?= 0
 # ============= DEBUGE ============
-.PHONY: clean a2l
+.PHONY: clean a2l hex
 clean:
-	rm -rf $(BUI_DIR)/*
+	@rm -rf $(BUI_DIR)/*
 a2l:
-	addr2line -e $(BUI_DIR)/Kernel.bin $(addr)
+	addr2line -e $(BUI_DIR)/Kernel.bin $(a)
 
+hex:
+	@python3 $(TET_DIR)/hex.py $(n)

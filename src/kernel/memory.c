@@ -886,7 +886,7 @@ void pagetable_init()
 static u64 phy_mm_count = 0;
 void pagetable_4K_init()
 {
-    unsigned long i = 0x03000000;
+    unsigned long i = 0;
     unsigned long toMem = phy_mm_count * PAGE_2M_SIZE; 
     u64* j = 0;
     unsigned long *tmp =  NULL;

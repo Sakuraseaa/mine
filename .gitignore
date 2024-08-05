@@ -18,3 +18,5 @@ hd.qcow2
 system_api_lib
 *.txt
 *.out
+boot.img
+kallsyms.S
