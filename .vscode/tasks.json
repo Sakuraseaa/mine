@@ -5,7 +5,7 @@
             "command": "make",
             "args": [
                 "-f",
-                "/home/steven/mine/src/makefile",
+                "/home/steven/mine/makefile",
             ],
         },
         // {
@@ -62,7 +62,7 @@
             "command": "make",
             "args": [
                 "-f",
-                "/home/steven/mine/src/makefile",
+                "/home/steven/mine/makefile",
                 "clean",
             ],
         },

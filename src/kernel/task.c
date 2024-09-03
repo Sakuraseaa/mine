@@ -330,7 +330,6 @@ unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 {
 	int error = 0;
 	struct mm_struct *newmm = NULL;
-	unsigned long *tmp;
 	unsigned long *virtual = NULL;
 	struct Page *p = NULL;
 	if (clone_flags & CLONE_VM)
@@ -379,7 +378,7 @@ out:
 void exit_mm_fork(struct task_struct *tsk)
 {
 	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
-	unsigned long tmp1 = NULL;
+	unsigned long tmp1 = 0;
 	size_t i = 0, j = 0, k = 0;
 	struct Page* p = NULL;
 	if (tsk->flags & PF_VFORK)

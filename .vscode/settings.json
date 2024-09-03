@@ -21,8 +21,11 @@
         "task.h": "c",
         "preempt.h": "c",
         "lib.h": "c",
-        "buffer.h": "c"
+        "buffer.h": "c",
+        "msadsc_t.h": "c",
+        "basetype.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",
+    "C_Cpp.errorSquiggles": "enabledIfIncludesResolve",
 }

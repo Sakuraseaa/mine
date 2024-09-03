@@ -26,6 +26,9 @@ typedef struct List
 	struct List *next;
 }list_t;
 
+typedef list_t list_h_t;
+typedef list_t list_n_t;
+
 void list_init(struct List *list);
 
 void list_add_to_behind(struct List *entry, struct List *pnew); ////add to entry behind

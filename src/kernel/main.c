@@ -27,6 +27,7 @@
 #include "bitmap.h"
 #include "device.h"
 #include "buffer.h"
+#include "msadsc_t.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
@@ -51,7 +52,7 @@ void Start_Kernel(void)
 	Pos.XCharSize = 8;
 	Pos.YCharSize = 16;
 
-	Pos.FB_addr = (unsigned int *)0xffff800003000000;
+	Pos.FB_addr = (u64 *)0xffff800003000000;
 	Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
 
 	semaphore_init(&visual_lock, 1);
@@ -64,7 +65,7 @@ void Start_Kernel(void)
 	// 初始化异常函数表 IDT
 	sys_vector_init();
 	
-	init_cpu();
+	// init_cpu();
 
 	memory_management_struct.start_code = (unsigned long)&_text;
 	memory_management_struct.end_code = (unsigned long)&_etext;
@@ -74,7 +75,8 @@ void Start_Kernel(void)
 
 	// color_printk(RED, BLACK, "memory init \n");
 	init_memory();
-
+	init_msadsc();
+	
 	// color_printk(RED, BLACK, "slab init \n");
 	slab_init();
 

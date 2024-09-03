@@ -1,9 +1,9 @@
-SRC_DIR=/home/steven/mine/src
-BUI_DIR=/home/steven/mine/build/kernel
-BOCHS = /home/steven/mine/bochs
-INC_DIR = /home/steven/mine/src/include
-SCI_DIR = /home/steven/mine/script
-TET_DIR = /home/steven/mine/test
+SRC_DIR= ./src
+BUI_DIR= ./build/kernel
+BOCHS = ./bochs
+INC_DIR = ./src/include
+SCI_DIR = ./script
+TET_DIR = ./test
 
 PIC   := PIC
 ASM   = nasm
@@ -13,6 +13,7 @@ CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack
 		-fno-builtin -fno-pie -fno-pic -nostdlib \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
 		-I $(INC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ -I $(SRC_DIR)/fs/minix/	\
+		-I $(SRC_DIR)/mm/ \
 #被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
 		$(BUI_DIR)/trap.o $(BUI_DIR)/memory.o $(BUI_DIR)/interrupt.o $(BUI_DIR)/PIC.o \
@@ -24,7 +25,7 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/SMP.o $(BUI_DIR)/signal.o  $(BUI_DIR)/execv.o $(BUI_DIR)/debug.o $(BUI_DIR)/buffer.o\
 		$(BUI_DIR)/bitmap.o $(BUI_DIR)/minix.o  $(BUI_DIR)/device.o $(BUI_DIR)/super.o $(BUI_DIR)/inode.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
-		$(BUI_DIR)/mem_test.o
+		$(BUI_DIR)/mem_test.o $(BUI_DIR)/msadsc.o
 
 
 OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
@@ -32,14 +33,14 @@ OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
 ALL:$(BUI_DIR)/Kernel.bin 
 
 $(BUI_DIR)/Kernel.bin:$(OBJS) $(OBJS_SCRIPT)
-	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  /home/steven/mine/src/Kernel.lds  -Map $(BUI_DIR)/../Kernel.map
+	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T  ./Kernel.lds  -Map $(BUI_DIR)/../Kernel.map
 	@sudo mount -o loop $(BOCHS)/boot.img /mnt
 	@sudo cp $(BUI_DIR)/Kernel.bin /mnt -v
 	@sudo umount /mnt
 	@echo '感谢世界!系统编译构建完成！ ^_^'
 
 $(BUI_DIR)/kernel.bin:$(OBJS)
-	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T /home/steven/mine/src/Kernel.lds -Map $(BUI_DIR)/../kernel.map
+	@ld -static -b elf64-x86-64  -z muldefs -o $@ $^ -T ./Kernel.lds -Map $(BUI_DIR)/../kernel.map
 
 $(BUI_DIR)/main.o: $(SRC_DIR)/kernel/main.c
 #	$(CC) $(CFLAGS) $< -o $@
@@ -133,6 +134,10 @@ $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 $(BUI_DIR)/execv.o: $(SRC_DIR)/lib/execv.c
 	@$(CC) $(CFLAGS) $< -o $@
 
+# =========== try mm =============
+$(BUI_DIR)/msadsc.o: $(SRC_DIR)/mm/msadsc.c
+	@$(CC) $(CFLAGS) $< -o $@
+# ================================
 
 # =============  SCRIPT ============
 $(BUI_DIR)/kallsyms.o: $(SCI_DIR)/kallsyms.c $(BUI_DIR)/kernel.bin

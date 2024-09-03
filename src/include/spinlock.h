@@ -1,12 +1,13 @@
 #ifndef _spinlock_h_
 #define _spinlock_h_
-#include "preempt.h"
+
+#include "types.h"
 // 本文件定义自旋锁，自旋锁用来防止多核侵略存储区
 typedef struct
 {
     __volatile__ unsigned long lock;
 } spinlock_T;
-
+typedef spinlock_T spinlock_t;
 // 排队自旋锁 
 typedef struct equity_spinlock_t{
     union {
