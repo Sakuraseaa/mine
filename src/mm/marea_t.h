@@ -15,7 +15,7 @@ typedef struct s_ARCLST
 	list_h_t al_lru2;
 	uint_t al_lru1nr;
 	uint_t al_lru2nr;
-}arclst_t;
+}arclst_t; // allocation replacement cache list
 
 // 用于内存分配结果的结构体，包含了分配的起始地址、大小、物理地址等信息。
 typedef struct s_MMAFRETS
@@ -88,13 +88,13 @@ typedef struct s_MEMDIVMER
 #define MEMAREA_MAX 4
 #define MA_HWAD_LSTART 0
 #define MA_HWAD_LSZ 0x2000000
-#define MA_HWAD_LEND (MA_HWAD_LSTART+MA_HWAD_LSZ-1)
+#define MA_HWAD_LEND (MA_HWAD_LSTART + MA_HWAD_LSZ-1)
 #define MA_KRNL_LSTART 0x2000000
-#define MA_KRNL_LSZ (0x400000000-0x2000000)
-#define MA_KRNL_LEND (MA_KRNL_LSTART+MA_KRNL_LSZ-1)
-#define MA_PROC_LSTART 0x400000000
-#define MA_PROC_LSZ (0xffffffffffffffff-0x400000000)
-#define MA_PROC_LEND (MA_PROC_LSTART+MA_PROC_LSZ)
+#define MA_KRNL_LSZ (0x10000000 - MA_HWAD_LSZ)
+#define MA_KRNL_LEND (MA_KRNL_LSTART + MA_KRNL_LSZ-1)
+#define MA_PROC_LSTART 0x10000000
+#define MA_PROC_LSZ (0xffffffffffffffff - MA_PROC_LSTART)
+#define MA_PROC_LEND (MA_PROC_LSTART + MA_PROC_LSZ)
 //0x400000000  0x40000000
 typedef struct s_MEMAREA
 {
@@ -112,16 +112,17 @@ typedef struct s_MEMAREA
 	uint_t ma_horizline;	//内存区分配时的水位线
 	adr_t ma_logicstart;	//内存区开始地址
 	adr_t ma_logicend;		//内存区结束地址
-	uint_t ma_logicsz;		//内存区大小
-	adr_t ma_effectstart;
-	adr_t ma_effectend;
-	uint_t ma_effectsz;
-	list_h_t ma_allmsadsclst;
+	uint_t ma_logicsz;		//内存区大小 logitcal end
+	adr_t ma_effectstart;	// effective start
+	adr_t ma_effectend;	// effective - end
+	uint_t ma_effectsz;	 // effective - size
+	list_h_t ma_allmsadsclst; // all msadsc list 挂载此内存区的物理页
 	uint_t ma_allmsadscnr;
-	arclst_t ma_arcpglst;
-	mafuncobjs_t ma_funcobj;
-	memdivmer_t ma_mdmdata;
-	void* ma_privp;
+	arclst_t ma_arcpglst;	// page list
+	mafuncobjs_t ma_funcobj; // function objcts 功能对象
+	memdivmer_t ma_mdmdata;	// memory divider merge data
+	void* ma_privp; // memory area private pointer
+}memarea_t;
 	/*
 	*这个结构至少占用一个页面，当然
 	*也可以是多个连续的的页面，但是
@@ -133,6 +134,4 @@ typedef struct s_MEMAREA
 	*完全可以替换mafuncobjs_t结构
 	*中的指针，指向你的函数。
 	*/
-}memarea_t;
-
 #endif

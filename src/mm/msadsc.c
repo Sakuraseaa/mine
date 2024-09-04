@@ -4,8 +4,10 @@
 #include "spinlock.h"
 #include "msadsc_t.h"
 #include "memmgrob.h"
+#include "pages64_t.h"
 
-memmgrob_t glomm;
+
+extern memmgrob_t glomm;
 extern struct Global_Memory_Descriptor memory_management_struct;
 #define PMR_T_OSAPUSERRAM 1
 
@@ -91,7 +93,7 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
     }
     
     *msar = TotalMem;
-    *msavstart = (msadsc_t*)PAGE_4K_ALIGN(memory_management_struct.end_of_struct);
+    *msavstart = (msadsc_t*)(memory_management_struct.end_of_struct);
     
     color_printk(BLUE, BLACK,"OS having %d 4k pagesize  = %d MB\n", TotalMem, (TotalMem * PAGE_4K_SIZE) / 1024 / 1024);
     
@@ -127,10 +129,114 @@ void init_msadsc()
     //将msadsc_t结构数组的开始的物理地址写入kmachbsp结构中 
     glomm.mo_msadscstat = msadscvp;
     glomm.mo_msanr = msadscnr;
-    memory_management_struct.end_of_struct += (sizeof(msadsc_t) * coremdnr + sizeof(u64_t) * 10) & (~(sizeof(u64_t)-1));
+    memory_management_struct.end_of_struct += (sizeof(msadsc_t) * coremdnr + sizeof(u64_t) * 2) & (~(sizeof(u64_t)-1));
     
     // for(int i = 159; i < 165; i++) //1MB
     //     disp_one_msadsc(glomm.mo_msadscstat + i);
 
+    return;
+}
+
+
+//搜索一段内存地址空间所对应的msadsc_t结构
+u64_t search_segment_occupymsadsc(msadsc_t *msastart, u64_t msanr, u64_t ocpystat, u64_t ocpyend)
+{
+    u64_t mphyadr = 0, fsmsnr = 0, mnr, tmpadr;
+    msadsc_t *fstatmp = NULL;
+    for (mnr = 0; mnr < msanr; mnr++)
+    {
+        if ((msastart[mnr].md_phyadrs.paf_padrs << PSHRSIZE) == ocpystat)
+        {
+            //找出开始地址对应的第一个msadsc_t结构，就跳转到step1
+            fstatmp = &msastart[mnr];
+            goto step1;
+        }
+    }
+step1:
+    fsmsnr = 0;
+    if (NULL == fstatmp)
+    {
+        return 0;
+    }
+    for (tmpadr = ocpystat; tmpadr < ocpyend; tmpadr += PAGESIZE, fsmsnr++)
+    {
+        //从开始地址对应的第一个msadsc_t结构开始设置，直到结束地址对应的最后一个masdsc_t结构
+        mphyadr = fstatmp[fsmsnr].md_phyadrs.paf_padrs << PSHRSIZE;
+        if (mphyadr != tmpadr)
+        {
+            return 0;
+        }
+        if (MF_MOCTY_FREE != fstatmp[fsmsnr].md_indxflgs.mf_mocty ||
+            0 != fstatmp[fsmsnr].md_indxflgs.mf_uindx ||
+            PAF_NO_ALLOC != fstatmp[fsmsnr].md_phyadrs.paf_alloc)
+        {
+            return 0;
+        }
+        //设置msadsc_t结构为已经分配，已经分配给内核
+        fstatmp[fsmsnr].md_indxflgs.mf_mocty = MF_MOCTY_KRNL;
+        fstatmp[fsmsnr].md_indxflgs.mf_uindx++;
+        fstatmp[fsmsnr].md_phyadrs.paf_alloc = PAF_ALLOC;
+    }
+    //进行一些数据的正确性检查
+    u64_t ocpysz = ocpyend - ocpystat;
+    if ((ocpysz & 0xfff) != 0)
+    {
+        if (((ocpysz >> PSHRSIZE) + 1) != fsmsnr)
+        {
+            return 0;
+        }
+        return fsmsnr;
+    }
+    if ((ocpysz >> PSHRSIZE) != fsmsnr)
+    {
+        return 0;
+    }
+    return fsmsnr;
+}
+
+
+bool_t search_krloccupymsadsc_core()
+{
+    u64_t retschmnr = 0;
+    msadsc_t *msadstat = glomm.mo_msadscstat;
+    u64_t msanr = glomm.mo_msanr;
+    //搜索BIOS中断表占用的内存页所对应msadsc_t结构
+    retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0, 0x200000);
+    retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0x100000, 0x200000);
+    if (0 == retschmnr)
+    {
+        return FALSE;
+    }
+//     //搜索内核栈占用的内存页所对应msadsc_t结构
+//     retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_krlinitstack & (~(0xfffUL)), mbsp->mb_krlinitstack);
+//     if (0 == retschmnr)
+//     {
+//         return FALSE;
+//     }
+//     //搜索内核占用的内存页所对应msadsc_t结构
+//     retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_krlimgpadr, mbsp->mb_nextwtpadr);
+//     if (0 == retschmnr)
+//     {
+//         return FALSE;
+//     }
+//     //搜索内核映像文件占用的内存页所对应msadsc_t结构
+//     retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_imgpadr, mbsp->mb_imgpadr + mbsp->mb_imgsz);
+//     if (0 == retschmnr)
+//     {
+//         return FALSE;
+//     }
+    return TRUE;
+}
+
+
+//初始化搜索内核占用的内存页面
+// init search kernel occupy memory
+void init_search_krloccupymm()
+{
+    //实际初始化搜索内核占用的内存页面
+    if (search_krloccupymsadsc_core() == FALSE)
+    {
+        color_printk(RED, BLACK,"search_krloccupymsadsc_core fail\n");
+    }
     return;
 }

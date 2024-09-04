@@ -27,7 +27,7 @@
 #include "bitmap.h"
 #include "device.h"
 #include "buffer.h"
-#include "msadsc_t.h"
+#include "memmgrinit.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
@@ -75,8 +75,8 @@ void Start_Kernel(void)
 
 	// color_printk(RED, BLACK, "memory init \n");
 	init_memory();
-	init_msadsc();
 	
+	init_memmgr();
 	// color_printk(RED, BLACK, "slab init \n");
 	slab_init();
 

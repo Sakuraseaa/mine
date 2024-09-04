@@ -3,7 +3,7 @@
 
 #include "basetype.h"
 #include "msadsc_t.h"
-#include "memarea.c"
+#include "marea_t.h"
 
 typedef struct s_MEMMGROB
 {
@@ -25,6 +25,5 @@ typedef struct s_MEMMGROB
     u64_t mo_mareanr;
 }memmgrob_t; // memory management global resource object
 
-extern memmgrob_t glomm;
 
 #endif // _MEMMGROB_H_

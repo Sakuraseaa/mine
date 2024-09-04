@@ -75,5 +75,6 @@ typedef struct s_MSADSC
 
 
 void init_msadsc();
+void init_search_krloccupymm();
 
 #endif // _MSADSC_T_H_

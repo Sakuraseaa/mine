@@ -23,7 +23,8 @@
         "lib.h": "c",
         "buffer.h": "c",
         "msadsc_t.h": "c",
-        "basetype.h": "c"
+        "basetype.h": "c",
+        "memmgrob.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

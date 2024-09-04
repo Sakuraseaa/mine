@@ -762,8 +762,6 @@ unsigned long kfree(void *address)
             if (slab->Vaddress == page_base_address)
             {
                 // 若物理页基址相等，则说明找到了对应的物理页
-
-
                 index = (address - slab->Vaddress) / kmalloc_cache_size[i].size;
                 // 😅 我的灵光一现好像都是错的，也许那不是灵光一些，是无知
                 // *(slab->color_map + (index >> 6)) ^= 1 << index % 64; 
