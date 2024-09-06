@@ -202,7 +202,7 @@ bool_t search_krloccupymsadsc_core()
     u64_t msanr = glomm.mo_msanr;
     //搜索BIOS中断表占用的内存页所对应msadsc_t结构
     retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0, 0x200000);
-    retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0x100000, 0x200000);
+    retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0x100000, PAGE_2M_ALIGN(Virt_To_Phy(memory_management_struct.end_of_struct)));
     if (0 == retschmnr)
     {
         return FALSE;

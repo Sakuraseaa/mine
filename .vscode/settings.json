@@ -24,7 +24,9 @@
         "buffer.h": "c",
         "msadsc_t.h": "c",
         "basetype.h": "c",
-        "memmgrob.h": "c"
+        "memmgrob.h": "c",
+        "marea_t.h": "c",
+        "memdivmer_t.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

@@ -7,6 +7,7 @@
 #include "errno.h"
 #include "memory.h"
 #include "debug.h"
+#include "endebug.h"
 
 #define FAT_DENRY_SIZE 32
 #define EOC 0x0ffffff8 // end of clusterchain
@@ -1062,12 +1063,12 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     fsbi->fsinfo_sector_infat = fbs->BPB_FSInfo;
     fsbi->bootsector_bk_infat = fbs->BPB_BkBootSec;
 
+    #if ENABLE_FAT32_DEBUG
     // BPB - 引导扇区参数块 - BIOS Parameter Block ? - Boot Parameter Block
     color_printk(ORANGE, BLACK, "FAT32 Boot Sector\nBPB_FSInfo:%#018lx\tFAT1_firstsector:%#018lx\tBPB_TotSec32:%#018lx\n", fbs->BPB_FSInfo, fsbi->FAT1_firstsector, fbs->BPB_TotSec32);
     color_printk(ORANGE, BLACK, "BPB_SecPerClus:%#018lx\tBPB_NumFATs:%#018lx\tBPB_FATSz32:%#018lx\t\n", fbs->BPB_SecPerClus, fbs->BPB_NumFATs, fbs->BPB_FATSz32);
     color_printk(ORANGE, BLACK, "BPB_firstsector:%#018lx\tBPB_RootClus:%#018lx\tBPB_BytesPerSec:%#018lx\n", fsbi->Data_firstsector, fbs->BPB_RootClus, fbs->BPB_BytesPerSec);
-
-    /* 查看FAT1表第一块扇区
+    
     unsigned int bbuf[128], i;
     IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector, 1, (unsigned char *)bbuf);
     for (i = 0; i < 128; i++)
@@ -1076,7 +1077,9 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
         if (i && i % 16 == 0)
             color_printk(ORANGE, BLACK, "\n");
     }
-     */
+
+    #endif
+    
     // fat32 fsinfo sector
     fsbi->fat_fsinfo = (struct FAT32_FSInfo *)kmalloc(sizeof(struct FAT32_FSInfo), 0);
     memset(fsbi->fat_fsinfo, 0, sizeof(struct FAT32_FSInfo));

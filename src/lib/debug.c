@@ -22,7 +22,8 @@ void debugk(const char *file, const char* func, int line, const char *fmt, ...)
 
 void user_spin(char *filename, const char *func, u64 line, const char *condition)
 {
-    color_printk(RED, BLACK,  "[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);
-    cli();
+    system_error("[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);
+    // color_printk(RED, BLACK,  "[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);
+    cli(); 
     while(1);
 }

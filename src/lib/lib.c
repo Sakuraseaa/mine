@@ -145,6 +145,17 @@ struct List *list_next(struct List *entry)
         return NULL;
 }
 
+long list_is_empty_careful(const list_h_t *head)
+{
+	list_h_t *next = head->next;
+	if (next == head && next == head->prev)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+
 /*
         From => To memory copy Num bytes
 */

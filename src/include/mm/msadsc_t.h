@@ -65,7 +65,7 @@ typedef struct s_PHYADRFLGS
 //内存空间地址描述符 - Memory Space Address Descriptor
 typedef struct s_MSADSC
 {
-    list_h_t md_list;           //链表
+    list_n_t md_list;           //链表
     spinlock_t md_lock;         //保护自身的自旋锁
     msadflgs_t md_indxflgs;     //内存空间地址描述符标志
     phyadrflgs_t md_phyadrs;    //物理地址和标志

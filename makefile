@@ -13,7 +13,7 @@ CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack
 		-fno-builtin -fno-pie -fno-pic -nostdlib \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
 		-I $(INC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ -I $(SRC_DIR)/fs/minix/	\
-		-I $(SRC_DIR)/mm/ \
+		-I $(INC_DIR)/mm/ \
 #被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
 		$(BUI_DIR)/trap.o $(BUI_DIR)/memory.o $(BUI_DIR)/interrupt.o $(BUI_DIR)/PIC.o \
@@ -26,6 +26,8 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/bitmap.o $(BUI_DIR)/minix.o  $(BUI_DIR)/device.o $(BUI_DIR)/super.o $(BUI_DIR)/inode.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
 		$(BUI_DIR)/mem_test.o $(BUI_DIR)/memmgrinit.o $(BUI_DIR)/msadsc.o $(BUI_DIR)/memarea.o 	\
+		$(BUI_DIR)/memdivmer.o \
+
 
 
 OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
@@ -134,12 +136,15 @@ $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 $(BUI_DIR)/execv.o: $(SRC_DIR)/lib/execv.c
 	@$(CC) $(CFLAGS) $< -o $@
 
+
 # =========== try mm =============
 $(BUI_DIR)/msadsc.o: $(SRC_DIR)/mm/msadsc.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/memarea.o: $(SRC_DIR)/mm/memarea.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/memmgrinit.o: $(SRC_DIR)/mm/memmgrinit.c
+	@$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/memdivmer.o: $(SRC_DIR)/mm/memdivmer.c
 	@$(CC) $(CFLAGS) $< -o $@
 # ================================
 

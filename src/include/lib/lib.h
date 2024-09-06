@@ -44,6 +44,8 @@ struct List *list_prev(struct List *entry);
 
 struct List *list_next(struct List *entry);
 
+long list_is_empty_careful(const list_h_t *head);
+
 #define SEEK_SET 0 /* Seek relative to start-of-file */
 #define SEEK_CUR 1 /* Seek relative to current position */
 #define SEEK_END 2 /* Seek relative to end-of-file */
@@ -61,7 +63,6 @@ void *memcpy(void *From, void *To, long Num);
 		FirstPart < SecondPart		=>	-1
 */
 int memcmp(void *FirstPart, void *SecondPart, long Count);
-
 /*
 		set memory at Address with C ,number is Count
 */
@@ -131,6 +132,17 @@ unsigned int io_in32(unsigned short port);
 void io_out8(unsigned short port, unsigned char value);
 
 void io_out32(unsigned short port, unsigned int value);
+
+//获得64位数中最高有效位（即最高的设置为1的位）的位置的函数
+int64 search_64rlbits(u64 val)
+{
+    int64 retbitnr = -1;
+    __asm__ __volatile__(
+        "bsrq %1,%q0 \t\n"
+        : "+r"(retbitnr)
+        : "rm"(val));
+    return retbitnr + 1;
+}
 
 #define port_insw(port, buffer, nr)                                               \
 	__asm__ __volatile__("cld;rep;insw;mfence;" ::"d"(port), "D"(buffer), "c"(nr) \

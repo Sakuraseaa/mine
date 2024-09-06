@@ -49,7 +49,7 @@ typedef struct s_BAFHLST
 	spinlock_t af_lock;
 	u32_t af_stus;
 	uint_t af_oder;		 	// 页面数的位移量 order
-	uint_t af_oderpnr;		// oder对应的页面数比如 oder为2那就是1<<2=4  order-page-number
+	uint_t af_oderpnr;		// 页面数, 该bafh list每一个节点挂载的页面数, 如果oder为2，那这个数就是 1<<2=4  order-page-number
 	uint_t af_fobjnr;		// 多少个空闲msadsc_t结构，即空闲页面 free-object-number
 	//uint_t af_aobjnr;
 	uint_t af_mobjnr; 		// 此结构的msadsc_t结构总数，即此结构总页面 msadsc_t object number
@@ -107,21 +107,21 @@ typedef struct s_MEMAREA
 	// wait_l_head_t ma_waitlst;//内存区的等待队列
 	uint_t ma_maxpages;			//内存区总的页面数
 	uint_t ma_allocpages;  
-	uint_t ma_freepages;	//内存区空闲的页面数
-	uint_t ma_resvpages;	//内存区保留的页面数
-	uint_t ma_horizline;	//内存区分配时的水位线
-	adr_t ma_logicstart;	//内存区开始地址
-	adr_t ma_logicend;		//内存区结束地址
-	uint_t ma_logicsz;		//内存区大小 logitcal end
-	adr_t ma_effectstart;	// effective start
-	adr_t ma_effectend;	// effective - end
-	uint_t ma_effectsz;	 // effective - size
-	list_h_t ma_allmsadsclst; // all msadsc list 挂载此内存区的物理页
+	uint_t ma_freepages;		//内存区空闲的页面数
+	uint_t ma_resvpages;		//内存区保留的页面数
+	uint_t ma_horizline;		//内存区分配时的水位线
+	adr_t ma_logicstart;		//内存区开始地址
+	adr_t ma_logicend;			//内存区结束地址
+	uint_t ma_logicsz;			//内存区大小 logitcal end
+	adr_t ma_effectstart;		// effective start
+	adr_t ma_effectend;			// effective - end
+	uint_t ma_effectsz;	 		// effective - size
+	list_h_t ma_allmsadsclst; 	// all msadsc list 挂载此内存区的物理页
 	uint_t ma_allmsadscnr;
-	arclst_t ma_arcpglst;	// page list
-	mafuncobjs_t ma_funcobj; // function objcts 功能对象
-	memdivmer_t ma_mdmdata;	// memory divider merge data
-	void* ma_privp; // memory area private pointer
+	arclst_t ma_arcpglst;		// page list
+	mafuncobjs_t ma_funcobj; 	// function objcts 功能对象
+	memdivmer_t ma_mdmdata;		// memory divider merge data
+	void* ma_privp; 			// memory area private pointer
 }memarea_t;
 	/*
 	*这个结构至少占用一个页面，当然

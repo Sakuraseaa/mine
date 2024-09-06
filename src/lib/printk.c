@@ -388,6 +388,8 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 	return i;
 }
 
+
+
 /**
  * @brief 把VBE帧缓存区地址重映射，在页表重新初始化过程中覆盖了VBE帧缓存区, 导致pagetable_init函数无法在屏幕上
  * 显示日志信息，
