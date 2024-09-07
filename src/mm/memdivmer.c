@@ -830,6 +830,8 @@ msadsc_t *mm_divpages_fmwk(memmgrob_t *mmobjp, uint_t pages, uint_t *retrelpnr, 
  * @param retrealpnr 存放实际分配内存页面数的指针
  * @param mrtype 请求的分配内存页面的内存区类型
  * @param flgs 请求分配的内存页面的标志位
+ * 			flgs == 1: 表示获取该内存区中，尺寸最大的一个内存块
+ *  		flgs == 0: 表示获取 pages * 4KB 大小的内存块 
  * @return msadsc_t* 
  */
 msadsc_t *mm_division_pages(memmgrob_t *mmobjp, uint_t pages, uint_t *retrealpnr, uint_t mrtype, uint_t flgs)
