@@ -26,7 +26,8 @@
         "basetype.h": "c",
         "memmgrob.h": "c",
         "marea_t.h": "c",
-        "memdivmer_t.h": "c"
+        "memdivmer_t.h": "c",
+        "test.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

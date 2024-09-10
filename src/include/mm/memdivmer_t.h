@@ -17,6 +17,6 @@
 // }mchkstuc_t;
 #include "msadsc_t.h"
 #include "memmgrob.h"
-
+bool_t mm_merge_pages(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs);
 msadsc_t *mm_division_pages(memmgrob_t *mmobjp, uint_t pages, uint_t *retrealpnr, uint_t mrtype, uint_t flgs);
 #endif
