@@ -134,4 +134,7 @@ typedef struct s_MEMAREA
 	*完全可以替换mafuncobjs_t结构
 	*中的指针，指向你的函数。
 	*/
+
+void init_memarea();
+void init_merlove_mem();
 #endif

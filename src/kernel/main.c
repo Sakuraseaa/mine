@@ -76,13 +76,14 @@ void Start_Kernel(void)
 	// color_printk(RED, BLACK, "memory init \n");
 	init_memory();
 	
-	init_memmgr();
 	// color_printk(RED, BLACK, "slab init \n");
 	slab_init();
 
 	frame_buffer_init();
 	
 	pagetable_4K_init();
+
+	// init_memmgr();
 
 	device_init();
 

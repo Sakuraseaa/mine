@@ -4,6 +4,7 @@
 #include "basetype.h"
 #include "msadsc_t.h"
 #include "marea_t.h"
+#include "kmsob_t.h"
 
 typedef struct s_MEMMGROB
 {
@@ -23,6 +24,8 @@ typedef struct s_MEMMGROB
     u64_t mo_msanr;
     memarea_t* mo_mareastat;   //内存区结构指针 
     u64_t mo_mareanr;
+
+	kmsobmgrhed_t mo_kmsobmgr;  // 统筹所有内存池的结构，内存池用于分配小内存
 }memmgrob_t; // memory management global resource object
 
 

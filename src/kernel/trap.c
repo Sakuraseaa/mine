@@ -252,11 +252,10 @@ void do_page_fault(struct pt_regs * regs,unsigned long error_code)
 	unsigned long cr2 = 0;
 
 	__asm__	__volatile__("movq	%%cr2,	%0":"=r"(cr2)::"memory");
-	current;
 	// color_printk(RED,BLACK,"do_page_fault(14),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
 	if(!(error_code & 0x01)) {
-		color_printk(RED,BLACK,"Page Not-Present,\t");
+		color_printk(RED,BLACK,"Page Not-Present! address: %x\t", cr2);
 		do_no_page(cr2);
 	}
 	if(error_code & 0x02) {

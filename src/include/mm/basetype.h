@@ -1,5 +1,6 @@
 #ifndef _BASTYPE_T_H
 #define _BASTYPE_T_H
+#define NULL ((void *)0) // Пе
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
 typedef unsigned int u32_t;
