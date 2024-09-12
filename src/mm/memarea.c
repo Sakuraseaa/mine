@@ -401,6 +401,7 @@ bool_t continumsadsc_add_bafhlst(memarea_t *mareap, bafhlst_t *bafhp, msadsc_t *
 	fend->md_indxflgs.mf_olkty = MF_OLKTY_BAFH; // 尾
 	//最后的msadsc_t结构指向它属于的bafhlst_t结构
 	fend->md_odlink = bafhp;
+	
 	list_add_to_behind(&bafhp->af_frelst, &fstat->md_list);
     // list_add(&fstat->md_list, &bafhp->af_frelst); // 挂载物理页到 组织链表
 	bafhp->af_fobjnr++;
@@ -464,7 +465,7 @@ bool_t continumsadsc_add_procmareabafh(memarea_t *mareap, bafhlst_t *bafhp, msad
 		fstat[tmpnr].md_indxflgs.mf_olkty = MF_OLKTY_BAFH; // 尾巴 ？
 		fstat[tmpnr].md_odlink = bafhp;
         
-        list_add_to_behind(&bafhp->af_frelst, &fstat->md_list);
+        list_add_to_behind(&bafhp->af_frelst, &fstat[tmpnr].md_list);
 		// list_add(&fstat[tmpnr].md_list, &bafhp->af_frelst);
 		bafhp->af_fobjnr++;
 		bafhp->af_mobjnr++;
@@ -536,7 +537,7 @@ bool_t continumsadsc_mareabafh_core(memarea_t *mareap, msadsc_t **rfstat, msadsc
 	{ // 专为用户分配的 ？
 		if (continumsadsc_add_procmareabafh(mareap, bafhp, mstat, mend, *rfmnr) == FALSE)
 		{
-			return FALSE;
+		 	return FALSE;
 		}
 		#if ENABLE_MM_DEBUG
 		color_printk(WHITE, BLACK, "User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_mobjnr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
@@ -688,7 +689,6 @@ bool_t merlove_mem_core()
 	return TRUE;
 }
 
-#if 0
 uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 {
 	if (NULL == mstat || NULL == bafhp || NULL == mareap)
@@ -784,17 +784,17 @@ uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 
 bool_t check_one_bafhlst(bafhlst_t *bafhp, memarea_t *mareap)
 {
-	if (NULL == bafhp || NULL == mareap)
-	{
+	if (NULL == bafhp || NULL == mareap) {
 		return FALSE;
 	}
-	if (1 > bafhp->af_mobjnr && 1 > bafhp->af_fobjnr)
-	{
+	if (1 > bafhp->af_mobjnr && 1 > bafhp->af_fobjnr) {
 		return TRUE;
 	}
+
 	uint_t lindx = 0;
 	list_h_t *tmplst = NULL;
 	msadsc_t *msap = NULL;
+	
 	list_for_each(tmplst, &bafhp->af_frelst)
 	{
 		msap = list_entry(tmplst, msadsc_t, md_list);
@@ -804,8 +804,8 @@ bool_t check_one_bafhlst(bafhlst_t *bafhp, memarea_t *mareap)
 		}
 		lindx++;
 	}
-	if (lindx != bafhp->af_fobjnr || lindx != bafhp->af_mobjnr)
-	{
+
+	if (lindx != bafhp->af_fobjnr || lindx != bafhp->af_mobjnr) {
 		return FALSE;
 	}
 	return TRUE;
@@ -813,12 +813,10 @@ bool_t check_one_bafhlst(bafhlst_t *bafhp, memarea_t *mareap)
 
 bool_t check_one_memarea(memarea_t *mareap)
 {
-	if (NULL == mareap)
-	{
+	if (NULL == mareap) {
 		return FALSE;
 	}
-	if (1 > mareap->ma_maxpages)
-	{
+	if (1 > mareap->ma_maxpages) {
 		return TRUE;
 	}
 
@@ -830,26 +828,24 @@ bool_t check_one_memarea(memarea_t *mareap)
 		}
 	}
 
-	if (check_one_bafhlst(&mareap->ma_mdmdata.dm_onemsalst, mareap) == FALSE)
-	{
+	if (check_one_bafhlst(&mareap->ma_mdmdata.dm_onemsalst, mareap) == FALSE) {
 		return FALSE;
 	}
 	return TRUE;
 }
-void mem_check_mareadata(machbstart_t *mbsp)
+
+void mem_check_mareadata()
 {
-	memarea_t *marea = (memarea_t *)phyadr_to_viradr((adr_t)mbsp->mb_memznpadr);
-	for (uint_t maidx = 0; maidx < mbsp->mb_memznnr; maidx++)
+	memarea_t *marea = (memarea_t *)glomm.mo_mareastat;
+	for (uint_t maidx = 0; maidx < glomm.mo_mareanr; maidx++)
 	{
-		if (check_one_memarea(&marea[maidx]) == FALSE)
-		{
+		if (check_one_memarea(&marea[maidx]) == FALSE) {
+
 			system_error("check_one_memarea fail\n");
 		}
 	}
 	return;
 }
-
-#endif
 
 void init_merlove_mem()
 {
@@ -857,6 +853,6 @@ void init_merlove_mem()
 	{
 		color_printk(RED, BLACK, "merlove_mem_core fail\n");
 	}
-	//mem_check_mareadata(&kmachbsp);
+	mem_check_mareadata();
 	return;
 }

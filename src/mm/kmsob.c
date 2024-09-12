@@ -7,6 +7,7 @@
 #include "memdivmer_t.h"
 #include "kmsob_t.h"
 #include "printk.h"
+#include "spinlock.h"
 #include "lib.h"
 
 
@@ -101,8 +102,8 @@ void kmsobmgrhed_t_init(kmsobmgrhed_t *initp)
 	
 	// 这里并不是按照开始的图形分类的而是每次增加32字节，
 	// 所以是32，64,96,128,160,192,224，256，...
-	for (uint_t i = 0; i < KOBLST_MAX; i++)
-	{
+	for (uint_t i = 0; i < KOBLST_MAX; i++) {
+
 		koblst_t_init(&initp->ks_msoblst[i], koblsz);
 		koblsz += 32;
 	}

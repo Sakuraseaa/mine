@@ -21,14 +21,14 @@ void init_memmgr()
 	init_search_krloccupymm();
 	
     // 合并内存页到内存区中
-    init_merlove_mem();
+    init_merlove_mem();	// Error have a bug
 	
 	init_kmsob();
 
+	// 测试代码需要迁移到映射之后
+	// kmsob_new(34);
 	
-	kmsob_new(34);
-	
-	kmsob_new(38);
+	// kmsob_new(38);
 	
 	#if 0
 	// 这里申请了9kb,需要占用3个页面,也就是12kb,得到是16kb, 16 - 12 = 4;
