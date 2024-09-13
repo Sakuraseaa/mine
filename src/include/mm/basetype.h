@@ -27,6 +27,7 @@ typedef void* buf_t;
 typedef unsigned long size_t;
 typedef u32_t reg_t;
 
+#define ALIGN_UP8(x) (((x) + 7) & ~7)
 
 typedef void (*inthandler_t)();
 typedef drv_t (*i_handle_t)(uint_t int_nr);

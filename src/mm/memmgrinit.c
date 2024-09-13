@@ -8,8 +8,6 @@ memmgrob_t glomm;
 
 void init_memmgr()
 {	
-	msadsc_t* msa;
-	uint_t need = 0;
 	// init 物理页 结构
 	init_msadsc();
 	
@@ -25,12 +23,9 @@ void init_memmgr()
 	
 	init_kmsob();
 
-	// 测试代码需要迁移到映射之后
-	// kmsob_new(34);
-	
-	// kmsob_new(38);
-	
 	#if 0
+	msadsc_t* msa;
+	uint_t need = 0;
 	// 这里申请了9kb,需要占用3个页面,也就是12kb,得到是16kb, 16 - 12 = 4;
 	// 可以尝试把 多余的个页面，挂载到小的链表头上
 	msa = mm_division_pages(&glomm, 9, &need, MA_TYPE_HWAD, 0);
@@ -42,4 +37,12 @@ void init_memmgr()
 	#endif
 
 	return;
+}
+
+void test_mmobj(void) {
+	// 测试代码需要迁移到映射之后
+	for(int i = 0; i < 70; i++) {
+		kmsob_new(34);
+	}
+	kmsob_new(38);
 }

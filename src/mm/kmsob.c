@@ -153,7 +153,7 @@ kmsob_t *scan_newkmsob_isok(kmsob_t *kmsp, size_t msz)
 	{
 		return NULL;
 	}
-	if (msz <= kmsp->so_objsz)
+	if (msz == kmsp->so_objsz)
 	{
 		return kmsp;
 	}
@@ -611,14 +611,16 @@ void *kmsob_new_core(size_t msz)
 	cpuflg_t cpuflg;
 	// knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
-	// 根据内存对象大小查找并返回 koblst_t结构指针
-	koblp = onmsz_retn_koblst(kmobmgrp, msz);
+	// 根据内存对象大小查找并返回 koblst_t(内存池托管结构) 结构指针
+	koblp = onmsz_retn_koblst(kmobmgrp, msz); 
 	if (NULL == koblp) {
 		retptr = NULL;
 		goto ret_step;
 	}
+	
+	msz = ALIGN_UP8(msz);  // 对齐到8字节
 
-    // 从koblst_t结构中获取 kmsob_t结构(内存池结构)
+    // 从koblst_t结构(内存池挂载点)中获取 kmsob_t结构(内存池结构)
 	kmsp = onkoblst_retn_newkmsob(koblp, msz);
 	if (NULL == kmsp) {
         // 没有msz大小的内存池，则去建立这样大小的一个内存池，挂载到koblst_t结构中
@@ -644,10 +646,194 @@ ret_step:
 // 内存对象分配接口
 void *kmsob_new(size_t msz)
 {
-	if (1 > msz || 2048 < msz)
+	if (1 > msz || 2048 < msz)	{
 	//对于小于1 或者 大于2048字节的大小不支持 直接返回NULL表示失败
-	{
 		return NULL;
 	}
 	return kmsob_new_core(msz);
 }
+
+
+uint_t scan_freekmsob_isok(kmsob_t *kmsp)
+{
+	if (NULL == kmsp)
+	{
+		return 0;
+	}
+	if (kmsp->so_mobjnr < kmsp->so_fobjnr)
+	{
+		return 0;
+	}
+	if (kmsp->so_mobjnr == kmsp->so_fobjnr)
+	{
+		return 2;
+	}
+	return 1;
+}
+
+bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *kmsp)
+{
+	if (NULL == kmobmgrp || NULL == koblp || NULL == kmsp)
+	{
+		return FALSE;
+	}
+	if (1 > kmsp->so_mc.mc_kmobinpnr || list_is_empty_careful(&kmsp->so_mc.mc_kmobinlst) == TRUE)
+	{
+		return FALSE;
+	}
+	list_h_t *tmplst = NULL;
+	msadsc_t *msa = NULL;
+	msclst_t *mscp = kmsp->so_mc.mc_lst;
+	list_del(&kmsp->so_list);
+	koblp->ol_emnr--;
+	kmobmgrp->ks_msobnr--;
+
+	kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DSYFLG);
+
+	for (uint_t j = 0; j < MSCLST_MAX; j++)
+	{
+		if (0 < mscp[j].ml_msanr)
+		{
+			list_for_each_head_dell(tmplst, &mscp[j].ml_list)
+			{
+				msa = list_entry(tmplst, msadsc_t, md_list);
+				list_del(&msa->md_list);
+				if (mm_merge_pages(&memmgrob, msa, (uint_t)mscp[j].ml_ompnr) == FALSE)
+				{
+					system_error("_destroy_kmsob_core mm_merge_pages FALSE2\n");
+				}
+			}
+		}
+	}
+	list_for_each_head_dell(tmplst, &kmsp->so_mc.mc_kmobinlst)
+	{
+		msa = list_entry(tmplst, msadsc_t, md_list);
+		list_del(&msa->md_list);
+		if (mm_merge_pages(&memmgrob, msa, (uint_t)kmsp->so_mc.mc_kmobinpnr) == FALSE)
+		{
+			system_error("_destroy_kmsob_core mm_merge_pages FALSE2\n");
+		}
+	}
+	return TRUE;
+}
+
+bool_t _destroy_kmsob(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *kmsp)
+{
+	if (NULL == kmobmgrp || NULL == koblp || NULL == kmsp)
+	{
+		return FALSE;
+	}
+	if (1 > kmobmgrp->ks_msobnr || 1 > koblp->ol_emnr)
+	{
+		return FALSE;
+	}
+	uint_t screts = scan_freekmsob_isok(kmsp);
+	if (0 == screts)
+	{
+		system_error("_destroy_kmsob scan_freekmsob_isok rets 0\n");
+	}
+	if (1 == screts)
+	{
+		kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DELFLG);
+		return TRUE;
+	}
+	if (2 == screts)
+	{
+		return _destroy_kmsob_core(kmobmgrp, koblp, kmsp);
+	}
+	return FALSE;
+}
+bool_t kmsob_del_opkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
+{
+	if (NULL == kmsp || NULL == fadrs || 1 > fsz)
+	{
+		return FALSE;
+	}
+	if ((kmsp->so_fobjnr + 1) > kmsp->so_mobjnr)
+	{
+		return FALSE;
+	}
+	if (scan_dfszkmsob_isok(kmsp, fadrs, fsz) == FALSE)
+	{
+		return FALSE;
+	}
+
+	freobjh_t *obhp = (freobjh_t *)fadrs;
+	freobjh_t_init(obhp, 0, obhp);
+	list_add(&obhp->oh_list, &kmsp->so_frelst);
+	kmsp->so_fobjnr++;
+	return TRUE;
+}
+
+bool_t kmsob_delete_onkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
+{
+	if (NULL == kmsp || NULL == fadrs || 1 > fsz)
+	{
+		return FALSE;
+	}
+	bool_t rets = FALSE;
+	cpuflg_t cpuflg;
+	knl_spinlock_cli(&kmsp->so_lock, &cpuflg);
+	if (kmsob_del_opkmsob(kmsp, fadrs, fsz) == FALSE)
+	{
+		rets = FALSE;
+		goto ret_step;
+	}
+	rets = TRUE;
+ret_step:
+	knl_spinunlock_sti(&kmsp->so_lock, &cpuflg);
+	return rets;
+}
+
+// 核心
+bool_t kmsob_delete_core(void *fadrs, size_t fsz)
+{
+	kmsobmgrhed_t *kmobmgrp = &memmgrob.mo_kmsobmgr;
+	bool_t rets = FALSE;
+	koblst_t *koblp = NULL;
+	kmsob_t *kmsp = NULL;
+	cpuflg_t cpuflg;
+	knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
+	
+	// 根据释放内存对象的大小在kmsobmgrhed_t中查找并返回koblst_t，
+	// 在其中挂载着对应的kmsob_t
+	koblp = onmsz_retn_koblst(kmobmgrp, fsz);
+	if (NULL == koblp)
+	{
+		rets = FALSE;
+		goto ret_step;
+	}
+	// 根据释放内存对象的地址在koblst_t中查找并返回kmsob_t结构体，
+	kmsp = onkoblst_retn_delkmsob(koblp, fadrs, fsz);
+	if (NULL == kmsp)
+	{
+		rets = FALSE;
+		goto ret_step;
+	}
+	rets = kmsob_delete_onkmsob(kmsp, fadrs, fsz);
+	if (FALSE == rets)
+	{
+		rets = FALSE;
+		goto ret_step;
+	}
+	if (_destroy_kmsob(kmobmgrp, koblp, kmsp) == FALSE)
+	{
+		rets = FALSE;
+		goto ret_step;
+	}
+	rets = TRUE;
+ret_step:
+	knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
+	return rets;
+}
+
+// 释放内存对象接口
+bool_t kmsob_delete(void *fadrs, size_t fsz)
+{
+	if (NULL == fadrs || 1 > fsz || 2048 < fsz)
+	{
+		return FALSE;
+	}
+	return kmsob_delete_core(fadrs, fsz);
+}
+

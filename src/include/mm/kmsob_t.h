@@ -44,7 +44,7 @@ typedef struct s_FREOBJH
 //内存对象容器
 typedef struct s_KMSOB
 {
-    list_h_t so_list;        //链表
+    list_h_t so_list;        // 把内存池 添加到 池挂载的结点
     spinlock_t so_lock;      //保护结构自身的自旋锁
     uint_t so_stus;          //状态与标志
     uint_t so_flgs;
@@ -74,14 +74,16 @@ typedef struct s_KMBEXT
 }kmbext_t;
 
 
-// 挂载kmsob_t内存持结构, 在本系统中boklst统筹 包含(a, a +31)大小的内存对象的内存池
-// 这就是说 boklst 包含了32种内存池，每一个内存池有它独有尺寸的内存对象
+// 挂载内存池结构, 在本系统中boklst统筹 包含(a, a +31)大小的内存对象的内存池
+// 这就是说 boklst 包含了好几种内存池，每种内存池的大小不同
+// 大小范围在 0 - 32 之间, 也就是说boklst中最多有4种大小不同的内存池
+// 比如第一个 内存池链 的内存池分别是 8 ，16，24， 32能够分配这四种大小的内存池
 typedef struct s_KOBLST
 {
 	list_h_t ol_emplst;	// 挂载kmsob_t结构的链表
 	kmsob_t* ol_cahe;	// 最近一次查找的kmsob_t结构
 	uint_t ol_emnr; // 挂载kmsob_t结构的数量, 挂载内存池的数量
-	size_t ol_sz;	// kmsob_t结构中内存对象的大小
+	size_t ol_sz;	// 内存池结构中内存对象的大小, 0，32，64，96，128....2048
 }koblst_t;
 
 // 管理kmsob_t结构的数据结构

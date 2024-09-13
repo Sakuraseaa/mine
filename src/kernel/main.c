@@ -73,18 +73,18 @@ void Start_Kernel(void)
 	memory_management_struct.end_rodata = (unsigned long)&_erodata;
 	memory_management_struct.start_brk = (unsigned long)&_end;
 
-	// color_printk(RED, BLACK, "memory init \n");
 	init_memory();
 	
 	init_memmgr();
 	
-	// color_printk(RED, BLACK, "slab init \n");
 	slab_init();
 
 	frame_buffer_init();
 	
 	pagetable_4K_init();
 
+	test_mmobj();
+	
 	device_init();
 
 	buffer_init();
