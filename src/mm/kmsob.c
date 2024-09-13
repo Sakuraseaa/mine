@@ -153,7 +153,8 @@ kmsob_t *scan_newkmsob_isok(kmsob_t *kmsp, size_t msz)
 	{
 		return NULL;
 	}
-	if (msz == kmsp->so_objsz)
+	//if (msz == kmsp->so_objsz)
+	if(msz <= kmsp->so_objsz)
 	{
 		return kmsp;
 	}
@@ -162,8 +163,7 @@ kmsob_t *scan_newkmsob_isok(kmsob_t *kmsp, size_t msz)
 
 kmsob_t *scan_delkmsob_isok(kmsob_t *kmsp, void *fadrs, size_t fsz)
 {
-	if (NULL == kmsp || NULL == fadrs || 1 > fsz)
-	{
+	if (NULL == kmsp || NULL == fadrs || 1 > fsz) {
 		return NULL;
 	}
 	if ((adr_t)fadrs >= (kmsp->so_vstat + sizeof(kmsob_t)) && ((adr_t)fadrs + (adr_t)fsz) <= kmsp->so_vend)
@@ -173,10 +173,10 @@ kmsob_t *scan_delkmsob_isok(kmsob_t *kmsp, void *fadrs, size_t fsz)
 			return kmsp;
 		}
 	}
-	if (1 > kmsp->so_mextnr)
-	{
+	if (1 > kmsp->so_mextnr) {
 		return NULL;
 	}
+
 	kmbext_t *bexp = NULL;
 	list_h_t *tmplst = NULL;
 	list_for_each(tmplst, &kmsp->so_mextlst)
@@ -186,10 +186,8 @@ kmsob_t *scan_delkmsob_isok(kmsob_t *kmsp, void *fadrs, size_t fsz)
 		{
 			system_error("scan_delkmsob_isok err\n");
 		}
-		if ((adr_t)fadrs >= (bexp->mt_vstat + sizeof(kmbext_t)) && ((adr_t)fadrs + (adr_t)fsz) <= bexp->mt_vend)
-		{
-			if (fsz <= kmsp->so_objsz)
-			{
+		if ((adr_t)fadrs >= (bexp->mt_vstat + sizeof(kmbext_t)) && ((adr_t)fadrs + (adr_t)fsz) <= bexp->mt_vend) {
+			if (fsz <= kmsp->so_objsz) {
 				return kmsp;
 			}
 		}
@@ -338,10 +336,10 @@ kmsob_t *onkoblst_retn_delkmsob(koblst_t *koblp, void *fadrs, size_t fsz)
 	{
 		return NULL;
 	}
+
 	// 看看上次刚刚操作的kmsob_t结构
 	kmsp = scan_delkmsob_isok(koblp->ol_cahe, fadrs, fsz);
-	if (NULL != kmsp)
-	{
+	if (NULL != kmsp) {
 		return kmsp;
 	}
 
@@ -618,7 +616,7 @@ void *kmsob_new_core(size_t msz)
 		goto ret_step;
 	}
 	
-	msz = ALIGN_UP8(msz);  // 对齐到8字节
+	// msz = ALIGN_UP8(msz);  // 对齐到8字节
 
     // 从koblst_t结构(内存池挂载点)中获取 kmsob_t结构(内存池结构)
 	kmsp = onkoblst_retn_newkmsob(koblp, msz);
@@ -643,6 +641,7 @@ ret_step:
 	// knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
 	return retptr;
 }
+
 // 内存对象分配接口
 void *kmsob_new(size_t msz)
 {
@@ -673,14 +672,13 @@ uint_t scan_freekmsob_isok(kmsob_t *kmsp)
 
 bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *kmsp)
 {
-	if (NULL == kmobmgrp || NULL == koblp || NULL == kmsp)
-	{
+	if (NULL == kmobmgrp || NULL == koblp || NULL == kmsp) {
 		return FALSE;
 	}
-	if (1 > kmsp->so_mc.mc_kmobinpnr || list_is_empty_careful(&kmsp->so_mc.mc_kmobinlst) == TRUE)
-	{
+	if (1 > kmsp->so_mc.mc_kmobinpnr || list_is_empty_careful(&kmsp->so_mc.mc_kmobinlst) == TRUE) {
 		return FALSE;
 	}
+
 	list_h_t *tmplst = NULL;
 	msadsc_t *msa = NULL;
 	msclst_t *mscp = kmsp->so_mc.mc_lst;
@@ -705,12 +703,12 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 			}
 		}
 	}
+
 	list_for_each_head_dell(tmplst, &kmsp->so_mc.mc_kmobinlst)
 	{
 		msa = list_entry(tmplst, msadsc_t, md_list);
 		list_del(&msa->md_list);
-		if (mm_merge_pages(&memmgrob, msa, (uint_t)kmsp->so_mc.mc_kmobinpnr) == FALSE)
-		{
+		if (mm_merge_pages(&memmgrob, msa, (uint_t)kmsp->so_mc.mc_kmobinpnr) == FALSE) {
 			system_error("_destroy_kmsob_core mm_merge_pages FALSE2\n");
 		}
 	}
@@ -719,38 +717,34 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 
 bool_t _destroy_kmsob(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *kmsp)
 {
-	if (NULL == kmobmgrp || NULL == koblp || NULL == kmsp)
-	{
+	if (NULL == kmobmgrp || NULL == koblp || NULL == kmsp) {
 		return FALSE;
 	}
-	if (1 > kmobmgrp->ks_msobnr || 1 > koblp->ol_emnr)
-	{
+	if (1 > kmobmgrp->ks_msobnr || 1 > koblp->ol_emnr) {
 		return FALSE;
 	}
+
 	uint_t screts = scan_freekmsob_isok(kmsp);
-	if (0 == screts)
-	{
-		system_error("_destroy_kmsob scan_freekmsob_isok rets 0\n");
+	
+	switch(screts) {
+		case 0: 
+			system_error("_destroy_kmsob scan_freekmsob_isok rets 0\n");
+			break;
+		case 1:
+			kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DELFLG);
+			return TRUE;
+		case 2:
+			return _destroy_kmsob_core(kmobmgrp, koblp, kmsp);
 	}
-	if (1 == screts)
-	{
-		kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DELFLG);
-		return TRUE;
-	}
-	if (2 == screts)
-	{
-		return _destroy_kmsob_core(kmobmgrp, koblp, kmsp);
-	}
+
 	return FALSE;
 }
 bool_t kmsob_del_opkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
 {
-	if (NULL == kmsp || NULL == fadrs || 1 > fsz)
-	{
+	if (NULL == kmsp || NULL == fadrs || 1 > fsz) {
 		return FALSE;
 	}
-	if ((kmsp->so_fobjnr + 1) > kmsp->so_mobjnr)
-	{
+	if ((kmsp->so_fobjnr + 1) > kmsp->so_mobjnr) {
 		return FALSE;
 	}
 	if (scan_dfszkmsob_isok(kmsp, fadrs, fsz) == FALSE)
@@ -773,49 +767,48 @@ bool_t kmsob_delete_onkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
 	}
 	bool_t rets = FALSE;
 	cpuflg_t cpuflg;
-	knl_spinlock_cli(&kmsp->so_lock, &cpuflg);
-	if (kmsob_del_opkmsob(kmsp, fadrs, fsz) == FALSE)
-	{
+	// knl_spinlock_cli(&kmsp->so_lock, &cpuflg);
+	if (kmsob_del_opkmsob(kmsp, fadrs, fsz) == FALSE) {
 		rets = FALSE;
 		goto ret_step;
 	}
 	rets = TRUE;
 ret_step:
-	knl_spinunlock_sti(&kmsp->so_lock, &cpuflg);
+	// knl_spinunlock_sti(&kmsp->so_lock, &cpuflg);
 	return rets;
 }
 
 // 核心
 bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 {
-	kmsobmgrhed_t *kmobmgrp = &memmgrob.mo_kmsobmgr;
+	kmsobmgrhed_t *kmobmgrp = &glomm.mo_kmsobmgr;
 	bool_t rets = FALSE;
 	koblst_t *koblp = NULL;
 	kmsob_t *kmsp = NULL;
 	cpuflg_t cpuflg;
-	knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
+	//knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
 	// 根据释放内存对象的大小在kmsobmgrhed_t中查找并返回koblst_t，
 	// 在其中挂载着对应的kmsob_t
 	koblp = onmsz_retn_koblst(kmobmgrp, fsz);
-	if (NULL == koblp)
-	{
+	if (NULL == koblp) {
 		rets = FALSE;
 		goto ret_step;
 	}
+
 	// 根据释放内存对象的地址在koblst_t中查找并返回kmsob_t结构体，
 	kmsp = onkoblst_retn_delkmsob(koblp, fadrs, fsz);
-	if (NULL == kmsp)
-	{
+	if (NULL == kmsp) {
 		rets = FALSE;
 		goto ret_step;
 	}
+
 	rets = kmsob_delete_onkmsob(kmsp, fadrs, fsz);
-	if (FALSE == rets)
-	{
+	if (FALSE == rets) {
 		rets = FALSE;
 		goto ret_step;
 	}
+
 	if (_destroy_kmsob(kmobmgrp, koblp, kmsp) == FALSE)
 	{
 		rets = FALSE;
@@ -823,7 +816,7 @@ bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 	}
 	rets = TRUE;
 ret_step:
-	knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
+	//knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
 	return rets;
 }
 
