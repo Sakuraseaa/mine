@@ -696,7 +696,7 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 			{
 				msa = list_entry(tmplst, msadsc_t, md_list);
 				list_del(&msa->md_list);
-				if (mm_merge_pages(&memmgrob, msa, (uint_t)mscp[j].ml_ompnr) == FALSE)
+				if (mm_merge_pages(&glomm, msa, (uint_t)mscp[j].ml_ompnr) == FALSE)
 				{
 					system_error("_destroy_kmsob_core mm_merge_pages FALSE2\n");
 				}
@@ -707,8 +707,8 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 	list_for_each_head_dell(tmplst, &kmsp->so_mc.mc_kmobinlst)
 	{
 		msa = list_entry(tmplst, msadsc_t, md_list);
-		list_del(&msa->md_list);
-		if (mm_merge_pages(&memmgrob, msa, (uint_t)kmsp->so_mc.mc_kmobinpnr) == FALSE) {
+		list_del(&msa->md_list); // ¶ÏÎïÀíÒ³Á´
+		if (mm_merge_pages(&glomm, msa, (uint_t)kmsp->so_mc.mc_kmobinpnr) == FALSE) {
 			system_error("_destroy_kmsob_core mm_merge_pages FALSE2\n");
 		}
 	}
@@ -754,7 +754,7 @@ bool_t kmsob_del_opkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
 
 	freobjh_t *obhp = (freobjh_t *)fadrs;
 	freobjh_t_init(obhp, 0, obhp);
-	list_add(&obhp->oh_list, &kmsp->so_frelst);
+	list_add_to_before(&kmsp->so_frelst, &obhp->oh_list);
 	kmsp->so_fobjnr++;
 	return TRUE;
 }

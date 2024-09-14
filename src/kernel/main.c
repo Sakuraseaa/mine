@@ -83,7 +83,8 @@ void Start_Kernel(void)
 	
 	pagetable_4K_init();
 
-	test_mmobj();
+	// test_mmobj();
+	init_krlmm();
 	
 	device_init();
 

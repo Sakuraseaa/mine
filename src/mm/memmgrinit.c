@@ -41,8 +41,7 @@ void init_memmgr()
 
 void test_mmobj(void) {
 	// 测试代码需要迁移到映射之后
-	for(int i = 0; i < 70; i++) {
-		kmsob_new(34);
-	}
-	kmsob_new(38);
+	void *fadrs = kmsob_new(34);
+	
+	kmsob_delete(fadrs, 34);
 }

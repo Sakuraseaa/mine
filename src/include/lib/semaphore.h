@@ -10,7 +10,7 @@
 // 信号量
 typedef struct SEMAPHORE
 {
-    atomic_T conter;   // 原子量，记录信号量拥有的资源数量
+    atomic_t conter;   // 原子量，记录信号量拥有的资源数量
     wait_queue_T wait; // 等待队列
 } semaphore_T;
 
