@@ -7,93 +7,93 @@
 #define KUC_DELFLG (2)
 #define KUC_DSYFLG (3)
 
-//¹ÜÀíÄÚ´æ¶ÔÏóÈİÆ÷Õ¼ÓÃµÄÄÚ´æÒ³ÃæËù¶ÔÓ¦µÄmsadsc_t½á¹¹
+//ç®¡ç†å†…å­˜å¯¹è±¡å®¹å™¨å ç”¨çš„å†…å­˜é¡µé¢æ‰€å¯¹åº”çš„msadsc_tç»“æ„
 typedef struct s_MSCLST
 {
-    uint_t ml_msanr;  //¶àÉÙ¸ömsadsc_t
-    uint_t ml_ompnr;  //Ò»¸ömsadsc_t¶ÔÓ¦µÄÁ¬ĞøµÄÎïÀíÄÚ´æÒ³ÃæÊı
-    list_h_t ml_list; //¹ÒÔØmsadsc_tµÄÁ´±í
+    uint_t ml_msanr;  //å¤šå°‘ä¸ªmsadsc_t
+    uint_t ml_ompnr;  //ä¸€ä¸ªmsadsc_tå¯¹åº”çš„è¿ç»­çš„ç‰©ç†å†…å­˜é¡µé¢æ•°
+    list_h_t ml_list; //æŒ‚è½½msadsc_tçš„é“¾è¡¨
 }msclst_t;
 
 
-//¹ÜÀíÄÚ´æ¶ÔÏóÈİÆ÷Õ¼ÓÃµÄÄÚ´æ
+//ç®¡ç†å†…å­˜å¯¹è±¡å®¹å™¨å ç”¨çš„å†…å­˜
 typedef struct s_MSOMDC
 {
-    //msclst_t½á¹¹Êı×émc_lst[0]=1¸öÁ¬ĞøÒ³ÃæµÄmsadsc_t
-    //               mc_lst[1]=2¸öÁ¬ĞøÒ³ÃæµÄmsadsc_t
-    //               mc_lst[2]=4¸öÁ¬ĞøÒ³ÃæµÄmsadsc_t
-    //               mc_lst[3]=8¸öÁ¬ĞøÒ³ÃæµÄmsadsc_t
-    //               mc_lst[4]=16¸öÁ¬ĞøÒ³ÃæµÄmsadsc_t
+    //msclst_tç»“æ„æ•°ç»„mc_lst[0]=1ä¸ªè¿ç»­é¡µé¢çš„msadsc_t
+    //               mc_lst[1]=2ä¸ªè¿ç»­é¡µé¢çš„msadsc_t
+    //               mc_lst[2]=4ä¸ªè¿ç»­é¡µé¢çš„msadsc_t
+    //               mc_lst[3]=8ä¸ªè¿ç»­é¡µé¢çš„msadsc_t
+    //               mc_lst[4]=16ä¸ªè¿ç»­é¡µé¢çš„msadsc_t
     msclst_t mc_lst[MSCLST_MAX];
-    uint_t mc_msanr;   //×Ü¹²¶à¸ömsadsc_t½á¹¹
+    uint_t mc_msanr;   //æ€»å…±å¤šä¸ªmsadsc_tç»“æ„
     list_h_t mc_list;
-    //ÄÚ´æ¶ÔÏóÈİÆ÷µÚÒ»¸öÕ¼ÓÃmsadsc_t
+    //å†…å­˜å¯¹è±¡å®¹å™¨ç¬¬ä¸€ä¸ªå ç”¨msadsc_t
     list_h_t mc_kmobinlst;
-    //ÄÚ´æ¶ÔÏóÈİÆ÷µÚÒ»¸öÕ¼ÓÃmsadsc_t¶ÔÓ¦µÄÁ¬ĞøµÄÎïÀíÄÚ´æÒ³ÃæÊı
+    //å†…å­˜å¯¹è±¡å®¹å™¨ç¬¬ä¸€ä¸ªå ç”¨msadsc_tå¯¹åº”çš„è¿ç»­çš„ç‰©ç†å†…å­˜é¡µé¢æ•°
     uint_t mc_kmobinpnr;
 }msomdc_t;
 
-// ÄÚ´æ¶ÔÏó
+// å†…å­˜å¯¹è±¡
 typedef struct s_FREOBJH
 {
-	list_h_t oh_list; // Á´±í
-	uint_t oh_stus;	 // ¶ÔÏó×´Ì¬
-	void* oh_stat;	// ¶ÔÏóµÄ¿ªÊ¼µØÖ·
+	list_h_t oh_list; // é“¾è¡¨
+	uint_t oh_stus;	 // å¯¹è±¡çŠ¶æ€
+	void* oh_stat;	// å¯¹è±¡çš„å¼€å§‹åœ°å€
 }freobjh_t; // free object head
 
-//ÄÚ´æ¶ÔÏóÈİÆ÷
+//å†…å­˜å¯¹è±¡å®¹å™¨
 typedef struct s_KMSOB
 {
-    list_h_t so_list;        // °ÑÄÚ´æ³Ø Ìí¼Óµ½ ³Ø¹ÒÔØµÄ½áµã
-    spinlock_t so_lock;      //±£»¤½á¹¹×ÔÉíµÄ×ÔĞıËø
-    uint_t so_stus;          //×´Ì¬Óë±êÖ¾
+    list_h_t so_list;        // æŠŠå†…å­˜æ±  æ·»åŠ åˆ° æ± æŒ‚è½½çš„ç»“ç‚¹
+    spinlock_t so_lock;      //ä¿æŠ¤ç»“æ„è‡ªèº«çš„è‡ªæ—‹é”
+    uint_t so_stus;          //çŠ¶æ€ä¸æ ‡å¿—
     uint_t so_flgs;
-    adr_t so_vstat;          //ÄÚ´æ¶ÔÏóÈİÆ÷µÄ¿ªÊ¼µØÖ·
-    adr_t so_vend;           //ÄÚ´æ¶ÔÏóÈİÆ÷µÄ½áÊøµØÖ·
-    size_t so_objsz;         //ÄÚ´æ¶ÔÏó´óĞ¡
-    size_t so_objrelsz;      //ÄÚ´æ¶ÔÏóÊµ¼Ê´óĞ¡
-    uint_t so_mobjnr;        //ÄÚ´æ¶ÔÏóÈİÆ÷ÖĞ×Ü¹²µÄ¶ÔÏó¸öÊı
-    uint_t so_fobjnr;        //ÄÚ´æ¶ÔÏóÈİÆ÷ÖĞ¿ÕÏĞµÄ¶ÔÏó¸öÊı
-    list_h_t so_frelst;      //ÄÚ´æ¶ÔÏóÈİÆ÷ÖĞ¿ÕÏĞµÄ¶ÔÏóÁ´±íÍ·
-    list_h_t so_alclst;      //ÄÚ´æ¶ÔÏóÈİÆ÷ÖĞ·ÖÅäµÄ¶ÔÏóÁ´±íÍ·
-    list_h_t so_mextlst;     //ÄÚ´æ¶ÔÏóÈİÆ÷À©Õ¹kmbext_t½á¹¹Á´±íÍ·
-    uint_t so_mextnr;        //ÄÚ´æ¶ÔÏóÈİÆ÷À©Õ¹kmbext_t½á¹¹¸öÊı
-    msomdc_t so_mc;          //ÄÚ´æ¶ÔÏóÈİÆ÷Õ¼ÓÃÄÚ´æÒ³Ãæ¹ÜÀí½á¹¹
-    void* so_privp;          //±¾½á¹¹Ë½ÓĞÊı¾İÖ¸Õë
-    void* so_extdp;          //±¾½á¹¹À©Õ¹Êı¾İÖ¸Õë
+    adr_t so_vstat;          //å†…å­˜å¯¹è±¡å®¹å™¨çš„å¼€å§‹åœ°å€
+    adr_t so_vend;           //å†…å­˜å¯¹è±¡å®¹å™¨çš„ç»“æŸåœ°å€
+    size_t so_objsz;         //å†…å­˜å¯¹è±¡å¤§å°
+    size_t so_objrelsz;      //å†…å­˜å¯¹è±¡å®é™…å¤§å°
+    uint_t so_mobjnr;        //å†…å­˜å¯¹è±¡å®¹å™¨ä¸­æ€»å…±çš„å¯¹è±¡ä¸ªæ•°
+    uint_t so_fobjnr;        //å†…å­˜å¯¹è±¡å®¹å™¨ä¸­ç©ºé—²çš„å¯¹è±¡ä¸ªæ•°
+    list_h_t so_frelst;      //å†…å­˜å¯¹è±¡å®¹å™¨ä¸­ç©ºé—²çš„å¯¹è±¡é“¾è¡¨å¤´
+    list_h_t so_alclst;      //å†…å­˜å¯¹è±¡å®¹å™¨ä¸­åˆ†é…çš„å¯¹è±¡é“¾è¡¨å¤´
+    list_h_t so_mextlst;     //å†…å­˜å¯¹è±¡å®¹å™¨æ‰©å±•kmbext_tç»“æ„é“¾è¡¨å¤´
+    uint_t so_mextnr;        //å†…å­˜å¯¹è±¡å®¹å™¨æ‰©å±•kmbext_tç»“æ„ä¸ªæ•°
+    msomdc_t so_mc;          //å†…å­˜å¯¹è±¡å®¹å™¨å ç”¨å†…å­˜é¡µé¢ç®¡ç†ç»“æ„
+    void* so_privp;          //æœ¬ç»“æ„ç§æœ‰æ•°æ®æŒ‡é’ˆ
+    void* so_extdp;          //æœ¬ç»“æ„æ‰©å±•æ•°æ®æŒ‡é’ˆ
 }kmsob_t;
 
-// ¹ÜÀíÄÚ´æ¶ÔÏóÈİÆ÷À©Õ¹ÈİÁ¿
+// ç®¡ç†å†…å­˜å¯¹è±¡å®¹å™¨æ‰©å±•å®¹é‡
 typedef struct s_KMBEXT
 {
-	list_h_t mt_list; 	// Á´±í
-	adr_t mt_vstat;		// ÄÚ´æ¶ÔÏóÈİÆ÷À©Õ¹ÈİÁ¿¿ªÊ¼µØÖ·
-	adr_t mt_vend;		// ÄÚ´æ¶ÔÏóÈİÆ÷À©Õ¹ÈİÁ¿½áÊøµØÖ·
-	kmsob_t* mt_kmsb;	// Ö¸ÏòÄÚ´æ¶ÔÏóÈİÆ÷½á¹¹
-	uint_t mt_mobjnr;	// ÄÚ´æ¶ÔÏóÈİÆ÷À©Õ¹ÈİÁ¿µÄÄÚ´æÖĞÓĞ¶àÉÙ¶ÔÏó
+	list_h_t mt_list; 	// é“¾è¡¨
+	adr_t mt_vstat;		// å†…å­˜å¯¹è±¡å®¹å™¨æ‰©å±•å®¹é‡å¼€å§‹åœ°å€
+	adr_t mt_vend;		// å†…å­˜å¯¹è±¡å®¹å™¨æ‰©å±•å®¹é‡ç»“æŸåœ°å€
+	kmsob_t* mt_kmsb;	// æŒ‡å‘å†…å­˜å¯¹è±¡å®¹å™¨ç»“æ„
+	uint_t mt_mobjnr;	// å†…å­˜å¯¹è±¡å®¹å™¨æ‰©å±•å®¹é‡çš„å†…å­˜ä¸­æœ‰å¤šå°‘å¯¹è±¡
 }kmbext_t;
 
 
-// ¹ÒÔØÄÚ´æ³Ø½á¹¹, ÔÚ±¾ÏµÍ³ÖĞboklstÍ³³ï °üº¬(a, a +31)´óĞ¡µÄÄÚ´æ¶ÔÏóµÄÄÚ´æ³Ø
-// Õâ¾ÍÊÇËµ boklst °üº¬ÁËºÃ¼¸ÖÖÄÚ´æ³Ø£¬Ã¿ÖÖÄÚ´æ³ØµÄ´óĞ¡²»Í¬
-// ´óĞ¡·¶Î§ÔÚ 0 - 32 Ö®¼ä, Ò²¾ÍÊÇËµboklstÖĞ×î¶àÓĞ4ÖÖ´óĞ¡²»Í¬µÄÄÚ´æ³Ø
-// ±ÈÈçµÚÒ»¸ö ÄÚ´æ³ØÁ´ µÄÄÚ´æ³Ø·Ö±ğÊÇ 8 £¬16£¬24£¬ 32ÄÜ¹»·ÖÅäÕâËÄÖÖ´óĞ¡µÄÄÚ´æ³Ø
+// æŒ‚è½½å†…å­˜æ± ç»“æ„, åœ¨æœ¬ç³»ç»Ÿä¸­boklstç»Ÿç­¹ åŒ…å«(a, a +31)å¤§å°çš„å†…å­˜å¯¹è±¡çš„å†…å­˜æ± 
+// è¿™å°±æ˜¯è¯´ boklst åŒ…å«äº†å¥½å‡ ç§å†…å­˜æ± ï¼Œæ¯ç§å†…å­˜æ± çš„å¤§å°ä¸åŒ
+// å¤§å°èŒƒå›´åœ¨ 0 - 32 ä¹‹é—´, ä¹Ÿå°±æ˜¯è¯´boklstä¸­æœ€å¤šæœ‰4ç§å¤§å°ä¸åŒçš„å†…å­˜æ± 
+// æ¯”å¦‚ç¬¬ä¸€ä¸ª å†…å­˜æ± é“¾ çš„å†…å­˜æ± åˆ†åˆ«æ˜¯ 8 ï¼Œ16ï¼Œ24ï¼Œ 32èƒ½å¤Ÿåˆ†é…è¿™å››ç§å¤§å°çš„å†…å­˜æ± 
 typedef struct s_KOBLST
 {
-	list_h_t ol_emplst;	// ¹ÒÔØkmsob_t½á¹¹µÄÁ´±í
-	kmsob_t* ol_cahe;	// ×î½üÒ»´Î²éÕÒµÄkmsob_t½á¹¹
-	uint_t ol_emnr; // ¹ÒÔØkmsob_t½á¹¹µÄÊıÁ¿, ¹ÒÔØÄÚ´æ³ØµÄÊıÁ¿
-	size_t ol_sz;	// ÄÚ´æ³Ø½á¹¹ÖĞÄÚ´æ¶ÔÏóµÄ´óĞ¡, 0£¬32£¬64£¬96£¬128....2048
+	list_h_t ol_emplst;	// æŒ‚è½½kmsob_tç»“æ„çš„é“¾è¡¨
+	kmsob_t* ol_cahe;	// æœ€è¿‘ä¸€æ¬¡æŸ¥æ‰¾çš„kmsob_tç»“æ„
+	uint_t ol_emnr; // æŒ‚è½½kmsob_tç»“æ„çš„æ•°é‡, æŒ‚è½½å†…å­˜æ± çš„æ•°é‡
+	size_t ol_sz;	// å†…å­˜æ± ç»“æ„ä¸­å†…å­˜å¯¹è±¡çš„å¤§å°, 0ï¼Œ32ï¼Œ64ï¼Œ96ï¼Œ128....2048
 }koblst_t;
 
-// ¹ÜÀíkmsob_t½á¹¹µÄÊı¾İ½á¹¹
+// ç®¡ç†kmsob_tç»“æ„çš„æ•°æ®ç»“æ„
 typedef struct s_KMSOBMGRHED
 {
 	spinlock_t ks_lock;
 	list_h_t ks_tclst;
 	uint_t ks_tcnr;
-	uint_t ks_msobnr;	// ×Ü¹²¶àÉÙ¸ökmsob_t½á¹¹
-	kmsob_t* ks_msobche;	// ×î½ü·ÖÅäÄÚ´æ¶ÔÏóµÄkmsob_t½á¹¹
+	uint_t ks_msobnr;	// æ€»å…±å¤šå°‘ä¸ªkmsob_tç»“æ„
+	kmsob_t* ks_msobche;	// æœ€è¿‘åˆ†é…å†…å­˜å¯¹è±¡çš„kmsob_tç»“æ„
 	koblst_t ks_msoblst[KOBLST_MAX];
 }kmsobmgrhed_t; // kernel memory space object manager head
 
@@ -106,4 +106,5 @@ typedef struct s_KOBCKS
 
 void init_kmsob();
 void *kmsob_new(size_t msz);
+bool_t kmsob_delete(void *fadrs, size_t fsz);
 #endif // _KMSOB_T_H_

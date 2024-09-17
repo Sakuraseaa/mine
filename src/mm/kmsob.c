@@ -84,7 +84,7 @@ void kmbext_t_init(kmbext_t *initp, adr_t vstat, adr_t vend, kmsob_t *kmsp)
 
 void koblst_t_init(koblst_t *initp, size_t koblsz)
 {
-	list_init(&initp->ol_emplst); // ¹ÒÔØ kmsob_t½á¹¹µÄÁ´±í
+	list_init(&initp->ol_emplst); // æŒ‚è½½ kmsob_tç»“æ„çš„é“¾è¡¨
 	initp->ol_cahe = NULL;
 	initp->ol_emnr = 0;
 	initp->ol_sz = koblsz;
@@ -97,11 +97,11 @@ void kmsobmgrhed_t_init(kmsobmgrhed_t *initp)
 	spin_init(&initp->ks_lock);
 	list_init(&initp->ks_tclst);
 	initp->ks_tcnr = 0;
-	initp->ks_msobnr = 0; // kmsob_t½á¹¹µÄÊıÁ¿
-	initp->ks_msobche = NULL;  // ×î½ü·ÖÅäÄÚ´æ¶ÔÏóµÄ kmsob_t ½á¹¹
+	initp->ks_msobnr = 0; // kmsob_tç»“æ„çš„æ•°é‡
+	initp->ks_msobche = NULL;  // æœ€è¿‘åˆ†é…å†…å­˜å¯¹è±¡çš„ kmsob_t ç»“æ„
 	
-	// ÕâÀï²¢²»ÊÇ°´ÕÕ¿ªÊ¼µÄÍ¼ĞÎ·ÖÀàµÄ¶øÊÇÃ¿´ÎÔö¼Ó32×Ö½Ú£¬
-	// ËùÒÔÊÇ32£¬64,96,128,160,192,224£¬256£¬...
+	// è¿™é‡Œå¹¶ä¸æ˜¯æŒ‰ç…§å¼€å§‹çš„å›¾å½¢åˆ†ç±»çš„è€Œæ˜¯æ¯æ¬¡å¢åŠ 32å­—èŠ‚ï¼Œ
+	// æ‰€ä»¥æ˜¯32ï¼Œ64,96,128,160,192,224ï¼Œ256ï¼Œ...
 	for (uint_t i = 0; i < KOBLST_MAX; i++) {
 
 		koblst_t_init(&initp->ks_msoblst[i], koblsz);
@@ -305,13 +305,13 @@ kmsob_t *onkoblst_retn_newkmsob(koblst_t *koblp, size_t msz)
 		return NULL;
 	}
 	
-	// ¼ì²éÉÏÒ»¸ö¸Õ¸Õ·ÖÅäÁËÄÚ´æ¶ÔÏó¸øÆäËûÄ£¿éÄÚ´æ³Ø£¬ÄÜ·ñÂú×ãmsz³ß´çÄÚ´æ¶ÔÏóµÄÒªÇó
+	// æ£€æŸ¥ä¸Šä¸€ä¸ªåˆšåˆšåˆ†é…äº†å†…å­˜å¯¹è±¡ç»™å…¶ä»–æ¨¡å—å†…å­˜æ± ï¼Œèƒ½å¦æ»¡è¶³mszå°ºå¯¸å†…å­˜å¯¹è±¡çš„è¦æ±‚
 	kmsp = scan_newkmsob_isok(koblp->ol_cahe, msz); 
 	if (NULL != kmsp) {
 		return kmsp;
 	}
 
-    // ²»Âú×ãÔòÈ¥·ÃÎÊÆäËûÄÚ´æ³Ø£¬¿´ÆäÄÜ·ñÂú×ãÒªÇó
+    // ä¸æ»¡è¶³åˆ™å»è®¿é—®å…¶ä»–å†…å­˜æ± ï¼Œçœ‹å…¶èƒ½å¦æ»¡è¶³è¦æ±‚
 	if (0 < koblp->ol_emnr)
 	{
 		list_for_each(tmplst, &koblp->ol_emplst)
@@ -327,7 +327,7 @@ kmsob_t *onkoblst_retn_newkmsob(koblst_t *koblp, size_t msz)
 	return NULL;
 }
 
-// ²éÕÒÊÍ·ÅÄÚ´æ¶ÔÏóËùÊôµÄkmso_t½á¹¹
+// æŸ¥æ‰¾é‡Šæ”¾å†…å­˜å¯¹è±¡æ‰€å±çš„kmso_tç»“æ„
 kmsob_t *onkoblst_retn_delkmsob(koblst_t *koblp, void *fadrs, size_t fsz)
 {
 	kmsob_t *kmsp = NULL, *tkmsp = NULL;
@@ -337,7 +337,7 @@ kmsob_t *onkoblst_retn_delkmsob(koblst_t *koblp, void *fadrs, size_t fsz)
 		return NULL;
 	}
 
-	// ¿´¿´ÉÏ´Î¸Õ¸Õ²Ù×÷µÄkmsob_t½á¹¹
+	// çœ‹çœ‹ä¸Šæ¬¡åˆšåˆšæ“ä½œçš„kmsob_tç»“æ„
 	kmsp = scan_delkmsob_isok(koblp->ol_cahe, fadrs, fsz);
 	if (NULL != kmsp) {
 		return kmsp;
@@ -389,7 +389,7 @@ bool_t kmsob_add_koblst(koblst_t *koblp, kmsob_t *kmsp)
 	return TRUE;
 }
 
-// ´´½¨Ä³¸öÄÚ´æ¶ÔÏó´óĞ¡µÄ×î³õÄÚ´æ³Ø
+// åˆ›å»ºæŸä¸ªå†…å­˜å¯¹è±¡å¤§å°çš„æœ€åˆå†…å­˜æ± 
 kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cvadre, msadsc_t *msa, uint_t relpnr)
 {
 	if (NULL == kmsp || 1 > objsz || NULL == cvadrs || NULL == cvadre || NULL == msa || 1 > relpnr) {
@@ -411,21 +411,21 @@ kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cva
 	kmsp->so_vend = cvadre;
 	kmsp->so_objsz = objsz;
     
-    // ÔÚË«ÏòÁ´±íÖĞ£¬Í·½ÚµãµÄÇ°Ãæ²åÈëÒ»¸ö½Úµã¡£ÏàµÈÓÚÔÚÁ´±íÎ²Ìí¼ÓÒ»¸ö½Úµã
+    // åœ¨åŒå‘é“¾è¡¨ä¸­ï¼Œå¤´èŠ‚ç‚¹çš„å‰é¢æ’å…¥ä¸€ä¸ªèŠ‚ç‚¹ã€‚ç›¸ç­‰äºåœ¨é“¾è¡¨å°¾æ·»åŠ ä¸€ä¸ªèŠ‚ç‚¹
     list_add_to_before(&kmsp->so_mc.mc_kmobinlst, &msa->md_list);
 	// list_add(&msa->md_list, &kmsp->so_mc.mc_kmobinlst);
 	kmsp->so_mc.mc_kmobinpnr = (uint_t)relpnr;
 
-    // ±ê¼ÇÄÚ´æ¶ÔÏóµÄÆğÊ¼Î»ÖÃºÍ½áÊøÎ»ÖÃ
+    // æ ‡è®°å†…å­˜å¯¹è±¡çš„èµ·å§‹ä½ç½®å’Œç»“æŸä½ç½®
 	freobjh_t *fohstat = (freobjh_t *)(kmsp + 1), *fohend = (freobjh_t *)cvadre;
 
 	uint_t ap = (uint_t)((uint_t)fohstat);
 	freobjh_t *tmpfoh = (freobjh_t *)((uint_t)ap);
-	for (; tmpfoh < fohend;) // ½¨Á¢ÄÚ´æ¶ÔÏó
+	for (; tmpfoh < fohend;) // å»ºç«‹å†…å­˜å¯¹è±¡
 	{
 		if ((ap + (uint_t)kmsp->so_objsz) <= (uint_t)cvadre)
 		{
-			freobjh_t_init(tmpfoh, 0, (void *)tmpfoh); // ³õÊ¼»¯ÄÚ´æ¶ÔÏó£¬ÄÚ´æ¶ÔÏó¾Í½¨Á¢ÔÚÒª·ÖÅä¸øÆäËû½ø³ÌµÄÃ¿¸ö¿ÕÏĞÄÚ´æÉÏ
+			freobjh_t_init(tmpfoh, 0, (void *)tmpfoh); // åˆå§‹åŒ–å†…å­˜å¯¹è±¡ï¼Œå†…å­˜å¯¹è±¡å°±å»ºç«‹åœ¨è¦åˆ†é…ç»™å…¶ä»–è¿›ç¨‹çš„æ¯ä¸ªç©ºé—²å†…å­˜ä¸Š
 			list_add_to_before(&kmsp->so_frelst, &tmpfoh->oh_list);
 			kmsp->so_mobjnr++;
 			kmsp->so_fobjnr++;
@@ -436,7 +436,7 @@ kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cva
 	return kmsp;
 }
 
-// B3 ´´½¨Ä³¸öÄÚ´æ¶ÔÏó´óĞ¡µÄÀ©Õ¹ÄÚ´æ³Ø
+// B3 åˆ›å»ºæŸä¸ªå†…å­˜å¯¹è±¡å¤§å°çš„æ‰©å±•å†…å­˜æ± 
 kmsob_t *_create_kmsob(kmsobmgrhed_t *kmmgrlokp, koblst_t *koblp, size_t objsz)
 {
 	if (NULL == kmmgrlokp || NULL == koblp || 1 > objsz) {
@@ -454,7 +454,7 @@ kmsob_t *_create_kmsob(kmsobmgrhed_t *kmmgrlokp, koblst_t *koblp, size_t objsz)
 		pages = 4;
 	}
 	
-    // ÉêÇëÎïÀíÒ³ÄÚ´æ
+    // ç”³è¯·ç‰©ç†é¡µå†…å­˜
     msa = mm_division_pages(&glomm, pages, &relpnr, MA_TYPE_KRNL, DMF_RELDIV);
 	if (NULL == msa) {
 		return NULL;
@@ -486,7 +486,7 @@ kmsob_t *_create_kmsob(kmsobmgrhed_t *kmmgrlokp, koblst_t *koblp, size_t objsz)
 	return kmsp;
 }
 
-// C1  Ö´ĞĞÄÚ´æ¶ÔÏó·ÖÅä²Ù×÷
+// C1  æ‰§è¡Œå†…å­˜å¯¹è±¡åˆ†é…æ“ä½œ
 void *kmsob_new_opkmsob(kmsob_t *kmsp, size_t msz)
 {
 	if (NULL == kmsp || 1 > msz) {
@@ -503,7 +503,7 @@ void *kmsob_new_opkmsob(kmsob_t *kmsp, size_t msz)
     return (void *)(fobh);
 }
 
-// C2 À©Õ¹ÄÚ´æ³Ø
+// C2 æ‰©å±•å†…å­˜æ± 
 bool_t kmsob_extn_pages(kmsob_t *kmsp)
 {
 	if (NULL == kmsp) {
@@ -540,7 +540,7 @@ bool_t kmsob_extn_pages(kmsob_t *kmsp)
 	if (MSCLST_MAX <= mscidx || 0 > mscidx)
 	{ 
 		if (mm_merge_pages(&glomm, msa, relpnr) == FALSE)
-		{ // ·¢ËÍ´íÎó£¬»ØÊÕÄÚ´æÒ³
+		{ // å‘é€é”™è¯¯ï¼Œå›æ”¶å†…å­˜é¡µ
 			system_error("kmsob_extn_pages mm_merge_pages fail\n");
 		}
 		return FALSE;
@@ -586,7 +586,7 @@ void *kmsob_new_onkmsob(kmsob_t *kmsp, size_t msz)
 	cpuflg_t cpuflg;
 	// knl_spinlock_cli(&kmsp->so_lock, &cpuflg);
 	if (scan_kmsob_objnr(kmsp) < 1)
-	{ // µ±Ç°ÄÚ´æ³ØÄÚ´æ¶ÔÏó²»×ã£¬GOTO: À©Õ¹ÄÚ´æ³Ø
+	{ // å½“å‰å†…å­˜æ± å†…å­˜å¯¹è±¡ä¸è¶³ï¼ŒGOTO: æ‰©å±•å†…å­˜æ± 
 		if (kmsob_extn_pages(kmsp) == FALSE)
 		{
 			retptr = NULL;
@@ -602,26 +602,26 @@ ret_step:
 // A
 void *kmsob_new_core(size_t msz)
 {
-	kmsobmgrhed_t *kmobmgrp = &glomm.mo_kmsobmgr;//»ñÈ¡kmsobmgrhed_t½á¹¹µÄµØÖ·
+	kmsobmgrhed_t *kmobmgrp = &glomm.mo_kmsobmgr;//è·å–kmsobmgrhed_tç»“æ„çš„åœ°å€
 	void *retptr = NULL;
 	koblst_t *koblp = NULL;
 	kmsob_t *kmsp = NULL;
 	cpuflg_t cpuflg;
 	// knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
-	// ¸ù¾İÄÚ´æ¶ÔÏó´óĞ¡²éÕÒ²¢·µ»Ø koblst_t(ÄÚ´æ³ØÍĞ¹Ü½á¹¹) ½á¹¹Ö¸Õë
+	// æ ¹æ®å†…å­˜å¯¹è±¡å¤§å°æŸ¥æ‰¾å¹¶è¿”å› koblst_t(å†…å­˜æ± æ‰˜ç®¡ç»“æ„) ç»“æ„æŒ‡é’ˆ
 	koblp = onmsz_retn_koblst(kmobmgrp, msz); 
 	if (NULL == koblp) {
 		retptr = NULL;
 		goto ret_step;
 	}
 	
-	// msz = ALIGN_UP8(msz);  // ¶ÔÆëµ½8×Ö½Ú
+	// msz = ALIGN_UP8(msz);  // å¯¹é½åˆ°8å­—èŠ‚
 
-    // ´Ókoblst_t½á¹¹(ÄÚ´æ³Ø¹ÒÔØµã)ÖĞ»ñÈ¡ kmsob_t½á¹¹(ÄÚ´æ³Ø½á¹¹)
+    // ä»koblst_tç»“æ„(å†…å­˜æ± æŒ‚è½½ç‚¹)ä¸­è·å– kmsob_tç»“æ„(å†…å­˜æ± ç»“æ„)
 	kmsp = onkoblst_retn_newkmsob(koblp, msz);
 	if (NULL == kmsp) {
-        // Ã»ÓĞmsz´óĞ¡µÄÄÚ´æ³Ø£¬ÔòÈ¥½¨Á¢ÕâÑù´óĞ¡µÄÒ»¸öÄÚ´æ³Ø£¬¹ÒÔØµ½koblst_t½á¹¹ÖĞ
+        // æ²¡æœ‰mszå¤§å°çš„å†…å­˜æ± ï¼Œåˆ™å»å»ºç«‹è¿™æ ·å¤§å°çš„ä¸€ä¸ªå†…å­˜æ± ï¼ŒæŒ‚è½½åˆ°koblst_tç»“æ„ä¸­
 		kmsp = _create_kmsob(kmobmgrp, koblp, koblp->ol_sz);
 		if (NULL == kmsp) {
 			retptr = NULL;
@@ -635,18 +635,18 @@ void *kmsob_new_core(size_t msz)
 		goto ret_step;
 	}
 
-	//¸üĞÂkmsobmgrhed_t½á¹¹µÄĞÅÏ¢
+	//æ›´æ–°kmsobmgrhed_tç»“æ„çš„ä¿¡æ¯
 	kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_NEWFLG);
 ret_step:
 	// knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
 	return retptr;
 }
 
-// ÄÚ´æ¶ÔÏó·ÖÅä½Ó¿Ú
+// å†…å­˜å¯¹è±¡åˆ†é…æ¥å£
 void *kmsob_new(size_t msz)
 {
 	if (1 > msz || 2048 < msz)	{
-	//¶ÔÓÚĞ¡ÓÚ1 »òÕß ´óÓÚ2048×Ö½ÚµÄ´óĞ¡²»Ö§³Ö Ö±½Ó·µ»ØNULL±íÊ¾Ê§°Ü
+	//å¯¹äºå°äº1 æˆ–è€… å¤§äº2048å­—èŠ‚çš„å¤§å°ä¸æ”¯æŒ ç›´æ¥è¿”å›NULLè¡¨ç¤ºå¤±è´¥
 		return NULL;
 	}
 	return kmsob_new_core(msz);
@@ -707,7 +707,7 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 	list_for_each_head_dell(tmplst, &kmsp->so_mc.mc_kmobinlst)
 	{
 		msa = list_entry(tmplst, msadsc_t, md_list);
-		list_del(&msa->md_list); // ¶ÏÎïÀíÒ³Á´
+		list_del(&msa->md_list); // æ–­ç‰©ç†é¡µé“¾
 		if (mm_merge_pages(&glomm, msa, (uint_t)kmsp->so_mc.mc_kmobinpnr) == FALSE) {
 			system_error("_destroy_kmsob_core mm_merge_pages FALSE2\n");
 		}
@@ -778,7 +778,7 @@ ret_step:
 	return rets;
 }
 
-// ºËĞÄ
+// æ ¸å¿ƒ
 bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 {
 	kmsobmgrhed_t *kmobmgrp = &glomm.mo_kmsobmgr;
@@ -788,15 +788,15 @@ bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 	cpuflg_t cpuflg;
 	//knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
-	// ¸ù¾İÊÍ·ÅÄÚ´æ¶ÔÏóµÄ´óĞ¡ÔÚkmsobmgrhed_tÖĞ²éÕÒ²¢·µ»Økoblst_t£¬
-	// ÔÚÆäÖĞ¹ÒÔØ×Å¶ÔÓ¦µÄkmsob_t
+	// æ ¹æ®é‡Šæ”¾å†…å­˜å¯¹è±¡çš„å¤§å°åœ¨kmsobmgrhed_tä¸­æŸ¥æ‰¾å¹¶è¿”å›koblst_tï¼Œ
+	// åœ¨å…¶ä¸­æŒ‚è½½ç€å¯¹åº”çš„kmsob_t
 	koblp = onmsz_retn_koblst(kmobmgrp, fsz);
 	if (NULL == koblp) {
 		rets = FALSE;
 		goto ret_step;
 	}
 
-	// ¸ù¾İÊÍ·ÅÄÚ´æ¶ÔÏóµÄµØÖ·ÔÚkoblst_tÖĞ²éÕÒ²¢·µ»Økmsob_t½á¹¹Ìå£¬
+	// æ ¹æ®é‡Šæ”¾å†…å­˜å¯¹è±¡çš„åœ°å€åœ¨koblst_tä¸­æŸ¥æ‰¾å¹¶è¿”å›kmsob_tç»“æ„ä½“ï¼Œ
 	kmsp = onkoblst_retn_delkmsob(koblp, fadrs, fsz);
 	if (NULL == kmsp) {
 		rets = FALSE;
@@ -820,7 +820,7 @@ ret_step:
 	return rets;
 }
 
-// ÊÍ·ÅÄÚ´æ¶ÔÏó½Ó¿Ú
+// é‡Šæ”¾å†…å­˜å¯¹è±¡æ¥å£
 bool_t kmsob_delete(void *fadrs, size_t fsz)
 {
 	if (NULL == fadrs || 1 > fsz || 2048 < fsz)

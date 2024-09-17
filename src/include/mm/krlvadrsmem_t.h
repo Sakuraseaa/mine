@@ -49,7 +49,7 @@ typedef struct KVMEMCBOXMGR
 	spinlock_t kbm_lock;
 	u64_t kbm_flgs;
 	u64_t kbm_stus;	
-	uint_t kbm_kmbnr;
+	uint_t kbm_kmbnr;		// kvmemcbox_tç»“æ„ä¸ªæ•°
 	list_h_t kbm_kmbhead;
 	uint_t kbm_cachenr;
 	uint_t kbm_cachemax;
@@ -57,22 +57,23 @@ typedef struct KVMEMCBOXMGR
 	list_h_t kbm_cachehead;
 	void* kbm_ext;
 }kvmemcboxmgr_t;
+// é¡µé¢ç›’å­çš„å¤´ï¼Œç”¨äºæŒ‚è½½kvmemcbox_tç»“æ„, å…¨å±€çš„æ•°æ®ç»“æ„, ç®¡ç†æ‰€æœ‰çš„kvmemcbox_t
 
 typedef struct KVMEMCBOX 
 {
-	list_h_t kmb_list;
+	list_n_t kmb_list;
 	spinlock_t kmb_lock;
-	refcount_t kmb_cont;
+	refcount_t kmb_cont;		// å…±äº«è®¡æ•°å™¨
 	u64_t kmb_flgs;
 	u64_t kmb_stus;
 	u64_t kmb_type;
-	uint_t kmb_msanr;
-	list_h_t kmb_msalist;
-	kvmemcboxmgr_t* kmb_mgr;
-	void* kmb_filenode;
-	void* kmb_pager;
-	void* kmb_ext;
-}kvmemcbox_t;
+	uint_t kmb_msanr;			// å¤šå°‘ä¸ªmsadsc_t
+	list_h_t kmb_msalist;		// æŒ‚è½½msadsc_tç»“æ„çš„é“¾è¡¨
+	kvmemcboxmgr_t* kmb_mgr;	// æŒ‡å‘ä¸Šå±‚ç»“æ„
+	void* kmb_filenode;			// æŒ‡å‘æ–‡ä»¶èŠ‚ç‚¹æè¿°ç¬¦
+	void* kmb_pager;			// æŒ‡å‘åˆ†é¡µå™¨
+	void* kmb_ext;				// è‡ªèº«æ‰©å±•æ•°æ®æŒ‡é’ˆ
+}kvmemcbox_t;	// é¡µé¢ç›’å­
 
 typedef struct VASLKNODE
 {
@@ -98,22 +99,22 @@ typedef struct PGTABPAGE
 	spinlock_t ptp_lock;
 	list_h_t   ptp_msalist;
 	uint_t     ptp_msanr;
-}pgtabpage_t;
+}pgtabpage_t; // page table page
 
 typedef struct KMVARSDSC
 {
 	spinlock_t kva_lock;
-	u32_t  kva_maptype;  // Ó³ÉäÀàĞÍ
+	u32_t  kva_maptype;  // æ˜ å°„ç±»å‹
 	list_h_t kva_list;
 	u64_t  kva_flgs;
 	u64_t  kva_limits;
 	vaslknode_t kva_lknode;
-	void*  kva_mcstruct;        // Ö¸ÏòËüµÄÉÏ²ã½á¹¹
-	adr_t  kva_start;           // ĞéÄâµØÖ·µÄ¿ªÊ¼
-	adr_t  kva_end;             // ĞéÄâµØÖ·µÄ½áÊø
-	kvmemcbox_t* kva_kvmbox;    // ¹ÜÀíÕâ¸ö½á¹¹Ó³ÉäµÄÎïÀíÒ³Ãæ
+	void*  kva_mcstruct;        // æŒ‡å‘å®ƒçš„ä¸Šå±‚ç»“æ„
+	adr_t  kva_start;           // è™šæ‹Ÿåœ°å€çš„å¼€å§‹
+	adr_t  kva_end;             // è™šæ‹Ÿåœ°å€çš„ç»“æŸ
+	kvmemcbox_t* kva_kvmbox;    // ç®¡ç†è¿™ä¸ªç»“æ„æ˜ å°„çš„ç‰©ç†é¡µé¢
 	void*  kva_kvmcobj;
-}kmvarsdsc_t; // ĞéÄâµØÖ·Çø¼ä
+}kmvarsdsc_t; // è™šæ‹Ÿåœ°å€åŒºé—´ kernel memory virtual address descriptor
 
 typedef struct KVIRMEMADRS
 {
@@ -135,7 +136,7 @@ typedef struct KVIRMEMADRS
 	pgtabpage_t kvs_ptabpgcs;
 	kvmcobjmgr_t kvs_kvmcomgr;
 	kvmemcboxmgr_t kvs_kvmemcboxmgr;
-}kvirmemadrs_t; //  ¹ÜÀíÕû¸öĞéÄâµØÖ·¿Õ¼äµÄkmvarsdsc_t½á¹¹
+}kvirmemadrs_t; // kernel virtual memory address ç®¡ç†æ•´ä¸ªè™šæ‹Ÿåœ°å€ç©ºé—´çš„kmvarsdsc_tç»“æ„
 
 typedef struct s_MMADRSDSC mmadrsdsc_t;
 
@@ -143,42 +144,43 @@ typedef struct s_VIRMEMADRS
 {
 	spinlock_t vs_lock;
 	u32_t  vs_resalin;
-	list_h_t vs_list;
+	list_h_t vs_list;			// é“¾æ¥è™šæ‹Ÿåœ°å€åŒºé—´
 	uint_t vs_flgs;
-	uint_t vs_kmvdscnr;         // ¶àÉÙ¸öĞéÄâµØÖ·Çø¼ä
-	mmadrsdsc_t* vs_mm;         // Ö¸ÏòËüµÄÉÏ²ãµÄÊı¾İ½á¹¹
-	kmvarsdsc_t* vs_startkmvdsc; // ¿ªÊ¼µÄĞéÄâµØÖ·Çø¼ä
-	kmvarsdsc_t* vs_endkmvdsc;   // ½áÊøµÄĞéÄâµØÖ·Çø¼ä
-	kmvarsdsc_t* vs_currkmvdsc;  // µ±Ç°µÄĞéÄâµØÖ·Çø¼ä
+	uint_t vs_kmvdscnr;         // å¤šå°‘ä¸ªè™šæ‹Ÿåœ°å€åŒºé—´
+	mmadrsdsc_t* vs_mm;         // æŒ‡å‘å®ƒçš„ä¸Šå±‚çš„æ•°æ®ç»“æ„
+	kmvarsdsc_t* vs_startkmvdsc; // å¼€å§‹çš„è™šæ‹Ÿåœ°å€åŒºé—´
+	kmvarsdsc_t* vs_endkmvdsc;   // ç»“æŸçš„è™šæ‹Ÿåœ°å€åŒºé—´
+	kmvarsdsc_t* vs_currkmvdsc;  // å½“å‰çš„è™šæ‹Ÿåœ°å€åŒºé—´
 	kmvarsdsc_t* vs_krlmapdsc;
 	kmvarsdsc_t* vs_krlhwmdsc;
 	kmvarsdsc_t* vs_krlolddsc;
-	adr_t vs_isalcstart;         // ÄÜ·ÖÅäµÄ¿ªÊ¼ĞéÄâµØÖ·
-	adr_t vs_isalcend;           // ÄÜ·ÖÅäµÄ½áÊøĞéÄâµØÖ·
-	void* vs_privte;             // Ë½ÓĞÊı¾İÖ¸Õë
-	void* vs_ext;
-}virmemadrs_t;
+	adr_t vs_isalcstart;         // èƒ½åˆ†é…çš„å¼€å§‹è™šæ‹Ÿåœ°å€
+	adr_t vs_isalcend;           // èƒ½åˆ†é…çš„ç»“æŸè™šæ‹Ÿåœ°å€
+	void* vs_privte;             // ç§æœ‰æ•°æ®æŒ‡é’ˆ
+	void* vs_ext;				 // æ‰©å±•æ•°æ®æŒ‡é’ˆ
+}virmemadrs_t; // virtual memory address
 
+// å¸¸è§„æ“ä½œå°±æ˜¯æŠŠåŒä¸€ä¸ªç‰©ç†å†…å­˜é¡µé¢æ˜ å°„åˆ°ä¸åŒçš„è™šæ‹Ÿåœ°å€åŒºé—´
 typedef struct s_MMADRSDSC
 {
 	spinlock_t msd_lock;
 	list_h_t msd_list;
 	uint_t msd_flag;
 	uint_t msd_stus;
-	uint_t msd_scount;  // ¼ÆÊı£¬¸Ã½á¹¹¿ÉÄÜ±»¹²Ïí
-	// sem_t  msd_sem;     // ĞÅºÅÁ¿
-	// mmudsc_t msd_mmu;   // ¹ÜÀí MMUÏà¹ØĞÅÏ¢
-	virmemadrs_t msd_virmemadrs;    // ĞéÄâµØÖ·¿Õ¼ä
+	uint_t msd_scount;  // è®¡æ•°ï¼Œè¯¥ç»“æ„å¯èƒ½è¢«å…±äº«
+	// sem_t  msd_sem;     // ä¿¡å·é‡
+	// mmudsc_t msd_mmu;   // ç®¡ç† MMUç›¸å…³ä¿¡æ¯
+	virmemadrs_t msd_virmemadrs;    // è™šæ‹Ÿåœ°å€ç©ºé—´
 
-	adr_t msd_stext;
+	adr_t msd_stext;	// åº”ç”¨çš„æŒ‡ä»¤åŒºçš„å¼€å§‹ï¼Œç»“æŸåœ°å€
 	adr_t msd_etext;
-	adr_t msd_sdata;
+	adr_t msd_sdata;	// åº”ç”¨çš„æ•°æ®åŒºçš„å¼€å§‹ï¼Œç»“æŸåœ°å€
 	adr_t msd_edata;
 	adr_t msd_sbss;
 	adr_t msd_ebss;
-	adr_t msd_sbrk;
+	adr_t msd_sbrk;		// åº”ç”¨çš„å †åŒºçš„å¼€å§‹ï¼Œç»“æŸåœ°å€
 	adr_t msd_ebrk;
-}mmadrsdsc_t; // ¹ÜÀí½ø³ÌµÄĞéÄâµØÖ·
+}mmadrsdsc_t; // ç®¡ç†è¿›ç¨‹çš„è™šæ‹Ÿåœ°å€, memory address descriptor
 
 
 #define VADSZ_ALIGN(x) ALIGN(x,0x1000)

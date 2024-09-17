@@ -1,5 +1,6 @@
 #include "types.h"
 #include "lib.h"
+#include "basetype.h"
 
 // verify: 核实， 检测数据是否越过用户层界限
 long verify_area(unsigned char *addr, unsigned long size)
@@ -155,6 +156,23 @@ long list_is_empty_careful(const list_h_t *head)
 	return 0;
 }
 
+bool_t list_is_last(const list_h_t* list, const list_h_t* head)
+{
+	if(list->next == head)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
+bool_t list_is_first(const list_h_t* list, const list_h_t* head)
+{
+	if(list->prev == head)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
 
 /*
         From => To memory copy Num bytes

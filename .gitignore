@@ -1,6 +1,6 @@
 /build
 /tmp
-/bochs/boot.img
+./bochs/boot.img
 *.o
 *.s~
 *.s
