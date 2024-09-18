@@ -35,6 +35,9 @@
 // 把物理地址转换成虚拟地址，这种切换的把戏，只有一一映射，才能使用
 #define Phy_To_Virt(addr) ((unsigned long *)((unsigned long)(addr) + PAGE_OFFSET))
 
+adr_t viradr_to_phyadr(adr_t kviradr);
+adr_t phyadr_to_viradr(adr_t kphyadr);
+
 #define Virt_To_2M_Page(kaddr) (memory_management_struct.pages_struct + (Virt_To_Phy(kaddr) >> PAGE_2M_SHIFT))
 #define Phy_to_2M_Page(kaddr) (memory_management_struct.pages_struct + ((unsigned long)(kaddr) >> PAGE_2M_SHIFT))
 

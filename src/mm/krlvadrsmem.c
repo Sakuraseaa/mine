@@ -7,7 +7,7 @@
 #include "basetype.h"
 #include "msadsc_t.h"
 #include "memmgrob.h"
-#include "halmmu_t.h"
+#include "halmmu.h"
 #include "memdivmer_t.h"
 extern memmgrob_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
@@ -183,20 +183,20 @@ kmvarsdsc_t *new_kmvarsdsc()
 {
 	kmvarsdsc_t *kmvdc = NULL;
 	kmvdc = (kmvarsdsc_t *)kmsob_new(sizeof(kmvarsdsc_t));
-	if (NULL == kmvdc)
-	{
+	if (NULL == kmvdc) {
 		return NULL;
 	}
+
 	kmvarsdsc_t_init(kmvdc);
 	return kmvdc;
 }
 
 bool_t del_kmvarsdsc(kmvarsdsc_t *delkmvd)
 {
-	if (NULL == delkmvd)
-	{
+	if (NULL == delkmvd) {
 		return FALSE;
 	}
+
 	return kmsob_delete((void *)delkmvd, sizeof(kmvarsdsc_t));
 }
 
@@ -221,29 +221,27 @@ bool_t del_kmvarsdsc(kmvarsdsc_t *delkmvd)
 // 	return kmsob_delete((void *)vmdsc, sizeof(virmemadrs_t));
 // }
 
-// void kvma_seting_kvirmemadrs(kvirmemadrs_t *kvma)
-// {
-// 	kmvarsdsc_t *kmvdc = NULL;
-// 	if (NULL == kvma)
-// 	{
-// 		system_error("kvma_seting_kvirmemadrs parm err\n");
-// 	}
-// 	kmvdc = new_kmvarsdsc();
-// 	if (NULL == kmvdc)
-// 	{
-// 		system_error("kvma_seting_kvirmemadrs nomem err\n");
-// 	}
-// 	kvma->kvs_isalcstart = KRNL_VIRTUAL_ADDRESS_START + KRNL_MAP_VIRTADDRESS_SIZE;
-// 	kvma->kvs_isalcend = KRNL_VIRTUAL_ADDRESS_END;
-// 	kmvdc->kva_start = KRNL_VIRTUAL_ADDRESS_START;
-// 	kmvdc->kva_end = KRNL_VIRTUAL_ADDRESS_START + KRNL_MAP_VIRTADDRESS_SIZE;
-// 	kmvdc->kva_mcstruct = kvma;
-// 	kvma->kvs_startkmvdsc = kmvdc;
-// 	kvma->kvs_endkmvdsc = kmvdc;
-// 	kvma->kvs_krlmapdsc = kmvdc;
-// 	kvma->kvs_kmvdscnr++;
-// 	return;
-// }
+void kvma_seting_kvirmemadrs(kvirmemadrs_t *kvma)
+{
+	kmvarsdsc_t *kmvdc = NULL;
+	if (NULL == kvma) {
+		system_error("kvma_seting_kvirmemadrs parm err\n");
+	}
+	kmvdc = new_kmvarsdsc();
+	if (NULL == kmvdc) {
+		system_error("kvma_seting_kvirmemadrs nomem err\n");
+	}
+	kvma->kvs_isalcstart = KRNL_VIRTUAL_ADDRESS_START + KRNL_MAP_VIRTADDRESS_SIZE;
+	kvma->kvs_isalcend = KRNL_VIRTUAL_ADDRESS_END;
+	kmvdc->kva_start = KRNL_VIRTUAL_ADDRESS_START;
+	kmvdc->kva_end = KRNL_VIRTUAL_ADDRESS_START + KRNL_MAP_VIRTADDRESS_SIZE;
+	kmvdc->kva_mcstruct = kvma;
+	kvma->kvs_startkmvdsc = kmvdc;
+	kvma->kvs_endkmvdsc = kmvdc;
+	kvma->kvs_krlmapdsc = kmvdc;
+	kvma->kvs_kmvdscnr++;
+	return;
+}
 
 bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 {
@@ -287,8 +285,7 @@ bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 
 void mmadrsdsc_t_init(mmadrsdsc_t* initp)
 {
-	if(NULL == initp)
-	{
+	if (NULL == initp) {
 		return;
 	}
 	spin_init(&initp->msd_lock);
@@ -298,7 +295,7 @@ void mmadrsdsc_t_init(mmadrsdsc_t* initp)
 	initp->msd_scount = 0;
 	// krlsem_t_init(&initp->msd_sem);
 	// krlsem_set_sem(&initp->msd_sem, SEM_FLG_MUTEX, SEM_MUTEX_ONE_LOCK);
-	// mmudsc_t_init(&initp->msd_mmu);
+	mmudsc_t_init(&initp->msd_mmu);
 	virmemadrs_t_init(&initp->msd_virmemadrs);
 	initp->msd_stext = 0;
 	initp->msd_etext = 0;
@@ -316,11 +313,10 @@ void init_kvirmemadrs()
 {
 	mmadrsdsc_t_init(&initmmadrsdsc);
 	kvirmemadrs_t_init(&krlvirmemadrs);
-	// kvma_seting_kvirmemadrs(&krlvirmemadrs);
+	kvma_seting_kvirmemadrs(&krlvirmemadrs);
 	kvma_inituserspace_virmemadrs(&initmmadrsdsc.msd_virmemadrs);
-	// hal_mmu_init(&initmmadrsdsc.msd_mmu);
-	// hal_mmu_load(&initmmadrsdsc.msd_mmu);
-	// test_vadr();
+	hal_mmu_init(&initmmadrsdsc.msd_mmu);
+	hal_mmu_load(&initmmadrsdsc.msd_mmu);
 	return;
 }
 
@@ -679,7 +675,7 @@ void test_vadr()
 	}
 	
 	int* p = (int*)vadr;
-	*p = 20;
+	*p = 20; // 触发缺页中断
 	
 	return;
 }
@@ -938,12 +934,12 @@ adr_t vma_map_msa_fault(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t 
     phyadrs = msadsc_ret_addr(usermsa);
     
 	// 建立MMU页表完成虚拟地址到物理地址的映射
-    // if (hal_mmu_transform(&mm->msd_mmu, vadrs, phyadrs, flags) == TRUE)
-    // {//映射成功则返回物理地址
-    //     return phyadrs;
-    // }
-    // //映射失败就要先释放分配的物理内存页面
-    // vma_del_usermsa(mm, kmbox, usermsa, phyadrs);
+    if (hal_mmu_transform(&mm->msd_mmu, vadrs, phyadrs, flags) == TRUE)
+    {//映射成功则返回物理地址
+        return phyadrs;
+    }
+    //映射失败就要先释放分配的物理内存页面
+    vma_del_usermsa(mm, kmbox, usermsa, phyadrs);
     return INVIALID;
 }
 
@@ -1023,7 +1019,7 @@ sint_t vma_map_fairvadrs_core(mmadrsdsc_t *mm, adr_t vadrs)
         goto out;
     }
     //分配物理内存页面并建立MMU页表
-    // phyadrs = vma_map_phyadrs(mm, kmvd, vadrs, (0 | PML4E_US | PML4E_RW | PML4E_P));
+    phyadrs = vma_map_phyadrs(mm, kmvd, vadrs, (0 | PML4E_US | PML4E_RW | PML4E_P));
     if (INVIALID == phyadrs) {
         rets = -ENOMEM;
         goto out;

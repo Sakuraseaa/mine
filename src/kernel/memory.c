@@ -1284,8 +1284,10 @@ u64 do_wp_page(u64 virtual_address) {
  *配合exec
  * @param address The address that cause the exception
  */
+extern long krluserspace_accessfailed(adr_t fairvadrs);
 void do_no_page(u64 virtual_address)
 {
+    krluserspace_accessfailed(virtual_address);
 }
 
 /**
@@ -1304,3 +1306,10 @@ void do_no_page(u64 virtual_address)
 //        : "m"(vaddr)
 //        : "memory");
 // }
+adr_t viradr_to_phyadr(adr_t kviradr) {
+    return (adr_t)Virt_To_Phy(kviradr);
+}
+
+adr_t phyadr_to_viradr(adr_t kphyadr) {
+    return (adr_t)Phy_To_Virt(kphyadr);
+}

@@ -36,7 +36,8 @@
         "krlmm.h": "c",
         "stat.h": "c",
         "dirent.h": "c",
-        "kmsob_t.h": "c"
+        "kmsob_t.h": "c",
+        "halmmu.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

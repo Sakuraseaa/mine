@@ -1,13 +1,34 @@
 #include "bastype.h"
 #include "halmmu_t.h"
 #include "msadsc_t.h"
+#include "memmgrob.h"
+#include "memdivmer_t.h"
+#include "halmmu.h"
+#include "errno.h"
+#include "memory.h"
+#include "spinlock.h"
+#include "printk.h"
+extern memmgrob_t glomm;
 
-void cr3s_t_init(cr3s_t* init)
+uint_t read_cr3()
 {
-    if (NULL == init) {
-        return;
-    }
-    init->c3s_entry = 0;
+    uint_t regtmp = 0;
+    __asm__ __volatile__(
+        "movq %%cr3,%0\n\t"
+        : "=r"(regtmp)
+        :
+        : "memory");
+    return regtmp;
+}
+
+void write_cr3(uint_t r_val)
+{
+    __asm__ __volatile__(
+        "movq %0,%%cr3 \n\t"
+        :
+        : "r"(r_val)
+        : "memory" //, "edx"
+    );
     return;
 }
 
@@ -17,7 +38,7 @@ void mmudsc_t_init(mmudsc_t* init)
         return;
     }
 
-    spinlock_init(&init->mud_lock);
+    spin_init(&init->mud_lock);
 	init->mud_stus = 0;
 	init->mud_flag = 0;
 	init->mud_tdirearr = NULL;
@@ -38,14 +59,12 @@ msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
     tdirearr_t* tdirearr = NULL;
 	u64_t pages = 1, retpnr = 0;
     msadsc_t* msa = NULL;
-    if(NULL == mmulocked)
-    {
+    if(NULL == mmulocked) {
         return NULL;
     }
     
-	msa = mm_division_pages(&memmgrob, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
-	if(NULL == msa)
-	{
+	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+	if(NULL == msa) {
 		return NULL;
 	}
 
@@ -53,7 +72,7 @@ msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
 
     tdirearr_t_init(tdirearr);
 
-    list_add(&msa->md_list, &mmulocked->mud_tdirhead);
+    list_add(&msa->md_list, &mmulocked->mud_tdirhead);     list_add(&mmulocked->mud_tdirhead, &msa->md_list);
     mmulocked->mud_tdirmsanr++;
 	mmulocked->mud_tdirearr = tdirearr;
 
@@ -77,7 +96,7 @@ bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
 			list_del(&msa->md_list);
-			if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+			if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -92,7 +111,7 @@ bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa
 		if(msadsc_ret_addr(tmpmsa) == tblphyadr)
 		{
 			list_del(&tmpmsa->md_list);
-			if(mm_merge_pages(&memmgrob, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
+			if(mm_merge_pages(&glomm, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -114,7 +133,7 @@ msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
         return NULL;
     }
     
-	msa = mm_division_pages(&memmgrob, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
 	if(NULL == msa)
 	{
 		return NULL;
@@ -146,7 +165,7 @@ bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
 			list_del(&msa->md_list);
-			if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+			if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -161,7 +180,7 @@ bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa
 		if(msadsc_ret_addr(tmpmsa) == tblphyadr)
 		{
 			list_del(&tmpmsa->md_list);
-			if(mm_merge_pages(&memmgrob, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
+			if(mm_merge_pages(&glomm, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -183,7 +202,7 @@ msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
         return NULL;
     }
     
-	msa = mm_division_pages(&memmgrob, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
 	if(NULL == msa)
 	{
 		return NULL;
@@ -216,7 +235,7 @@ bool_t mmu_del_idirearr(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
 			list_del(&msa->md_list);
-			if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+			if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -231,7 +250,7 @@ bool_t mmu_del_idirearr(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa
 		if(msadsc_ret_addr(tmpmsa) == tblphyadr)
 		{
 			list_del(&tmpmsa->md_list);
-			if(mm_merge_pages(&memmgrob, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
+			if(mm_merge_pages(&glomm, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -253,7 +272,7 @@ msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
         return NULL;
     }
     
-	msa = mm_division_pages(&memmgrob, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
 	if(NULL == msa)
 	{
 		return NULL;
@@ -285,7 +304,7 @@ bool_t mmu_del_mdirearr(mmudsc_t* mmulocked, mdirearr_t* mdirearr, msadsc_t* msa
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
 			list_del(&msa->md_list);
-			if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+			if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -300,7 +319,7 @@ bool_t mmu_del_mdirearr(mmudsc_t* mmulocked, mdirearr_t* mdirearr, msadsc_t* msa
 		if(msadsc_ret_addr(tmpmsa) == tblphyadr)
 		{
 			list_del(&tmpmsa->md_list);
-			if(mm_merge_pages(&memmgrob, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
+			if(mm_merge_pages(&glomm, tmpmsa, onfrmsa_retn_fpagenr(tmpmsa)) == FALSE)
 			{
 				system_error("mmu_del_tdirearr err\n");
 				return FALSE;
@@ -319,7 +338,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 	adr_t retadr;
 	if(NULL == mmulocked || NULL == mdirearr)
 	{
-		return NULL;
+		return INVIALID;
 	}
 
 	mindex = mmu_mdire_index(vadrs);
@@ -327,7 +346,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 	mdire = mdirearr->mde_arr[mindex];
 	if(mmumsa_is_have(&mdire) == FALSE)
 	{
-		return NULL;
+		return INVIALID;
 	}
 
 	retadr = mmumsa_ret_padr(&mdire);
@@ -535,16 +554,14 @@ sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t
 	adr_t dire;
 	sdirearr_t* sdirearr = NULL;
 	msadsc_t* msa = NULL;
-	if(NULL == mmulocked || NULL == tdirearr || NULL == outmsa)
-	{
+	if (NULL == mmulocked || NULL == tdirearr || NULL == outmsa) {
 		return NULL;
 	}
 	
 	tindex = mmu_tdire_index(vadrs);
 	
 	tdire = tdirearr->tde_arr[tindex];
-	if(sdire_is_have(&tdire) == TRUE)
-	{
+	if (sdire_is_have(&tdire) == TRUE) {
 		sdirearr = tdire_ret_sdirearr(&tdire);
 		*outmsa = NULL;
 		return sdirearr;
@@ -577,18 +594,16 @@ bool_t hal_mmu_transform_core(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t fla
 	msadsc_t* imsa = NULL;
 	msadsc_t* mmsa = NULL;
 
-	knl_spinlock(&mmu->mud_lock);
+	// knl_spinlock(&mmu->mud_lock);
 	
 	tdirearr = mmu->mud_tdirearr;
-	if(NULL == tdirearr)
-	{
+	if(NULL == tdirearr) {
 		rets = FALSE;
 		goto out;
 	}
 
 	sdirearr = mmu_transform_sdire(mmu, tdirearr, vadrs, flags, &smsa);
-	if(NULL == sdirearr)
-	{
+	if(NULL == sdirearr) {
 		rets = FALSE;
 		goto untf_sdire;		
 	}
@@ -625,7 +640,7 @@ untf_idire:
 untf_sdire:
 	mmu_untransform_sdire(mmu, tdirearr, smsa, vadrs);	
 out:
-	knl_spinunlock(&mmu->mud_lock);
+	// knl_spinunlock(&mmu->mud_lock);
 	return rets;
 }
 
@@ -633,7 +648,7 @@ bool_t hal_mmu_transform(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	if(NULL == mmu)
 	{
-		return NULL;
+		return FALSE;
 	}
 	return hal_mmu_transform_core(mmu, vadrs, padrs, flags);
 }
@@ -642,9 +657,8 @@ adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
 {
 	uint_t mindex;
 	mdire_t dire;
-	if(NULL == mdirearr)
-	{
-		return NULL;
+	if (NULL == mdirearr) {
+		return INVIALID;
 	}
 
 	mindex = mmu_mdire_index(vadrs);
@@ -653,7 +667,7 @@ adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
 
 	if(mmumsa_is_have(&dire) == FALSE)
 	{
-		return NULL;
+		return INVIALID;
 	}
 
 	return mmumsa_ret_padr(&dire);
@@ -730,25 +744,25 @@ adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 	sdirearr_t* sdirearr;
 	idirearr_t* idirearr;
 	mdirearr_t* mdirearr;
-	knl_spinlock(&mmu->mud_lock);
+//	knl_spinlock(&mmu->mud_lock);
 	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
 	if(NULL == sdirearr)
 	{
-		retadr = NULL;
+		retadr = INVIALID;
 		goto out;
 	}
 
 	idirearr = mmu_find_idirearr(sdirearr, vadrs);
 	if(NULL == idirearr)
 	{
-		retadr = NULL;
+		retadr = INVIALID;
 		goto untf_sdirearr;
 	}
 
 	mdirearr = mmu_find_mdirearr(idirearr, vadrs);
 	if(NULL == mdirearr)
 	{
-		retadr = NULL;
+		retadr = INVIALID;
 		goto untf_idirearr; 
 	}
 	
@@ -760,7 +774,7 @@ untf_idirearr:
 untf_sdirearr:
 	mmu_untransform_sdire(mmu, mmu->mud_tdirearr, NULL, vadrs);
 out:	
-	knl_spinunlock(&mmu->mud_lock);
+//	knl_spinunlock(&mmu->mud_lock);
 	return retadr;
 }
 
@@ -775,12 +789,11 @@ adr_t hal_mmu_untransform(mmudsc_t* mmu, adr_t vadrs)
 
 void hal_mmu_load(mmudsc_t* mmu)
 {
-	if(NULL == mmu)
-	{
+	if(NULL == mmu) {
 		return;
 	}
 	
-	knl_spinlock(&mmu->mud_lock);
+	// knl_spinlock(&mmu->mud_lock);
 	if(NULL == mmu->mud_tdirearr || 0 != (((u64_t)(mmu->mud_tdirearr)) & 0xfff))
 	{
 		goto out;
@@ -790,7 +803,7 @@ void hal_mmu_load(mmudsc_t* mmu)
 	write_cr3((uint_t)(mmu->mud_cr3.c3s_entry));
 
 out:
-	knl_spinunlock(&mmu->mud_lock);	
+	// knl_spinunlock(&mmu->mud_lock);	
 	return;
 }
 
@@ -805,14 +818,13 @@ void hal_mmu_refresh()
 bool_t hal_mmu_init(mmudsc_t* mmu)
 {
 	bool_t  rets = FALSE;
-	adr_t pcr3 = NULL, vcr3 = NULL;
+	adr_t pcr3 = INVIALID, vcr3 = INVIALID;
 	cr3s_t cr3;
-	if(NULL == mmu)
-	{
+	if(NULL == mmu) {
 		return FALSE;
 	}
 
-	knl_spinlock(&mmu->mud_lock);
+	// knl_spinlock(&mmu->mud_lock);
 
 	if(mmu_new_tdirearr(mmu) == NULL)
 	{
@@ -825,14 +837,14 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 	pcr3 = (adr_t)(cr3.c3s_c3sflgs.c3s_plm4a << 12);
 	vcr3 = phyadr_to_viradr(pcr3);
 
-	hal_memcpy((void*)vcr3, (void*)mmu->mud_tdirearr, sizeof(tdirearr_t));
+	memcpy((void*)vcr3, (void*)mmu->mud_tdirearr, sizeof(tdirearr_t));
 	
 	mmu->mud_cr3.c3s_entry = (u64_t)viradr_to_phyadr((adr_t)mmu->mud_tdirearr);
 	mmu->mud_tdirearr->tde_arr[0].t_entry = 0;
 	rets = TRUE;
 
 out:	
-	knl_spinunlock(&mmu->mud_lock);
+	// knl_spinunlock(&mmu->mud_lock);
 	return rets;
 }
 
@@ -848,7 +860,7 @@ bool_t mmu_clean_mdirearrmsas(mmudsc_t* mmulocked)
 	{
 		msa = list_entry(pos, msadsc_t, md_list);
 		list_del(&msa->md_list);
-		if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+		if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 		{
 			system_error("mmu_clean_mdirearrmsas");
 			return FALSE;
@@ -870,7 +882,7 @@ bool_t mmu_clean_idirearrmsas(mmudsc_t* mmulocked)
 	{
 		msa = list_entry(pos, msadsc_t, md_list);
 		list_del(&msa->md_list);
-		if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+		if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 		{
 			system_error("mmu_clean_idirearrmsas");
 			return FALSE;
@@ -892,7 +904,7 @@ bool_t mmu_clean_sdirearrmsas(mmudsc_t* mmulocked)
 	{
 		msa = list_entry(pos, msadsc_t, md_list);
 		list_del(&msa->md_list);
-		if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+		if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 		{
 			system_error("mmu_clean_sdirearrmsas");
 			return FALSE;
@@ -914,7 +926,7 @@ bool_t mmu_clean_tdirearrmsas(mmudsc_t* mmulocked)
 	{
 		msa = list_entry(pos, msadsc_t, md_list);
 		list_del(&msa->md_list);
-		if(mm_merge_pages(&memmgrob, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
+		if(mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa)) == FALSE)
 		{
 			system_error("mmu_clean_tdirearrmsas");
 			return FALSE;
@@ -927,14 +939,14 @@ bool_t mmu_clean_tdirearrmsas(mmudsc_t* mmulocked)
 bool_t hal_mmu_clean(mmudsc_t* mmu)
 {
 	bool_t  rets = FALSE;
-	adr_t pcr3 = NULL, vcr3 = NULL;
+	adr_t pcr3 = INVIALID, vcr3 = INVIALID;
 	cr3s_t cr3;
 	if(NULL == mmu)
 	{
 		return FALSE;
 	}
 
-	knl_spinlock(&mmu->mud_lock);
+	// knl_spinlock(&mmu->mud_lock);
 
 	cr3.c3s_entry = (u64_t)read_cr3();
 
@@ -974,7 +986,7 @@ bool_t hal_mmu_clean(mmudsc_t* mmu)
 	rets = TRUE;
 
 out:	
-	knl_spinunlock(&mmu->mud_lock);
+	//knl_spinunlock(&mmu->mud_lock);
 	return rets;
 }
 
@@ -984,16 +996,16 @@ void dump_mmu(mmudsc_t* dump)
 	{
 		return;
 	}
-	kprint("mmudsc_t.mud_tdirearr:%x\n", dump->mud_tdirearr);
-	kprint("mmudsc_t.mud_cr3:%x\n", dump->mud_cr3.c3s_entry);
-	kprint("mmudsc_t.mud_tdirmsanr:%x\n", dump->mud_tdirmsanr);
-	kprint("mmudsc_t.mud_sdirmsanr:%x\n", dump->mud_sdirmsanr);
-	kprint("mmudsc_t.mud_idirmsanr:%x\n", dump->mud_idirmsanr);
-	kprint("mmudsc_t.mud_mdirmsanr:%x\n", dump->mud_mdirmsanr);
-	kprint("mmudsc_t.mud_tdirhead:%x\n", list_is_empty_careful(&dump->mud_tdirhead));
-	kprint("mmudsc_t.mud_sdirhead:%x\n", list_is_empty_careful(&dump->mud_sdirhead));
-	kprint("mmudsc_t.mud_idirhead:%x\n", list_is_empty_careful(&dump->mud_idirhead));
-	kprint("mmudsc_t.mud_mdirhead:%x\n", list_is_empty_careful(&dump->mud_mdirhead));
+	// kprint("mmudsc_t.mud_tdirearr:%x\n", dump->mud_tdirearr);
+	// kprint("mmudsc_t.mud_cr3:%x\n", dump->mud_cr3.c3s_entry);
+	// kprint("mmudsc_t.mud_tdirmsanr:%x\n", dump->mud_tdirmsanr);
+	// kprint("mmudsc_t.mud_sdirmsanr:%x\n", dump->mud_sdirmsanr);
+	// kprint("mmudsc_t.mud_idirmsanr:%x\n", dump->mud_idirmsanr);
+	// kprint("mmudsc_t.mud_mdirmsanr:%x\n", dump->mud_mdirmsanr);
+	// kprint("mmudsc_t.mud_tdirhead:%x\n", list_is_empty_careful(&dump->mud_tdirhead));
+	// kprint("mmudsc_t.mud_sdirhead:%x\n", list_is_empty_careful(&dump->mud_sdirhead));
+	// kprint("mmudsc_t.mud_idirhead:%x\n", list_is_empty_careful(&dump->mud_idirhead));
+	// kprint("mmudsc_t.mud_mdirhead:%x\n", list_is_empty_careful(&dump->mud_mdirhead));
 	return;
 }
 

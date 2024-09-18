@@ -11,6 +11,7 @@ extern memmgrob_t glomm;
 extern struct Global_Memory_Descriptor memory_management_struct;
 #define PMR_T_OSAPUSERRAM 1
 
+
 void msadsc_t_init(msadsc_t *initp)
 {
 	list_init(&initp->md_list);
@@ -243,7 +244,15 @@ void init_search_krloccupymm()
 adr_t msadsc_ret_addr(msadsc_t *msa)
 {
     if (NULL == msa) {
-        return 0;
+        return INVIALID;
     }
     return (msa->md_phyadrs.paf_padrs << PAGPHYADR_SZLSHBIT);
+}
+
+adr_t msadsc_ret_vaddr(msadsc_t *msa)
+{
+    if (NULL == msa) {
+        return INVIALID;
+    }
+    return (adr_t)Phy_To_Virt(msadsc_ret_addr(msa));
 }

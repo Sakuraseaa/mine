@@ -29,8 +29,8 @@ OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.
 		$(BUI_DIR)/bitmap.o $(BUI_DIR)/minix.o  $(BUI_DIR)/device.o $(BUI_DIR)/super.o $(BUI_DIR)/inode.o\
 		$(BUI_DIR)/usr_printf.o $(BUI_DIR)/usr_init.o  $(BUI_DIR)/usr_LIB.o $(BUI_DIR)/usr_lib.o \
 		$(BUI_DIR)/mem_test.o $(BUI_DIR)/memmgrinit.o $(BUI_DIR)/msadsc.o $(BUI_DIR)/memarea.o 	\
-		$(BUI_DIR)/memdivmer.o $(BUI_DIR)/kmsob.o $(BUI_DIR)/krlmm.o $(BUI_DIR)/krlvadrsmem.o\
-
+		$(BUI_DIR)/memdivmer.o $(BUI_DIR)/kmsob.o $(BUI_DIR)/krlmm.o $(BUI_DIR)/krlvadrsmem.o \
+		$(BUI_DIR)/halmmu.o \
 
 
 OBJS_SCRIPT = $(BUI_DIR)/kallsyms.o
@@ -141,8 +141,6 @@ $(BUI_DIR)/execv.o: $(SRC_DIR)/lib/execv.c
 
 
 # =========== try mm =============
-$(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS)-o $@ $^
 $(BUI_DIR)/msadsc.o: $(SRC_DIR)/mm/msadsc.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/memarea.o: $(SRC_DIR)/mm/memarea.c
@@ -156,6 +154,8 @@ $(BUI_DIR)/kmsob.o: $(SRC_DIR)/mm/kmsob.c
 $(BUI_DIR)/krlmm.o: $(SRC_DIR)/mm/krlmm.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/krlvadrsmem.o: $(SRC_DIR)/mm/krlvadrsmem.c
+	@$(CC) $(CFLAGS) $< -o $@
+$(BUI_DIR)/halmmu.o: $(SRC_DIR)/mm/halmmu.c
 	@$(CC) $(CFLAGS) $< -o $@
 # ================================
 

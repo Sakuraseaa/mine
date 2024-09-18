@@ -264,6 +264,7 @@ void do_page_fault(struct pt_regs * regs,unsigned long error_code)
 	if(!(error_code & 0x01)) {
 		color_printk(RED,BLACK,"Page Not-Present! address: %x\t", cr2);
 		do_no_page(cr2);
+		return;
 	}
 	if(error_code & 0x02) {
 		// color_printk(RED,BLACK,"Write Cause Fault,\t");
