@@ -5,6 +5,6 @@ void init_krlmm()
 {
     init_kvirmemadrs();
 
-    test_vadr();
+   // test_vadr();
     return;
 }

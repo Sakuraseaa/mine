@@ -153,11 +153,14 @@ void do_invalid_TSS(struct pt_regs * regs,unsigned long error_code)
 	else
 		color_printk(RED,BLACK,"Refers to a descriptor in the GDT or the current LDT;\n");
 
-	if((error_code & 0x02) == 0)
-		if(error_code & 0x04)
+	if ((error_code & 0x02) == 0)
+	{
+		if(error_code & 0x04) {
 			color_printk(RED,BLACK,"Refers to a segment or gate descriptor in the LDT;\n");
-		else
+		} else {
 			color_printk(RED,BLACK,"Refers to a descriptor in the current GDT;\n");
+		}
+	}
 
 	color_printk(RED,BLACK,"Segment Selector Index:%#010x\n",error_code & 0xfff8);
 
@@ -180,12 +183,14 @@ void do_segment_not_present(struct pt_regs * regs,unsigned long error_code)
 	else
 		color_printk(RED,BLACK,"Refers to a descriptor in the GDT or the current LDT;\n");
 
-	if((error_code & 0x02) == 0)
-		if(error_code & 0x04)
+	if ((error_code & 0x02) == 0)
+	{
+		if (error_code & 0x04) {
 			color_printk(RED,BLACK,"Refers to a segment or gate descriptor in the LDT;\n");
-		else
+		} else {
 			color_printk(RED,BLACK,"Refers to a descriptor in the current GDT;\n");
-
+		}
+	}
 	color_printk(RED,BLACK,"Segment Selector Index:%#010x\n",error_code & 0xfff8);
 
 	display_regs(regs);
@@ -206,11 +211,12 @@ void do_stack_segment_fault(struct pt_regs * regs,unsigned long error_code)
 	else
 		color_printk(RED,BLACK,"Refers to a descriptor in the GDT or the current LDT;\n");
 
-	if((error_code & 0x02) == 0)
+	if((error_code & 0x02) == 0) {
 		if(error_code & 0x04)
 			color_printk(RED,BLACK,"Refers to a segment or gate descriptor in the LDT;\n");
 		else
 			color_printk(RED,BLACK,"Refers to a descriptor in the current GDT;\n");
+	}
 
 	color_printk(RED,BLACK,"Segment Selector Index:%#010x\n",error_code & 0xfff8);
 
@@ -233,11 +239,12 @@ void do_general_protection(struct pt_regs * regs,unsigned long error_code)
 	else
 		color_printk(RED,BLACK,"Refers to a descriptor in the GDT or the current LDT;\n");
 
-	if((error_code & 0x02) == 0)
+	if((error_code & 0x02) == 0){
 		if(error_code & 0x04)
 			color_printk(RED,BLACK,"Refers to a segment or gate descriptor in the LDT;\n");
 		else
 			color_printk(RED,BLACK,"Refers to a descriptor in the current GDT;\n");
+	}
 
 	color_printk(RED,BLACK,"Segment Selector Index:%#010x\n",error_code & 0xfff8);
 

@@ -240,3 +240,10 @@ void init_search_krloccupymm()
     }
     return;
 }
+adr_t msadsc_ret_addr(msadsc_t *msa)
+{
+    if (NULL == msa) {
+        return 0;
+    }
+    return (msa->md_phyadrs.paf_padrs << PAGPHYADR_SZLSHBIT);
+}

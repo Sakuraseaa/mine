@@ -5,6 +5,13 @@
 #include "kmsob_t.h"
 #include "lib.h"
 #include "basetype.h"
+#include "msadsc_t.h"
+#include "memmgrob.h"
+#include "halmmu_t.h"
+extern memmgrob_t glomm;
+void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
+kvirmemadrs_t krlvirmemadrs;
+
 // void teststc_t_init(teststc_t *initp)
 // {
 // 	list_init(&initp->tst_list);
@@ -75,18 +82,17 @@ void vaslknode_t_init(vaslknode_t *initp)
 	return;
 }
 
-// void pgtabpage_t_init(pgtabpage_t *initp)
-// {
-// 	knl_spinlock_init(&initp->ptp_lock);
-// 	list_init(&initp->ptp_msalist);
-// 	initp->ptp_msanr = 0;
-// 	return;
-// }
+void pgtabpage_t_init(pgtabpage_t *initp)
+{
+	spin_init(&initp->ptp_lock);
+	list_init(&initp->ptp_msalist);
+	initp->ptp_msanr = 0;
+	return;
+}
 
 void virmemadrs_t_init(virmemadrs_t *initp)
 {
-	if (NULL == initp)
-	{
+	if (NULL == initp) {
 		return;
 	}
 	spin_init(&initp->vs_lock);
@@ -127,33 +133,50 @@ void kmvarsdsc_t_init(kmvarsdsc_t *initp)
 	initp->kva_kvmcobj = NULL;
 	return;
 }
+void kvmcobjmgr_t_init(kvmcobjmgr_t* initp)
+{
+	if(NULL==initp)
+	{
+		system_error("kvmcobjmgr_t_init parm NULL\n");
+	}
+	// knl_spinlock_init(&initp->kom_lock);
+	initp->kom_flgs=0;
+	initp->kom_kvmcobjnr=0;
+	list_init(&initp->kom_kvmcohead);
+	initp->kom_kvmcocahenr=0;
+	list_init(&initp->kom_kvmcocahe);
+	initp->kom_kvmcodelnr=0;
+	list_init(&initp->kom_kvmcodelhead);
+	return;
+}
 
-// void kvirmemadrs_t_init(kvirmemadrs_t *initp)
-// {
-// 	if (NULL == initp)
-// 	{
-// 		system_error("kvirmemadrs_t_init pram err\n");
-// 	}
-// 	spin_init(&initp->kvs_lock);
-// 	initp->kvs_flgs = 0;
-// 	initp->kvs_kmvdscnr = 0;
-// 	initp->kvs_startkmvdsc = NULL;
-// 	initp->kvs_endkmvdsc = NULL;
-// 	initp->kvs_krlmapdsc = NULL;
-// 	initp->kvs_krlhwmdsc = NULL;
-// 	initp->kvs_krlolddsc = NULL;
-// 	initp->kvs_isalcstart = 0;
-// 	initp->kvs_isalcend = 0;
-// 	initp->kvs_privte = NULL;
-// 	initp->kvs_ext = NULL;
-// 	list_init(&initp->kvs_testhead);
-// 	initp->kvs_tstcnr = 0;
-// 	initp->kvs_randnext = 1;
-// 	pgtabpage_t_init(&initp->kvs_ptabpgcs);
-// 	kvmcobjmgr_t_init(&initp->kvs_kvmcomgr);
-// 	kvmemcboxmgr_t_init(&initp->kvs_kvmemcboxmgr);
-// 	return;
-// }
+// 初始化虚拟地址空间结构体
+void kvirmemadrs_t_init(kvirmemadrs_t *initp)
+{
+	if (NULL == initp) {
+		system_error("kvirmemadrs_t_init pram err\n");
+	}
+	
+	spin_init(&initp->kvs_lock);
+	initp->kvs_flgs = 0;
+	initp->kvs_kmvdscnr = 0;
+	initp->kvs_startkmvdsc = NULL;
+	initp->kvs_endkmvdsc = NULL;
+	initp->kvs_krlmapdsc = NULL;
+	initp->kvs_krlhwmdsc = NULL;
+	initp->kvs_krlolddsc = NULL;
+	initp->kvs_isalcstart = 0;
+	initp->kvs_isalcend = 0;
+	initp->kvs_privte = NULL;
+	initp->kvs_ext = NULL;
+	list_init(&initp->kvs_testhead);
+	initp->kvs_tstcnr = 0;
+	initp->kvs_randnext = 1;
+	pgtabpage_t_init(&initp->kvs_ptabpgcs);
+	kvmcobjmgr_t_init(&initp->kvs_kvmcomgr);
+	kvmemcboxmgr_t_init(&initp->kvs_kvmemcboxmgr);
+	return;
+}
 
 kmvarsdsc_t *new_kmvarsdsc()
 {
@@ -260,6 +283,7 @@ bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 	// knl_spinunlock(&vma->vs_lock);
 	return TRUE;
 }
+
 void mmadrsdsc_t_init(mmadrsdsc_t* initp)
 {
 	if(NULL == initp)
@@ -287,11 +311,10 @@ void mmadrsdsc_t_init(mmadrsdsc_t* initp)
 }
 
 mmadrsdsc_t initmmadrsdsc;
-
 void init_kvirmemadrs()
 {
 	mmadrsdsc_t_init(&initmmadrsdsc);
-	// kvirmemadrs_t_init(&krlvirmemadrs);
+	kvirmemadrs_t_init(&krlvirmemadrs);
 	// kvma_seting_kvirmemadrs(&krlvirmemadrs);
 	kvma_inituserspace_virmemadrs(&initmmadrsdsc.msd_virmemadrs);
 	// hal_mmu_init(&initmmadrsdsc.msd_mmu);
@@ -309,7 +332,7 @@ kmvarsdsc_t *vma_find_kmvarsdsc_is_ok(virmemadrs_t *vmalocked, kmvarsdsc_t *curr
 	if (list_is_last(&curr->kva_list, &vmalocked->vs_list) == FALSE)
 	{
 		nextkmvd = list_next_entry(curr, kmvarsdsc_t, kva_list);
-		if (NULL == start) { 
+		if (INVIALID == start) { 
 		// 1、如果没有指定起始地址，则判断当前kmvarsdsc_t与下一个kmvarsdsc_t之间，是否有未分配的虚拟地址，长度满足要求
 			if ((curr->kva_end + (adr_t)vassize) <= nextkmvd->kva_start) {
 				return curr;
@@ -323,7 +346,7 @@ kmvarsdsc_t *vma_find_kmvarsdsc_is_ok(virmemadrs_t *vmalocked, kmvarsdsc_t *curr
 	}
 	else
 	{
-		if (NULL == start) // 如果 start 是 NULL，则表示从当前区间的结尾开始分配
+		if (INVIALID == start) // 如果 start 是 NULL，则表示从当前区间的结尾开始分配
 		{
 			if ((curr->kva_end + (adr_t)vassize) < vmalocked->vs_isalcend) {
 				return curr;
@@ -380,7 +403,7 @@ kmvarsdsc_t *vma_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vas
 // B 分配虚拟地址空间核心函数
 adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vaslimits, u32_t vastype)
 {
-	adr_t retadrs = NULL;
+	adr_t retadrs = INVIALID;
 	kmvarsdsc_t *newkmvd = NULL, *currkmvd = NULL;
 	virmemadrs_t *vma = &mm->msd_virmemadrs;
 	// knl_spinlock(&vma->vs_lock);
@@ -388,11 +411,11 @@ adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vas
 	// 查找虚拟地址区间
 	currkmvd = vma_find_kmvarsdsc(vma, start, vassize);
 	if (NULL == currkmvd) {
-		retadrs = NULL;
+		retadrs = INVIALID;
 		goto out;
 	}
 	// 进行虚拟地址区间进行检查看能否复用这个数据结构
-	if (((NULL == start) || (start == currkmvd->kva_end)) && (vaslimits == currkmvd->kva_limits) && (vastype == currkmvd->kva_maptype)) {
+	if (((INVIALID == start) || (start == currkmvd->kva_end)) && (vaslimits == currkmvd->kva_limits) && (vastype == currkmvd->kva_maptype)) {
 		retadrs = currkmvd->kva_end;		// 能复用的话，当前虚拟地址区间的结束地址返回
 		currkmvd->kva_end += vassize;		// 扩展当前虚拟地址区间的结束地址为分配虚拟地址区间的大小
 		vma->vs_currkmvdsc = currkmvd;
@@ -401,7 +424,7 @@ adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vas
 
 	newkmvd = new_kmvarsdsc(); // 建立一个新的kmvarsdsc_t虚拟地址区间结构
 	if (NULL == newkmvd) {
-		retadrs = NULL;
+		retadrs = INVIALID;
 		goto out;
 	}
 
@@ -436,15 +459,15 @@ out:
 adr_t vma_new_vadrs(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vaslimits, u32_t vastype)
 {
 	if (NULL == mm || 1 > vassize) {
-		return NULL;
+		return INVIALID;
 	}
 
-	if (NULL != start) 
+	if (INVIALID != start) 
 	{
 		if (((start & 0xfff) != 0) || (0x1000 > start) // 开始地址是否4KB对齐？
 		|| (USER_VIRTUAL_ADDRESS_END < (start + vassize))) 
 		{ 	// 结束地址不能超过整个虚拟地址空间
-			return NULL;
+			return INVIALID;
 		}
 	}
 
@@ -659,7 +682,357 @@ void test_vadr()
 	
 	return;
 }
+
 #include "errno.h"
+void kvmemcbox_t_init(kvmemcbox_t* init)
+{
+	if (NULL == init) {
+		return;
+	}
+	list_init(&init->kmb_list);
+	spin_init(&init->kmb_lock);
+	atomic_set(&init->kmb_cont, 0);
+	init->kmb_flgs = 0;
+	init->kmb_stus = 0;
+	init->kmb_type = 0;
+	init->kmb_msanr = 0;
+	list_init(&init->kmb_msalist);
+	init->kmb_mgr = NULL;
+	init->kmb_filenode = NULL;
+	init->kmb_pager = NULL;
+	init->kmb_ext = NULL;
+	return;
+}
+
+void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init)
+{
+	if (NULL == init) {
+		return;
+	}
+
+	list_init(&init->kbm_list);
+	spin_init(&init->kbm_lock);
+	init->kbm_flgs = 0;
+	init->kbm_stus = 0;
+	init->kbm_kmbnr = 0;
+	list_init(&init->kbm_kmbhead);
+	init->kbm_cachenr = 0;
+	init->kbm_cachemax = KMBOX_CACHE_MAX;
+	init->kbm_cachemin = KMBOX_CACHE_MIN;
+	list_init(&init->kbm_cachehead);
+	init->kbm_ext = NULL;
+	return;
+}
+
+kvmemcbox_t* new_kvmemcbox()
+{
+	kvmemcbox_t* kmbox = NULL;
+	
+	kmbox = (kvmemcbox_t*)kmsob_new(sizeof(kvmemcbox_t));
+	if(NULL == kmbox) {
+		return NULL;
+	}
+
+	kvmemcbox_t_init(kmbox);
+	return kmbox;
+}
+
+bool_t del_kvmemcbox(kvmemcbox_t* del)
+{
+	if(NULL == del)
+	{
+		return FALSE;
+	}
+	return kmsob_delete((void*)del, sizeof(kvmemcbox_t));
+}
+
+void knl_count_kvmemcbox(kvmemcbox_t* kmbox)
+{
+	if(NULL == kmbox)
+	{
+		return;
+	}
+	atomic_inc(&kmbox->kmb_cont);
+	return;
+}
+
+void knl_decount_kvmemcbox(kvmemcbox_t* kmbox)
+{
+	if(NULL == kmbox)
+	{
+		return;
+	}
+	atomic_dec(&kmbox->kmb_cont);
+	return;
+}
+
+kvmemcbox_t* knl_get_kvmemcbox()
+{
+	kvmemcbox_t* kmb = NULL;
+	kvmemcboxmgr_t* kmbmgr = &krlvirmemadrs.kvs_kvmemcboxmgr; // 页面盒子头
+	// knl_spinlock(&kmbmgr->kbm_lock);
+	if(0 < kmbmgr->kbm_cachenr)
+	{
+		if(list_is_empty_careful(&kmbmgr->kbm_cachehead) == FALSE)
+		{
+			kmb = list_first_oneobj(&kmbmgr->kbm_cachehead, kvmemcbox_t, kmb_list);
+			list_del(&kmb->kmb_list);
+			kmbmgr->kbm_cachenr--;
+			
+			kvmemcbox_t_init(kmb);
+			list_add(&kmbmgr->kbm_kmbhead, &kmb->kmb_list);
+			kmbmgr->kbm_kmbnr++;
+			atomic_inc(&kmb->kmb_cont);
+			kmb->kmb_mgr = kmbmgr;
+			kmb = kmb;
+			goto out; 
+		}
+	}
+
+	kmb = new_kvmemcbox();
+	if (NULL == kmb) {
+		goto out;
+	}
+
+	list_add(&kmbmgr->kbm_kmbhead, &kmb->kmb_list);
+	kmbmgr->kbm_kmbnr++;
+	atomic_inc(&kmb->kmb_cont);
+	kmb->kmb_mgr = kmbmgr;
+
+out:
+	// knl_spinunlock(&kmbmgr->kbm_lock);	
+	return kmb;
+}
+
+bool_t knl_put_kvmemcbox(kvmemcbox_t* kmbox)
+{
+	kvmemcboxmgr_t* kmbmgr = &krlvirmemadrs.kvs_kvmemcboxmgr;
+	bool_t rets = FALSE;
+	if (NULL == kmbox) {
+		return FALSE;
+	}
+
+	// spinlock(&kmbmgr->kbm_lock);
+	
+	atomic_dec(&kmbox->kmb_cont);
+	if (atomic_read(&kmbox->kmb_cont) >= 1) {
+		rets = TRUE;
+		goto out;
+	}
+	
+	if (kmbmgr->kbm_cachenr >= kmbmgr->kbm_cachemax)
+	{
+		list_del(&kmbox->kmb_list);
+		if(del_kvmemcbox(kmbox) == FALSE)
+		{
+			rets = FALSE;
+			goto out;
+		}
+		else
+		{
+			kmbmgr->kbm_kmbnr--;
+			rets = TRUE;
+			goto out;
+		}
+	}
+
+	list_move(&kmbox->kmb_list, &kmbmgr->kbm_cachehead);
+	kmbmgr->kbm_cachenr++;
+	kmbmgr->kbm_kmbnr--;
+	
+	rets = TRUE;
+out:
+	// knl_spinunlock(&kmbmgr->kbm_lock);
+	return rets;
+} 
+
+bool_t vma_del_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr)
+{
+	bool_t rets = FALSE;
+	msadsc_t *tmpmsa = NULL, *delmsa = NULL;
+	list_h_t *pos;
+
+	if (NULL == mm || NULL == kmbox || NULL == phyadr) {
+		return FALSE;
+	}
+
+	// knl_spinlock(&kmbox->kmb_lock);
+
+	if (NULL != msa)
+	{
+		if (msadsc_ret_addr(msa) == phyadr)
+		{
+			delmsa = msa;
+			list_del(&msa->md_list);
+			kmbox->kmb_msanr--;
+			rets = TRUE;
+			goto out;
+		}
+	}
+
+	list_for_each(pos, &kmbox->kmb_msalist)
+	{
+		tmpmsa = list_entry(pos, msadsc_t, md_list);
+		if (msadsc_ret_addr(tmpmsa) == phyadr)
+		{
+			delmsa = tmpmsa;
+			list_del(&tmpmsa->md_list);
+			kmbox->kmb_msanr--;
+			rets = TRUE;
+			goto out;
+		}
+	}
+
+	delmsa = NULL;
+	rets = FALSE;
+
+out:
+	// knl_spinunlock(&kmbox->kmb_lock);
+
+	if (NULL != delmsa)
+	{
+		if (mm_merge_pages(&glomm, delmsa, onfrmsa_retn_fpagenr(delmsa)) == FALSE)
+		{
+			system_error("vma_del_usermsa err\n");
+			return FALSE;
+		}
+	}
+
+	return rets;
+}
+
+msadsc_t *vma_new_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox)
+{
+	u64_t pages = 1, retpnr = 0;
+	msadsc_t *msa = NULL;
+
+	if (NULL == mm || NULL == kmbox) {
+		return NULL;
+	}
+
+	msa = mm_divpages_procmarea(&glomm, pages, &retpnr);
+	if (NULL == msa) {
+		return NULL;
+	}
+
+	// knl_spinlock(&kmbox->kmb_lock);
+
+	list_add(&kmbox->kmb_msalist, &msa->md_list);
+	kmbox->kmb_msanr++;
+
+	// knl_spinunlock(&kmbox->kmb_lock);
+	return msa;
+}
+
+adr_t vma_map_msa_fault(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t flags)
+{
+    msadsc_t *usermsa;
+    adr_t phyadrs = INVIALID;
+   //分配一个物理内存页面，挂载到kvmemcbox_t中，并返回对应的msadsc_t结构
+    usermsa = vma_new_usermsa(mm, kmbox);
+    if (NULL == usermsa) { //没有物理内存页面返回NULL表示失败
+        return INVIALID;
+    }
+    //获取msadsc_t对应的内存页面的物理地址
+    phyadrs = msadsc_ret_addr(usermsa);
+    
+	// 建立MMU页表完成虚拟地址到物理地址的映射
+    // if (hal_mmu_transform(&mm->msd_mmu, vadrs, phyadrs, flags) == TRUE)
+    // {//映射成功则返回物理地址
+    //     return phyadrs;
+    // }
+    // //映射失败就要先释放分配的物理内存页面
+    // vma_del_usermsa(mm, kmbox, usermsa, phyadrs);
+    return INVIALID;
+}
+
+//接口函数
+adr_t vma_map_phyadrs(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t vadrs, u64_t flags)
+{
+    kvmemcbox_t *kmbox = kmvd->kva_kvmbox;
+    if (NULL == kmbox) {
+        return INVIALID;
+    }
+    //调用核心函数，flags表示页表条目中的相关权限、存在、类型等位段
+    return vma_map_msa_fault(mm, kmbox, vadrs, flags);
+}
+
+kmvarsdsc_t *vma_map_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t vadrs)
+{
+    list_h_t *pos = NULL;
+    kmvarsdsc_t *curr = vmalocked->vs_currkmvdsc;
+    
+	// 看看上一次刚刚被操作的kmvarsdsc_t结构
+    if (NULL != curr)
+    {//虚拟地址是否落在kmvarsdsc_t结构表示的虚拟地址区间
+        if ((vadrs >= curr->kva_start) && (vadrs < curr->kva_end))
+        {
+            return curr;
+        }
+    }
+    
+	//遍历每个kmvarsdsc_t结构
+    list_for_each(pos, &vmalocked->vs_list)
+    {
+        curr = list_entry(pos, kmvarsdsc_t, kva_list);
+        //虚拟地址是否落在kmvarsdsc_t结构表示的虚拟地址区间
+        if ((vadrs >= curr->kva_start) && (vadrs < curr->kva_end)) {
+            return curr;
+        }
+    }
+    return NULL;
+}
+
+kvmemcbox_t *vma_map_retn_kvmemcbox(kmvarsdsc_t *kmvd)
+{
+    kvmemcbox_t *kmbox = NULL;
+    //如果kmvarsdsc_t结构中已经存在了kvmemcbox_t结构，则直接返回
+    if (NULL != kmvd->kva_kvmbox) {
+        return kmvd->kva_kvmbox;
+    }
+    //新建一个kvmemcbox_t结构
+    kmbox = knl_get_kvmemcbox();
+    if (NULL == kmbox)
+    {
+        return NULL;
+    }
+    //指向这个新建的kvmemcbox_t结构
+    kmvd->kva_kvmbox = kmbox;
+    return kmvd->kva_kvmbox;
+}
+
+sint_t vma_map_fairvadrs_core(mmadrsdsc_t *mm, adr_t vadrs)
+{
+    sint_t rets = FALSE;
+    adr_t phyadrs = INVIALID;
+    virmemadrs_t *vma = &mm->msd_virmemadrs;
+    kmvarsdsc_t *kmvd = NULL;
+    kvmemcbox_t *kmbox = NULL;
+     // knl_spinlock(&vma->vs_lock);
+    //查找对应的kmvarsdsc_t结构, 没有找到. 说明虚拟地址不存在，直接返回
+    kmvd = vma_map_find_kmvarsdsc(vma, vadrs);
+    if (NULL == kmvd) {
+        rets = -EFAULT;
+        goto out;
+    }
+    //返回kmvarsdsc_t结构下对应kvmemcbox_t结构
+    kmbox = vma_map_retn_kvmemcbox(kmvd);
+    if (NULL == kmbox) {
+        rets = -ENOMEM;
+        goto out;
+    }
+    //分配物理内存页面并建立MMU页表
+    // phyadrs = vma_map_phyadrs(mm, kmvd, vadrs, (0 | PML4E_US | PML4E_RW | PML4E_P));
+    if (INVIALID == phyadrs) {
+        rets = -ENOMEM;
+        goto out;
+    }
+    rets = EOK;
+out:
+ //   knl_spinunlock(&vma->vs_lock);
+    return rets;
+}
+
 //缺页异常处理接口
 sint_t vma_map_fairvadrs(mmadrsdsc_t *mm, adr_t vadrs)
 {//对参数进行检查

@@ -134,7 +134,6 @@ struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags)
 {
     int i;
     unsigned long page = 0;
-    unsigned long attribute = 0;
 
     int zone_start = 0;
     int zone_end = 0;
@@ -151,17 +150,14 @@ struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags)
     case ZONE_DMA:
         zone_start = 0;
         zone_end = ZONE_DMA_INDEX;
-        attribute = PG_PTable_Maped;
         break;
     case ZONE_NORMAL:
         zone_start = ZONE_DMA_INDEX;
         zone_end = ZONE_NORMAL_INDEX;
-        attribute = PG_PTable_Maped;
         break;
     case ZONE_UNMAPED:
         zone_start = ZONE_UNMAPED_INDEX;
         zone_end = memory_management_struct.zones_size - 1;
-        attribute = 0;
         break;
     default:
         color_printk(RED, BLACK, "alloc_pages error zone_select index\n");
@@ -886,7 +882,6 @@ void pagetable_4K_init()
 {
     unsigned long i = 0;
     unsigned long toMem = phy_mm_count * PAGE_2M_SIZE; 
-    u64* j = 0;
     unsigned long *tmp =  NULL;
     unsigned long virtual_addr = 0;
     
@@ -1163,7 +1158,6 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
 {
     unsigned long *tmp = NULL;
     unsigned long *virtual = NULL;
-    struct Page *p = NULL;
     unsigned long i = 0;
 
     for (i = addr; i < addr + len; i += PAGE_2M_SIZE)

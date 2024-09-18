@@ -5,8 +5,9 @@
 #include "basetype.h"
 #include "lib.h"
 
+#define PAGPHYADR_SZLSHBIT (12)
 #define MSAD_PAGE_MAX (8)
-
+#define MSA_SIZE (1 << PAGPHYADR_SZLSHBIT)
 
 #define MF_OLKTY_INIT (0)
 #define MF_OLKTY_ODER (1)
@@ -77,4 +78,5 @@ typedef struct s_MSADSC
 void init_msadsc();
 void init_search_krloccupymm();
 
+adr_t msadsc_ret_addr(msadsc_t *msa);
 #endif // _MSADSC_T_H_

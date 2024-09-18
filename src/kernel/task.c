@@ -330,10 +330,7 @@ unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 {
 	int error = 0;
 	struct mm_struct *newmm = NULL;
-	unsigned long *virtual = NULL;
-	struct Page *p = NULL;
-	if (clone_flags & CLONE_VM)
-	{
+	if (clone_flags & CLONE_VM) {
 		newmm = current->mm;
 		goto out;
 	}

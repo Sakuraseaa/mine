@@ -6,10 +6,7 @@ typedef struct
     __volatile__ long value;
 } atomic_t;
 
-typedef struct s_REFCOUNt
-{
-    atomic_t ref_count;
-} refcount_t;
+typedef atomic_t refcount_t;
 
 #define atomic_read(atomic) ((atomic)->value)
 #define atomic_set(atomic, val) (((atomic)->value) = (val))

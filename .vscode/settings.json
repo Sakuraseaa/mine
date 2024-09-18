@@ -29,7 +29,11 @@
         "memdivmer_t.h": "c",
         "test.h": "c",
         "krlvadrsmem_t.h": "c",
-        "error.h": "c"
+        "error.h": "c",
+        "bastype.h": "c",
+        "halmmu_t.h": "c",
+        "memmgrinit.h": "c",
+        "krlmm.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

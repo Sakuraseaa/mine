@@ -8,7 +8,6 @@
 #define false 0
 #define true 1
 typedef char bool;
-
 typedef unsigned long size_t;
 
 typedef char int8;

@@ -5,6 +5,7 @@
 #include "lib.h"
 #include "atomic.h"
 #include "spinlock.h"
+#include "halmmu_t.h"
 
 #define RET4PT_PML4EVDR (1)
 #define RET4PT_PDPTEVDR (2)
@@ -50,12 +51,12 @@ typedef struct KVMEMCBOXMGR
 	u64_t kbm_flgs;
 	u64_t kbm_stus;	
 	uint_t kbm_kmbnr;		// kvmemcbox_t结构个数
-	list_h_t kbm_kmbhead;
-	uint_t kbm_cachenr;
-	uint_t kbm_cachemax;
-	uint_t kbm_cachemin;
-	list_h_t kbm_cachehead;
-	void* kbm_ext;
+	list_h_t kbm_kmbhead;	// 挂载kvmemcbox_t结构的链表
+	uint_t kbm_cachenr;		// 缓存空闲kvmemcbox_t结构的个数
+	uint_t kbm_cachemax;	// 最大缓存个数，超过了就释放
+	uint_t kbm_cachemin;	// 最小缓存个数
+	list_h_t kbm_cachehead;	// 缓存kvmemcbox_t结构的链表
+	void* kbm_ext;			// 扩展数据指针
 }kvmemcboxmgr_t;
 // 页面盒子的头，用于挂载kvmemcbox_t结构, 全局的数据结构, 管理所有的kvmemcbox_t
 
@@ -169,7 +170,7 @@ typedef struct s_MMADRSDSC
 	uint_t msd_stus;
 	uint_t msd_scount;  // 计数，该结构可能被共享
 	// sem_t  msd_sem;     // 信号量
-	// mmudsc_t msd_mmu;   // 管理 MMU相关信息
+	mmudsc_t msd_mmu;   // 管理 MMU相关信息
 	virmemadrs_t msd_virmemadrs;    // 虚拟地址空间
 
 	adr_t msd_stext;	// 应用的指令区的开始，结束地址

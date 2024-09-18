@@ -28,12 +28,13 @@
 #include "device.h"
 #include "buffer.h"
 #include "memmgrinit.h"
+#include "krlmm.h"
 
 extern semaphore_T visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
 extern struct keyboard_inputbuffer *p_mouse;
 extern long global_pid;
-struct Global_Memory_Descriptor memory_management_struct = {{0}, 0};
+struct Global_Memory_Descriptor memory_management_struct = {{{0}}, 0};
 extern int usr_init();
 extern unsigned long shell_boot(unsigned long arg);
 extern int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigned long flags);
@@ -52,7 +53,7 @@ void Start_Kernel(void)
 	Pos.XCharSize = 8;
 	Pos.YCharSize = 16;
 
-	Pos.FB_addr = (u64 *)0xffff800003000000;
+	Pos.FB_addr = (u32_t *)0xffff800003000000;
 	Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
 
 	semaphore_init(&visual_lock, 1);

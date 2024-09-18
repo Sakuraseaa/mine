@@ -93,5 +93,11 @@ immediately established */
 #define EWOULDBLOCK 80 /* Operation would block 将一个socket连接设置成非阻塞模式*/
 #define EXDEV 81       /* Improper link */
 
+#define EALLOC		82 
+#define ENOOBJ 		83
+#define EGOON		84 /* go on*/
+#define ECPLT		85 /*Complete*/
+#define EPARAM		86 //参数错误
+
 #define EOK 0  /* 函数执行成功 */
 #endif

@@ -146,14 +146,14 @@ struct List *list_next(struct List *entry)
         return NULL;
 }
 
-long list_is_empty_careful(const list_h_t *head)
+bool_t list_is_empty_careful(const list_h_t *head)
 {
 	list_h_t *next = head->next;
 	if (next == head && next == head->prev)
 	{
-		return 1;
+		return TRUE;
 	}
-	return 0;
+	return FALSE;
 }
 
 bool_t list_is_last(const list_h_t* list, const list_h_t* head)
@@ -174,6 +174,19 @@ bool_t list_is_first(const list_h_t* list, const list_h_t* head)
 	return FALSE;
 }
 
+void list_move(list_h_t *list, list_h_t *head)
+{
+	list_del(list);
+	list_add(list, head);
+	return;
+}
+
+void list_move_tail(list_h_t *list, list_h_t *head)
+{
+	list_del(list);
+	list_add_tail(list, head);
+	return;
+}
 /*
         From => To memory copy Num bytes
 */

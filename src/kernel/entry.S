@@ -166,8 +166,8 @@ ENTRY(ret_system_call)
 	xchgq %rcx, %r11
 
 	sti
-	.byte 0x48
-	sysexit
+	// .byte 0x48  // 48 用来标识sysexitq是64位指令，但此处实验sysexitq已经可以标识了
+	sysexitq
 	
 	// /*使用SYSEXIT指令可以快速返回3特权级指令,
 	// /*1.需要IA32_SYSTEMR_CS寄存器提供3特权级的代码段选择子和栈段选择子*/

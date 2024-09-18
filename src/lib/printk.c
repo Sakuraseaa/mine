@@ -66,11 +66,13 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 		sign = (type & PLUS) ? '+' : ((type & SPACE) ? ' ' : 0);
 	if (sign)
 		size--;
-	if (type & SPECIAL)
-		if (base == 16)
+	if (type & SPECIAL) {
+		if (base == 16) {
 			size -= 2;
-		else if (base == 8)
+		} else if (base == 8) {
 			size--;
+		}
+	}
 	i = 0;
 	if (num == 0)
 		tmp[i++] = '0';
@@ -86,17 +88,20 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 	if (sign)
 		*str++ = sign;
 	if (type & SPECIAL)
-		if (base == 8)
+	{
+		if (base == 8) {
 			*str++ = '0';
-		else if (base == 16)
-		{
+		} else if (base == 16) {
 			*str++ = '0';
 			*str++ = digits[33];
 		}
-	if (!(type & LEFT))
+	}
+
+	if (!(type & LEFT)) {
 		while (size-- > 0)
 			*str++ = c;
-
+	}
+	
 	while (i < precision--)
 		*str++ = '0';
 	while (i-- > 0)
@@ -406,7 +411,7 @@ void frame_buffer_init()
 	Global_CR3 = Get_gdt();
 
     for(i = 0; i < Pos.FB_length; i += PAGE_4K_SIZE) {
-		tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) + ((FB_addr + i >> PAGE_GDT_SHIFT) & 0x1ff);
+		tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) + (((FB_addr + i) >> PAGE_GDT_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
 			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
@@ -416,7 +421,7 @@ void frame_buffer_init()
 		}
 	
 		// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + ((FB_addr + i >> PAGE_1G_SHIFT) & 0x1ff);
+		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((FB_addr + i) >> PAGE_1G_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
 			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
@@ -427,7 +432,7 @@ void frame_buffer_init()
 	
 		// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 		// 申请用户占用的内存,填充页表, 填充PDT内存
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + ((FB_addr + i >> PAGE_2M_SHIFT) & 0x1ff);
+		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((FB_addr + i) >> PAGE_2M_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{	
 			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
@@ -435,13 +440,13 @@ void frame_buffer_init()
 			set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 		}
 
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + ((FB_addr + i >> PAGE_4K_SHIFT) & 0x1ff);
+		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((FB_addr + i) >> PAGE_4K_SHIFT) & 0x1ff);
 
 		set_pt(tmp, mk_pdpt(VBE_Phy_address + i, PAGE_USER_Page_4K));
 	
     }
 
-	Pos.FB_addr = Phy_To_Virt(VBE_Phy_address);
+	Pos.FB_addr = (u32_t*)Phy_To_Virt(VBE_Phy_address);
 
 	u64* old_map = Phy_To_Virt(0x103000  + 23 * 8); 
 	memset(old_map, 0, 8 * 9);

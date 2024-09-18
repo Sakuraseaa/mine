@@ -1371,10 +1371,16 @@ bool_t mm_merge_pages(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 	return rets;
 }
 
-
-
-
-
-
-
-
+u64_t onfrmsa_retn_fpagenr(msadsc_t* freemsa)
+{
+	if(NULL==freemsa||NULL==freemsa->md_odlink)
+	{
+		return 0;
+	}
+	msadsc_t* fmend=(msadsc_t*)freemsa->md_odlink;
+	if(fmend<freemsa)
+	{
+		return 0;
+	}
+	return ((u64_t)(fmend-freemsa)+1);
+}
