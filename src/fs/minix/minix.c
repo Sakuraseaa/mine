@@ -189,7 +189,7 @@ static inode_t *minix_new_node(dev_t dev, idx_t nr, int32 file_type) {
 u16 minix_bmap(inode_t *inode, idx_t block, bool create) {
     assert(block >= 0 && block < TOTAL_BLOCK);
     u64 index = block;
-    minix_inode_t* m_inode = (minix_dentry_t*)inode->private_index_info;
+    minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
     u16 *array = m_inode->zone;
     buffer_t* buf = NULL;
 
@@ -538,7 +538,7 @@ static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char*
         entry++;
     }
 
-    return buf;
+    return;
 }
 
 
@@ -550,7 +550,7 @@ static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char*
  */
 static void realse_file_data(super_t* minix_sb, minix_inode_t* m_inode) {
     
-    u64 index = 0, i = 0, j = 0;
+    u64 index = 0, i = 0;
     u16 block = 0, *blk_indexs = NULL;
     buffer_t* buf = NULL;
     
@@ -700,7 +700,7 @@ long minix_rmdir(struct index_node *dir, struct dir_entry *dentry) {
     long ret = OKay;
 
     super_t* minix_sb = dentry->d_sb;
-    minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
+    minix_inode_t* m_inode = (minix_inode_t*)dentry->dir_inode->private_index_info;
     
     if(m_inode->size != (sizeof(minix_dentry_t) * 2)) {
         color_printk(RED, BLACK, "rmdir: filed to remove: Directory not empty!\n");
@@ -736,7 +736,7 @@ long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
     long ret = OKay;
 
     super_t* minix_sb = dentry->d_sb;
-    minix_inode_t* m_inode = (minix_dentry_t*)dentry->dir_inode->private_index_info;
+    minix_inode_t* m_inode = (minix_inode_t*)dentry->dir_inode->private_index_info;
     
 
     // a. 删除文件对应目录项
@@ -792,6 +792,7 @@ inode_t *iput(dev_t dev, idx_t nr) {
     // minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
 
     // inode->buf = bread(dev, inode_block(minix_sb, nr), BLOCK_SIZE);
+    return NULL;
 }
 
 // 获得设备 dev 的 nr inode

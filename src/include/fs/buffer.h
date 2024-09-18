@@ -21,7 +21,7 @@ typedef struct block_buf{
 
 typedef struct buffer
 {
-    char *data;          // 数据区
+    u8 *data;          // 数据区
     bdesc_t *desc;       // 描述符指针
     dev_t dev;           // 设备号
     idx_t block;         // 块号

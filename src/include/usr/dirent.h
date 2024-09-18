@@ -23,4 +23,5 @@ struct dirent
 struct DIR* opendir(const char* path);
 int closedir(struct DIR* dir);
 struct dirent* readdir(struct DIR*dir);
+unsigned long chdir(char* path);
 #endif

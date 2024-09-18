@@ -8,6 +8,7 @@
 #include "msadsc_t.h"
 #include "memmgrob.h"
 #include "halmmu_t.h"
+#include "memdivmer_t.h"
 extern memmgrob_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
 kvirmemadrs_t krlvirmemadrs;
@@ -428,7 +429,7 @@ adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vas
 		goto out;
 	}
 
-	if (NULL == start) {
+	if (INVIALID == start) {
 		newkmvd->kva_start = currkmvd->kva_end;
 	} else {
 		newkmvd->kva_start = start;
@@ -672,7 +673,7 @@ bool_t vma_del_vadrs(mmadrsdsc_t *mm, adr_t start, size_t vassize)
 
 void test_vadr()
 {
-	adr_t vadr = vma_new_vadrs(&initmmadrsdsc, NULL, 0x1000, 0, 0);
+	adr_t vadr = vma_new_vadrs(&initmmadrsdsc, 0, 0x1000, 0, 0);
 	if (NULL == (void*)vadr) {
 		color_printk(RED, BLACK, "分配虚拟地址空间失败\n");
 	}
@@ -852,7 +853,7 @@ bool_t vma_del_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t
 	msadsc_t *tmpmsa = NULL, *delmsa = NULL;
 	list_h_t *pos;
 
-	if (NULL == mm || NULL == kmbox || NULL == phyadr) {
+	if (NULL == mm || NULL == kmbox || INVIALID == phyadr) {
 		return FALSE;
 	}
 

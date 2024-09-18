@@ -27,7 +27,7 @@ void bitmap_init(bitmap_t *btmp, u64 bytes_len) {
     memset(btmp->bits, 0, bytes_len);
 }
 
-void bitmap_make(bitmap_t *btmp, char* data, u64 bytes_len) {
+void bitmap_make(bitmap_t *btmp, u8* data, u64 bytes_len) {
     btmp->bits = data;
     btmp->btmp_bytes_len = bytes_len;
 }

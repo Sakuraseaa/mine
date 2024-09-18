@@ -14,6 +14,7 @@
 #include "fs.h"
 #include "types.h"
 #include "test.h"
+#include "HEPT.h"
 
 // 系统调用有关
 /*
@@ -252,12 +253,8 @@ u64 sys_mkdir(char* filename) {
     char *path = NULL;
     long pathlen = 0;
     long error = 0;
-    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
-    int path_flags = 0;
+    struct dir_entry *Child_dentry = NULL;
     struct dir_entry *dentry = NULL;
-    struct file *filp = NULL;
-    struct file **f = NULL;
-    int fd = -1; // 文件描述符
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)kmalloc(PAGE_4K_SIZE, 0);
@@ -269,8 +266,7 @@ u64 sys_mkdir(char* filename) {
     if (pathlen <= 0) {
         kfree(path);
         return -EFAULT;
-    }
-    else if (pathlen >= PAGE_4K_SIZE) {
+    } else if (pathlen >= PAGE_4K_SIZE) {
         kfree(path);
         return -ENAMETOOLONG;
     }
@@ -294,12 +290,8 @@ u64 sys_rmdir(char* filename) {
     char *path = NULL;
     long pathlen = 0;
     long error = 0;
-    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
-    int path_flags = 0;
+    struct dir_entry *Child_dentry = NULL;
     struct dir_entry *dentry = NULL;
-    struct file *filp = NULL;
-    struct file **f = NULL;
-    int fd = -1; // 文件描述符
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)kmalloc(PAGE_4K_SIZE, 0);
@@ -344,12 +336,9 @@ u64 sys_unlink(char* filename) {
     char *path = NULL;
     long pathlen = 0;
     long error = 0;
-    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
-    int path_flags = 0;
+    struct dir_entry *Child_dentry = NULL;
     struct dir_entry *dentry = NULL;
-    struct file *filp = NULL;
-    struct file **f = NULL;
-    int fd = -1; // 文件描述符
+
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)kmalloc(PAGE_4K_SIZE, 0);
@@ -550,18 +539,17 @@ unsigned long sys_reboot(unsigned long cmd, void *arg)
     color_printk(GREEN, BLACK, "sys_reboot\n");
     switch (cmd)
     {
-    case SYSTEM_REBOOT:
-        io_out8(0x64, 0xFE);
-        break;
-
-    case SYSTEM_POWEROFF:
-        color_printk(RED, BLACK, "sys_reboot cmd SYSTEM_POWEROFF\n");
-        break;
-
-    default:
-        color_printk(RED, BLACK, "sys_reboot cmd ERROR!\n");
-        break;
+        case SYSTEM_REBOOT:
+            io_out8(0x64, 0xFE);
+            break;
+        case SYSTEM_POWEROFF:
+            color_printk(RED, BLACK, "sys_reboot cmd SYSTEM_POWEROFF\n");
+            break;
+        default:
+            color_printk(RED, BLACK, "sys_reboot cmd ERROR!\n");
+            break;
     }
+    return EOK;
 }
 
 extern int fill_dentry(void* buf, char*name, long namelen, long offset);
@@ -676,7 +664,6 @@ void exit_mm(struct task_struct *tsk)
 
     /* recycle all memory pages. these include Data, Code, Stack, Heap...*/
     /* 这里操作页表，还是有一点点小难度的。些许风霜罢了 🧐*/
-	u64 vaddr = 0;
 	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
 		if((*(tmp4 + i)) & PAGE_Present) {
 			tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
@@ -831,7 +818,7 @@ unsigned long sys_info(char order) {
 }
 
 
-unsigned long sys_fstat(int fd, struct stat *statbuf)
+unsigned long sys_fstat(int fd, stat_t *statbuf)
 {
-
+    return EOK;
 }

@@ -10,9 +10,9 @@
 #include "command.h"
 
 int analysis_keycode(int fd);
-int read_line(int fd, unsigned char *buf);
+int read_line(int fd, char *buf);
 void run_command(int index, int argc, char **argv);
-int parse_command(unsigned char *buf, int *argc, char ***argv);
+int parse_command(char *buf, int *argc, char ***argv);
 void print_prompt(void);
 
 extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
@@ -36,7 +36,7 @@ int main()
 	printf("Pid: %d\n", pid);
 	
 	int fd = 0;
-	unsigned char buf[256] = {0};
+	char buf[256] = {0};
 	char path[] = "/KEYBOARD.DEV";
 	int index = -1;
 	current_dir = (char*)malloc(2, 0);
@@ -261,7 +261,7 @@ int find_cmd(char *cmd_name)
 	return -1;
 }
 
-int read_line(int fd, unsigned char *buf)
+int read_line(int fd, char *buf)
 {
 	char key = 0;
 	int count = 0;
@@ -298,7 +298,7 @@ int read_line(int fd, unsigned char *buf)
 	}
 }
 
-int parse_command(unsigned char *buf, int *argc, char ***argv)
+int parse_command(char *buf, int *argc, char ***argv)
 {
 	int i = 0, j = 0;
 	bool is_cmpstr_ing = false;

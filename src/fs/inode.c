@@ -3,6 +3,7 @@
 #include "fs.h"
 #include "inode.h"
 #include "super.h"
+#include "sys.h"
 list_t super_list;
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)

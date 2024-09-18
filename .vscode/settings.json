@@ -33,7 +33,10 @@
         "bastype.h": "c",
         "halmmu_t.h": "c",
         "memmgrinit.h": "c",
-        "krlmm.h": "c"
+        "krlmm.h": "c",
+        "stat.h": "c",
+        "dirent.h": "c",
+        "kmsob_t.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

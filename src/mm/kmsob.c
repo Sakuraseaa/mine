@@ -56,8 +56,8 @@ void kmsob_t_init(kmsob_t *initp)
 	spin_init(&initp->so_lock);
 	initp->so_stus = 0;
 	initp->so_flgs = 0;
-	initp->so_vstat = NULL;
-	initp->so_vend = NULL;
+	initp->so_vstat = INVIALID;
+	initp->so_vend = INVIALID;
 	initp->so_objsz = 0;
 	initp->so_objrelsz = 0;
 	initp->so_mobjnr = 0;
@@ -392,7 +392,7 @@ bool_t kmsob_add_koblst(koblst_t *koblp, kmsob_t *kmsp)
 // 创建某个内存对象大小的最初内存池
 kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cvadre, msadsc_t *msa, uint_t relpnr)
 {
-	if (NULL == kmsp || 1 > objsz || NULL == cvadrs || NULL == cvadre || NULL == msa || 1 > relpnr) {
+	if (NULL == kmsp || 1 > objsz || INVIALID == cvadrs || INVIALID == cvadre || NULL == msa || 1 > relpnr) {
 		return NULL;
 	}
 	if (objsz < sizeof(freobjh_t)) {
@@ -466,8 +466,8 @@ kmsob_t *_create_kmsob(kmsobmgrhed_t *kmmgrlokp, koblst_t *koblp, size_t objsz)
 
 	u64_t phyadr = msa->md_phyadrs.paf_padrs << PSHRSIZE; // physical address start 
 	u64_t phyade = phyadr + (relpnr << PSHRSIZE) - 1;   // physical address end 
-	adr_t vadrs = Phy_To_Virt((adr_t)phyadr);
-	adr_t vadre = Phy_To_Virt((adr_t)phyade);
+	adr_t vadrs = (adr_t)Phy_To_Virt((adr_t)phyadr);
+	adr_t vadre = (adr_t)Phy_To_Virt((adr_t)phyade);
 	
     kmsp = _create_init_kmsob((kmsob_t *)vadrs, koblp->ol_sz, vadrs, vadre, msa, relpnr);
 	if (NULL == kmsp)
@@ -534,8 +534,8 @@ bool_t kmsob_extn_pages(kmsob_t *kmsp)
 
 	u64_t phyadr = msa->md_phyadrs.paf_padrs << PSHRSIZE;
 	u64_t phyade = phyadr + (relpnr << PSHRSIZE) - 1;
-	adr_t vadrs = Phy_To_Virt((adr_t)phyadr);
-	adr_t vadre = Phy_To_Virt((adr_t)phyade);
+	adr_t vadrs = (adr_t)Phy_To_Virt((adr_t)phyadr);
+	adr_t vadre = (adr_t)Phy_To_Virt((adr_t)phyade);
 	sint_t mscidx = retn_mscidx(relpnr);
 	if (MSCLST_MAX <= mscidx || 0 > mscidx)
 	{ 

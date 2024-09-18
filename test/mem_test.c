@@ -74,7 +74,7 @@ void User_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
 
                                     end_phy = start_phy + PAGE_4K_SIZE;
                                     
-                                    map_entry_t* sk_addr = &map[(*i_m) - 1];
+                                    // map_entry_t* sk_addr = &map[(*i_m) - 1];
 
                                     if(*i_m < 0 || *i_m > 100)
                                         color_printk(RED, BLACK,"Hello world\n");
@@ -103,7 +103,7 @@ void User_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
 
 void test_show_vir_phy(struct task_struct *tsk) {
 
-	long i_m = 0;
+	size_t i_m = 0;
 
 	struct mm_struct *newmm = tsk->mm;
 	u64* PML4 = Phy_To_Virt(newmm->pgd);

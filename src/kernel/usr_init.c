@@ -66,7 +66,7 @@ int usr_init()
 {
 
 	int fd = 0;
-	unsigned char buf[256] = {0};
+	char buf[256] = {0};
 	char path[] = "/KEYBOARD.DEV";
 	int index = -1;
 	current_dir = (char*)kmalloc(2, 0);
@@ -558,6 +558,8 @@ int ls_command(int argc, char **argv)
 	}
 	printf("\n");
 	closedir(dir);
+
+	return 0;
 }
 
 extern int errno;
@@ -567,6 +569,7 @@ int pwd_command(int argc, char **argv)
 	getcwd(current_dir, strlen(current_dir));
 	printf(current_dir);
 	printf("\n");
+	return 0;
 }
 int cat_command(int argc, char **argv) 
 {
@@ -641,11 +644,7 @@ static char* get_filename_whole(char* buf, char* reletive_path) {
 
 int exec_command(int argc, char **argv)
 {
-	int pid = 0;
-	long retval = 0;
-	int len = 0;
 	char* filename = 0;
-	int i = 0;
 
 	printf("child process\n");
 	filename = get_filename_whole(filename, argv[1]);
@@ -659,7 +658,6 @@ int echo_command(int argc, char **argv) {
     int ret = 0, fd = 0;
     char* filename = NULL;
     
-    char* p = argv[3];
     if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
         
 		filename = get_filename_whole(filename, argv[3]);
@@ -771,7 +769,7 @@ int parse_command(char *buf, int *argc, char ***argv)
 	// 说明 ' 和 " 没有成对的匹配，
 	if(is_cmpstr_ing) {
 		printf(" \' or \" not a perfect mathc\n");
-		return;
+		return 0;
 	}
 
 	if (!*argc)
