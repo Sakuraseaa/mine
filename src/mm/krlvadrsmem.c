@@ -677,6 +677,8 @@ void test_vadr()
 	int* p = (int*)vadr;
 	*p = 20; // 触发缺页中断
 	
+	kmalloc_4k_page(1);
+	
 	return;
 }
 

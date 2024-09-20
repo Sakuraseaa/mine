@@ -23,7 +23,7 @@ void init_memmgr()
 	
 	init_kmsob();
 
-	#if 0
+	#if 1
 	msadsc_t* msa;
 	uint_t need = 0;
 	// 这里申请了9kb,需要占用3个页面,也就是12kb,得到是16kb, 16 - 12 = 4;
@@ -33,7 +33,7 @@ void init_memmgr()
 	// 4, 8, 16，13 = 4KB整数页 这些2的整数倍的页，直接归还尝试合并就好
 	// 9, 17 这些非整数倍的页，可以根据得到的12kb(16kb, 4kb)，20kb(32kb， 12kb),直接分解12kb,16kb挂载到空闲链表上
 	// 然后进行一次内存整合操作
-	mm_merge_pages(&glomm, msa, need);
+	mm_merge_pages(&glomm, msa, ((msadsc_t*)msa->md_odlink - msa) + 1);
 	#endif
 
 	return;

@@ -622,7 +622,7 @@ msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrel
 	}
 	
 	
-	// 获得bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
+	// 获得bafh list上的一个空闲节点，用mstat 和 mend记录这个节点的信息
 	rets = mm_retnmsaob_onbafhlst(divbfl, &retmstat, &retmend);
 	if (FALSE == rets || NULL == retmstat || NULL == retmend) {
 		*retrelpnr = 0;
@@ -909,6 +909,30 @@ msadsc_t *mm_divpages_procmarea(memmgrob_t *mmobjp, uint_t pages, uint_t *retrea
 	}
 	*retrealpnr = retpnr;
 	return retmsa;
+}
+
+static msadsc_t* phy_to_msadsc(adr_t phyaddr) 
+{
+	return &glomm.mo_msadscstat[(phyaddr - 0x100000) >> PAGE_4K_SHIFT];
+}
+
+void* kmalloc_4k_page(uint_t pages) 
+{
+	u64_t retpnr = 0;
+	msadsc_t *msa = NULL, *etd = NULL;
+
+	msa = mm_divpages_procmarea(&glomm, pages, &retpnr);
+
+	return Phy_To_Virt(msa->md_phyadrs.paf_padrs);
+}
+
+void kfree_4k_page(void * addr)
+{
+	msadsc_t* msa = phy_to_msadsc(Virt_To_Phy(addr));
+
+	mm_merge_pages(&glomm, msa, ((msadsc_t*)msa->md_odlink - msa) + 1);
+	
+	return;
 }
 
 bool_t scan_freemsa_isok(msadsc_t *freemsa, uint_t freepgs)
@@ -1363,6 +1387,8 @@ bool_t mm_merge_pages(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 	if (NULL == mmobjp || NULL == freemsa || 1 > freepgs) {
 		return FALSE;
 	}
+	sint_t dividx = retn_divoder(freepgs); // 把页面数向上对齐到2的整数次幂
+	freepgs = 1 << dividx;
 
 	bool_t rets = mm_merpages_fmwk(mmobjp, freemsa, freepgs);
 	if (FALSE == rets) {

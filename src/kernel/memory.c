@@ -14,6 +14,7 @@
 #include "printk.h"
 #include "errno.h"
 #include "assert.h"
+#include "kmsob_t.h"
 
 // 给page结构体的属性成员赋值, 增加引用
 unsigned long page_init(struct Page *page, unsigned long flags)
@@ -665,6 +666,7 @@ struct Slab *kmalloc_create(unsigned long size)
  * @param gfp_flags  the condition of get memory
  * @return void*  return virtual kernel address
  */
+#if 1
 void *kmalloc(unsigned long size, unsigned long gfp_flags)
 {
     int i, j;
@@ -736,6 +738,12 @@ void *kmalloc(unsigned long size, unsigned long gfp_flags)
     color_printk(BLUE, BLACK, "kmalloc() ERROR: no memory can alloc\n");
     return NULL;
 }
+#endif
+// void *kmalloc(unsigned long size, unsigned long gfp_flags)
+// {
+//     return kmsob_new(size);
+// }
+
 
 /**
  * @brief 释放内存
@@ -743,6 +751,10 @@ void *kmalloc(unsigned long size, unsigned long gfp_flags)
  * @param address 需要被释放的地址
  * @return unsigned long 1(false), 0(ture)
  */
+// unsigned long kfree(void* address, u64 size) {
+//     return kmsob_delete(address, size);
+// }
+#if 1
 unsigned long kfree(void *address)
 {
     int i, index;
@@ -809,7 +821,7 @@ unsigned long kfree(void *address)
     color_printk(RED, BLACK, "kfree() ERROR: can't free memory\n");
     return 0;
 }
-
+#endif
 /**
  * @brief 内核页表重新初始化，直至0-4GB(我的电脑内存小于4GB,so 我可用的内存都被映射到内核空间了2MB ~ 512MB)内的物理页
  *  全部映射到了线性地址空间(以0xffff800000000000为基址)
@@ -1252,25 +1264,25 @@ u64 addr_v2p(u64 vaddr) {
  */
 u64 do_wp_page(u64 virtual_address) {
 
-    u64 attr, phy_addr = addr_v2p(virtual_address);
-    u64* tmp = pde_ptr(virtual_address);
-    struct Page* page = (struct Page*)(memory_management_struct.pages_struct + (phy_addr >> PAGE_2M_SHIFT));
-    struct Page* new_page = NULL;
+    // u64 attr, phy_addr = addr_v2p(virtual_address);
+    // u64* tmp = pde_ptr(virtual_address);
+    // struct Page* page = (struct Page*)(memory_management_struct.pages_struct + (phy_addr >> PAGE_2M_SHIFT));
+    // struct Page* new_page = NULL;
 
-	attr = (*tmp & (0xfffUL)); // get parent privilege
-	attr = (attr | (PAGE_R_W)); // add PW right 
+	// attr = (*tmp & (0xfffUL)); // get parent privilege
+	// attr = (attr | (PAGE_R_W)); // add PW right 
 
-    if(page->reference_count == 1) {
-        // 物理页独享 - 修改页面权限返回
-		set_pdt(tmp, mk_pdt(page->PHY_address, attr));
+    // if(page->reference_count == 1) {
+    //     // 物理页独享 - 修改页面权限返回
+	// 	set_pdt(tmp, mk_pdt(page->PHY_address, attr));
         
-    }else {
-        // 分配新页面给进程，在进程用的时候给进程分配页面,给子进程分配新的页面 :happy
-        new_page = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-        memcpy(Phy_To_Virt(page->PHY_address), Phy_To_Virt(new_page->PHY_address), PAGE_2M_SIZE);
-        set_pdt(tmp, mk_pdt(new_page->PHY_address, attr));
-        page->reference_count--;
-    }
+    // }else {
+    //     // 分配新页面给进程，在进程用的时候给进程分配页面,给子进程分配新的页面 :happy
+    //     new_page = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
+    //     memcpy(Phy_To_Virt(page->PHY_address), Phy_To_Virt(new_page->PHY_address), PAGE_2M_SIZE);
+    //     set_pdt(tmp, mk_pdt(new_page->PHY_address, attr));
+    //     page->reference_count--;
+    // }
 
     flush_tlb_one(virtual_address);
 
@@ -1285,9 +1297,9 @@ u64 do_wp_page(u64 virtual_address) {
  * @param address The address that cause the exception
  */
 extern long krluserspace_accessfailed(adr_t fairvadrs);
-void do_no_page(u64 virtual_address)
+int64 do_no_page(u64 virtual_address)
 {
-    krluserspace_accessfailed(virtual_address);
+    return krluserspace_accessfailed(virtual_address);
 }
 
 /**

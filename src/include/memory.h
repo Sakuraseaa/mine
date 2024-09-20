@@ -338,7 +338,7 @@ unsigned long* pml4e_ptr(unsigned long vaddr);
 unsigned long* pdpe_ptr(unsigned long vaddr);
 unsigned long* pte_ptr(unsigned long vaddr);
 u64 do_wp_page(u64 virtual_address);
-void do_no_page(u64 virtual_address);
+int64 do_no_page(u64 virtual_address);
 void pagetable_4K_init();
-
+// unsigned long kfree(void* address, u64 size);
 #endif

@@ -51,7 +51,6 @@ u64_t init_msadsc_core(msadsc_t *msavstart, u64_t msanr)
     //获取phymmarge_t结构数组开始地址
     u64_t mdindx = 0, i, start, end;
 
-    // 把可操作的地址对齐到2MB, 计算有多少2MB物理页可用
     for (i = 0; i <= memory_management_struct.e820_length; i++)
     {
         if (memory_management_struct.e820[i].type != 1)
@@ -60,13 +59,14 @@ u64_t init_msadsc_core(msadsc_t *msavstart, u64_t msanr)
         // start向上取整，end向下取整
         start = memory_management_struct.e820[i].address;
         end = memory_management_struct.e820[i].address + memory_management_struct.e820[i].length;
+        if(end <= 0x100000UL)   // 忽略低于1MB的物理地址
+            continue;
         
         for(;start < end; start += PAGE_4K_SIZE) { // 遍历区间
             
             if ((start + 4096 - 1) <= end) // 确保 start 到 end 之间任有 4KB 内存
 			{
 				init_one_msadsc(&msavstart[mdindx++], start);
-			
             }
         }
     }
@@ -87,6 +87,9 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
         // start向上取整，end向下取整
         start = PAGE_4K_ALIGN(memory_management_struct.e820[i].address);
         end = ((memory_management_struct.e820[i].address + memory_management_struct.e820[i].length) >> PAGE_4K_SHIFT) << PAGE_4K_SHIFT;
+
+        if(end <= 0x100000UL)   // 忽略低于1MB的物理地址
+            continue;
 
         if (end <= start)
             continue;
