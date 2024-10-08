@@ -25,7 +25,7 @@ typedef struct signal_frame {
 // 设置信号
 sighadler_t sys_signal(long signum, sighadler_t  hander, void (*restorer)(void))
 {
-    sigaction_T* sa = (current->sigaction + signum);
+    sigaction_t* sa = (current->sigaction + signum);
     sa->sa_handler = hander;
     sa->sa_restorer = restorer;
 
@@ -57,7 +57,7 @@ void do_signal(struct pt_regs* regs)
     if(current->signal == 0)
         return;
     
-    sigaction_T* sa;
+    sigaction_t* sa;
     signal_frame_T sf;
     long signal = current->signal;
     long signr = 1;

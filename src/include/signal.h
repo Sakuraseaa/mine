@@ -50,7 +50,7 @@ typedef struct sigaction
 	sigset_t sa_mask;		   // 信号屏蔽码，在信号执行时会阻塞对这些信号的处理
 	int sa_flags;			   // 指定代表信号处理过程中的信号集
 	void (*sa_restorer)(void); // 恢复函数指针，由Libc提供，用于清理用户态堆栈
-}sigaction_T;
+}sigaction_t;
 
 // void (*signal(int _sig, void (*_func)(int)))(int);
 int raise(int sig);

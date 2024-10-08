@@ -427,7 +427,7 @@ typedef struct sigaction
  sigset_t sa_mask;
  int sa_flags;
  void (*sa_restorer)(void);
-}sigaction_T;
+}sigaction_t;
 
 
 int raise(int sig);
@@ -1366,7 +1366,7 @@ struct task_struct
  long preempt_count;
  long signal;
  long blocked;
- sigaction_T* sigaction;
+ sigaction_t* sigaction;
 
 
  struct mm_struct *mm;

@@ -131,10 +131,10 @@ void (*interrupt[24])(void) =
  * @param irq_name 中断名
  * @return int 运行成功, 返回1
  */
-int register_irq(unsigned long irq,
+s32_t register_irq(u64_t irq,
                  void *arg,
-                 void (*handler)(unsigned long nr, unsigned long parameter, struct pt_regs *regs),
-                 unsigned long parameter,
+                 void (*handler)(u64_t nr, u64_t parameter, struct pt_regs *regs),
+                 u64_t parameter,
                  hw_int_controller *controller,
                  char *irq_name)
 {
@@ -153,7 +153,7 @@ int register_irq(unsigned long irq,
 }
 
 // 中断销毁函数
-int unregister_irq(unsigned long irq)
+s32_t unregister_irq(u64_t irq)
 {
     irq_desc_T *p = &interrupt_desc[irq - 32];
 

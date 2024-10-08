@@ -158,7 +158,7 @@ typedef int (*filldir_t)(void *buf,char *name, long namelen,long offset);
 // 是进程和VFS的纽带，它是抽象出来的，不存在于物质介质中
 // 文件的读写访问(同步/异步)，IO控制以及其他操作方法
 // 文件描述符
-struct file
+typedef struct file
 {
     long position;      // 本文件的当前访问位置
     unsigned long mode; // mode 保存着文件的访问模式和操作模式
@@ -169,7 +169,7 @@ struct file
 
     // 用于保存各类文件系统的特有数据信息-具体到每个文件
     void *private_data;
-};
+}file_t;
 
 struct super_block_operations
 {

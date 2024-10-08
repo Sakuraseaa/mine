@@ -67,7 +67,7 @@ struct mm_struct
 	unsigned long start_stack, stack_length;		  // 应用层栈基地址
 };
 
-struct thread_struct
+typedef struct thread_struct
 {
 	unsigned long rsp0; // in tss, 记录着应用程序在内核层使用的栈基地址
 
@@ -80,10 +80,10 @@ struct thread_struct
 	unsigned long cr2;		  // CR2控制寄存器
 	unsigned long trap_nr;	  // 产生异常的异常号
 	unsigned long error_code; // 异常的错误码
-};
+}thread_t;
 
 // 进程PCB
-struct task_struct
+typedef struct task_struct
 {
 
 	volatile long state;		// 进程状态: 运行态，停止态，可中断态
@@ -91,7 +91,7 @@ struct task_struct
 	long preempt_count;	 		// 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
 	long signal;
 	long blocked;  		// 信号位图 和 bitmap of masked signals
-	sigaction_T* sigaction;		// 信号将要执行的操作和标志信息, 每一项对应一个信号, 一共三十二项
+	sigaction_t* sigaction;		// 信号将要执行的操作和标志信息, 每一项对应一个信号, 一共三十二项
 
 	
 	struct mm_struct *mm;		  // 内存空间分布结构体，记录内存页表和程序段信息
@@ -121,7 +121,7 @@ struct task_struct
 	struct dir_entry *i_pwd;	 // 进程当前目录 inode program work directory
 	struct dir_entry *i_root; // 进程根目录 inode
 	struct index_node *i_exec; // 程序文件 inode
-};
+}task_t;
 
 // 进程PCB和内核栈空间 32kb
 union task_union

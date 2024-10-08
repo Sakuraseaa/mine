@@ -12,10 +12,9 @@
 #include "assert.h"
 #include "stat.h"
 #include "fs.h"
-#include "types.h"
 #include "test.h"
 #include "HEPT.h"
-
+#include "basetype.h"
 // 系统调用有关
 /*
 normal
@@ -33,7 +32,7 @@ syscall need rcx(rip) r11(rflags)
 xchg rdx to r10, rcx to r11
 */
 
-unsigned long no_system_call(void)
+u64_t no_system_call(void)
 {
     color_printk(RED, BLACK, "no_system_call is calling\n");
     return -ENOSYS;
@@ -58,18 +57,18 @@ __asm__	(
 );
 */
 
-unsigned long sys_sleep(unsigned int seconds)
+u64_t sys_sleep(u64_t seconds)
 {
     time_sleep(seconds);
     return 0;
 }
 
-long sys_getpid(void)
+u64_t sys_getpid(void)
 {
     return current->pid;
 }
 
-unsigned long sys_putstring(unsigned int FRcolor, char *string)
+u64_t sys_putstring(u32_t FRcolor, s8_t *string)
 {
 
     color_printk(FRcolor, BLACK, string);
@@ -84,7 +83,7 @@ unsigned long sys_putstring(unsigned int FRcolor, char *string)
  * @param size 若调用者提供buf, 则size为buf的大小
  * @return char* 若成功且buf为NULL, 则操作系统会分配存储工作目录路径的缓冲区, 并返回首地址; 若失败则为NULL
  */
-char *sys_getcwd(char *buf, u64 size) {
+s8_t *sys_getcwd(s8_t *buf, u64 size) {
     assert(buf != NULL);
     
     dir_entry_t* dir = current->i_pwd;
@@ -112,7 +111,7 @@ char *sys_getcwd(char *buf, u64 size) {
     /* 至此full_path_reverse中的路径是反着的,
      * 即子目录在前(左),父目录在后(右) ,
      * 现将full_path_reverse中的路径反置 */
-    char *last_slash = NULL; // 用于记录字符串中最后一个 / 的地址
+    s8_t *last_slash = NULL; // 用于记录字符串中最后一个 / 的地址
     
     // 把full_path_reverse从后向前遇见 / 就截断一下
     // 添加到buf尾巴后面
@@ -135,20 +134,20 @@ char *sys_getcwd(char *buf, u64 size) {
  *  为系统增加缓冲区功能
  * @param filename 需要打开文件的路径
  * @param flags  文件操作标志位，描述文件的访问模式和操作模式,WRITE,READ,TRUNC, APPEND
- * @return unsigned long 返回一个最小未使用的正整数来代表这个文件对应的文件描述符，执行失败返回-1
+ * @return u64_t 返回一个最小未使用的正整数来代表这个文件对应的文件描述符，执行失败返回-1
  */
-unsigned long sys_open(char *filename, int flags)
+u64_t sys_open(s8_t *filename, s32_t flags)
 {
-    char *path = NULL;
-    long pathlen = 0;
-    long error = 0;
-    struct dir_entry *Parent_dentry = NULL, *Child_dentry = NULL;
-    int path_flags = 0;
-    struct dir_entry *dentry = NULL;
-    struct file *filp = NULL;
-    struct file **f = NULL;
-    int fd = -1; // 文件描述符
-    int i = 0;
+    s8_t *path = NULL;
+    s64_t pathlen = 0;
+    s64_t error = 0;
+    dir_entry_t *Parent_dentry = NULL, *Child_dentry = NULL;
+    s32_t path_flags = 0;
+    dir_entry_t *dentry = NULL;
+    file_t *filp = NULL;
+    file_t **f = NULL;
+    s32_t fd = -1; // 文件描述符
+    s32_t i = 0;
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)knew(PAGE_4K_SIZE, 0);
@@ -202,8 +201,8 @@ unsigned long sys_open(char *filename, int flags)
 sys_open_over_judge:
 
     // c.为目标文件,目标进程创建文件描述符, filp什么意思？file description?
-    filp = (struct file *)knew(sizeof(struct file), 0);
-    memset(filp, 0, sizeof(struct file));
+    filp = (file_t *)knew(sizeof(file_t), 0);
+    memset(filp, 0, sizeof(file_t));
     filp->dentry = dentry;
     filp->mode = flags;
 
@@ -249,10 +248,10 @@ sys_open_over_judge:
     return fd; // 返回文件描述符数组下标
 }
 
-u64 sys_mkdir(char* filename) {
-    char *path = NULL;
-    long pathlen = 0;
-    long error = 0;
+u64 sys_mkdir(s8_t* filename) {
+    s8_t *path = NULL;
+    s64_t pathlen = 0;
+    s64_t error = 0;
     struct dir_entry *Child_dentry = NULL;
     struct dir_entry *dentry = NULL;
 
@@ -286,10 +285,10 @@ u64 sys_mkdir(char* filename) {
     return error;
 }
 
-u64 sys_rmdir(char* filename) {
-    char *path = NULL;
-    long pathlen = 0;
-    long error = 0;
+u64 sys_rmdir(s8_t* filename) {
+    s8_t *path = NULL;
+    s64_t pathlen = 0;
+    s64_t error = 0;
     struct dir_entry *Child_dentry = NULL;
     struct dir_entry *dentry = NULL;
 
@@ -332,10 +331,10 @@ u64 sys_rmdir(char* filename) {
     return error;
 }
 
-u64 sys_unlink(char* filename) {
-    char *path = NULL;
-    long pathlen = 0;
-    long error = 0;
+u64 sys_unlink(s8_t* filename) {
+    s8_t *path = NULL;
+    s64_t pathlen = 0;
+    s64_t error = 0;
     struct dir_entry *Child_dentry = NULL;
     struct dir_entry *dentry = NULL;
 
@@ -390,9 +389,9 @@ u64 sys_unlink(char* filename) {
  * @brief 关闭文件描述符 = 释放文件描述符拥有的资源，切断进程和文件描述符之间的关联
  *
  * @param fd 文件描述符
- * @return unsigned long 如果close函数执行成功，则返回0，否则返回-1，errno变量会记录错误码
+ * @return u64_t 如果close函数执行成功，则返回0，否则返回-1，errno变量会记录错误码
  */
-unsigned long sys_close(int fd)
+u64_t sys_close(s32_t fd)
 {
     struct file *filp = NULL;
   //  color_printk(GREEN, BLACK, "sys_close:%d\n", fd);
@@ -414,12 +413,12 @@ unsigned long sys_close(int fd)
  * @param fd 文件描述符句柄
  * @param buf 读取数据缓冲区
  * @param count 读取数据的长度
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long sys_read(int fd, void *buf, long count)
+u64_t sys_read(s32_t fd, void *buf, s64_t count)
 {
-    struct file *filp = NULL;
-    unsigned long ret = 0;
+    file_t *filp = NULL;
+    u64_t ret = 0;
 
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
@@ -430,19 +429,18 @@ unsigned long sys_read(int fd, void *buf, long count)
     if (filp->f_ops && filp->f_ops->read)
         ret = filp->f_ops->read(filp, buf, count, &filp->position);
 
-
     return ret;
 }
 
-unsigned long sys_getNow(void) {
+u64_t sys_getNow(void) {
     return NOW();
 }
 
 // 写文件函数
-unsigned long sys_write(int fd, void *buf, long count)
+u64_t sys_write(s32_t fd, void *buf, s64_t count)
 {
-    struct file *filp = NULL;
-    unsigned long ret = 0;
+    file_t *filp = NULL;
+    u64_t ret = 0;
 
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
@@ -453,8 +451,6 @@ unsigned long sys_write(int fd, void *buf, long count)
     if (filp->f_ops && filp->f_ops->write)
         ret = filp->f_ops->write(filp, buf, count, &filp->position);
 
-
-
     return ret; // 成功的话返回的是写入的字节数
 }
 
@@ -464,12 +460,12 @@ unsigned long sys_write(int fd, void *buf, long count)
  * @param filds 指定文件描述符
  * @param offset 偏移值
  * @param whence 基地址
- * @return unsigned long 设置成功，返回距离文件起始位置的偏移/否则不改变访问返回-1/errno变量会记录错误码
+ * @return u64_t 设置成功，返回距离文件起始位置的偏移/否则不改变访问返回-1/errno变量会记录错误码
  */
-unsigned long sys_lseek(int filds, long offset, int whence)
+u64_t sys_lseek(s32_t filds, s64_t offset, s32_t whence)
 {
-    struct file *filp = NULL;
-    unsigned long ret = 0;
+    file_t *filp = NULL;
+    u64_t ret = 0;
     // color_printk(GREEN, BLACK, "sys_lseek:%d\n", filds);
     if (filds < 0 || filds >= TASK_FILE_MAX)
         return -EBADF;
@@ -488,10 +484,10 @@ unsigned long sys_lseek(int filds, long offset, int whence)
  * @brief fork()会为父进程(当前进程)创建了一个子进程，这个子进程将复制父进程的绝大部的内容，
  * 当fork函数执行后，父/子进程均可独立运行
  */
-unsigned long sys_fork()
+u64_t sys_fork()
 {
     // 索引到父进程的内核栈执行现场
-    struct pt_regs *regs = (struct pt_regs *)current->thread->rsp0 - 1;
+    pt_regs_t *regs = (pt_regs_t *)current->thread->rsp0 - 1;
     // color_printk(GREEN, BLACK, "sys_fork\n");
     // regs.rsp 是指向哪里呢？
     return do_fork(regs, 0, regs->rsp, 0);
@@ -500,11 +496,11 @@ unsigned long sys_fork()
 /**
  * @brief vfork()创建的子进程与父进程共享地址空间，当vfork函数执行后，子进程无法独立运行
  *  必须与exec类函数联合使用
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long sys_vfork()
+u64_t sys_vfork()
 {
-    struct pt_regs *regs = (struct pt_regs *)current->thread->rsp0 - 1; // 这个是什么东西 ？
+    pt_regs_t *regs = (pt_regs_t *)current->thread->rsp0 - 1; // 这个是什么东西 ？
     color_printk(GREEN, BLACK, "sys_vfork\n");
     return do_fork(regs, CLONE_VM | CLONE_FS | CLONE_SIGNAL, regs->rsp, 0);
 }
@@ -515,11 +511,11 @@ unsigned long sys_vfork()
  *        else if(brk < current->mm->end_brk) -> 说明进程希望释放一部分堆地址空间
  *        else 执行 do_brk() -> expand brk space
  * @param brk
- * @return unsigned long 新的堆空间结束地址
+ * @return u64_t 新的堆空间结束地址
  */
-unsigned long sys_brk(unsigned long brk)
+u64_t sys_brk(u64_t brk)
 {
-    unsigned long new_brk = PAGE_2M_ALIGN(brk);
+    u64_t new_brk = PAGE_2M_ALIGN(brk);
     // color_printk(GREEN, BLACK, "sys_brk:%018lx\n", brk);
     // color_printk(RED, BLACK, "brk:%#0x18lx, new_brk:%#018lx,current->mm->end_brk:%#018lx", brk, new_brk, current->mm->end_brk);
     if (new_brk == 0) // return brk base address
@@ -534,7 +530,7 @@ unsigned long sys_brk(unsigned long brk)
     return new_brk;
 }
 
-unsigned long sys_reboot(unsigned long cmd, void *arg)
+u64_t sys_reboot(u64_t cmd, void *arg)
 {
     color_printk(GREEN, BLACK, "sys_reboot\n");
     switch (cmd)
@@ -552,11 +548,11 @@ unsigned long sys_reboot(unsigned long cmd, void *arg)
     return EOK;
 }
 
-extern int fill_dentry(void* buf, char*name, long namelen, long offset);
-unsigned long sys_getdents(int fd, void* dirent, long count)
+extern int fill_dentry(void* buf, s8_t*name, s64_t namelen, s64_t offset);
+u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
 {
-    struct file* filp = NULL;
-    unsigned long ret = 0;
+    file_t* filp = NULL;
+    u64_t ret = 0;
     // color_printk(GREEN, BLACK, "sys_getdents:%d\n",fd);
     if(fd < 0 || fd > TASK_FILE_MAX)
         return -EBADF;
@@ -569,11 +565,11 @@ unsigned long sys_getdents(int fd, void* dirent, long count)
     return ret;
 }
 
-unsigned long sys_chdir(char* filename)
+u64_t sys_chdir(s8_t* filename)
 {
     char* path = NULL;
     long pathlen = 0;
-    struct dir_entry* dentry = NULL;
+    dir_entry_t* dentry = NULL;
 
     path = (char*) knew(PAGE_4K_SIZE, 0);
     if(path == NULL)
@@ -609,12 +605,12 @@ unsigned long sys_chdir(char* filename)
 }
 
 
-unsigned long sys_execve()
+u64_t sys_execve()
 {
     char* pathname = NULL;
-    long pathlen = 0;
-    long error = 0;
-    struct pt_regs* regs = (struct pt_regs*)current->thread->rsp0 - 1;
+    s64_t pathlen = 0;
+    s64_t error = 0;
+    pt_regs_t* regs = (pt_regs_t*)current->thread->rsp0 - 1;
     
     DEBUGK("sys_execve\n");
 
@@ -648,10 +644,10 @@ unsigned long sys_execve()
  * 		exit_mm()与copy_mm()的分配空间分布结构体初始化过程相逆
  * @param tsk
  */
-void exit_mm(struct task_struct *tsk)
+void exit_mm(task_t *tsk)
 {
-	// unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
-    // unsigned long tmp1 = 0; // page address
+	// u64_t *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+    // u64_t tmp1 = 0; // page address
 	// size_t i = 0, j = 0, k = 0;
 	// struct Page* p = NULL;
 	// if (tsk->flags & PF_VFORK)
@@ -692,11 +688,11 @@ void exit_mm(struct task_struct *tsk)
 	// 	kdelete(tsk->mm);
 }
 
-unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage)
+u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
 {
-    long retval = 0;
-    struct task_struct* child = NULL;
-    struct task_struct* tsk = NULL;
+    s64_t retval = 0;
+    task_t* child = NULL;
+    task_t* tsk = NULL;
 
     // color_printk(GREEN, BLACK,"sys_wait4\n");
     for(tsk =&init_task_union.task; tsk->next != &init_task_union.task; tsk = tsk->next)
@@ -723,14 +719,14 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
     return retval;
 }
 
-unsigned long sys_exit(int exit_code)
+u64_t sys_exit(s32_t exit_code)
 {
     DEBUGK("sys_exit\n");
     return do_exit(exit_code);
 }
 
-inode_t *namei(char* filename);
-unsigned long sys_stat(char* filename, stat_t* statbuf) {
+inode_t *namei(s8_t* filename);
+u64_t sys_stat(s8_t* filename, stat_t* statbuf) {
 
     inode_t* inode = namei(filename);
 
@@ -758,7 +754,7 @@ unsigned long sys_stat(char* filename, stat_t* statbuf) {
     return 0;
 }
 
-unsigned long sys_cleanScreen(void) {
+u64_t sys_cleanScreen(void) {
     // 清屏命令
     memset(Pos.FB_addr,0, Pos.FB_length);
 	Pos.XPosition = 0;
@@ -767,7 +763,7 @@ unsigned long sys_cleanScreen(void) {
     return 0;
 }
 
-void dir_Tree(dir_entry_t* cur, int depth) {
+void dir_Tree(dir_entry_t* cur, s32_t depth) {
     color_printk(WHITE, BLACK, "|");
     
     dir_entry_t* child = NULL;
@@ -799,7 +795,7 @@ void dir_Tree(dir_entry_t* cur, int depth) {
     }
 }
 
-unsigned long sys_info(char order) {
+u64_t sys_info(s8_t order) {
     
     switch (order)
     {
@@ -818,7 +814,7 @@ unsigned long sys_info(char order) {
 }
 
 
-unsigned long sys_fstat(int fd, stat_t *statbuf)
+u64_t sys_fstat(s32_t fd, stat_t *statbuf)
 {
     return EOK;
 }

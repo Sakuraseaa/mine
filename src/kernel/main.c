@@ -35,10 +35,10 @@ extern struct keyboard_inputbuffer *p_kb;
 extern struct keyboard_inputbuffer *p_mouse;
 extern long global_pid;
 struct Global_Memory_Descriptor memory_management_struct = {{{0}}, 0};
-extern int usr_init();
-extern unsigned long shell_boot(unsigned long arg);
-extern int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigned long flags);
-extern int shell_up;
+extern s32_t usr_init();
+extern u64_t shell_boot(u64_t arg);
+extern s32_t kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags);
+extern s32_t shell_up;
 
 #include "test.h"
 void Start_Kernel(void)
@@ -68,11 +68,11 @@ void Start_Kernel(void)
 	
 	// init_cpu();
 
-	memory_management_struct.start_code = (unsigned long)&_text;
-	memory_management_struct.end_code = (unsigned long)&_etext;
-	memory_management_struct.end_data = (unsigned long)&_edata;
-	memory_management_struct.end_rodata = (unsigned long)&_erodata;
-	memory_management_struct.start_brk = (unsigned long)&_end;
+	memory_management_struct.start_code = (u64_t)&_text;
+	memory_management_struct.end_code = (u64_t)&_etext;
+	memory_management_struct.end_data = (u64_t)&_edata;
+	memory_management_struct.end_rodata = (u64_t)&_erodata;
+	memory_management_struct.start_brk = (u64_t)&_end;
 
 	init_memory();
 	

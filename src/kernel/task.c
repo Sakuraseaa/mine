@@ -25,8 +25,8 @@ struct mm_struct init_mm = {0};
 
 struct thread_struct init_thread =
 	{
-		.rsp0 = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)),
-		.rsp = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)),
+		.rsp0 = (u64_t)(init_task_union.stack + STACK_SIZE / sizeof(u64_t)),
+		.rsp = (u64_t)(init_task_union.stack + STACK_SIZE / sizeof(u64_t)),
 		.fs = KERNEL_DS,
 		.gs = KERNEL_DS,
 		.cr2 = 0,
@@ -39,8 +39,8 @@ extern void ret_system_call(void);	  // 进入特权级3
 extern void kernel_thread_func(void); // 进入用户进程，在执行完用户进程后，会执行do_exit()程序
 extern void system_call(void);
 
-unsigned long shell_boot(unsigned long arg);
-long global_pid;
+u64_t shell_boot(u64_t arg);
+s64_t global_pid;
 
 struct task_struct *get_task(long pid)
 {
@@ -59,7 +59,7 @@ struct task_struct *get_task(long pid)
 // 在init进程的执行过程中，init进程会放弃内核线程的身份，将自己修改为普通进程
 // 尽管init进程此刻还没有实体程序，但伴随do_execve函数的执行结束，init进程将作为一个全新的个体运行与操作系统
 // 新的程序位于文件系统根目录下，名为init.bin
-unsigned long init(unsigned long arg)
+u64_t init(u64_t arg)
 {
 	// struct pt_regs *regs; // 这里破坏了中断栈
 	DISK1_FAT32_FS_init();
@@ -68,8 +68,8 @@ unsigned long init(unsigned long arg)
 
 	// sys_open("/The quick brown.fox", O_CREAT);
 
-	current->thread->rip = (unsigned long)ret_system_call;
-	current->thread->rsp = (unsigned long)current + STACK_SIZE - sizeof(struct pt_regs);
+	current->thread->rip = (u64_t)ret_system_call;
+	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(struct pt_regs);
 	current->thread->gs = USER_DS;
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
@@ -90,9 +90,9 @@ unsigned long init(unsigned long arg)
 // ------------------DEBUG----------------------
 extern int usr_init();
 // 被init调用,加载用户进程体，到用户空间800000
-unsigned long shell_execve(struct pt_regs *regs, char *name)
+u64_t shell_execve(struct pt_regs *regs, char *name)
 {
-	unsigned long retval = 0;
+	u64_t retval = 0;
 
 	// 这里没有初始化gs,fs段选择子
 	regs->ds = USER_DS;
@@ -103,10 +103,10 @@ unsigned long shell_execve(struct pt_regs *regs, char *name)
 	// regs->rsp = new_rsp;
 	//  在中断栈中填入地址
 
-	int (*fn)(void) = usr_init;
-	regs->r10 = (unsigned long)fn;				// RIP
+	s32_t (*fn)(void) = usr_init;
+	regs->r10 = (u64_t)fn;				// RIP
 	void *tmp = knew(1048576, 0);			// 申请1MB
-	regs->r11 = ((unsigned long)tmp) + 1048576; // RSP
+	regs->r11 = ((u64_t)tmp) + 1048576; // RSP
 	regs->rax = 0;
 
 	// 清理地址空间脏数据
@@ -114,10 +114,10 @@ unsigned long shell_execve(struct pt_regs *regs, char *name)
 	return retval;
 }
 
-unsigned long shell_boot(unsigned long arg)
+u64_t shell_boot(u64_t arg)
 {
-	current->thread->rip = (unsigned long)ret_system_call;
-	current->thread->rsp = (unsigned long)current + STACK_SIZE - sizeof(struct pt_regs);
+	current->thread->rip = (u64_t)ret_system_call;
+	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(struct pt_regs);
 	current->thread->gs = USER_DS;
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
@@ -156,9 +156,9 @@ void wakeup_process(struct task_struct *tsk)
  *
  * @param clone_flags
  * @param tsk
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long copy_flags(unsigned long clone_flags, struct task_struct *tsk)
+u64_t copy_flags(u64_t clone_flags, struct task_struct *tsk)
 {
 	// 如果子进程要与父进程共享内存空间，那么设置子进程标志PF_VFORK
 	if (clone_flags & CLONE_VM)
@@ -171,12 +171,12 @@ unsigned long copy_flags(unsigned long clone_flags, struct task_struct *tsk)
  *
  * @param clone_flags
  * @param tsk CPCB
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long copy_files(unsigned long clone_flags, struct task_struct *tsk)
+u64_t copy_files(u64_t clone_flags, struct task_struct *tsk)
 {
-	int error = 0;
-	int i = 0;
+	s32_t error = 0;
+	s32_t i = 0;
 	if (clone_flags & CLONE_FS)
 		goto out;
 	for (; i < TASK_FILE_MAX; i++)
@@ -196,7 +196,7 @@ out:
  */
 void exit_files(struct task_struct *tsk)
 {
-	int i = 0;
+	s32_t i = 0;
 	if (tsk->flags & PF_VFORK)
 		;
 	else
@@ -212,18 +212,18 @@ void exit_files(struct task_struct *tsk)
  *
  * @param clone_flags
  * @param tsk 子进程PCB
- * @return unsigned long
+ * @return u64_t
  */
 /*
-unsigned long copy_mm(unsigned long clone_flags, struct task_struct *tsk)
+u64_t copy_mm(u64_t clone_flags, struct task_struct *tsk)
 {
 	int error = 0;
 	struct mm_struct *newmm = NULL;
-	unsigned long code_start_addr = 0x800000;
-	unsigned long stack_start_addr = 0xa00000;
-	unsigned long brk_start_addr = 0xc00000;
-	unsigned long *tmp;
-	unsigned long *virtual = NULL;
+	u64_t code_start_addr = 0x800000;
+	u64_t stack_start_addr = 0xa00000;
+	u64_t brk_start_addr = 0xc00000;
+	u64_t *tmp;
+	u64_t *virtual = NULL;
 	struct Page *p = NULL;
 	if (clone_flags & CLONE_VM)
 	{
@@ -241,19 +241,19 @@ unsigned long copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 
 	// copy user code / data / bss / space
 	// 申请PDPT内存，填充PML4页表项
-	tmp = Phy_To_Virt((unsigned long *)((unsigned long)newmm->pgd & (~0xfffUL)) + ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
 	virtual = knew(PAGE_4K_SIZE, 0);
 	memset(virtual, 0, PAGE_4K_SIZE);
 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 
 	// 申请PDT内存，填充PDPT页表项
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
 	virtual = knew(PAGE_4K_SIZE, 0);
 	memset(virtual, 0, PAGE_4K_SIZE);
 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 
 	// 申请用户占用的内存,填充页表, 填充PDT内存
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
 	p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
 	set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
 
@@ -263,9 +263,9 @@ unsigned long copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 	// copy user brk space 拷贝用户空间的堆内存
 	if (current->mm->end_brk - current->mm->start_brk != 0)
 	{
-		tmp = Phy_To_Virt((unsigned long *)((unsigned long)newmm->pgd & (~0xfffUL)) + ((brk_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((brk_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
-		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((brk_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
+		tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((brk_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+		tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((brk_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
+		tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((brk_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
 		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
 		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
 
@@ -295,7 +295,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 
 
 	// 申请PDPT内存，填充PML4页表项 for child_process
-	tmp = Phy_To_Virt((unsigned long *)((unsigned long)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
 	if(!(*tmp & PAGE_Present)) {
 		virtual = knew(PAGE_4K_SIZE, 0);
 		memset(virtual, 0, PAGE_4K_SIZE);
@@ -303,7 +303,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	}
 
 	// 申请PDT内存，填充PDPT页表项 for child_process
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if(!(*tmp & PAGE_Present)) {
 		virtual = knew(PAGE_4K_SIZE, 0);
 		memset(virtual, 0, PAGE_4K_SIZE);
@@ -311,7 +311,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	}
 
 	// 填充 PDT 页表项 for child_process
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
 	if(!(*tmp & PAGE_Present)) {
 
 		attr = (*parent_tmp & (0xfffUL)); // get parent privilege
@@ -326,9 +326,9 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	return;
 }
 
-unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
+u64_t copy_mm_fork(u64_t clone_flags, struct task_struct *tsk)
 {
-	int error = 0;
+	s32_t error = 0;
 	struct mm_struct *newmm = NULL;
 	if (clone_flags & CLONE_VM) {
 		newmm = current->mm;
@@ -374,8 +374,8 @@ out:
 
 void exit_mm_fork(struct task_struct *tsk)
 {
-	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
-	unsigned long tmp1 = 0;
+	u64_t *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+	u64_t tmp1 = 0;
 	size_t i = 0, j = 0, k = 0;
 	struct Page* p = NULL;
 	if (tsk->flags & PF_VFORK)
@@ -413,34 +413,34 @@ void exit_mm_fork(struct task_struct *tsk)
 
 
 // 为子进程伪造应用层执行现场
-unsigned long copy_thread(unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size, struct task_struct *tsk, struct pt_regs *regs)
+u64_t copy_thread(u64_t clone_flags, u64_t stack_start, u64_t stack_size, task_t *tsk, pt_regs_t *regs)
 {
-	struct thread_struct *thd = NULL;
-	struct pt_regs *childregs = NULL; // 应用层执行现场结构体
+	thread_t *thd = NULL;
+	pt_regs_t *childregs = NULL; // 应用层执行现场结构体
 
 	// 开辟中断栈，
-	thd = (struct thread_struct *)(tsk + 1);
+	thd = (thread_t *)(tsk + 1);
 	memset(thd, 0, sizeof(*thd));
 	tsk->thread = thd;
 
 	// 给新进程复制上下文环境到中断栈内
-	childregs = (struct pt_regs *)((unsigned long)tsk + STACK_SIZE) - 1;
-	memcpy(regs, childregs, sizeof(struct pt_regs));
+	childregs = (pt_regs_t *)((u64_t)tsk + STACK_SIZE) - 1;
+	memcpy(regs, childregs, sizeof(pt_regs_t));
 
 	childregs->rax = 0;			  // fork给子进程，返回值为0
 	childregs->rsp = stack_start; // 设置子进程的应用层栈指针 ？为什么这里设置为0?
 
 	// 中断栈中的rsp会在新进程从内核中启动运行的时候用到
 	// rsp0用于新进程进入内核用到的栈
-	thd->rsp0 = (unsigned long)tsk + STACK_SIZE;
-	thd->rsp = (unsigned long)childregs;
+	thd->rsp0 = (u64_t)tsk + STACK_SIZE;
+	thd->rsp = (u64_t)childregs;
 	thd->fs = current->thread->fs;
 	thd->gs = current->thread->gs;
 
 	if (tsk->flags & PF_KTHREAD)
-		thd->rip = (unsigned long)kernel_thread_func;
+		thd->rip = (u64_t)kernel_thread_func;
 	else
-		thd->rip = (unsigned long)ret_system_call;
+		thd->rip = (u64_t)ret_system_call;
 
 	// color_printk(WHITE, BLACK, "current user ret addr:%#018lx, rsp:%#018lx\n", regs->r10, regs->r11);
 	// color_printk(WHITE, BLACK, "new user ret addr:%#018lx, rsp:%#018lx\n", childregs->r10, childregs->r11);
@@ -457,16 +457,16 @@ void exit_thread(struct task_struct *tsk) {}
  * @param clone_flags 克隆信息
  * @param stack_start
  * @param stack_size
- * @return unsigned long 为父进程返回子进程的ID号
+ * @return u64_t 为父进程返回子进程的ID号
  */
-unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size)
+u64_t do_fork(struct pt_regs *regs, u64_t clone_flags, u64_t stack_start, u64_t stack_size)
 {
-	int retval = 0;
+	s32_t retval = 0;
 	struct task_struct *tsk = NULL;
 
 	// alloc & copy task struct
 	tsk = (struct task_struct *)knew(STACK_SIZE, 0);
-	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (unsigned long)tsk);
+	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (u64_t)tsk);
 	if (tsk == NULL)
 	{
 		retval = -EAGAIN;
@@ -487,8 +487,8 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	tsk->umask = 0002;
 
 	// 拷贝信号
-	tsk->sigaction = (sigaction_T*)knew(sizeof(sigaction_T) * (NSIG + 1), 0);
-	memcpy(current->sigaction, tsk->sigaction, sizeof(sigaction_T) * (NSIG + 1));
+	tsk->sigaction = (sigaction_t*)knew(sizeof(sigaction_t) * (NSIG + 1), 0);
+	memcpy(current->sigaction, tsk->sigaction, sizeof(sigaction_t) * (NSIG + 1));
 
 	tsk->state = TASK_UNINTERRUPTIBLE;
 	//////头插法
@@ -533,7 +533,7 @@ void exit_notify(void)
 	wakeup(&current->parent->wait_childexit, TASK_INTERRUPTIBLE);
 }
 
-unsigned long do_exit(unsigned long exit_code)
+u64_t do_exit(u64_t exit_code)
 {
 	struct task_struct *tsk = current;
 	DEBUGK("exit task is running,arg:%#018lx\n", exit_code);
@@ -546,7 +546,7 @@ unsigned long do_exit(unsigned long exit_code)
 	exit_files(tsk);
 	// 回收信号，回收pid, recycle all resource
 	if(tsk->sigaction)
-		kdelete(tsk->sigaction, sizeof(sigaction_T) * (NSIG + 1));
+		kdelete(tsk->sigaction, sizeof(sigaction_t) * (NSIG + 1));
 	exit_mm(tsk);
 
 	sti();
@@ -562,13 +562,13 @@ do_exit_again:
 
 // 线程承载的函数，参数，标志
 // kernel_thread给进程创建了寄存器环境
-int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigned long flags)
+int kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags)
 { // 设置中断栈
 	struct pt_regs regs;
 	memset(&regs, 0, sizeof(regs));
 
-	regs.rbx = (unsigned long)fn;  // RBX保存着程序的入口地址
-	regs.rdx = (unsigned long)arg; // RDX保存着进程创建者传入的参数
+	regs.rbx = (u64_t)fn;  // RBX保存着程序的入口地址
+	regs.rdx = (u64_t)arg; // RDX保存着进程创建者传入的参数
 
 	regs.ds = KERNEL_DS;
 	regs.es = KERNEL_DS;
@@ -577,7 +577,7 @@ int kernel_thread(unsigned long (*fn)(unsigned long), unsigned long arg, unsigne
 	regs.rflags = (1 << 9); // 设置可中断标志
 
 	// rip 保存着进程引导程序, 在内核栈中设置这个rip,的意义是什么
-	regs.rip = (unsigned long)kernel_thread_func;
+	regs.rip = (u64_t)kernel_thread_func;
 
 	return do_fork(&regs, flags | CLONE_VM, 0, 0);
 }
@@ -611,11 +611,11 @@ void __switch_to(struct task_struct *prev, struct task_struct *next)
 // 任务初始化
 void task_init()
 {
-	unsigned long *tmp = NULL;
-	unsigned long *vaddr = NULL;
-	int i = 0;
+	u64_t *tmp = NULL;
+	u64_t *vaddr = NULL;
+	s32_t i = 0;
 
-	vaddr = Phy_To_Virt((unsigned long)Get_gdt() & (~0xfffUL));
+	vaddr = Phy_To_Virt((u64_t)Get_gdt() & (~0xfffUL));
 
 	// 内核层空间占用顶层页表的256个页表项
 	for (i = 256; i < 512; i++)
@@ -623,7 +623,7 @@ void task_init()
 		tmp = vaddr + i;
 		if (*tmp == 0)
 		{	
-			unsigned long *virtual = knew(PAGE_4K_SIZE, 0);
+			u64_t *virtual = knew(PAGE_4K_SIZE, 0);
 			memset(virtual, 0, PAGE_4K_SIZE);
 			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
 			// set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
@@ -636,14 +636,14 @@ void task_init()
 	init_mm.start_code = memory_management_struct.start_code;
 	init_mm.end_code = memory_management_struct.end_code;
 
-	init_mm.start_data = (unsigned long)&_data;
+	init_mm.start_data = (u64_t)&_data;
 	init_mm.end_data = memory_management_struct.end_data;
 
-	init_mm.start_rodata = (unsigned long)&_rodata;
-	init_mm.end_rodata = (unsigned long)&_erodata;
+	init_mm.start_rodata = (u64_t)&_rodata;
+	init_mm.end_rodata = (u64_t)&_erodata;
 
-	init_mm.start_brk = (unsigned long)&_bss;
-	init_mm.end_brk = (unsigned long)&_ebss;
+	init_mm.start_brk = (u64_t)&_bss;
+	init_mm.end_brk = (u64_t)&_ebss;
 
 	init_mm.start_brk = memory_management_struct.start_brk;
 	init_mm.end_brk = current->addr_limit;
@@ -657,7 +657,7 @@ void task_init()
 
 	// sysenter
 	wrmsr(0x175, current->thread->rsp0);	  // sysenter需要使用的rsp
-	wrmsr(0x176, (unsigned long)system_call); // sysenter进入系统调用后，会去执行system_call,sysenter要使用的rip
+	wrmsr(0x176, (u64_t)system_call); // sysenter进入系统调用后，会去执行system_call,sysenter要使用的rip
 
 	//	init_thread,init_tss
 	set_tss64(init_thread.rsp0, init_tss[0].rsp1, init_tss[0].rsp2, init_tss[0].ist1, init_tss[0].ist2, init_tss[0].ist3, init_tss[0].ist4, init_tss[0].ist5, init_tss[0].ist6, init_tss[0].ist7);
@@ -666,7 +666,7 @@ void task_init()
 	list_init(&init_task_union.task.list);
 	list_init(&init_task_union.task.wait_childexit.wait_list);
 
-	init_task_union.task.sigaction = (sigaction_T*)knew(sizeof(sigaction_T) * (NSIG + 1), 0);
+	init_task_union.task.sigaction = (sigaction_t*)knew(sizeof(sigaction_t) * (NSIG + 1), 0);
 
 	// 创建内核线程
 	kernel_thread(init, 13, CLONE_FS | CLONE_SIGNAL);

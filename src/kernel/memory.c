@@ -119,8 +119,7 @@ static struct Slab *init_Slab(u64_t size)
     }
 
     memset(tmp_slab->color_map, 0xff, tmp_slab->color_length);
-    int i = 0;
-    for (; i < tmp_slab->color_count; i++)
+    for (size_t i = 0; i < tmp_slab->color_count; i++)
         *(tmp_slab->color_map + (i >> 6)) ^= (1UL << i % 64);
 
     return tmp_slab;
@@ -132,13 +131,13 @@ static struct Slab *init_Slab(u64_t size)
  *  它最多可从DMA区域空间，已映射页表区域空间，未映射页表区域空间里，一次申请64个连续的物理页
  *  并设置这些物理页对应的struct page属性
  */
-struct Page *alloc_pages(int zone_select, int number, u64_t page_flags)
+struct Page *alloc_pages(s32_t zone_select, s32_t number, u64_t page_flags)
 {
-    int i;
+    s32_t i;
     u64_t page = 0;
 
-    int zone_start = 0;
-    int zone_end = 0;
+    s32_t zone_start = 0;
+    s32_t zone_end = 0;
 
     if (number >= 64 || number <= 0)
     {
@@ -225,9 +224,9 @@ find_free_pages:
 /* page: free page start from this pointer
     number : number < 64
 */
-void free_pages(struct Page *page, int number)
+void free_pages(struct Page *page, s32_t number)
 {
-    int i = 0;
+    s32_t i = 0;
     if (page == NULL)
     {
         color_printk(RED, BLACK, "free_pages() ERROR: page is invalid\n");
@@ -254,7 +253,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
 {
     struct Slab *slab_p = Slab_cache->cache_pool;
     struct Slab *tmp_slab = NULL;
-    int j = 0;
+    s32_t j = 0;
 
 
     // a.内存池中没有Slab可用了, 申请一个物理页，加入内存池
@@ -353,7 +352,7 @@ u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg)
 {
     struct Slab *slab_p = slab_cache->cache_pool;
     assert(slab_p != NULL);
-    int index = 0;
+    s32_t index = 0;
     do
     {
         // 先通过内存对象(由调用者传入)的虚拟地址判断其所在的struct Slba结构体
@@ -568,7 +567,7 @@ u64_t slab_init()
 // 内存池资源不足时，使用该函数创建一个Slab结构体，申请一个物理页，加入到内存池
 struct Slab *kmalloc_create(u64_t size)
 {
-    int i;
+    s32_t i;
     struct Slab *slab = NULL;
     struct Page *page = NULL;
     u64_t *vaddress = NULL;
@@ -670,7 +669,7 @@ struct Slab *kmalloc_create(u64_t size)
 #if 1
 void *kmalloc(u64_t size, u64_t gfp_flags)
 {
-    int i, j;
+    s32_t i, j;
     struct Slab *slab = NULL;
     if (size > 1048576)
     {
@@ -742,7 +741,7 @@ void *kmalloc(u64_t size, u64_t gfp_flags)
 #endif
 void *knew(u64_t size, u64_t gfp_flags)
 {
-    u64 rest = (size % PAGE_4K_SIZE) ? 1 : 0;
+    u64_t rest = (size % PAGE_4K_SIZE) ? 1 : 0;
     void* addr = NULL;
     if (size < 2048 && gfp_flags == 0)
     {
@@ -766,7 +765,7 @@ void *knew(u64_t size, u64_t gfp_flags)
  * @param address 需要被释放的地址
  * @return u64_t 1(false), 0(ture)
  */
-void kdelete(void* address, u64 size) {
+void kdelete(void* address, u64_t size) {
     
     if (size < 2048)
     {
@@ -780,7 +779,7 @@ void kdelete(void* address, u64 size) {
 #if 1
 u64_t kfree(void *address)
 {
-    int i, index;
+    s32_t i, index;
     void *page_base_address = (void *)((u64_t)address & PAGE_2M_MASK); // 物理页虚拟基地址
     struct Slab *slab = NULL;
     // 这里内存的释放代价是否有点大了？
@@ -846,7 +845,7 @@ u64_t kfree(void *address)
 }
 #endif
 
-static u64 phy_mm_count = 0;
+static u64_t phy_mm_count = 0;
 void pagetable_4K_init()
 {
     u64_t i = 0;
@@ -902,7 +901,7 @@ void pagetable_4K_init()
 
 void init_memory()
 {
-    int i, j;
+    s32_t i, j;
     u64_t TotalMem = 0;
     struct E820 *p = NULL;
 
@@ -1205,7 +1204,7 @@ u64_t* pte_ptr(u64_t vaddr) {
  * @param vaddr 需要转换的虚拟地址
  * @return uint32_t 虚拟地址对应的物理地址
  */
-u64 addr_v2p(u64 vaddr) {
+u64_t addr_v2p(u64 vaddr) {
     u64_t* pde = pde_ptr(vaddr);
     return ((*pde) & (PAGE_2M_MASK));
 }
@@ -1217,7 +1216,7 @@ u64 addr_v2p(u64 vaddr) {
  * @param virtual_address The addresss that caused the exception
  * @return u64_t 
  */
-u64 do_wp_page(u64 virtual_address) {
+u64_t do_wp_page(u64_t virtual_address) {
 
     // u64 attr, phy_addr = addr_v2p(virtual_address);
     // u64* tmp = pde_ptr(virtual_address);
@@ -1252,7 +1251,7 @@ u64 do_wp_page(u64 virtual_address) {
  * @param address The address that cause the exception
  */
 extern long krluserspace_accessfailed(adr_t fairvadrs);
-int64 do_no_page(u64 virtual_address)
+int64 do_no_page(u64_t virtual_address)
 {
     return krluserspace_accessfailed(virtual_address);
 }
