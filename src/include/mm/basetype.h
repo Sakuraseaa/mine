@@ -1,7 +1,10 @@
 #ifndef _BASTYPE_T_H
 #define _BASTYPE_T_H
 #define INVIALID 0
+
 #define NULL ((void *)0)
+#define nullptr ((void *)0)
+
 typedef unsigned char u8_t;
 typedef unsigned short u16_t;
 typedef unsigned int u32_t;

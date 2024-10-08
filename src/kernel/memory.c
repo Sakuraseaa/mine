@@ -16,9 +16,9 @@
 #include "assert.h"
 #include "kmsob_t.h"
 #include "memdivmer_t.h"
-
+#include "basetype.h"
 // 给page结构体的属性成员赋值, 增加引用
-unsigned long page_init(struct Page *page, unsigned long flags)
+u64_t page_init(struct Page *page, u64_t flags)
 {
     page->attribute |= flags;
 
@@ -31,7 +31,7 @@ unsigned long page_init(struct Page *page, unsigned long flags)
 }
 
 // 递减page页面的引用, 引用为0->属性删除
-unsigned long page_clean(struct Page *page)
+u64_t page_clean(struct Page *page)
 {
     page->reference_count--;
     page->zone_struct->total_pages_link--;
@@ -43,7 +43,7 @@ unsigned long page_clean(struct Page *page)
 }
 
 // 得到页面属性
-unsigned long get_page_attribute(struct Page *page)
+u64_t get_page_attribute(struct Page *page)
 {
     if (!page)
     {
@@ -55,7 +55,7 @@ unsigned long get_page_attribute(struct Page *page)
 }
 
 // 设置页面属性
-unsigned long set_page_attribute(struct Page *page, unsigned long flags)
+u64_t set_page_attribute(struct Page *page, u64_t flags)
 {
     if (page == NULL)
     {
@@ -75,7 +75,7 @@ unsigned long set_page_attribute(struct Page *page, unsigned long flags)
  * @param size  该2M物理页被分成多个size大小的内存块
  * @return struct Slab*  返回创建好的指针（该结构体需要被一次手动free）
  */
-static struct Slab *init_Slab(unsigned long size)
+static struct Slab *init_Slab(u64_t size)
 {
     // a. 为tmp_slab结构体申请内存
     struct Slab *tmp_slab = (struct Slab *)kmalloc(sizeof(struct Slab), 0);
@@ -107,9 +107,9 @@ static struct Slab *init_Slab(unsigned long size)
     // 位图中有效位数
     tmp_slab->color_count = tmp_slab->free_count;
     // 位图长度/(字节)
-    tmp_slab->color_length = ((tmp_slab->color_count + sizeof(unsigned long) * 8 - 1) >> 6) << 3;
+    tmp_slab->color_length = ((tmp_slab->color_count + sizeof(u64_t) * 8 - 1) >> 6) << 3;
     // 为位图申请内存
-    tmp_slab->color_map = (unsigned long *)kmalloc(tmp_slab->color_length, 0);
+    tmp_slab->color_map = (u64_t *)kmalloc(tmp_slab->color_length, 0);
     if (tmp_slab->color_map == NULL)
     {
         color_printk(RED, BLACK, "slab_malloc()->kmalloc()=>tmp_slab->color_map == NULL\n");
@@ -132,10 +132,10 @@ static struct Slab *init_Slab(unsigned long size)
  *  它最多可从DMA区域空间，已映射页表区域空间，未映射页表区域空间里，一次申请64个连续的物理页
  *  并设置这些物理页对应的struct page属性
  */
-struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags)
+struct Page *alloc_pages(int zone_select, int number, u64_t page_flags)
 {
     int i;
-    unsigned long page = 0;
+    u64_t page = 0;
 
     int zone_start = 0;
     int zone_end = 0;
@@ -171,9 +171,9 @@ struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags)
     for (i = zone_start; i <= zone_end; i++)
     {
         struct Zone *z;
-        unsigned long j;
-        unsigned long start, end;
-        unsigned long tmp;
+        u64_t j;
+        u64_t start, end;
+        u64_t tmp;
 
         // 检测第i个数据空间是否有空足够空闲页，可提供
         if ((memory_management_struct.zones_struct + i)->page_free_count < number)
@@ -184,23 +184,23 @@ struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags)
         end = z->zone_end_address >> PAGE_2M_SHIFT;
 
         tmp = 64 - start % 64;
-        // 在内存区域zone中，遍历对应的物理页，按照UNSIGNED LONG类型作为步进长度(这里的处理很绝，值得学习)
+        // 在内存区域zone中，遍历对应的物理页，按照u64_t类型作为步进长度(这里的处理很绝，值得学习)
         for (j = start; j < end; j += j % 64 ? tmp : 64)
         {
-            unsigned long *p = memory_management_struct.bits_map + (j >> 6); // 定位到位图中的long
-            unsigned long shift = j % 64;                                    // 在long中的偏移
-            unsigned long k = 0;
-            unsigned long num = (1UL << number) - 1;
+            u64_t *p = memory_management_struct.bits_map + (j >> 6); // 定位到位图中的long
+            u64_t shift = j % 64;                                    // 在long中的偏移
+            u64_t k = 0;
+            u64_t num = (1UL << number) - 1;
 
             for (k = shift; k < 64; k++) // 每次遍历64个
             {
-                //  (*p >> k) | (*(p + 1) << (64 - k))将后一个UNSIGNED LONG变量的低位补齐到正在检索的变量中
+                //  (*p >> k) | (*(p + 1) << (64 - k))将后一个u64_t变量的低位补齐到正在检索的变量中
                 //  这样申请出的物理页是连续的
-                unsigned long z1 = (*p >> k) | (*(p + 1) << (64 - k));
+                u64_t z1 = (*p >> k) | (*(p + 1) << (64 - k));
                 if (!((k ? (z1) : *p) & (num)))
                 {
                     // 找到了连续的number个物理页面, 初始化这个页面
-                    unsigned long l;
+                    u64_t l;
                     page = j + k - shift;
                     for (l = 0; l < number; l++) // 分配每一个页
                     {
@@ -250,7 +250,7 @@ void free_pages(struct Page *page, int number)
 }
 
 // 在具体的SLAB内存池申请对象
-void *slab_malloc(struct Slab_cache *Slab_cache, unsigned long arg)
+void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
 {
     struct Slab *slab_p = Slab_cache->cache_pool;
     struct Slab *tmp_slab = NULL;
@@ -347,9 +347,9 @@ void *slab_malloc(struct Slab_cache *Slab_cache, unsigned long arg)
  * @param slab_cache    内存池
  * @param addres    需要释放的虚拟地址
  * @param arg       析构功能的参数
- * @return unsigned long  成功返回 1， 不成功返回 0
+ * @return u64_t  成功返回 1， 不成功返回 0
  */
-unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg)
+u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg)
 {
     struct Slab *slab_p = slab_cache->cache_pool;
     assert(slab_p != NULL);
@@ -411,8 +411,8 @@ unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned l
  * @param arg  暂时没有用到
  * @return struct Slab_cache* 内存池指针
  */
-struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Vaddress, unsigned long arg),
-                               void *(*destructor)(void *Vaddress, unsigned long arg), unsigned long arg)
+struct Slab_cache *slab_create(u64_t size, void *(*constructor)(void *Vaddress, u64_t arg),
+                               void *(*destructor)(void *Vaddress, u64_t arg), u64_t arg)
 {
     // 1. 为Slab_cache申请内存
     struct Slab_cache *slab_cache = NULL;
@@ -437,7 +437,7 @@ struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Va
 }
 
 // SLAB内存池的销毁
-unsigned long slab_destroy(struct Slab_cache *slab_cache)
+u64_t slab_destroy(struct Slab_cache *slab_cache)
 {
     struct Slab *slab_p = slab_cache->cache_pool;
     struct Slab *tmp_slab = NULL;
@@ -483,14 +483,14 @@ NO_SLAB_MEM:
 
 // 初始化不同规格的内存池, 给每个内存池暂时分配一个slab, page物理页
 // 此处slab占用的空间是我们静态申请使用的。
-unsigned long slab_init()
+u64_t slab_init()
 {
     struct Page *page = NULL;
     // get a free page and set to empty page table and return the virtual address
-    unsigned long *virtual = NULL;
-    unsigned long i, j;
+    u64_t *virtual = NULL;
+    u64_t i, j;
 
-    unsigned long tmp_address = memory_management_struct.end_of_struct;
+    u64_t tmp_address = memory_management_struct.end_of_struct;
     // 给16种内存池，分配Slab结构体
     for (i = 0; i < 16; i++)
     {
@@ -503,13 +503,13 @@ unsigned long slab_init()
         kmalloc_cache_size[i].cache_pool->using_count = 0;
         kmalloc_cache_size[i].cache_pool->free_count = PAGE_2M_SIZE / kmalloc_cache_size[i].size; // 空闲块数
         // 位图长度 /字节
-        kmalloc_cache_size[i].cache_pool->color_length = ((PAGE_2M_SIZE / kmalloc_cache_size[i].size + sizeof(unsigned long) * 8 - 1) >> 6) << 3;
+        kmalloc_cache_size[i].cache_pool->color_length = ((PAGE_2M_SIZE / kmalloc_cache_size[i].size + sizeof(u64_t) * 8 - 1) >> 6) << 3;
         // 本Slab里面有多少个可用块数
         kmalloc_cache_size[i].cache_pool->color_count = kmalloc_cache_size[i].cache_pool->free_count;
 
         // 建立位图, 递增内核边界, 把所有位图置位
-        kmalloc_cache_size[i].cache_pool->color_map = (unsigned long *)memory_management_struct.end_of_struct;
-        memory_management_struct.end_of_struct = (unsigned long)(memory_management_struct.end_of_struct + kmalloc_cache_size[i].cache_pool->color_length + sizeof(long) * 10) & (~(sizeof(long) - 1));
+        kmalloc_cache_size[i].cache_pool->color_map = (u64_t *)memory_management_struct.end_of_struct;
+        memory_management_struct.end_of_struct = (u64_t)(memory_management_struct.end_of_struct + kmalloc_cache_size[i].cache_pool->color_length + sizeof(long) * 10) & (~(sizeof(long) - 1));
         memset(kmalloc_cache_size[i].cache_pool->color_map, 0xff, kmalloc_cache_size[i].cache_pool->color_length);
 
         // 把位图中该恢复的位，恢复, 异或
@@ -540,7 +540,7 @@ unsigned long slab_init()
     for (i = 0; i < 16; i++)
     {
         // a. 计算物理页地址, 向上2MB对齐
-        virtual = (unsigned long *)((memory_management_struct.end_of_struct + PAGE_2M_SIZE * i + PAGE_2M_SIZE - 1) & PAGE_2M_MASK);
+        virtual = (u64_t *)((memory_management_struct.end_of_struct + PAGE_2M_SIZE * i + PAGE_2M_SIZE - 1) & PAGE_2M_MASK);
 
         // b. 根据虚拟页计算(已经分配好的)strcut Page结构体的位置
         page = Virt_To_2M_Page(virtual);
@@ -566,12 +566,12 @@ unsigned long slab_init()
 }
 
 // 内存池资源不足时，使用该函数创建一个Slab结构体，申请一个物理页，加入到内存池
-struct Slab *kmalloc_create(unsigned long size)
+struct Slab *kmalloc_create(u64_t size)
 {
     int i;
     struct Slab *slab = NULL;
     struct Page *page = NULL;
-    unsigned long *vaddress = NULL;
+    u64_t *vaddress = NULL;
     long structsize = 0; // 记录 Slab 和 位图 的大小
 
     // 申请一个物理页
@@ -598,7 +598,7 @@ struct Slab *kmalloc_create(unsigned long size)
 
         // 这是Slab结构体 和本物理页的位图
         slab = (struct Slab *)((unsigned char *)vaddress + PAGE_2M_SIZE - structsize);
-        slab->color_map = (unsigned long *)((unsigned char *)slab + sizeof(struct Slab));
+        slab->color_map = (u64_t *)((unsigned char *)slab + sizeof(struct Slab));
 
         slab->free_count = (PAGE_2M_SIZE - structsize) / size;
         slab->using_count = 0;
@@ -608,7 +608,7 @@ struct Slab *kmalloc_create(unsigned long size)
         list_init(&slab->list);
 
         // 位图长度/字节，向上对齐64字节
-        slab->color_length = ((slab->color_count + sizeof(unsigned long) * 8 - 1) >> 6) << 3;
+        slab->color_length = ((slab->color_count + sizeof(u64_t) * 8 - 1) >> 6) << 3;
         memset(slab->color_map, 0xff, slab->color_length);
 
         // 根据总可用块数，恢复位图
@@ -636,10 +636,10 @@ struct Slab *kmalloc_create(unsigned long size)
         slab->free_count = PAGE_2M_SIZE / size;
         slab->using_count = 0;
         slab->color_count = slab->free_count;
-        slab->color_length = ((slab->color_count + sizeof(unsigned long) * 8 - 1) >> 6) << 3;
+        slab->color_length = ((slab->color_count + sizeof(u64_t) * 8 - 1) >> 6) << 3;
 
         // 创建位图
-        slab->color_map = (unsigned long *)kmalloc(slab->color_length, 0);
+        slab->color_map = (u64_t *)kmalloc(slab->color_length, 0);
         memset(slab->color_map, 0xff, slab->color_length);
 
         slab->Vaddress = Phy_To_Virt(page->PHY_address);
@@ -668,7 +668,7 @@ struct Slab *kmalloc_create(unsigned long size)
  * @return void*  return virtual kernel address
  */
 #if 1
-void *kmalloc(unsigned long size, unsigned long gfp_flags)
+void *kmalloc(u64_t size, u64_t gfp_flags)
 {
     int i, j;
     struct Slab *slab = NULL;
@@ -722,7 +722,7 @@ void *kmalloc(unsigned long size, unsigned long gfp_flags)
 
         if ((*(slab->color_map + (j >> 6)) & (1UL << (j % 64))) == 0)
         {
-            unsigned long sk_t = (*(slab->color_map +  (j >> 6))) & ((1UL << (j % 64)));
+            u64_t sk_t = (*(slab->color_map +  (j >> 6))) & ((1UL << (j % 64)));
             assert((sk_t) == 0);
 
             *(slab->color_map + (j >> 6)) |= (1UL << (j % 64));
@@ -740,7 +740,7 @@ void *kmalloc(unsigned long size, unsigned long gfp_flags)
     return NULL;
 }
 #endif
-void *knew(unsigned long size, unsigned long gfp_flags)
+void *knew(u64_t size, u64_t gfp_flags)
 {
     u64 rest = (size % PAGE_4K_SIZE) ? 1 : 0;
     void* addr = NULL;
@@ -764,7 +764,7 @@ void *knew(unsigned long size, unsigned long gfp_flags)
  * @brief 释放内存
  *
  * @param address 需要被释放的地址
- * @return unsigned long 1(false), 0(ture)
+ * @return u64_t 1(false), 0(ture)
  */
 void kdelete(void* address, u64 size) {
     
@@ -778,10 +778,10 @@ void kdelete(void* address, u64 size) {
     }
 }
 #if 1
-unsigned long kfree(void *address)
+u64_t kfree(void *address)
 {
     int i, index;
-    void *page_base_address = (void *)((unsigned long)address & PAGE_2M_MASK); // 物理页虚拟基地址
+    void *page_base_address = (void *)((u64_t)address & PAGE_2M_MASK); // 物理页虚拟基地址
     struct Slab *slab = NULL;
     // 这里内存的释放代价是否有点大了？
     // 遍历各种内存池，寻找需要操作的物理页
@@ -849,52 +849,52 @@ unsigned long kfree(void *address)
 static u64 phy_mm_count = 0;
 void pagetable_4K_init()
 {
-    unsigned long i = 0;
-    unsigned long toMem = phy_mm_count * PAGE_2M_SIZE; 
-    unsigned long *tmp =  NULL;
-    unsigned long virtual_addr = 0;
+    u64_t i = 0;
+    u64_t toMem = phy_mm_count * PAGE_2M_SIZE; 
+    u64_t *tmp =  NULL;
+    u64_t virtual_addr = 0;
     
     for (;(i + PAGE_4K_SIZE -1)< toMem ; i+= PAGE_4K_SIZE)
     {
-        virtual_addr = (unsigned long)Phy_To_Virt(i);
+        virtual_addr = (u64_t)Phy_To_Virt(i);
         
         // 获取该虚拟地址对应的PML(page map level 4, 4级页表)中的页表项指针
-        tmp = Phy_To_Virt((unsigned long)Global_CR3 + ((virtual_addr >> PAGE_GDT_SHIFT) & 0x1ff) * 8);
+        tmp = Phy_To_Virt((u64_t)Global_CR3 + ((virtual_addr >> PAGE_GDT_SHIFT) & 0x1ff) * 8);
         if (*tmp == 0)
         { // 页表项为空，则分配4kbPDPT页表,填充该表项
-            unsigned long *PDPT = knew(PAGE_4K_SIZE, 1);
+            u64_t *PDPT = knew(PAGE_4K_SIZE, 1);
             memset(PDPT, 0, PAGE_4K_SIZE);
             set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(PDPT), PAGE_USER_GDT));
         }
 
         // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_1G_SHIFT) & 0x1ff) * 8);
+        tmp = (u64_t *)((u64_t)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_1G_SHIFT) & 0x1ff) * 8);
         if (*tmp == 0) {  // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
-            unsigned long *PDT = knew(PAGE_4K_SIZE, 1);
+            u64_t *PDT = knew(PAGE_4K_SIZE, 1);
             memset(PDT, 0, PAGE_4K_SIZE);
             set_pdpt(tmp, mk_pdpt(Virt_To_Phy(PDT), PAGE_USER_Dir));
         }
 
         // ========================================================================================
         // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
-        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_2M_SHIFT) & 0x1ff) * 8);
+        tmp = (u64_t *)((u64_t)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_2M_SHIFT) & 0x1ff) * 8);
         if (*tmp == 0)
         { // 页表项为空，则分配4kb-PDT(page directory table)页表，填充该表项
-            unsigned long *PT= knew(PAGE_4K_SIZE, 1);
+            u64_t *PT= knew(PAGE_4K_SIZE, 1);
             memset(PT, 0, PAGE_4K_SIZE);
             set_pdt(tmp, mk_pdpt(Virt_To_Phy(PT), PAGE_USER_Dir));
         }
 
         // ========================================================================================
         // 获取该虚拟地址对应的PT(page table)中的页表项指针
-        tmp = (unsigned long *)((unsigned long)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_4K_SHIFT) & 0x1ff) * 8);
+        tmp = (u64_t *)((u64_t)Phy_To_Virt(*tmp & (~0xfffUL)) + ((virtual_addr >> PAGE_4K_SHIFT) & 0x1ff) * 8);
         if(*tmp == 0)
             set_pt(tmp, mk_pt(i, PAGE_USER_Page_4K));
     }
 
     flush_tlb();             
     
-    unsigned long*  sk_addr = Phy_To_Virt(toMem  - PAGE_4K_SIZE);
+    u64_t*  sk_addr = Phy_To_Virt(toMem  - PAGE_4K_SIZE);
     *sk_addr = 0xff;
     return;
 }
@@ -903,7 +903,7 @@ void pagetable_4K_init()
 void init_memory()
 {
     int i, j;
-    unsigned long TotalMem = 0;
+    u64_t TotalMem = 0;
     struct E820 *p = NULL;
 
     // color_printk(BLUE, BLACK, "Display Physics Address MAP,Type(1:RAM,2:ROM or Reserved,3:ACPI Reclaim Memory,4:ACPI NVS Memory,Others:Undefine)\n");
@@ -938,7 +938,7 @@ void init_memory()
     // 把可操作的地址对齐到2MB, 计算有多少2MB物理页可用
     for (i = 0; i <= memory_management_struct.e820_length; i++)
     {
-        unsigned long start, end;
+        u64_t start, end;
         if (memory_management_struct.e820[i].type != 1)
             continue;
 
@@ -962,18 +962,18 @@ void init_memory()
     // bits map construction init
     //================创建物理页位图==============================================================
     // a. 位图设置在内核之后，向上对齐4kb
-    memory_management_struct.bits_map = (unsigned long *)((memory_management_struct.start_brk + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
+    memory_management_struct.bits_map = (u64_t *)((memory_management_struct.start_brk + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
     // 2MB物理页面数
     memory_management_struct.bits_size = TotalMem >> PAGE_2M_SHIFT;
     // b. 位图长度(单位是字节) --- 此处的 & 符号可以理解为除法
-    memory_management_struct.bits_length = (((unsigned long)(TotalMem >> PAGE_2M_SHIFT) + sizeof(long) * 8 - 1) / 8) & (~(sizeof(long) - 1));
+    memory_management_struct.bits_length = (((u64_t)(TotalMem >> PAGE_2M_SHIFT) + sizeof(long) * 8 - 1) / 8) & (~(sizeof(long) - 1));
     // c. 把位图全置位 init bits map memory
     memset(memory_management_struct.bits_map, 0xff, memory_management_struct.bits_length); // init bits map memory
 
     // pages construction init
     // ===========创建物理页结构体数组 - pages construction init =================================================
     // a. 物理页结构体创建在物理页位图之后，向上对齐4kb, 要求清空这段区域
-    memory_management_struct.pages_struct = (struct Page *)(((unsigned long)memory_management_struct.bits_map + memory_management_struct.bits_length + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
+    memory_management_struct.pages_struct = (struct Page *)(((u64_t)memory_management_struct.bits_map + memory_management_struct.bits_length + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
 
     memory_management_struct.pages_size = TotalMem >> PAGE_2M_SHIFT;
 
@@ -983,7 +983,7 @@ void init_memory()
 
     // zones construction init
     // ===========创建可用物理内存区域结构体 - pages consturction init ====================
-    memory_management_struct.zones_struct = (struct Zone *)(((unsigned long)memory_management_struct.pages_struct + memory_management_struct.pages_length + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
+    memory_management_struct.zones_struct = (struct Zone *)(((u64_t)memory_management_struct.pages_struct + memory_management_struct.pages_length + PAGE_4K_SIZE - 1) & PAGE_4K_MASK);
 
     memory_management_struct.zones_size = 0;
 
@@ -993,7 +993,7 @@ void init_memory()
     // ================ 初始化 Zone 和 Page 结构体
     for (i = 0; i <= memory_management_struct.e820_length; i++)
     {
-        unsigned long start, end;
+        u64_t start, end;
         struct Zone *z;
         struct Page *p;
         // 不符合要求的内存区域被掠过
@@ -1077,7 +1077,7 @@ void init_memory()
     // color_printk(ORANGE, BLACK, "ZONE_DMA_INDEX:%d\tZONE_NORMAL_INDEX:%d\tZONE_UNMAPED_INDEX:%d\n", ZONE_DMA_INDEX, ZONE_NORMAL_INDEX, ZONE_UNMAPED_INDEX);
     //  给内存管理结构尾赋值，并且预留的一段内存空间防止越界访问, 字节单位
     ////need a blank to separate memory_management_struct
-    memory_management_struct.end_of_struct = (unsigned long)((unsigned long)memory_management_struct.zones_struct + memory_management_struct.zones_length + sizeof(long) * 32) & (~(sizeof(long) - 1));
+    memory_management_struct.end_of_struct = (u64_t)((u64_t)memory_management_struct.zones_struct + memory_management_struct.zones_length + sizeof(long) * 32) & (~(sizeof(long) - 1));
 
     // color_printk(ORANGE, BLACK, "start_code:%#018lx,end_code:%#018lx,end_data:%#018lx,start_brk:%#018lx,end_of_struct:%#018lx\n", memory_management_struct.start_code, memory_management_struct.end_code, memory_management_struct.end_data, memory_management_struct.start_brk, memory_management_struct.end_of_struct);
 
@@ -1119,31 +1119,31 @@ void init_memory()
  *
  * @param addr 堆的当前位置
  * @param len 要扩展的堆的长度
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long do_brk(unsigned long addr, unsigned long len)
+u64_t do_brk(u64_t addr, u64_t len)
 {
-    unsigned long *tmp = NULL;
-    unsigned long *virtual = NULL;
-    unsigned long i = 0;
+    u64_t *tmp = NULL;
+    u64_t *virtual = NULL;
+    u64_t i = 0;
     /* sktest: 修改kmalloc 为 knew ，用户空间内存*/
     for (i = addr; i < addr + len; i += PAGE_2M_SIZE)
     {
-        tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((i >> PAGE_GDT_SHIFT) & 0x1ff));
+        tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((i >> PAGE_GDT_SHIFT) & 0x1ff));
         if (*tmp == 0) // 这样比较可读性不好
         {
             virtual = umalloc_4k_page(1); 
             memset(virtual, 0, PAGE_4K_SIZE);
             set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
         }
-        tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_1G_SHIFT) & 0x1ff));
+        tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_1G_SHIFT) & 0x1ff));
         if (*tmp == 0)
         {
             virtual =  umalloc_4k_page(1); 
             memset(virtual, 0, PAGE_4K_SIZE);
             set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
         }
-        tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
+        tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
         if (*tmp == 0)
         {
 		    virtual = umalloc_4k_page(1); // 申请page_table 内存，填充page_dirctory页表项
@@ -1151,7 +1151,7 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
             set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
         }
 
-    	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((i >> PAGE_4K_SHIFT) & 0x1ff));
+    	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_4K_SHIFT) & 0x1ff));
         if (*tmp == 0)
         {
 		    virtual = umalloc_4k_page(1); // 申请页表内存，填充页表项
@@ -1167,9 +1167,9 @@ unsigned long do_brk(unsigned long addr, unsigned long len)
 /**
  * @brief pmle_addr用于获得虚拟地址vaddr对应的4级页表项指针，pte中有vaddr保存的物理页地址
  */
-unsigned long* pml4e_ptr(unsigned long vaddr)
+u64_t* pml4e_ptr(u64_t vaddr)
 {
-    unsigned long *pmle =  Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL))) +
+    u64_t *pmle =  Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL))) +
 					  ((vaddr >> PAGE_GDT_SHIFT) & 0x1ff);
     return pmle;
 }
@@ -1177,25 +1177,25 @@ unsigned long* pml4e_ptr(unsigned long vaddr)
 /**
  * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录指针表(3级页表)项指针
  */
-unsigned long* pdpe_ptr(unsigned long vaddr)
+u64_t* pdpe_ptr(u64_t vaddr)
 {
-	unsigned long *pdpe = Phy_To_Virt((unsigned long *)(*(pml4e_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
+	u64_t *pdpe = Phy_To_Virt((u64_t *)(*(pml4e_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_1G_SHIFT) & 0x1ff));
     return pdpe;
 }
 
 /**
  * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
  */
-unsigned long* pde_ptr(unsigned long vaddr) {
-	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pdpe_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_2M_SHIFT) & 0x1ff));
+u64_t* pde_ptr(u64_t vaddr) {
+	u64_t* pde = Phy_To_Virt((u64_t *)(*(pdpe_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_2M_SHIFT) & 0x1ff));
 	return pde;
 }
 
 /**
  * @brief pdpe_addr用于获得虚拟地址vaddr对应的页目录表(2级页表)项指针
  */
-unsigned long* pte_ptr(unsigned long vaddr) {
-	unsigned long* pde = Phy_To_Virt((unsigned long *)(*(pde_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_4K_SHIFT) & 0x1ff));
+u64_t* pte_ptr(u64_t vaddr) {
+	u64_t* pde = Phy_To_Virt((u64_t *)(*(pde_ptr(vaddr)) & (~0xfffUL)) + ((vaddr >> PAGE_4K_SHIFT) & 0x1ff));
 	return pde;
 }
 
@@ -1206,7 +1206,7 @@ unsigned long* pte_ptr(unsigned long vaddr) {
  * @return uint32_t 虚拟地址对应的物理地址
  */
 u64 addr_v2p(u64 vaddr) {
-    unsigned long* pde = pde_ptr(vaddr);
+    u64_t* pde = pde_ptr(vaddr);
     return ((*pde) & (PAGE_2M_MASK));
 }
 
@@ -1215,7 +1215,7 @@ u64 addr_v2p(u64 vaddr) {
  *    配合fork()
  * 
  * @param virtual_address The addresss that caused the exception
- * @return unsigned long 
+ * @return u64_t 
  */
 u64 do_wp_page(u64 virtual_address) {
 
