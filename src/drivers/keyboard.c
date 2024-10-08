@@ -149,7 +149,7 @@ void keyboard_init()
     struct IO_APIC_RET_entry entry;
     unsigned long i, j;
 
-    p_kb = (struct keyboard_inputbuffer *)kmalloc(sizeof(struct keyboard_inputbuffer), 0);
+    p_kb = (struct keyboard_inputbuffer *)knew(sizeof(struct keyboard_inputbuffer), 0);
 
     wait_queue_init(&keyboard_wait_queue, NULL);
 
@@ -180,9 +180,9 @@ void keyboard_init()
     register_irq(0x21, &entry, &keyboard_handler, (unsigned long)p_kb, &keyboard_int_controller, "ps/2 keyboard");
 }
 
-// 驱动卸载函数 - 什么时候实现动态加载？
+// sktest 驱动卸载函数 - 什么时候实现动态加载？
 void keyboard_exit()
 {
     unregister_irq(0x21);
-    kfree((unsigned long *)p_kb);
+    kdelete(p_kb, sizeof(keyboard_inputbuffer_t));
 }

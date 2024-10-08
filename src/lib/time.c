@@ -208,7 +208,7 @@ void timer_init()
     register_softirq(0, &do_timer, NULL);
 
     // 给定时队列加入第一个任务
-    tmp = (struct timer_list *)kmalloc(sizeof(struct timer_list), 0);
+    tmp = (struct timer_list *)knew(sizeof(struct timer_list), 0);
     init_timer(tmp, &test_timer, NULL, 40);
     add_timer(tmp);
 }

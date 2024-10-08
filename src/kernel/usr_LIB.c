@@ -54,7 +54,7 @@ struct DIR* opendir(const char* path)
     fd = open(path, O_DIRECTORY);
     
     if(fd >= 0)
-        dir = (struct DIR*)kmalloc(sizeof(struct DIR), 0);
+        dir = (struct DIR*)knew(sizeof(struct DIR), 0);
     else
         return NULL;
 
@@ -70,7 +70,7 @@ struct DIR* opendir(const char* path)
 int closedir(struct DIR* dir)
 {
     close(dir->fd);
-    kfree(dir);
+    kdelete(dir, sizeof(struct DIR));
     return 0;
 }
 

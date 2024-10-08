@@ -414,7 +414,7 @@ void frame_buffer_init()
 		tmp = Phy_To_Virt((unsigned long *)((unsigned long)Global_CR3 & (~0xfffUL))) + (((FB_addr + i) >> PAGE_GDT_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
-			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
+			virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 			memset(virtual, 0, PAGE_4K_SIZE);
 
 			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
@@ -424,7 +424,7 @@ void frame_buffer_init()
 		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((FB_addr + i) >> PAGE_1G_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{
-			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
+			virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 			memset(virtual, 0, PAGE_4K_SIZE);
 
 			set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
@@ -435,7 +435,7 @@ void frame_buffer_init()
 		tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL))) + (((FB_addr + i) >> PAGE_2M_SHIFT) & 0x1ff);
 		if (*tmp == 0)
 		{	
-			virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
+			virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
 			memset(virtual, 0, PAGE_4K_SIZE);
 			set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 		}

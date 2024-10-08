@@ -258,11 +258,11 @@ long minix_iput(struct dir_entry *dentry, struct index_node *inode) { return 0; 
 long minix_delete(struct dir_entry *dentry) { 
     // 当然这里是需要重写的
     if(ISREG(dentry->dir_inode->i_mode)) {
-        kfree(dentry->dir_inode);
+        kdelete(dentry->dir_inode, sizeof(inode_t));
 
         list_del(&dentry->child_node);
 
-        slab_free(Dir_Entry_Pool, dentry, 0); // 这一句话应该再 VFS 层实现
+        kdelete(dentry, sizeof(dir_entry_t)); // 这一句话应该再 VFS 层实现
     } else if (ISDIR(dentry->dir_inode->i_mode)) {
 
     }
@@ -434,7 +434,7 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
     assert(dir->attribute == FS_ATTR_DIR)
 
     // A. 准备好目录项
-    minix_dentry_t* dent = (minix_dentry_t*)kmalloc(sizeof(minix_dentry_t), 0); 
+    minix_dentry_t* dent = (minix_dentry_t*)knew(sizeof(minix_dentry_t), 0); 
     memset(dent, 0, sizeof(minix_dentry_t));
 
     dent->nr = dentry->dir_inode->nr;
@@ -580,8 +580,6 @@ static void realse_file_data(super_t* minix_sb, minix_inode_t* m_inode) {
         // 这里的实现 需要三重循环，有没有什么方法。可以减少时间复杂度
         assert(0);
     }
-
-
 }
 
 /**
@@ -671,7 +669,7 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
     // C. 在新文件创建 "." 和 ".." 目录项
     inode_t* i_child = dentry->dir_inode;
 
-    dir_entry_t* i_entry = (dir_entry_t*)slab_malloc(Dir_Entry_Pool, 0);
+    dir_entry_t* i_entry = (dir_entry_t*)knew(sizeof(dir_entry_t), 0);
     
     i_entry->dir_inode = i_child;
     i_entry->name_length = 1;
@@ -683,8 +681,8 @@ long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) {
     i_entry->name_length = 2;
     name[1] = '.';
     add_dentry(i_child, i_entry);
-
-    slab_free(Dir_Entry_Pool, i_entry, 0);
+    
+    kdelete(i_entry, sizeof(dir_entry_t));
     
     return 0; 
 }
@@ -808,7 +806,7 @@ inode_t *iget(dev_t dev, idx_t nr)
     super_t* super = get_super(dev);
     minix_sb_info_t *minix_sb = (minix_sb_info_t*)(super->private_sb_info);
 
-    inode = (inode_t*)kmalloc(sizeof(inode_t), 0);
+    inode = (inode_t*)knew(sizeof(inode_t), 0);
     inode->dev = dev;
     inode->inode_ops = &minix_inode_ops;
     inode->f_ops = &minix_file_ops;
@@ -851,7 +849,7 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     struct super_block *sbp = NULL;
     minix_sb_info_t* minix_sb = NULL;
     // ===============================  读取super block =====================================
-    sbp = (struct super_block *)kmalloc(sizeof(struct super_block), 0);
+    sbp = (struct super_block *)knew(sizeof(struct super_block), 0);
     memset(sbp, 0, sizeof(struct super_block));
 
     sbp->dev = 2; // here need rewrite
@@ -864,7 +862,7 @@ struct super_block *minix_read_superblock(struct Disk_Partition_Table_Entry *DPT
     list_add_to_behind(&super_list, &sbp->node);
     sbp->sb_ops = &minix_super_ops;
 
-    sbp->private_sb_info = minix_sb = (minix_sb_info_t *)kmalloc(sizeof(minix_sb_info_t), 0);
+    sbp->private_sb_info = minix_sb = (minix_sb_info_t *)knew(sizeof(minix_sb_info_t), 0);
     memset(sbp->private_sb_info, 0, sizeof(minix_sb_info_t));
 
     sbp->buf = bread(sbp->dev, 1, sbp->block_size);
@@ -877,15 +875,17 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
                 minix_sb->zmap_blocks, minix_sb->magic);
     
     // directory entry 
-    sbp->root = (dir_entry_t*)slab_malloc(Dir_Entry_Pool, 0);
+    sbp->root = (dir_entry_t*)knew(sizeof(dir_entry_t), 0);
 
     sbp->root->parent = sbp->root;
     sbp->root->name_length = 1;
-    sbp->root->name = (char*)kmalloc(2, 0);
+    sbp->root->name = (char*)knew(2, 0);
     sbp->root->name[0] = '/';
     sbp->root->dir_ops = &minix_dentry_ops;
     sbp->root->d_sb = sbp;
-
+    list_init(&sbp->root->child_node);
+    list_init(&sbp->root->subdirs_list);
+    
     // creat root inode
     sbp->root->dir_inode = iget(sbp->dev, 1);
 
@@ -897,9 +897,7 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
     zmap[1] = bread(sbp->dev, 2 + minix_sb->imap_blocks + 1, BLOCK_SIZE);
     // ==================================================
     
-    
     return sbp;
-
 }
 
 

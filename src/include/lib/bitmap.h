@@ -13,6 +13,7 @@ typedef struct bitmap
 
 void bitmap_init(bitmap_t *btmp, u64 bytes_len);
 int64 bitmap_scan(bitmap_t *btmp, u64 cnt);
+void bitmap_destory(bitmap_t *btmp);
 void bitmap_set(bitmap_t *btmp, u64 bit_idx, u8 value);
 void bitmap_make(bitmap_t *btmp, u8* data, u64 bytes_len);
 bool bitmap_scan_test(bitmap_t *btmp, u64 bit_idx);

@@ -331,7 +331,6 @@ unsigned long slab_init();
 void *slab_malloc(struct Slab_cache *slab_cache, unsigned long arg);
 unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg);
 unsigned long do_brk(unsigned long addr, unsigned long len);
-void pagetable_init();
 void init_memory();
 unsigned long* pde_ptr(unsigned long vaddr);
 unsigned long* pml4e_ptr(unsigned long vaddr);
@@ -341,4 +340,9 @@ u64 do_wp_page(u64 virtual_address);
 int64 do_no_page(u64 virtual_address);
 void pagetable_4K_init();
 // unsigned long kfree(void* address, u64 size);
+
+
+void kdelete(void* address, u64 size);
+void *knew(unsigned long size, unsigned long gfp_flags);
+
 #endif

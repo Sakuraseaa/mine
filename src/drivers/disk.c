@@ -26,7 +26,7 @@ void end_request(struct block_buffer_node *node)
     current->flags |= NEED_SCHEDULE;
 
     // 释放硬盘请求队列节点占用的内存
-    kfree((unsigned long *)disk_request.in_using);
+    kdelete(disk_request.in_using, sizeof(block_buffer_node_t));
     disk_request.in_using = NULL;
 
     if (disk_request.block_request_count) // 硬盘中断请求队列不为空，则继续处理请求包
@@ -132,7 +132,7 @@ long cmd_out()
  */
 struct block_buffer_node *make_request(long cmd, unsigned long blocks, long count, unsigned char *buffer)
 {
-    struct block_buffer_node *node = (struct block_buffer_node *)kmalloc(sizeof(struct block_buffer_node), 0);
+    struct block_buffer_node *node = (struct block_buffer_node *)knew(sizeof(struct block_buffer_node), 0);
     wait_queue_init(&node->wait_queue, current);
 
     switch (cmd)

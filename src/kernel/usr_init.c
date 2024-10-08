@@ -69,7 +69,7 @@ int usr_init()
 	char buf[256] = {0};
 	char path[] = "/KEYBOARD.DEV";
 	int index = -1;
-	current_dir = (char*)kmalloc(2, 0);
+	current_dir = (char*)knew(2, 0);
 	current_dir[0] = '/';
 
 
@@ -93,7 +93,7 @@ int usr_init()
 			run_command(index, argc, argv); // 命令执行
 	}
 
-	kfree(current_dir);
+	kdelete(current_dir, strlen(current_dir));
 	close(fd);
 
 	while (1)
@@ -386,10 +386,10 @@ int cd_command(int argc, char **argv)
 	i = chdir(path);
 
 	if(!i) {
-		kfree(current_dir);
+		kdelete(current_dir, strlen(current_dir));
 		current_dir = path;
 	} else {
-		kfree(path);
+		kdelete(path, strlen(path));
 		color_printf(RED, "cd: %s:No such file or directory\n", argv[1]);
 	}
 	return 1;
@@ -498,7 +498,7 @@ int ls_command(int argc, char **argv)
 
 		if(strcmp(str, "-l") == 0){  // 检测 -l 标志
 			isDetail = true;
-			buf = (char*)kmalloc(512, 0);
+			buf = (char*)knew(512, 0);
 		}
 	}
 	
@@ -512,7 +512,7 @@ int ls_command(int argc, char **argv)
 	}
 
 	// printf("ls_command opendir:%d\n", dir->fd);
-	entry = (struct dirent*)kmalloc(256, 0);
+	entry = (struct dirent*)knew(256, 0);
 	// 直到该目录为空
 	while(1)
 	{
@@ -558,7 +558,7 @@ int ls_command(int argc, char **argv)
 	}
 	printf("\n");
 	closedir(dir);
-
+	kdelete(entry, 256);
 	return 0;
 }
 
@@ -582,7 +582,7 @@ int cat_command(int argc, char **argv)
 	// 拼凑绝对路径
 	len = strlen(current_dir);
 	i = len + strlen(argv[1]);
-	filename = kmalloc(i + 2, 0);
+	filename = knew(i + 2, 0);
 	memset(filename, 0, i + 2);
 
 	if(argv[1][0] == '/') // 是绝对路径
@@ -599,7 +599,7 @@ int cat_command(int argc, char **argv)
 	}
 	i = lseek(fd, 0, SEEK_END);
 	lseek(fd, 0 , SEEK_SET);
-	buf = kmalloc(i + 1, 0);
+	buf = knew(i + 1, 0);
 	memset(buf, 0 , i + 1);
 	len = read(fd, buf, i);
 	printf("length:%d\n",len);
@@ -634,7 +634,7 @@ static char* get_filename_whole(char* buf, char* reletive_path) {
 	// 拼凑绝对路径
 	len = strlen(current_dir);
 	len = len + strlen(reletive_path);
-	buf = kmalloc(len + 2, 0);
+	buf = knew(len + 2, 0);
 	memset(buf, 0, len + 2);
 
 	make_clear_abs_path(reletive_path, buf); // 是相对路径 把相对路径转换成绝对路径
@@ -774,7 +774,7 @@ int parse_command(char *buf, int *argc, char ***argv)
 
 	if (!*argc)
 		return -1;
-	*argv = (char **)kmalloc(sizeof(char **) * (*argc), 0);
+	*argv = (char **)knew(sizeof(char **) * (*argc), 0);
 	// printf("parse_command argv:%#018lx, *argv:%#018lx\n", argv, *argv);
 
 	for (i = 0; i < *argc && j < 256; i++)

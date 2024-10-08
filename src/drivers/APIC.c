@@ -57,6 +57,7 @@ void ioapic_rte_write(unsigned char index, unsigned long value)
 	io_mfence();
 }
 
+#if 0
 // 初始化 Struct IOAPIC_map 并且 把间接访问寄存器的物理基地址映射到线性空间
 static void IOAPIC_pagetable_remap()
 {
@@ -100,7 +101,7 @@ static void IOAPIC_pagetable_remap()
 
 	flush_tlb();
 }
-
+#endif
 // init local apic
 void Local_APIC_init()
 {

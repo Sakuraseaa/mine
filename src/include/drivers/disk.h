@@ -342,7 +342,7 @@ struct Disk_Identify_Info
 #define ATA_WRITE_CMD 0x34		   // 写命令
 #define GET_IDENTIFY_DISK_CMD 0xec // 查询参数命令
 
-struct block_buffer_node
+typedef struct block_buffer_node
 {
 	unsigned int count;												// 请求的扇区数
 	unsigned char cmd;												// 命令
@@ -350,14 +350,14 @@ struct block_buffer_node
 	unsigned char *buffer;											// 指向的缓冲区
 	void (*end_handler)(unsigned long nr, unsigned long parameter); // 命令对应的中断处理程序
 	wait_queue_T wait_queue;
-};
+}block_buffer_node_t;
 
-struct request_queue
+typedef struct request_queue
 {
 	wait_queue_T wait_queue_list;		// 请求硬盘操作的等待队列
 	struct block_buffer_node *in_using; // 正在处理的硬盘操作请求
 	long block_request_count;			// 剩余请求数
-};
+}request_queue_t;
 
 struct request_queue disk_request;
 extern struct block_device_operation IDE_device_operation;

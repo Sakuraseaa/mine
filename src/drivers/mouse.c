@@ -52,14 +52,14 @@ hw_int_controller mouse_int_controller =
 void mouse_exit()
 {
     unregister_irq(0x2c);
-    kfree((unsigned long *)p_mouse);
+    kdelete(p_mouse, sizeof(keyboard_inputbuffer_t));
 }
 
 void mouse_init()
 {
     struct IO_APIC_RET_entry entry;
 
-    p_mouse = (struct keyboard_inputbuffer *)kmalloc(sizeof(struct keyboard_inputbuffer), 0);
+    p_mouse = (struct keyboard_inputbuffer *)knew(sizeof(struct keyboard_inputbuffer), 0);
     p_mouse->p_head = p_mouse->buf;
     p_mouse->p_tail = p_mouse->buf;
     p_mouse->count = 0;

@@ -23,8 +23,12 @@ bool bitmap_scan_test(bitmap_t *btmp, u64 bit_idx) {
 
 void bitmap_init(bitmap_t *btmp, u64 bytes_len) {
     btmp->btmp_bytes_len = bytes_len;
-    btmp->bits = kmalloc(bytes_len, 0);
+    btmp->bits = knew(bytes_len, 0);
     memset(btmp->bits, 0, bytes_len);
+}
+
+void bitmap_destory(bitmap_t *btmp) {
+    kdelete(btmp->bits, btmp->btmp_bytes_len);
 }
 
 void bitmap_make(bitmap_t *btmp, u8* data, u64 bytes_len) {

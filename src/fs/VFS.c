@@ -17,7 +17,7 @@ struct super_block * sb_vec[4];
 // 当前文件系统的超级块
 struct super_block *current_sb = NULL;
 
-Slab_cache_t* Dir_Entry_Pool = NULL;
+// Slab_cache_t* Dir_Entry_Pool = NULL;
 static void* dir_entry_consturctor(void* Vaddr, u64 arg) { // 目录项构造函数。
 
     dir_entry_t* dir = Vaddr;
@@ -34,7 +34,7 @@ static void* dir_entry_desturctor(void* Vaddr, u64 arg) { // 目录项析构函�
 
     dir_entry_t* dir = Vaddr;
     if(dir->name_length)
-        kfree(dir->name);
+        kdelete(dir->name, dir->name_length);
     
     list_del(&dir->child_node);
     list_del(&dir->subdirs_list);
@@ -44,7 +44,7 @@ static void* dir_entry_desturctor(void* Vaddr, u64 arg) { // 目录项析构函�
 }
 
 void VFS_init(void) {
-    Dir_Entry_Pool = slab_create(sizeof(dir_entry_t), dir_entry_consturctor, dir_entry_desturctor, 0);
+    // Dir_Entry_Pool = slab_create(sizeof(dir_entry_t), dir_entry_consturctor, dir_entry_desturctor, 0);
 }
 
 // 文件系统的注册
@@ -217,13 +217,15 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
         if(path != NULL)
             goto next_floder;
         
-        path = (struct dir_entry *)slab_malloc(Dir_Entry_Pool, 0);
+        path = (struct dir_entry *)knew(sizeof(dir_entry_t), 0);
 
         // 准备好要找的文件名
-        path->name = kmalloc(tmpnamelen + 1, 0);
+        path->name = knew(tmpnamelen + 1, 0);
         memset(path->name, 0, tmpnamelen + 1);
         memcpy(tmpname, path->name, tmpnamelen);
         path->name_length = tmpnamelen;
+        list_init(&path->child_node);
+        list_init(&path->subdirs_list);
 
         // lookup函数从当前目录中搜索与目标名想匹配的目录项。
         // 如果匹配成功，那么lookup函数将返回目标名的短目录项，失败返回NULL
@@ -237,8 +239,8 @@ struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **
             }
 
             DEBUGK("can not find file or dir:%s\n", path->name);
-            kfree(path->name);
-            kfree(path);
+            kdelete(path->name, path->name_length);
+            kdelete(path, sizeof(dir_entry_t));
 
             return NULL;
         }

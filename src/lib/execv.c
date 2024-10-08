@@ -91,7 +91,7 @@ struct file *open_exec_file(char *path)
 		color_printk(RED, BLACK, "bash: %s: Is a directory\n", path);
 		return (void *)-ENOTDIR;
 	}
-	filp = (struct file *)kmalloc(sizeof(struct file), 0);
+	filp = (struct file *)knew(sizeof(struct file), 0);
 	if (filp == NULL)
 		return (void *)-ENOMEM;
 	filp->position = 0;
@@ -120,7 +120,7 @@ static void virtual_map(unsigned long user_addr){
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
 	if (*tmp == 0) {
-		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
@@ -128,7 +128,7 @@ static void virtual_map(unsigned long user_addr){
 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if (*tmp == 0) {
-		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
@@ -137,7 +137,7 @@ static void virtual_map(unsigned long user_addr){
 	// 申请用户占用的内存,填充页表, 填充PDT内存
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
 	if (*tmp == 0) {
-		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
@@ -145,7 +145,7 @@ static void virtual_map(unsigned long user_addr){
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
 	if (*tmp == 0)
 	{
-		virtual = kmalloc(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 
 		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Page_4K));
@@ -212,7 +212,7 @@ static unsigned long section_analysis(struct file *filp, Elf64_Ehdr* elf_header)
 	Elf64_Off	s_off = elf_header->e_shoff; 			/* Section header table file offset */
 	
     unsigned int sect_idx = 0;
-	Elf64_Shdr *section_header = (Elf64_Shdr*)kmalloc(s_num * s_size, 0);
+	Elf64_Shdr *section_header = (Elf64_Shdr*)knew(s_num * s_size, 0);
 	Elf64_Shdr *shstr_entry = NULL;
 	char* s_name_table = NULL;
 
@@ -225,7 +225,7 @@ static unsigned long section_analysis(struct file *filp, Elf64_Ehdr* elf_header)
 
 	// read secontion Header string table
 	shstr_entry = &section_header[elf_header->e_shstrndx];
-	s_name_table = kmalloc(shstr_entry->sh_size, 0);
+	s_name_table = knew(shstr_entry->sh_size, 0);
 	memset(s_name_table, 0, shstr_entry->sh_size);
 	filp->f_ops->lseek(filp, shstr_entry->sh_offset, SEEK_SET);
 	filp->f_ops->read(filp, s_name_table, shstr_entry->sh_size, &filp->position);
@@ -352,9 +352,9 @@ unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *en
 	{
 		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
 		// 而新程序必须拥有独立的地址空间才能正常运行
-		current->mm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
+		current->mm = (struct mm_struct *)knew(sizeof(struct mm_struct), 0);
 		memset(current->mm, 0, sizeof(struct mm_struct));
-		current->mm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
+		current->mm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
 		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
 		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
 		// copy kernel space

@@ -105,7 +105,7 @@ unsigned long shell_execve(struct pt_regs *regs, char *name)
 
 	int (*fn)(void) = usr_init;
 	regs->r10 = (unsigned long)fn;				// RIP
-	void *tmp = kmalloc(1048576, 0);			// 申请1MB
+	void *tmp = knew(1048576, 0);			// 申请1MB
 	regs->r11 = ((unsigned long)tmp) + 1048576; // RSP
 	regs->rax = 0;
 
@@ -182,7 +182,7 @@ unsigned long copy_files(unsigned long clone_flags, struct task_struct *tsk)
 	for (; i < TASK_FILE_MAX; i++)
 		if (current->file_struct[i] != NULL)
 		{
-			tsk->file_struct[i] = (struct file *)kmalloc(sizeof(struct file), 0);
+			tsk->file_struct[i] = (struct file *)knew(sizeof(struct file), 0);
 			memcpy(current->file_struct[i], tsk->file_struct[i], sizeof(struct file));
 		}
 out:
@@ -202,7 +202,7 @@ void exit_files(struct task_struct *tsk)
 	else
 		for (; i < TASK_FILE_MAX; i++)
 			if (tsk->file_struct[i] != NULL)
-				kfree(tsk->file_struct[i]);
+				kdelete(tsk->file_struct[i], sizeof(struct file));
 	memset(tsk->file_struct, 0, sizeof(struct file *) * TASK_FILE_MAX);
 	// clear current->file_struct
 }
@@ -231,24 +231,24 @@ unsigned long copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 		goto out;
 	}
 
-	newmm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
+	newmm = (struct mm_struct *)knew(sizeof(struct mm_struct), 0);
 	memcpy(current->mm, newmm, sizeof(struct mm_struct));
 
 	// copy kernel space, 创建了PML4页表
-	newmm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
+	newmm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
 	memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
 	memset(Phy_To_Virt(newmm->pgd), 0, PAGE_4K_SIZE / 2); // clear user memory space
 
 	// copy user code / data / bss / space
 	// 申请PDPT内存，填充PML4页表项
 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)newmm->pgd & (~0xfffUL)) + ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	virtual = kmalloc(PAGE_4K_SIZE, 0);
+	virtual = knew(PAGE_4K_SIZE, 0);
 	memset(virtual, 0, PAGE_4K_SIZE);
 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 
 	// 申请PDT内存，填充PDPT页表项
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	virtual = kmalloc(PAGE_4K_SIZE, 0);
+	virtual = knew(PAGE_4K_SIZE, 0);
 	memset(virtual, 0, PAGE_4K_SIZE);
 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 
@@ -297,7 +297,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	// 申请PDPT内存，填充PML4页表项 for child_process
 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
 	if(!(*tmp & PAGE_Present)) {
-		virtual = kmalloc(PAGE_4K_SIZE, 0);
+		virtual = knew(PAGE_4K_SIZE, 0);
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
@@ -305,7 +305,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	// 申请PDT内存，填充PDPT页表项 for child_process
 	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if(!(*tmp & PAGE_Present)) {
-		virtual = kmalloc(PAGE_4K_SIZE, 0);
+		virtual = knew(PAGE_4K_SIZE, 0);
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
@@ -335,11 +335,11 @@ unsigned long copy_mm_fork(unsigned long clone_flags, struct task_struct *tsk)
 		goto out;
 	}
 
-	newmm = (struct mm_struct *)kmalloc(sizeof(struct mm_struct), 0);
+	newmm = (struct mm_struct *)knew(sizeof(struct mm_struct), 0);
 	memcpy(current->mm, newmm, sizeof(struct mm_struct));
 
 	// copy kernel space, 创建了PML4页表
-	newmm->pgd = (pml4t_t *)Virt_To_Phy(kmalloc(PAGE_4K_SIZE, 0));
+	newmm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
 	memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
 	memset(Phy_To_Virt(newmm->pgd), 0, PAGE_4K_SIZE / 2); // clear user memory space
 
@@ -399,16 +399,16 @@ void exit_mm_fork(struct task_struct *tsk)
 							p->PHY_address--;
 							// for parent_process's page_table privilege, give page_fault solve. 
 						}
-					kfree(Phy_To_Virt(*tmp2));
+					kdelete(Phy_To_Virt(*tmp2), PAGE_4K_SIZE);
 				}
 			}
-			kfree(Phy_To_Virt(*tmp3));
+			kdelete(Phy_To_Virt(*tmp3), PAGE_4K_SIZE);
 		}
 	}
-	kfree(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
+	kdelete(Phy_To_Virt(tsk->mm->pgd), PAGE_4K_SIZE); // release PMl4's memory
 
 	if (tsk->mm != NULL)
-		kfree(tsk->mm);
+		kdelete(tsk->mm, sizeof(struct mm_struct));
 }
 
 
@@ -465,7 +465,7 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	struct task_struct *tsk = NULL;
 
 	// alloc & copy task struct
-	tsk = (struct task_struct *)kmalloc(STACK_SIZE, 0);
+	tsk = (struct task_struct *)knew(STACK_SIZE, 0);
 	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (unsigned long)tsk);
 	if (tsk == NULL)
 	{
@@ -487,7 +487,7 @@ unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned 
 	tsk->umask = 0002;
 
 	// 拷贝信号
-	tsk->sigaction = (sigaction_T*)kmalloc(sizeof(sigaction_T) * (NSIG + 1), 0);
+	tsk->sigaction = (sigaction_T*)knew(sizeof(sigaction_T) * (NSIG + 1), 0);
 	memcpy(current->sigaction, tsk->sigaction, sizeof(sigaction_T) * (NSIG + 1));
 
 	tsk->state = TASK_UNINTERRUPTIBLE;
@@ -524,7 +524,7 @@ copy_mm_fail:
 	exit_mm_fork(tsk);
 copy_flags_fail:
 alloc_copy_task_fail:
-	kfree(tsk);
+	kdelete(tsk, sizeof(struct task_struct));
 	return retval;
 }
 
@@ -546,7 +546,7 @@ unsigned long do_exit(unsigned long exit_code)
 	exit_files(tsk);
 	// 回收信号，回收pid, recycle all resource
 	if(tsk->sigaction)
-		kfree(tsk->sigaction);
+		kdelete(tsk->sigaction, sizeof(sigaction_T) * (NSIG + 1));
 	exit_mm(tsk);
 
 	sti();
@@ -623,7 +623,7 @@ void task_init()
 		tmp = vaddr + i;
 		if (*tmp == 0)
 		{	
-			unsigned long *virtual = kmalloc(PAGE_4K_SIZE, 0);
+			unsigned long *virtual = knew(PAGE_4K_SIZE, 0);
 			memset(virtual, 0, PAGE_4K_SIZE);
 			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
 			// set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
@@ -666,7 +666,7 @@ void task_init()
 	list_init(&init_task_union.task.list);
 	list_init(&init_task_union.task.wait_childexit.wait_list);
 
-	init_task_union.task.sigaction = (sigaction_T*)kmalloc(sizeof(sigaction_T) * (NSIG + 1), 0);
+	init_task_union.task.sigaction = (sigaction_T*)knew(sizeof(sigaction_T) * (NSIG + 1), 0);
 
 	// 创建内核线程
 	kernel_thread(init, 13, CLONE_FS | CLONE_SIGNAL);

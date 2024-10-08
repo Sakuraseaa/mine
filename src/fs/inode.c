@@ -41,7 +41,7 @@ inode_t *namei(char* filename) {
     // 使用 filename 和 getcwd()的方式拼接，但布置到完成路径长度申请多长缓冲合适。 无情的4K
     char* path = NULL;
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    path = (char *)knew(PAGE_4K_SIZE, 0);
     if (path == NULL)
         return NULL;
     
@@ -52,7 +52,7 @@ inode_t *namei(char* filename) {
 
     // 如果是完整路径 我们可以使用path_walk得到该文件的目录项，从而得到 inode;
     dir_entry_t* dentry  = path_walk(path, 0, NULL);
-    kfree(path);
+    kdelete(path, PAGE_4K_SIZE);
     if(dentry == NULL)
         return NULL;
     

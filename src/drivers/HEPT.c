@@ -53,7 +53,7 @@ static void ticks_to_sleep(unsigned int sleep_ticks)
    
    // 切换进程
    struct timer_list *tmp = NULL;
-   tmp = (struct timer_list *)kmalloc(sizeof(struct timer_list), 0);
+   tmp = (struct timer_list *)knew(sizeof(struct timer_list), 0);
    init_timer(tmp, &weakUp_sleepList, &current->pid, jiffies + sleep_ticks);
    add_timer(tmp);
    interruptible_sleep_on(&sleep_queue_head);

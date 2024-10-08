@@ -3,7 +3,7 @@
 
 // BPB = BIOS Parameter Block
 // FAT32文件系统的引导扇区
-struct FAT32_BootSector
+typedef struct FAT32_BootSector
 {
     unsigned char BS_jmpBoot[3];    // 跳转指令
     unsigned char BS_OEMName[8];    // 生产厂商名
@@ -35,10 +35,10 @@ struct FAT32_BootSector
 
     unsigned char BootCode[420]; // 引导代码
     unsigned short BS_TraiSig;   // 结束标记
-} __attribute__((packed));
+} __attribute__((packed)) FAT32_bootsector_t;
 
 // FAT32文件系统的FSInfo扇区, 主要的是FSI_Free_Count 和 FSI_Nxt_Free成员，
-struct FAT32_FSInfo
+typedef struct FAT32_FSInfo
 {
     unsigned int FSI_LeadSig;         // FSInfo扇区标识符
     unsigned char FSI_Reserved1[480]; // 保留使用
@@ -47,10 +47,10 @@ struct FAT32_FSInfo
     unsigned int FSI_Nxt_Free;        // 空闲簇的起始搜索位置，参考值不精确
     unsigned char Reserved2[12];      // 保留使用，全置为0
     unsigned int FSI_TrailSig;        // 结束标志
-} __attribute__((packed));
+} __attribute__((packed)) FAT32_fsinfo_t;
 
 // fat32文件系统超级块信息结构体,描述出一个FAT32文件系统元数据
-struct FAT32_sb_info
+typedef struct FAT32_sb_info
 {
     unsigned long start_sector; // 文件系统起始扇区
     unsigned long sector_count; // 文件系统扇区总数
@@ -68,9 +68,9 @@ struct FAT32_sb_info
     unsigned long bootsector_bk_infat; // 引导扇区的备份扇区号
 
     struct FAT32_FSInfo *fat_fsinfo;
-};
+}FAT32_sb_info_t;
 // 为 VFS系统 提供建立fat32文件系统的数据
-struct FAT32_inode_info
+typedef struct FAT32_inode_info
 {
     unsigned long first_cluster;   // 本文件在fat32系统中的起始簇号
     unsigned long dentry_location; // dentry struct in cluster(0 is root, 1 is invalid),本文件的目录项在文件系统中对应的簇号
@@ -80,7 +80,7 @@ struct FAT32_inode_info
     unsigned short create_time; // 创建时间
     unsigned short write_date;  // 创建日期
     unsigned short write_time;  // 创建时间
-};
+}FAT32_inode_info_t;
 
 #define ATTR_READ_ONLY (1 << 0) // 只读
 #define ATTR_HIDDEN (1 << 1)    // 隐藏
@@ -125,6 +125,9 @@ struct FAT32_LongDirectory
     unsigned short LDIR_FstClusLO; // 必须为0
     unsigned short LDIR_Name3[2];  // 长文件名的第12 ~ 13 个字符
 } __attribute__((packed));
+
+typedef struct FAT32_Directory FAT32_directory_t;
+typedef struct FAT32_LongDirectory FAT32_longdirectory_t;
 
 extern struct index_node_operations FAT32_inode_ops;
 extern struct file_operations FAT32_file_ops;

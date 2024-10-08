@@ -151,7 +151,7 @@ unsigned long sys_open(char *filename, int flags)
     int i = 0;
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    path = (char *)knew(PAGE_4K_SIZE, 0);
     if (path == NULL)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
@@ -159,12 +159,12 @@ unsigned long sys_open(char *filename, int flags)
     // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
     if (pathlen <= 0)
     {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -EFAULT;
     }
     else if (pathlen >= PAGE_4K_SIZE)
     {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -ENAMETOOLONG;
     }
     // strncpy_from_user(filename, path, pathlen);
@@ -175,7 +175,7 @@ unsigned long sys_open(char *filename, int flags)
         path_flags = 1;
 
     dentry = path_walk(path, path_flags, &Child_dentry); // b.2得到目录项
-    kfree(path);
+    kdelete(path, PAGE_4K_SIZE);
     
     if (dentry == NULL)
         return -ENOENT;
@@ -202,7 +202,7 @@ unsigned long sys_open(char *filename, int flags)
 sys_open_over_judge:
 
     // c.为目标文件,目标进程创建文件描述符, filp什么意思？file description?
-    filp = (struct file *)kmalloc(sizeof(struct file), 0);
+    filp = (struct file *)knew(sizeof(struct file), 0);
     memset(filp, 0, sizeof(struct file));
     filp->dentry = dentry;
     filp->mode = flags;
@@ -218,7 +218,7 @@ sys_open_over_judge:
     if (error != 1)
     { // 内核只释放了文件描述符占用的内存空间，而未释放inode结构和dentry结构占用的内存空间
         // 因为释放它们是一个漫长的过程，其中必将设计路径所以内所有结构的回收，缓存，销毁等管理细节
-        kfree(filp);
+        kdelete(filp, sizeof(struct file));
         return -EFAULT;
     }
 
@@ -240,7 +240,7 @@ sys_open_over_judge:
 
     if (i == TASK_FILE_MAX)
     {
-        kfree(filp);
+        kdelete(filp, sizeof(struct file));
         ////reclaim struct index_node & struct dir_entry
         return -EMFILE;
     }
@@ -257,17 +257,17 @@ u64 sys_mkdir(char* filename) {
     struct dir_entry *dentry = NULL;
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    path = (char *)knew(PAGE_4K_SIZE, 0);
     if (path == NULL)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
     // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
     if (pathlen <= 0) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -EFAULT;
     } else if (pathlen >= PAGE_4K_SIZE) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -ENAMETOOLONG;
     }
     // strncpy_from_user(filename, path, pathlen);
@@ -275,7 +275,7 @@ u64 sys_mkdir(char* filename) {
 
 
     dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
-    kfree(path);
+    kdelete(path, PAGE_4K_SIZE);
     if (dentry == NULL)
         return -ENOENT;
     
@@ -294,18 +294,18 @@ u64 sys_rmdir(char* filename) {
     struct dir_entry *dentry = NULL;
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    path = (char *)knew(PAGE_4K_SIZE, 0);
     if (path == NULL)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
     // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
     if (pathlen <= 0) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -EFAULT;
     }
     else if (pathlen >= PAGE_4K_SIZE) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -ENAMETOOLONG;
     }
     // strncpy_from_user(filename, path, pathlen);
@@ -313,7 +313,7 @@ u64 sys_rmdir(char* filename) {
 
 
     dentry = path_walk(path, 2, &Child_dentry); // b.2得到目录项
-    kfree(path);
+    kdelete(path, PAGE_4K_SIZE);
     
     if (dentry == NULL)
         return -ENOENT;
@@ -323,11 +323,11 @@ u64 sys_rmdir(char* filename) {
     if(dentry->dir_inode->inode_ops && dentry->dir_inode->inode_ops->rmdir)
         error = dentry->dir_inode->inode_ops->rmdir(dentry->dir_inode, Child_dentry);
     if(error == OKay) {
-        kfree(Child_dentry->dir_inode);
+        kdelete(Child_dentry->dir_inode, sizeof(inode_t));
 
         list_del(&Child_dentry->child_node);
 
-        slab_free(Dir_Entry_Pool, Child_dentry, 0);
+        kdelete(Child_dentry, sizeof(dir_entry_t));
     }
     return error;
 }
@@ -341,18 +341,18 @@ u64 sys_unlink(char* filename) {
 
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)kmalloc(PAGE_4K_SIZE, 0);
+    path = (char *)knew(PAGE_4K_SIZE, 0);
     if (path == NULL)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
     // pathlen = strnlen_user(filename, PAGE_4K_SIZE); 为了在内核中也可以使用sys_open(), 目前先注释进行调试
     if (pathlen <= 0) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -EFAULT;
     }
     else if (pathlen >= PAGE_4K_SIZE) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -ENAMETOOLONG;
     }
     // strncpy_from_user(filename, path, pathlen);
@@ -360,7 +360,7 @@ u64 sys_unlink(char* filename) {
 
 
     dentry = path_walk(path, 2, &Child_dentry); 
-    kfree(path);
+    kdelete(path, PAGE_4K_SIZE);
     if (dentry == NULL)
         return -ENOENT;
     
@@ -402,7 +402,7 @@ unsigned long sys_close(int fd)
     filp = current->file_struct[fd];
     if (filp->f_ops && filp->f_ops->close)
         filp->f_ops->close(filp->dentry->dir_inode, filp);
-    kfree(filp);
+    kdelete(filp, sizeof(struct file));
     current->file_struct[fd] = NULL;
 
     return 0;
@@ -575,17 +575,17 @@ unsigned long sys_chdir(char* filename)
     long pathlen = 0;
     struct dir_entry* dentry = NULL;
 
-    path = (char*) kmalloc(PAGE_4K_SIZE, 0);
+    path = (char*) knew(PAGE_4K_SIZE, 0);
     if(path == NULL)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
 
     pathlen = strnlen_user(filename, PAGE_4K_SIZE);
     if(pathlen <= 0) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -EFAULT;
     } else if(pathlen >= PAGE_4K_SIZE) {
-        kfree(path);
+        kdelete(path, PAGE_4K_SIZE);
         return -ENAMETOOLONG;
     }
 
@@ -595,7 +595,7 @@ unsigned long sys_chdir(char* filename)
     if (dentry == NULL)
         return -ENOENT;
     
-    kfree(path);
+    kdelete(path, PAGE_4K_SIZE);
     
     // 改变当前进程工作目录
     current->i_pwd = dentry;
@@ -618,7 +618,7 @@ unsigned long sys_execve()
     
     DEBUGK("sys_execve\n");
 
-    pathname = (char*)kmalloc(PAGE_4K_SIZE, 0);
+    pathname = (char*)knew(PAGE_4K_SIZE, 0);
     if(pathname == NULL)
         return -ENOMEM;
     
@@ -627,11 +627,11 @@ unsigned long sys_execve()
 
     if(pathlen <= 0)
     {
-        kfree(pathname);
+        kdelete(pathname, PAGE_4K_SIZE);
         return -EFAULT;
     }else if(pathlen >= PAGE_4K_SIZE)
     {
-        kfree(pathname);
+        kdelete(pathname, PAGE_4K_SIZE);
         return -ENAMETOOLONG;
     }
 
@@ -639,7 +639,7 @@ unsigned long sys_execve()
     strncpy_from_user((char*)regs->rdi, pathname, pathlen);
     error = do_execve(regs, pathname, (char**)regs->rsi, NULL);
 
-    kfree(pathname);
+    kdelete(pathname, PAGE_4K_SIZE);
     return error;
 }
 
@@ -650,46 +650,46 @@ unsigned long sys_execve()
  */
 void exit_mm(struct task_struct *tsk)
 {
-	unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
-    unsigned long tmp1 = 0; // page address
-	size_t i = 0, j = 0, k = 0;
-	struct Page* p = NULL;
-	if (tsk->flags & PF_VFORK)
-		return;
+	// unsigned long *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+    // unsigned long tmp1 = 0; // page address
+	// size_t i = 0, j = 0, k = 0;
+	// struct Page* p = NULL;
+	// if (tsk->flags & PF_VFORK)
+	// 	return;
 
-	struct mm_struct *newmm = tsk->mm;
-	tmp4 = Phy_To_Virt(newmm->pgd);
+	// struct mm_struct *newmm = tsk->mm;
+	// tmp4 = Phy_To_Virt(newmm->pgd);
 
-    // 😟 😋 🤬
+    // // 😟 😋 🤬
 
-    /* recycle all memory pages. these include Data, Code, Stack, Heap...*/
-    /* 这里操作页表，还是有一点点小难度的。些许风霜罢了 🧐*/
-	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
-		if((*(tmp4 + i)) & PAGE_Present) {
-			tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
+    // /* recycle all memory pages. these include Data, Code, Stack, Heap...*/
+    // /* 这里操作页表，还是有一点点小难度的。些许风霜罢了 🧐*/
+	// for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
+	// 	if((*(tmp4 + i)) & PAGE_Present) {
+	// 		tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
 			
-			for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
-				if((*(tmp3 + j)) & PAGE_Present) {
+	// 		for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
+	// 			if((*(tmp3 + j)) & PAGE_Present) {
 					
-					tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
-					for(k = 0; k < 512; k++) {
-						if((*(tmp2 + k)) & PAGE_Present) {
-							tmp1 = (*(tmp2 + k)); // 得到物理页
-							p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
-                            free_pages(p, 1); // 释放物理页
-                        }
-                    }
-					kfree(tmp2); // 释放 PDT表
-				}
-			}
-			kfree(tmp3); // 释放 PDPT 表 
-		}
-	}
+	// 				tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
+	// 				for(k = 0; k < 512; k++) {
+	// 					if((*(tmp2 + k)) & PAGE_Present) {
+	// 						tmp1 = (*(tmp2 + k)); // 得到物理页
+	// 						p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
+    //                         free_pages(p, 1); // 释放物理页
+    //                     }
+    //                 }
+	// 				kdelete(tmp2); // 释放 PDT表
+	// 			}
+	// 		}
+	// 		kdelete(tmp3); // 释放 PDPT 表 
+	// 	}
+	// }
 
-	kfree(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
+	// kdelete(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
 
-	if (tsk->mm != NULL)
-		kfree(tsk->mm);
+	// if (tsk->mm != NULL)
+	// 	kdelete(tsk->mm);
 }
 
 unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage)
@@ -718,7 +718,7 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
 
     copy_to_user(&child->exit_code, status, sizeof(long));
     tsk->next = child->next; // 在PCB列表中，删除掉当前进程PCB
-    kfree(child); // 回收PCB, 内核栈
+    kdelete(child, sizeof(struct task_struct)); // 回收PCB, 内核栈
 
     return retval;
 }

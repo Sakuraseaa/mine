@@ -916,14 +916,34 @@ static msadsc_t* phy_to_msadsc(adr_t phyaddr)
 	return &glomm.mo_msadscstat[(phyaddr - 0x100000) >> PAGE_4K_SHIFT];
 }
 
-void* kmalloc_4k_page(uint_t pages) 
+void* umalloc_4k_page(uint_t pages) 
 {
 	u64_t retpnr = 0;
 	msadsc_t *msa = NULL, *etd = NULL;
 
 	msa = mm_divpages_procmarea(&glomm, pages, &retpnr);
 
-	return Phy_To_Virt(msa->md_phyadrs.paf_padrs);
+	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
+}
+
+void* kmalloc_4k_page(uint_t pages) 
+{
+	u64_t retpnr = 0;
+	msadsc_t *msa = NULL, *etd = NULL;
+
+	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+
+	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
+}
+
+void* hmalloc_4k_page(uint_t pages) 
+{
+	u64_t retpnr = 0;
+	msadsc_t *msa = NULL, *etd = NULL;
+	
+	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_HWAD, DMF_RELDIV);
+
+	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
 
 void kfree_4k_page(void * addr)

@@ -34,5 +34,5 @@ void add_timer(struct timer_list *timer)
 void del_timer(struct timer_list *timer)
 {
     list_del(&timer->list);
-    kfree(timer);
+    kdelete(timer, sizeof(timer_list_t));
 }

@@ -108,11 +108,11 @@ void test_show_vir_phy(struct task_struct *tsk) {
 	struct mm_struct *newmm = tsk->mm;
 	u64* PML4 = Phy_To_Virt(newmm->pgd);
 
-    map_entry_t* map = kmalloc(sizeof(map_entry_t) * 15, 0);
+    map_entry_t* map = knew(sizeof(map_entry_t) * 15, 0);
 
     User_Map(PML4, map, &i_m);
 
     Print_Map(map, i_m);
-    kfree(map);
+    kdelete(map, sizeof(map_entry_t));
 }
 

@@ -13,7 +13,7 @@
 
 extern list_t super_list;
 extern struct super_block *current_sb;
-extern Slab_cache_t* Dir_Entry_Pool;
+// extern Slab_cache_t* Dir_Entry_Pool;
 
 // 硬盘分区表项
 struct Disk_Partition_Table_Entry

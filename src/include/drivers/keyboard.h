@@ -4,14 +4,14 @@
 #include "VFS.h"
 
 #define KB_BUF_SIZE 100
-struct keyboard_inputbuffer
+typedef struct keyboard_inputbuffer
 {
     unsigned char *p_head; // 缓冲区首尾指针
     unsigned char *p_tail;
     int count; // 缓冲数据计数器
 
     unsigned char buf[KB_BUF_SIZE]; // 循环队列缓存区
-};
+}keyboard_inputbuffer_t;
 
 #define PAUSEBREAK 1
 #define PRINTSCREEN 2

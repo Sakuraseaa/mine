@@ -85,12 +85,12 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
 
 static err_t buffer_alloc(bdesc_t *desc) {
     // here allocated memory is too small, i think 16KB for suitable
-    u8* addr = (u8*)kmalloc(4096, 0); 
+    u8* addr = (u8*)knew(PAGE_4K_SIZE, 0); 
     
     buffer_t* buf = NULL;
     for(u8* i = addr; i < addr + 4096; i += desc->size) { 
         
-        buf = (buffer_t*)kmalloc(sizeof(buffer_t), 0);
+        buf = (buffer_t*)knew(sizeof(buffer_t), 0);
         
         buf->data = i;
         buf->block = 0;
