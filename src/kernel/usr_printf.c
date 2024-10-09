@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include "init.h"
-#include "basekit.h"
+#include "toolkit.h"
 
 unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 {

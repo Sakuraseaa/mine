@@ -9,9 +9,7 @@
  * @copyright Copyright (c) 2024
  * 
  */
-#include "mm_t.h"
-#include "mm_f.h"
-#include "memory.h"
+#include "mmkit.h"
 #include "task.h"
 // 给page结构体的属性成员赋值, 增加引用
 u64_t page_init(struct Page *page, u64_t flags)

@@ -1,6 +1,5 @@
 #ifndef __STAT_H__
 #define __STAT_H__
-#include "basetype.h"
 
 // 文件类型
 #define IFMT 00170000  // 文件类型（8 进制表示）

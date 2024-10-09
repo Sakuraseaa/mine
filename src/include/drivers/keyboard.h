@@ -1,8 +1,7 @@
 #ifndef __KEYBOARD_H__
 #define __KEYBOARD_H__
 
-#include "VFS.h"
-
+#include "fskit.h"
 #define KB_BUF_SIZE 100
 typedef struct keyboard_inputbuffer
 {

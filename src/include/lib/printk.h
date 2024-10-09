@@ -48,7 +48,6 @@ struct position
 	fair_spinlock_t printk_lock;
 } Pos;
 
-
 #define do_div(n, base) ({ \
 int __res; \
 __asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \

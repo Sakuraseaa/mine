@@ -1,8 +1,8 @@
-#include "basekit.h"
+#include "toolkit.h"
 #include "trap.h"
 #include "SMP.h"
 #include "task.h"
-#include "memory.h"
+#include "mmkit.h"
 int lookup_kallsyms(unsigned long address,int level)
 {
 	int index = 0;

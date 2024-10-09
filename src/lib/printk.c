@@ -1,6 +1,6 @@
 #include <stdarg.h>
-#include "basekit.h"
-#include "memory.h"
+#include "toolkit.h"
+#include "mmkit.h"
 
 semaphore_t visual_lock;
 

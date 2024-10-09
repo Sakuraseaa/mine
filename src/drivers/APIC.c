@@ -1,6 +1,6 @@
-#include "basekit.h"
+#include "toolkit.h"
+#include "mmkit.h"
 #include "interrupt.h"
-#include "memory.h"
 #include "APIC.h"
 
 // 读io apic的数据寄存器

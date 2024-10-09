@@ -1,5 +1,4 @@
-#include "mm_t.h"
-#include "mm_f.h"
+#include "mmkit.h"
 
 memmgrob_t glomm;
 

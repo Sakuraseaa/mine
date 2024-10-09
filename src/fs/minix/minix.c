@@ -1,14 +1,8 @@
-#include "basekit.h"
-#include "fs.h"
-#include "VFS.h"
-#include "memory.h"
+#include "toolkit.h"
+#include "fskit.h"
+#include "mmkit.h"
 #include "dirent.h"
 #include "disk.h"
-#include "minix.h"
-#include "buffer.h"
-#include "inode.h"
-#include "super.h"
-#include "stat.h"
 #include "task.h"
 
 static buffer_t* imap = NULL;

@@ -1,5 +1,4 @@
-#include "mm_t.h"
-#include "mm_f.h"
+#include "mmkit.h"
 #include "task.h"
 
 KLINE sint_t retn_mscidx(uint_t pages)

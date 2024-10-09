@@ -1,12 +1,6 @@
-#include "basekit.h"
+#include "toolkit.h"
 #include "task.h"
 #include "schedule.h"
-// 等待队列初始化
-void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk)
-{
-    list_init(&wait_queue->wait_list);
-    wait_queue->tsk = tsk;
-}
 
 // 信号量初始化
 void semaphore_init(semaphore_t *semaphore, unsigned long count)

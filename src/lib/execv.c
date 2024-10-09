@@ -1,6 +1,6 @@
-#include "basekit.h"
-#include "VFS.h"
-#include "memory.h"
+#include "toolkit.h"
+#include "fskit.h"
+#include "mmkit.h"
 #include "task.h"
 
 typedef unsigned int Elf64_Word;
@@ -110,7 +110,6 @@ static void virtual_map(unsigned long user_addr){
 	
 	unsigned long *tmp;
 	unsigned long *virtual = NULL;
-	struct Page *p = NULL;
 	
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
 	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));

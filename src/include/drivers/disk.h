@@ -1,7 +1,7 @@
 #ifndef __DISK_H__
 #define __DISK_H__
 
-#include "basekit.h"
+#include "toolkit.h"
 #include "block.h"
 
 #define PORT_DISK0_DATA 0x1f0		 // Data			数据

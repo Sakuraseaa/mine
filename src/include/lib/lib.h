@@ -27,16 +27,10 @@ typedef struct List
 typedef list_t list_h_t;
 typedef list_t list_n_t;
 
-
-
-
 #define SEEK_SET 0 /* Seek relative to start-of-file */
 #define SEEK_CUR 1 /* Seek relative to current position */
 #define SEEK_END 2 /* Seek relative to end-of-file */
-
 #define SEEK_MAX 3
-
-
 
 #define list_for_each(pos, head) for (pos = (head)->next; pos != (head); pos = pos->next)
 /* 	一直for，直到到达head 

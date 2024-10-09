@@ -1,8 +1,8 @@
 #ifndef _SYS_H__
 #define _SYS_H__
 #include "basetype.h"
+#include "fskit.h"
 #include "task.h"
-#include "stat.h"
 
 unsigned long no_system_call(void);
 unsigned long sys_putstring(unsigned int FRcolor, char *string);

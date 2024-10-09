@@ -8,6 +8,4 @@ typedef struct WAIT_QUEUE
     struct task_struct *tsk; // 记录待挂起的PCB
 } wait_queue_t;
 
-
-
 #endif

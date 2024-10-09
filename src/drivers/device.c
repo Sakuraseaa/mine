@@ -1,11 +1,7 @@
-#include "VFS.h"
+#include "fskit.h"
 #include "device.h"
-#include "assert.h"
-#include "debug.h"
-#include "errno.h"
 #include "block.h"
 #include "disk.h"
-#include "basetype.h"
 
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)

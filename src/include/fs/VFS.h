@@ -5,11 +5,6 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-#include "basekit.h"
-#include "fat32.h"
-#include "buffer.h"
-#include "memory.h"
-
 extern list_t super_list;
 extern struct super_block *current_sb;
 // extern Slab_cache_t* Dir_Entry_Pool;

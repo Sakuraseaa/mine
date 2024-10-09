@@ -1,5 +1,5 @@
 // 本系统不支持多核处理器
-#include "basekit.h"
+#include "toolkit.h"
 #include "interrupt.h"
 #include "SMP.h"
 

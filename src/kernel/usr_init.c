@@ -1,7 +1,8 @@
-#include "basekit.h"
+#include "toolkit.h"
+#include "fskit.h"
 #include "wait.h"
 #include "keyboard.h"
-#include "memory.h"
+#include "mmkit.h"
 #include "init.h"
 #include "dirent.h"
 #include "signal.h"
@@ -65,7 +66,6 @@ void test_time() {
     ttmm.year, ttmm.month, ttmm.day, ttmm.week_day, ttmm.hour, ttmm.minute, ttmm.second);
 }
 
-#include "VFS.h"
 int usr_init()
 {
 
@@ -398,8 +398,7 @@ int cd_command(int argc, char **argv)
 	}
 	return 1;
 }
-
-#include "stat.h"
+#include "fskit.h"
 static void strftime(time_t stamp, char *buf)
 {
     tm time;

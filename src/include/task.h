@@ -1,9 +1,9 @@
 #ifndef __TASK_H__ // #ifndef 当且仅当变量未定义时为真，#ifdef 当前仅当
 // 变量已定义时为真。 一旦检测结构为真，则执行后续操作直至遇见#endif指令为止
 #define __TASK_H__
-#include "basekit.h"
+#include "toolkit.h"
 #include "signal.h"
-#include "memory.h"
+#include "mmkit.h"
 // 每个任务的文件描述符最大数
 #define TASK_FILE_MAX 10
 

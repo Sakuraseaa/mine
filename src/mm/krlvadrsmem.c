@@ -1,6 +1,4 @@
-#include "mm_t.h"
-#include "mm_f.h"
-#include "memory.h"
+#include "mmkit.h"
 
 extern memmgrob_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);

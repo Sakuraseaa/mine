@@ -1,150 +1,6 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
-
-#include "basekit.h"
-//	8Bytes per cell, 页表项个数
-#define PTRS_PER_PAGE 512
-
-#define PAGE_OFFSET ((u64_t)0xffff800000000000)
-#define TASK_SIZE ((u64_t)0x00007fffffffffff)
-
-#define PAGE_GDT_SHIFT 39
-#define PAGE_1G_SHIFT 30 // 2的30次方是1GB
-#define PAGE_2M_SHIFT 21 // 2的21次方是2MB
-#define PAGE_4K_SHIFT 12 // 2的12次方是4KB
-
-#define PGTB_ENTRY 512
-#define PAGE_2M_SIZE (1UL << PAGE_2M_SHIFT)
-#define PAGE_4K_SIZE (1UL << PAGE_4K_SHIFT)
-
-#define PGTB_TB_MANAGE_SIZE     PAGE_4K_SIZE * PGTB_ENTRY           // 2MB
-#define PGTB_DTB_MANAGE_SIZE    PGTB_TB_MANAGE_SIZE * PGTB_ENTRY    // 1GB
-#define PGTB_DPTB_MANAGE_SIZE   PGTB_DTB_MANAGE_SIZE * PGTB_ENTRY   // 512 GB
-#define PGTB_PML4_MANAGE_SIZE   PGTB_DPTB_MANAGE_SIZE * PGTB_ENTRY  // 256 TB
-
-
-#define PAGE_2M_MASK (~(PAGE_2M_SIZE - 1)) // 用于屏蔽低2MB的数值
-#define PAGE_4K_MASK (~(PAGE_4K_SIZE - 1))
-
-#define PAGE_2M_ALIGN(addr) (((u64_t)(addr) + PAGE_2M_SIZE - 1) & PAGE_2M_MASK) // 把参数addr按2MB页的上边界对齐
-#define PAGE_4K_ALIGN(addr) (((u64_t)(addr) + PAGE_4K_SIZE - 1) & PAGE_4K_MASK)
-
-#define Virt_To_Phy(addr) ((u64_t)(addr) - PAGE_OFFSET) // 该函数将内核层虚拟地址转换成物理地址
-
-// 把物理地址转换成虚拟地址，这种切换的把戏，只有一一映射，才能使用
-#define Phy_To_Virt(addr) ((u64_t *)((u64_t)(addr) + PAGE_OFFSET))
-
-adr_t viradr_to_phyadr(adr_t kviradr);
-adr_t phyadr_to_viradr(adr_t kphyadr);
-
-#define Virt_To_2M_Page(kaddr) (memory_management_struct.pages_struct + (Virt_To_Phy(kaddr) >> PAGE_2M_SHIFT))
-#define Phy_to_2M_Page(kaddr) (memory_management_struct.pages_struct + ((u64_t)(kaddr) >> PAGE_2M_SHIFT))
-
-////alloc_pages zone_select
-#define ZONE_DMA (1 << 0)
-#define ZONE_NORMAL (1 << 1)
-#define ZONE_UNMAPED (1 << 2)
-
-////struct page attribute (alloc_pages flags)
-#define PG_PTable_Maped (1 << 0) // 经过页表映射的页/未在页表中映射, mapped = 1 or un-mapped = 0
-#define PG_Kernel_Init (1 << 1)  // 内核初始化程序/非内核初始化程序, init-code = 1 or normal-code/date=0
-#define PG_Referenced (1 << 2)
-#define PG_Dirty (1 << 3)
-#define PG_Active (1 << 4) // 使用中的页
-#define PG_Up_To_Date (1 << 5)
-#define PG_Device (1 << 6) // 设备寄存器/物理内存地址  device = 1 or memory =0
-#define PG_Kernel (1 << 7) // 内核层页/应用层页   kernel = 1 or user = 0
-#define PG_Shared (1 << 8) // 是否被共享   shared = 1 or single-use = 0
-#define PG_Slab (1 << 9)
-
-// =============================================================
-typedef struct
-{
-    u64_t pml4t;
-} pml4t_t;
-#define mk_mpl4t(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
-#define set_mpl4t(mpl4tptr, mpl4tval) (*(mpl4tptr) = (mpl4tval))
-
-typedef struct
-{
-    u64_t pdpt;
-} pdpt_t;
-#define mk_pdpt(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
-#define set_pdpt(pdptptr, pdptval) (*(pdptptr) = (pdptval))
-
-typedef struct
-{
-    u64_t pdt;
-} pdt_t;
-#define mk_pdt(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
-#define set_pdt(pdtptr, pdtval) (*(pdtptr) = (pdtval))
-
-typedef struct
-{
-    u64_t pt;
-} pt_t;
-#define mk_pt(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
-#define set_pt(ptptr, ptval) (*(ptptr) = (ptval))
-// ===============================================================
-
-////page table attribute
-
-//	bit 63	Execution Disable:
-#define PAGE_XD (1UL << 63)
-
-//	bit 12	Page Attribute Table
-#define PAGE_PAT (1UL << 12)
-
-//	bit 8	Global Page:1,global;0,part
-#define PAGE_Global (1UL << 8)
-
-//	bit 7	Page Size:1,big page;0,small page;
-#define PAGE_PS (1UL << 7)
-
-//	bit 6	Dirty:1,dirty;0,clean;
-#define PAGE_Dirty (1UL << 6)
-
-//	bit 5	Accessed:1,visited;0,unvisited;
-#define PAGE_Accessed (1UL << 5)
-
-//	bit 4	Page Level Cache Disable
-#define PAGE_PCD (1UL << 4)
-
-//	bit 3	Page Level Write Through
-#define PAGE_PWT (1UL << 3)
-
-//	bit 2	User Supervisor:1,user and supervisor;0,supervisor;
-#define PAGE_U_S (1UL << 2)
-
-//	bit 1	Read Write:1,read and write;0,read;
-#define PAGE_R_W (1UL << 1)
-
-//	bit 0	Present:1,present;0,no present;
-#define PAGE_Present (1UL << 0)
-
-// 1,0
-#define PAGE_KERNEL_GDT (PAGE_R_W | PAGE_Present)
-
-// 1,0
-#define PAGE_KERNEL_Dir (PAGE_R_W | PAGE_Present)
-
-// 7,1,0
-#define PAGE_KERNEL_Page (PAGE_PS | PAGE_R_W | PAGE_Present)
-
-#define PAGE_USER_PML4 (PAGE_U_S | PAGE_R_W | PAGE_Present)
-// 1,0
-#define PAGE_USER_GDT (PAGE_U_S | PAGE_R_W | PAGE_Present)
-
-// 2,1,0
-#define PAGE_USER_Dir (PAGE_U_S | PAGE_R_W | PAGE_Present)
-// 2,1,0
-#define PAGE_USER_Page_4K (PAGE_U_S | PAGE_R_W | PAGE_Present)
-// 7,2,1,0
-#define PAGE_USER_Page (PAGE_PS | PAGE_U_S | PAGE_R_W | PAGE_Present)
-
-// 7,2,0 , only read
-#define PAGE_USER_Page_OR (PAGE_PS | PAGE_U_S | PAGE_Present)
-
+/* 这里定义的结构体 已经几乎废弃 */
 /*ARDS, Address Range Descriptor Structure, 每个结构20字节*/
 struct Memory_E820_Formate
 {
@@ -247,6 +103,8 @@ typedef struct Slab_cache
 }Slab_cache_t;
 
 extern struct Global_Memory_Descriptor memory_management_struct;
+#define Virt_To_2M_Page(kaddr) (memory_management_struct.pages_struct + (Virt_To_Phy(kaddr) >> PAGE_2M_SHIFT))
+#define Phy_to_2M_Page(kaddr) (memory_management_struct.pages_struct + ((u64_t)(kaddr) >> PAGE_2M_SHIFT))
 
 //// each zone index
 int ZONE_DMA_INDEX = 0;
@@ -280,34 +138,6 @@ struct Slab_cache kmalloc_cache_size[16] =
 #define SIZEOF_LONG_ALIGN(size) ((size + sizeof(long) - 1) & ~(sizeof(long) - 1))
 #define SIZEOF_INT_ALIGN(size) ((size + sizeof(int) - 1) & ~(sizeof(int) - 1))
 
-// Transaltion_Lookaside_Buffer, 刷新虚拟地址 vaddr 的 块表 TLB
-#define flush_tlb_one(addr)                                   \
-    __asm__ __volatile__("invlpg	(%0)	\n\t" ::"r"(addr) \
-                         : "memory")
-
-#define flush_tlb()               \
-    do                            \
-    {                             \
-        u64_t tmpreg;     \
-        __asm__ __volatile__(     \
-            "movq	%%cr3,	%0	\n\t" \
-            "movq	%0,	%%cr3	\n\t" \
-            : "=r"(tmpreg)        \
-            :                     \
-            : "memory");          \
-    } while (0)
-
-inline static u64_t *Get_gdt()
-{
-    u64_t *tmp;
-    __asm__ __volatile__(
-        "movq	%%cr3,	%0	\n\t"
-        : "=r"(tmp)
-        :
-        : "memory");
-    return tmp;
-}
-
 u64_t page_init(struct Page *page, u64_t flags);
 u64_t page_clean(struct Page *page);
 u64_t get_page_attribute(struct Page *page);
@@ -338,10 +168,11 @@ u64_t* pte_ptr(u64_t vaddr);
 u64_t do_wp_page(u64_t virtual_address);
 s64_t do_no_page(u64_t virtual_address);
 void pagetable_4K_init();
-// u64_t kfree(void* address, u64 size);
-
 
 void kdelete(void* address, u64_t size);
 void *knew(u64_t size, u64_t gfp_flags);
+
+adr_t viradr_to_phyadr(adr_t kviradr);
+adr_t phyadr_to_viradr(adr_t kphyadr);
 
 #endif

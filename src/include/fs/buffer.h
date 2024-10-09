@@ -1,9 +1,7 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
-#include "memory.h"
-#include "basekit.h"
 
-#define HASH_COUNT 63      //
+#define HASH_COUNT 63
 #define MAX_BUF_COUNT 4096
 
 typedef struct block_buf{
@@ -23,7 +21,7 @@ typedef struct buffer
     bdesc_t *desc;       // 描述符指针
     dev_t dev;           // 设备号
     idx_t block;         // 块号
-    int refer_count;     // 引用计数
+    s32_t refer_count;     // 引用计数
     semaphore_t lock;    // 锁
     bool dirty;          // 是否与磁盘不一致
     bool valid;          // 缓冲数据是否有效
@@ -31,16 +29,8 @@ typedef struct buffer
     list_t rnode;        // 缓冲节点
 } buffer_t;
 
-
-
 err_t bwrite(buffer_t *buf);
-// 释放缓冲
 err_t brelse(buffer_t *buf);
-
-// 缓冲读
 buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size);
-
-
-
 void buffer_init(void);
 #endif

@@ -1,6 +1,6 @@
-#include "basekit.h"
+#include "toolkit.h"
+#include "mmkit.h"
 #include "interrupt.h"
-#include "memory.h"
 
 extern irq_desc_T interrupt_desc[NR_IRQS];
 // 修改向量号为irq对应I/O中断定向投递寄存器组的屏蔽标志,使其激活

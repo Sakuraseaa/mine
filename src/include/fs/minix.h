@@ -1,7 +1,6 @@
 #ifndef __MINIX_H__
 #define __MINIX_H__
-#include "basetype.h"
-#include "fcntl.h"
+
 #define BLOCK_SIZE 1024                       // 块大小
 #define SECTOR_SIZE 512                       // 扇区大小
 #define BLOCK_SECS (BLOCK_SIZE / SECTOR_SIZE) // 一块占 2 个扇区

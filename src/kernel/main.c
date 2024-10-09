@@ -1,6 +1,7 @@
-#include "basekit.h"
+#include "toolkit.h"
+#include "fskit.h"
 #include "trap.h"
-#include "memory.h"
+#include "mmkit.h"
 #include "interrupt.h"
 #include "task.h"
 #if APIC
@@ -15,11 +16,8 @@
 #include "softirq.h"
 #include "SMP.h"
 #include "schedule.h"
-#include "fat32.h"
-#include "VFS.h"
 #include "serial.h"
 #include "device.h"
-#include "buffer.h"
 #include "memmgrinit.h"
 #include "krlmm.h"
 
