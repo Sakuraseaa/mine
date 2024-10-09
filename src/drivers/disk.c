@@ -26,7 +26,7 @@ void end_request(struct block_buffer_node *node)
 }
 
 // 给硬盘发送命令
-long cmd_out()
+s64_t cmd_out()
 {
     wait_queue_t *wait_queue_tmp =
         container_of(list_next(&disk_request.wait_queue_list.wait_list), wait_queue_t, wait_list);
@@ -122,7 +122,7 @@ long cmd_out()
  * @param buffer  调用者传入的读写缓冲区
  * @return struct block_buffer_node*
  */
-struct block_buffer_node *make_request(long cmd, u64_t blocks, long count, unsigned char *buffer)
+struct block_buffer_node *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
     struct block_buffer_node *node = (struct block_buffer_node *)knew(sizeof(struct block_buffer_node), 0);
     wait_queue_init(&node->wait_queue, current);
@@ -183,27 +183,27 @@ hw_int_controller disk_int_controller =
         .ack = IOAPIC_edge_ack,
 };
 
-long IDE_open()
+s64_t IDE_open()
 {
     color_printk(BLACK, WHITE, "DISK0 Opened\n");
     return 1;
 }
 
-long IDE_close()
+s64_t IDE_close()
 {
     color_printk(BLACK, WHITE, "DISK0 Closed\n");
     return 1;
 }
 
 // 给硬盘发送除了读写外的命令，目前只实现了identify命令
-long IDE_ioctl(long cmd, long arg)
+s64_t IDE_ioctl(s64_t cmd, s64_t arg)
 {
 
     struct block_buffer_node *node = NULL;
 
     if (cmd == GET_IDENTIFY_DISK_CMD)
     {
-        node = make_request(cmd, 0, 0, (unsigned char *)arg);
+        node = make_request(cmd, 0, 0, (u8_t *)arg);
 
         submit(node);
         wait_for_finish();
@@ -222,7 +222,7 @@ long IDE_ioctl(long cmd, long arg)
  * @param buffer    要读写的缓存区
  * @return long     succeed return 1 OR Failed return 0
  */
-long IDE_transfer(long cmd, u64_t blocks, long count, unsigned char *buffer)
+s64_t IDE_transfer(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
     struct block_buffer_node *node = NULL;
     if (cmd == ATA_READ_CMD || cmd == ATA_WRITE_CMD)
@@ -346,9 +346,9 @@ void other_handler(u64_t nr, u64_t parameter)
         color_printk(RED, BLACK, "write_handler:%#010x\n", io_in8(PORT_DISK1_ERR_FEATURE));
 
     
-    int i = 0;
+    s32_t i = 0;
     struct Disk_Identify_Info a;
-    unsigned short *p = NULL;
+    u16_t *p = NULL;
     port_insw(PORT_DISK1_DATA, &a, 256);
 
     color_printk(ORANGE, WHITE, "\nSerial Number:"); // 序列号
@@ -364,15 +364,15 @@ void other_handler(u64_t nr, u64_t parameter)
         color_printk(ORANGE, WHITE, "%c%c", (a.Model_Number[i] >> 8) & 0xff, a.Model_Number[i] & 0xff);
     color_printk(ORANGE, WHITE, "\n");
 
-    p = (unsigned short *)&a;
+    p = (u16_t *)&a;
     // for (i = 0; i < 256; i++)
     //     color_printk(ORANGE, WHITE, "%04x ", *(p + i));
     // 是否支持LBA寻址
-    int capabilities = *(p + 49);
+    s32_t capabilities = *(p + 49);
     color_printk(ORANGE, WHITE, "LBA supported: %s\n", (capabilities & 0x0200) ? "Yes" : "No");
 
     // 是否支持LBA48寻址
-    int cmd_set_supported = *(p + 83);
+    s32_t cmd_set_supported = *(p + 83);
     color_printk(ORANGE, WHITE, "LBA48 supported: %s\n", (cmd_set_supported & 0x0400) ? "Yes" : "No");
     end_request(node);
 }

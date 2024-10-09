@@ -1,7 +1,7 @@
 #ifndef _SIGNAL_H
 #define _SIGNAL_H
 
-typedef unsigned int sigset_t; /* 32 bits */
+typedef u32_t sigset_t; /* 32 bits */
 
 #define _NSIG 32
 #define NSIG _NSIG

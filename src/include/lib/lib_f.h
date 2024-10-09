@@ -26,11 +26,11 @@ void lower(char *str);
 void upper(char *str);
 u64_t get_rflags();
 long str_find_char(char *string, char ch, long strlen); // 自己写的 略显丑陋
-long verify_area(unsigned char *addr, u64_t size);
+long verify_area(u8_t *addr, u64_t size);
 // 一对常用的数据复制函数，只不过这对函数会检测应用程序提供的应用层操作地址空间是否越界
 long copy_from_user(void *from, void *to, u64_t size);
 long copy_to_user(void *from, void *to, u64_t size);
-long verify_area(unsigned char *addr, u64_t size);
+long verify_area(u8_t *addr, u64_t size);
 long copy_from_user(void *from, void *to, u64_t size);
 long copy_to_user(void *from, void *to, u64_t size);
 long strncpy_from_user(void *from, void *to, u64_t size);
@@ -40,10 +40,10 @@ u64_t bit_set(u64_t *addr, u64_t nr);
 u64_t bit_get(u64_t *addr, u64_t nr);
 u64_t bit_clean(u64_t *addr, u64_t nr);
 
-unsigned char io_in8(unsigned short port);
-unsigned int io_in32(unsigned short port);
-void io_out8(unsigned short port, unsigned char value);
-void io_out32(unsigned short port, unsigned int value);
+u8_t io_in8(u16_t port);
+u32_t io_in32(u16_t port);
+void io_out8(u16_t port, u8_t value);
+void io_out32(u16_t port, u32_t value);
 
 s64_t search_64rlbits(u64_t val);
 
@@ -60,7 +60,7 @@ int memcmp(void *FirstPart, void *SecondPart, long Count);
 /*
 		set memory at Address with C ,number is Count
 */
-void *memset(void *Address, unsigned char C, long Count);
+void *memset(void *Address, u8_t C, long Count);
 /*
 		string copy
 */

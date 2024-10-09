@@ -6,18 +6,18 @@
  */
 void init_cpu(void)
 {
-	int i;
-	unsigned int CpuFacName[4] = {0, 0, 0, 0};
-	char FactoryName[17] = {0};
+	s32_t i;
+	u32_t CpuFacName[4] = {0, 0, 0, 0};
+	u8_t FactoryName[17] = {0};
 
 	// vendor_string 返回供应商表示字符串的CPUID最大值
 	get_cpuid(0, 0, &CpuFacName[0], &CpuFacName[1], &CpuFacName[2], &CpuFacName[3]);
 
-	*(unsigned int *)&FactoryName[0] = CpuFacName[1];
+	*(u32_t *)&FactoryName[0] = CpuFacName[1];
 
-	*(unsigned int *)&FactoryName[4] = CpuFacName[3];
+	*(u32_t *)&FactoryName[4] = CpuFacName[3];
 
-	*(unsigned int *)&FactoryName[8] = CpuFacName[2];
+	*(u32_t *)&FactoryName[8] = CpuFacName[2];
 
 	FactoryName[12] = '\0';
 	color_printk(YELLOW, BLACK, "%s\t%#010x\t%#010x\t%#010x\n", FactoryName, CpuFacName[1], CpuFacName[3], CpuFacName[2]);
@@ -27,13 +27,13 @@ void init_cpu(void)
 	{
 		get_cpuid(i, 0, &CpuFacName[0], &CpuFacName[1], &CpuFacName[2], &CpuFacName[3]);
 
-		*(unsigned int *)&FactoryName[0] = CpuFacName[0];
+		*(u32_t *)&FactoryName[0] = CpuFacName[0];
 
-		*(unsigned int *)&FactoryName[4] = CpuFacName[1];
+		*(u32_t *)&FactoryName[4] = CpuFacName[1];
 
-		*(unsigned int *)&FactoryName[8] = CpuFacName[2];
+		*(u32_t *)&FactoryName[8] = CpuFacName[2];
 
-		*(unsigned int *)&FactoryName[12] = CpuFacName[3];
+		*(u32_t *)&FactoryName[12] = CpuFacName[3];
 
 		FactoryName[16] = '\0';
 		color_printk(YELLOW, BLACK, "%s", FactoryName);

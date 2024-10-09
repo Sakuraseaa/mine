@@ -590,8 +590,8 @@ struct Slab *kmalloc_create(u64_t size)
         structsize = sizeof(struct Slab) + PAGE_2M_SIZE / size / 8; // Slab 和位图占用的字节数
 
         // 这是Slab结构体 和本物理页的位图
-        slab = (struct Slab *)((unsigned char *)vaddress + PAGE_2M_SIZE - structsize);
-        slab->color_map = (u64_t *)((unsigned char *)slab + sizeof(struct Slab));
+        slab = (struct Slab *)((u8_t *)vaddress + PAGE_2M_SIZE - structsize);
+        slab->color_map = (u64_t *)((u8_t *)slab + sizeof(struct Slab));
 
         slab->free_count = (PAGE_2M_SIZE - structsize) / size;
         slab->using_count = 0;

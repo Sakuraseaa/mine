@@ -3,10 +3,10 @@
 #include "mmkit.h"
 #include "kernelkit.h"
 
-typedef unsigned int Elf64_Word;
+typedef u32_t Elf64_Word;
 typedef u64_t Elf64_Addr;
 typedef u64_t Elf64_Off;
-typedef unsigned short Elf64_Half;
+typedef u16_t Elf64_Half;
 typedef u64_t Elf64_Xword;
 
 
@@ -14,7 +14,7 @@ typedef u64_t Elf64_Xword;
 
 typedef struct
 {
-    unsigned char	e_ident[EI_NIDENT];	/* Magic number and other info */    // 魔术， elf文件类型（标识是32位还是64位），指定大端还是小端，ELF头的版本信息，e_ident7 ~ 15位不使用
+    u8_t	e_ident[EI_NIDENT];	/* Magic number and other info */    // 魔术， elf文件类型（标识是32位还是64位），指定大端还是小端，ELF头的版本信息，e_ident7 ~ 15位不使用
     Elf64_Half	e_type;			    /* Object file type */                   // 文件类型 Relocatable file(.o), Executable(.out), Shared Object File(.so)
     Elf64_Half	e_machine;		    /* Architecture */                       // CPU 平台类型
     Elf64_Word	e_version;		    /* Object file version */                // ELF 版本号
@@ -162,7 +162,7 @@ static bool segment_load(struct file* filp, u64_t offset, u64_t filesz, u64_t va
     // 计算段将要加载到的虚拟页
     u64_t vaddr_first_page = vaddr & TASK_SIZE;
     // 表示文件在第一个页框中占用的字节大小
-    long size_in_first_page = PAGE_4K_SIZE - (vaddr & (PAGE_4K_SIZE - 1));
+    s64_t size_in_first_page = PAGE_4K_SIZE - (vaddr & (PAGE_4K_SIZE - 1));
 
     // 如果虚拟页内装不下, 则计算额外需要的页数
     u64_t occupy_pages = 1; // 计算本次加载要占用的物理页数
@@ -205,10 +205,10 @@ static u64_t section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
     Elf64_Half	s_num = elf_header->e_shnum;		    /* Section header table entry count */
 	Elf64_Off	s_off = elf_header->e_shoff; 			/* Section header table file offset */
 	
-    unsigned int sect_idx = 0;
+    u32_t sect_idx = 0;
 	Elf64_Shdr *section_header = (Elf64_Shdr*)knew(s_num * s_size, 0);
 	Elf64_Shdr *shstr_entry = NULL;
-	char* s_name_table = NULL;
+	str_t s_name_table = NULL;
 
 	// read Section Header
 
@@ -267,7 +267,7 @@ static u64_t load(char *pathname)
 {
 	struct file *filp = NULL;
 	u64_t end_bss = 0;
-	long ret = -1;
+	s64_t ret = -1;
 
 	Elf64_Ehdr elf_header;
 	Elf64_Phdr prog_header;
@@ -309,7 +309,7 @@ static u64_t load(char *pathname)
 	Elf64_Half prog_header_size = elf_header.e_phentsize;
     Elf64_Off prog_header_offset = elf_header.e_phoff;
     // 遍历所有程序头表
-    unsigned int prog_idx = 0;
+    u32_t prog_idx = 0;
 	
 	while (prog_idx < elf_header.e_phnum)
 	{
@@ -340,7 +340,7 @@ u64_t do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
   	// color_printk(RED, BLACK, "do_execve task is running\n");
 	u64_t stack_start_addr = TASK_SIZE + 1;
 	u64_t retval = 0;
-	long pos = 0;
+	s64_t pos = 0;
 	
 	if (current->flags & PF_VFORK)
 	{

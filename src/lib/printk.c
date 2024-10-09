@@ -4,12 +4,12 @@
 
 semaphore_t visual_lock;
 
-void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, unsigned int BKcolor, unsigned char font)
+void putchar(u32_t *fb, s32_t Xsize, s32_t x, s32_t y, u32_t FRcolor, u32_t BKcolor, u8_t font)
 {
-	int i = 0, j = 0;
-	unsigned int *addr = NULL;
-	unsigned char *fontp = NULL;
-	int testval = 0;
+	u32_t i = 0, j = 0;
+	u32_t *addr = NULL;
+	u8_t *fontp = NULL;
+	s32_t testval = 0;
 	fontp = font_ascii[font];
 	semaphore_down(&visual_lock);
 
@@ -31,20 +31,20 @@ void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, un
 	semaphore_up(&visual_lock);
 }
 
-int skip_atoi(const char **s)
+s32_t skip_atoi(cstr_t *s)
 {
-	int i = 0;
+	s32_t i = 0;
 
 	while (is_digit(**s))
 		i = i * 10 + *((*s)++) - '0';
 	return i;
 }
 
-static char *number(char *str, long num, int base, int size, int precision, int type)
+static str_t number(str_t str, s64_t num, s32_t base, s32_t size, s32_t precision, s32_t type)
 {
-	char c, sign, tmp[50];
-	const char *digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	int i;
+	char_t c, sign, tmp[50];
+	cstr_t digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	s32_t i;
 
 	if (type & SMALL)
 		digits = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -108,15 +108,15 @@ static char *number(char *str, long num, int base, int size, int precision, int 
 	return str;
 }
 
-int vsprintf(char *buf, const char *fmt, va_list args)
+s32_t vsprintf(str_t buf, cstr_t fmt, va_list args)
 {
-	char *str, *s;
-	int flags;
-	int field_width;
-	int precision;
-	int len, i;
+	char_t *str, *s;
+	s32_t flags;
+	s32_t field_width;
+	s32_t precision;
+	s32_t len, i;
 
-	int qualifier; /* 'h', 'l', 'L' or 'Z' for integer fields */
+	s32_t qualifier; /* 'h', 'l', 'L' or 'Z' for integer fields */
 
 	for (str = buf; *fmt; fmt++)
 	{
@@ -195,7 +195,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = ' ';
-			*str++ = (unsigned char)va_arg(args, int);
+			*str++ = (u8_t)va_arg(args, int);
 			while (--field_width > 0)
 				*str++ = ' ';
 			break;
@@ -225,7 +225,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 			if (qualifier == 'l')
 				str = number(str, va_arg(args, u64_t), 8, field_width, precision, flags);
 			else
-				str = number(str, va_arg(args, unsigned int), 8, field_width, precision, flags);
+				str = number(str, va_arg(args, u32_t), 8, field_width, precision, flags);
 			break;
 
 		case 'p':
@@ -248,7 +248,7 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 			if (qualifier == 'l')
 				str = number(str, va_arg(args, u64_t), 16, field_width, precision, flags);
 			else
-				str = number(str, va_arg(args, unsigned int), 16, field_width, precision, flags);
+				str = number(str, va_arg(args, u32_t), 16, field_width, precision, flags);
 			break;
 
 		case 'd':
@@ -296,9 +296,9 @@ int vsprintf(char *buf, const char *fmt, va_list args)
 	return str - buf;
 }
 
-int sprintf(char *buf, const char *fmt, ...)
+s32_t sprintf(str_t buf, cstr_t fmt, ...)
 {
-	int count = 0;
+	s32_t count = 0;
 	va_list args;
 
 	va_start(args, fmt);
@@ -308,12 +308,12 @@ int sprintf(char *buf, const char *fmt, ...)
 	return count;
 }
 
-int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...)
+s32_t color_printk(u32_t FRcolor, u32_t BKcolor, cstr_t fmt, ...)
 {
 
-	int i = 0;
-	int count = 0;
-	int line = 0;
+	s32_t i = 0;
+	s32_t count = 0;
+	s32_t line = 0;
 	va_list args;
 	va_start(args, fmt);
 
@@ -338,12 +338,12 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 			count--;
 			goto Label_tab;
 		}
-		if ((unsigned char)*(buf + count) == '\n')
+		if ((u8_t)*(buf + count) == '\n')
 		{
 			Pos.YPosition++;
 			Pos.XPosition = 0;
 		}
-		else if ((unsigned char)*(buf + count) == '\b')
+		else if ((u8_t)*(buf + count) == '\b')
 		{
 			Pos.XPosition--;
 			if (Pos.XPosition < 0)
@@ -355,7 +355,7 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 			}
 			putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, FRcolor, BKcolor, ' ');
 		}
-		else if ((unsigned char)*(buf + count) == '\t')
+		else if ((u8_t)*(buf + count) == '\t')
 		{
 			line = ((Pos.XPosition + 8) & ~(8 - 1)) - Pos.XPosition;
 
@@ -366,7 +366,7 @@ int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ..
 		}
 		else
 		{
-			putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, FRcolor, BKcolor, (unsigned char)*(buf + count));
+			putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, FRcolor, BKcolor, (u8_t)*(buf + count));
 			Pos.XPosition++;
 		}
 
@@ -459,7 +459,7 @@ void frame_buffer_init()
 // 	u64_t i;
 // 	u64_t *tmp;
 // 	u64_t *tmp1;
-// 	unsigned int *FB_addr = (unsigned int *)Phy_To_Virt(VBE_Phy_address);
+// 	u32_t *FB_addr = (u32_t *)Phy_To_Virt(VBE_Phy_address);
 // 	u64_t *vir_address;
 // 	Global_CR3 = Get_gdt();
 
@@ -489,7 +489,7 @@ void frame_buffer_init()
 // 		set_pdt(tmp1, mk_pdpt(phy, PAGE_KERNEL_Page | PAGE_PWT | PAGE_PCD));
 // 	}
 
-// 	Pos.FB_addr = (unsigned int *)Phy_To_Virt(VBE_Phy_address);
+// 	Pos.FB_addr = (u32_t *)Phy_To_Virt(VBE_Phy_address);
 
 // 	flush_tlb();
 // }

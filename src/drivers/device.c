@@ -66,8 +66,8 @@ int device_write(dev_t dev, void *buf, size_t count, idx_t lba, int flags)
 
 // 安装设备
 dev_t device_install(
-    int type, int subtype,
-    void *ptr, char *name, dev_t parent,
+    s32_t type, s32_t subtype,
+    void *ptr, str_t name, dev_t parent,
     void *ops)
 {
     device_t *device = get_null_device();
@@ -94,7 +94,7 @@ void device_init()
     }
 }
 
-device_t *device_find(int subtype, idx_t idx)
+device_t *device_find(s32_t subtype, idx_t idx)
 {
     idx_t nr = 0;
     for (size_t i = 0; i < DEVICE_NR; i++)

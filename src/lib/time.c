@@ -112,11 +112,11 @@ void localtime(u64_t stamp, struct time* tm) {
     tm->week_day = (days + 4) % 7;
     
     // 确认年, 这里产生误差显然需要 365 个闰年，不管了
-    int year = days / 365;  // 1970 年到目前一共经过了多少年
+    s32_t year = days / 365;  // 1970 年到目前一共经过了多少年
     tm->year = year + 1970;
 
 
-    int offset = 1;
+    s32_t offset = 1;
     if (is_leap_year(tm->year))
         offset = 0;
     
@@ -126,7 +126,7 @@ void localtime(u64_t stamp, struct time* tm) {
     
     tm->year_day = days % (366 - offset);
 
-    int mon = 1;
+    s32_t mon = 1;
     for(; mon < 13; mon++) {
         if((month[mon] - offset) > days)
             break;

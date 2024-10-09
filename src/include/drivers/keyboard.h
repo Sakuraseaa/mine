@@ -4,11 +4,11 @@
 #define KB_BUF_SIZE 100
 typedef struct keyboard_inputbuffer
 {
-    unsigned char *p_head; // 缓冲区首尾指针
-    unsigned char *p_tail;
+    u8_t *p_head; // 缓冲区首尾指针
+    u8_t *p_tail;
     int count; // 缓冲数据计数器
 
-    unsigned char buf[KB_BUF_SIZE]; // 循环队列缓存区
+    u8_t buf[KB_BUF_SIZE]; // 循环队列缓存区
 }keyboard_inputbuffer_t;
 
 #define PAUSEBREAK 1

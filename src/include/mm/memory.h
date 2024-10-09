@@ -4,11 +4,11 @@
 /*ARDS, Address Range Descriptor Structure, 每个结构20字节*/
 struct Memory_E820_Formate
 {
-    unsigned int address1; // 基地址低32位
-    unsigned int address2; // 基地址高32位
-    unsigned int length1;  // 内存长度低32位
-    unsigned int length2;  // 内存长度高32位
-    unsigned int type;     // 本段内存的类型
+    u32_t address1; // 基地址低32位
+    u32_t address2; // 基地址高32位
+    u32_t length1;  // 内存长度低32位
+    u32_t length2;  // 内存长度高32位
+    u32_t type;     // 本段内存的类型
 };
 u64_t *Global_CR3 = NULL;
 // E820 是 Memory_E820_Formate 的简单整合
@@ -16,7 +16,7 @@ struct E820
 {
     u64_t address;
     u64_t length;
-    unsigned int type;
+    u32_t type;
 } __attribute__((packed));
 // 修饰结构体不会生成对齐空间，改用紧凑格式
 

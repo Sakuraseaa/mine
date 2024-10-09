@@ -3,17 +3,17 @@
 
 struct desc_struct
 {
-	unsigned char x[8];
+	u8_t x[8];
 };
 
 struct gate_struct
 {
-	unsigned char x[16];
+	u8_t x[16];
 };
 
 extern struct desc_struct GDT_Table[];
 extern struct gate_struct IDT_Table[];
-extern unsigned int TSS64_Table[26];
+extern u32_t TSS64_Table[26];
 
 /* 输入: rax = (0x8 << 16) = 段选择子(内核代码段)，ecx = ist(8位), rdx = code_addr, i = 立即数约束 = attr(8位属性)
 
@@ -51,22 +51,22 @@ extern unsigned int TSS64_Table[26];
 							 : "memory");  \
 	} while (0)
 
-inline static void set_intr_gate(unsigned int n, unsigned char ist, void *addr)
+inline static void set_intr_gate(u32_t n, u8_t ist, void *addr)
 {
 	_set_gate(IDT_Table + n, 0x8E, ist, addr); // P,DPL=0,TYPE=E
 }
 
-inline static void set_trap_gate(unsigned int n, unsigned char ist, void *addr)
+inline static void set_trap_gate(u32_t n, u8_t ist, void *addr)
 {
 	_set_gate(IDT_Table + n, 0x8F, ist, addr); // P,DPL=0,TYPE=F
 }
 
-inline static void set_system_gate(unsigned int n, unsigned char ist, void *addr)
+inline static void set_system_gate(u32_t n, u8_t ist, void *addr)
 {
 	_set_gate(IDT_Table + n, 0xEF, ist, addr); // P,DPL=3,TYPE=F
 }
 
-inline static void set_system_intr_gate(unsigned int n, unsigned char ist, void *addr) // int3
+inline static void set_system_intr_gate(u32_t n, u8_t ist, void *addr) // int3
 {
 	_set_gate(IDT_Table + n, 0xEE, ist, addr); // P,DPL=3,TYPE=E
 }

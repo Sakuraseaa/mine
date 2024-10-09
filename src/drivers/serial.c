@@ -34,7 +34,7 @@ void serial_handler(u64_t nr, u64_t parameter, pt_regs_t *regs) {
     nr = nr == 0x24 ? 0 : 1;
 
     serial_t *serial = &serials[nr];
-    unsigned char state = io_in8(serial->iobase + COM_LINE_STATUS);
+    u8_t state = io_in8(serial->iobase + COM_LINE_STATUS);
 
     if (state & LSR_DR) // 数据可读
     {
@@ -53,7 +53,7 @@ int serial_write(serial_t *serial, char *buf, u64_t count) {
     int nr = 0;
     while (nr < count)
     {
-        unsigned char state = io_in8(serial->iobase + COM_LINE_STATUS);
+        u8_t state = io_in8(serial->iobase + COM_LINE_STATUS);
         if (state & LSR_THRE) // 如果串口可写
         {
             io_out8(serial->iobase, buf[nr++]);
@@ -65,7 +65,7 @@ int serial_write(serial_t *serial, char *buf, u64_t count) {
 
 void serial_init()
 {
-    unsigned char i = 0;
+    u8_t i = 0;
     for (; i < 2; i++)
     {
         serial_t *serial = &serials[i];

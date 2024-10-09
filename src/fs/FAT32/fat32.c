@@ -20,14 +20,14 @@ struct FAT32_FSInfo fat32_fsinfo;
  * @brief 在fat表中读出 簇号为fat_entry 对应的fat表项值
  *
  * @param fat_entry
- * @return unsigned int 簇号/结束标志
+ * @return u32_t 簇号/结束标志
  */
-unsigned int DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int fat_entry)
+u32_t DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, u32_t fat_entry)
 {
-    unsigned int buf[128];
+    u32_t buf[128];
     memset(buf, 0, 512);
     // fat_entry >> 7: 是因为一个扇区有128个fat表项， 这样会定位到簇号对应的偏移扇区
-    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (unsigned char *)buf);
+    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (u8_t *)buf);
 
     // color_printk(BLUE, BLACK, "DISK1_FAT32_read_FAT_Entry fat_entry:%#018lx, %#010x\n", fat_entry, buf[fat_entry & 0x7f]);
 
@@ -42,18 +42,18 @@ unsigned int DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int
  * @param value
  * @return u64_t 成功返回1
  */
-u64_t DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int fat_entry, unsigned int value)
+u64_t DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, u32_t fat_entry, u32_t value)
 {
-    unsigned int buf[128];
+    u32_t buf[128];
     int i;
     memset(buf, 0, 512);
     // 读fat
-    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (unsigned char *)buf);
+    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (u8_t *)buf);
 
     buf[fat_entry & 0x7f] = (buf[fat_entry & 0x7f] & 0xf0000000) | (value & 0x0fffffff);
     // 写fat1,fat2,...表
     for (i = 0; i < fsbi->NumFATs; i++)
-        IDE_device_operation.transfer(ATA_WRITE_CMD, fsbi->FAT1_firstsector + fsbi->sector_per_FAT * i + (fat_entry >> 7), 1, (unsigned char *)buf);
+        IDE_device_operation.transfer(ATA_WRITE_CMD, fsbi->FAT1_firstsector + fsbi->sector_per_FAT * i + (fat_entry >> 7), 1, (u8_t *)buf);
     return 1;
 }
 
@@ -67,13 +67,13 @@ u64_t FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
 {
     int i, j;
     u64_t sector_per_fat = fsbi->sector_per_FAT;
-    unsigned int buf[128];
+    u32_t buf[128];
 
     // fsbi->fat_fsinfo->FSI_Free_Count & fsbi->fat_fsinfo->FSI_Nxt_Free not exactly, so unuse
     for (i = 0; i < sector_per_fat; i++)
     {
         memset(buf, 0, 512);
-        IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + i, 1, (unsigned char *)buf);
+        IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + i, 1, (u8_t *)buf);
 
         for (j = 0; j < 128; j++)
         {
@@ -134,7 +134,7 @@ long FAT32_read(struct file *filp, char *buf, u64_t count, long *position)
         sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster;
 
         // c.2. 读取整个簇的数据
-        if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+        if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer))
         {
             color_printk(RED, BLACK, "FAT32 FS(read) read disk ERROR!!!!!!\n");
             retval = -EIO;
@@ -230,7 +230,7 @@ long FAT32_write(struct file *filp, char *buf, u64_t count, long *position)
         // flags标记当前簇的操作状态为已使用还是新分配。
         // 对于已使用的簇，必须将簇数据读出来，再写入数据覆盖到读取缓存区中
         if (!flags)
-            if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+            if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer))
             {
                 color_printk(RED, BLACK, "FAT32 FS(write) read disk ERROR!!!!\n");
                 retval = -EIO;
@@ -245,7 +245,7 @@ long FAT32_write(struct file *filp, char *buf, u64_t count, long *position)
             memcpy(buf, buffer + offset, length);
 
         // 把准备好的数据写入硬盘
-        if (!IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+        if (!IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer))
         {
             color_printk(RED, BLACK, "FAT32 FS(write) write disk ERROR!!!!\n");
             retval = -EIO;
@@ -315,9 +315,9 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
     struct FAT32_inode_info* finode = filp->dentry->dir_inode->private_index_info;
     struct FAT32_sb_info* fsbi = filp->dentry->dir_inode->sb->private_sb_info;
 
-    unsigned int cluster = 0;
+    u32_t cluster = 0;
     u64_t sector = 0;
-    unsigned char * buf = NULL;
+    u8_t * buf = NULL;
     char* name = NULL;
     int namelen = 0;
     int i = 0, j = 0, x = 0,y = 0;
@@ -444,16 +444,16 @@ struct file_operations FAT32_file_ops =
  * in the format of a MS-DOS directory entry.
  *
  * @param pFcbName Pointer to an unsigned byte array assumed to be 11 bytes long.
- * @return unsigned char Sum An 8-bit unsigned checksum of the array pointed to by pFcbName.
+ * @return u8_t Sum An 8-bit unsigned checksum of the array pointed to by pFcbName.
  */
-static unsigned char FAT32_ChkSum(unsigned char *pFcbName)
+static u8_t FAT32_ChkSum(u8_t *pFcbName)
 {
-    short FcbNameLen;
-    unsigned char sum;
+    s16_t FcbNameLen;
+    u8_t sum;
     sum = 0;
     for (FcbNameLen = 11; FcbNameLen != 0; FcbNameLen--)
     {
-        // NOTE: The operation si an unsigned char rotate right
+        // NOTE: The operation si an u8_t rotate right
         sum = ((sum & 1) ? 0x80 : 0) + (sum >> 1) + *pFcbName++;
     }
     return sum;
@@ -495,7 +495,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
     fd = (struct FAT32_Directory *)(fld + LDir_count); // 定位短目录项的长度
     // ------------------------- 初始化长目录项------------------
     fld0 = (struct FAT32_LongDirectory *)fd - 1;
-    unsigned char ChkSum_ = FAT32_ChkSum((unsigned char*)tmpName);
+    u8_t ChkSum_ = FAT32_ChkSum((u8_t*)tmpName);
     j = 0;
     for (; k < LDir_count; k++, fld0--)
     {
@@ -634,7 +634,7 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
 
         sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster;
 
-        if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer))
+        if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer))
         {
             kdelete(buffer, fsbi->bytes_per_cluster);
             kdelete(fld, sizeof(FAT32_longdirectory_t));
@@ -649,7 +649,7 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
             if (entry->DIR_Name[0] == 0)
             { // 成功找到
                 memcpy(fld, buffer + FAT_DENRY_SIZE * i, dir_entry_size_total);
-                IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buffer);
+                IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer);
                 finode->dentry_location = cluster;
                 finode->dentry_position = FAT_DENRY_SIZE * i;
                 retval = flag_finish = 0;
@@ -691,9 +691,9 @@ struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry
     struct FAT32_inode_info *finode = parent_inode->private_index_info;
     struct FAT32_sb_info *fsbi = parent_inode->sb->private_sb_info;
 
-    unsigned int cluster = 0;  // 簇号
+    u32_t cluster = 0;  // 簇号
     u64_t sector = 0;  // 扇区号
-    unsigned char *buf = NULL; // 保存硬盘数据的缓冲区
+    u8_t *buf = NULL; // 保存硬盘数据的缓冲区
     int i = 0, j = 0, x = 0;
     struct FAT32_Directory *tmpdentry = NULL;
     struct FAT32_LongDirectory *tmpldentry = NULL;
@@ -704,7 +704,7 @@ struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry
 next_cluster:
     sector = fsbi->Data_firstsector + (cluster - 2) * fsbi->sector_per_cluster; // 计算要读取的扇区号
     // color_printk(BLUE, BLACK, "lookup cluster:%#010x, sector: %#018lx\n", cluster, sector);
-    if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf))
+    if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buf))
     { // 读目录的数据块
         color_printk(RED, BLACK, "FAT32 FS(lookup) read disk ERROR!!!!!!!\n");
         kdelete(buf, fsbi->bytes_per_cluster);
@@ -735,22 +735,22 @@ next_cluster:
                 if (j > dest_dentry->name_length && tmpldentry->LDIR_Name1[x] == 0xffff)
                     continue;
                 // LDIR_Name1使用的编码方式是Unicode编码，而name[]使用的是ACSii码, 但由于Unicode编码发展与ACSII码, 所以可以进行比较
-                // 这里的unsigned short强转，是把char类型转换成unsigned short.所以本系统目前不支持汉字文件名
-                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name1[x] != (unsigned short)(dest_dentry->name[j++]))
+                // 这里的unsigned shor-t强转，是把char类型转换成unsigned shor-t.所以本系统目前不支持汉字文件名
+                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name1[x] != (u16_t)(dest_dentry->name[j++]))
                     goto continue_cmp_fail;
             }
             for (x = 0; x < 6; x++)
             {
                 if (j > dest_dentry->name_length && tmpldentry->LDIR_Name2[x] == 0xffff)
                     continue;
-                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name2[x] != (unsigned short)(dest_dentry->name[j++]))
+                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name2[x] != (u16_t)(dest_dentry->name[j++]))
                     goto continue_cmp_fail;
             }
             for (x = 0; x < 2; x++)
             {
                 if (j > dest_dentry->name_length && tmpldentry->LDIR_Name3[x] == 0xffff)
                     continue;
-                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name3[x] != (unsigned short)(dest_dentry->name[j++]))
+                else if (j > dest_dentry->name_length || tmpldentry->LDIR_Name3[x] != (u16_t)(dest_dentry->name[j++]))
                     goto continue_cmp_fail;
             }
 
@@ -994,14 +994,14 @@ void fat32_write_inode(struct index_node *inode)
     sector = fsbi->Data_firstsector + (finode->dentry_location - 2) * fsbi->sector_per_cluster;
     buf = (struct FAT32_Directory *)knew(fsbi->bytes_per_cluster, 0);
     memset(buf, 0, fsbi->bytes_per_cluster);
-    IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf);
+    IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buf);
     fdentry = buf + finode->dentry_position;
 
     //// alert fat32 dentry data, 这里没有更新时间等信息
     fdentry->DIR_FileSize = inode->file_size;
     fdentry->DIR_FstClusLO = finode->first_cluster & 0xffff;
     fdentry->DIR_FstClusHI = (fdentry->DIR_FstClusHI & 0xf000) | (finode->first_cluster >> 16);
-    IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (unsigned char *)buf);
+    IDE_device_operation.transfer(ATA_WRITE_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buf);
 
     kdelete(buf, sizeof(struct FAT32_Directory));
 }
@@ -1063,8 +1063,8 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     color_printk(ORANGE, BLACK, "BPB_SecPerClus:%#018lx\tBPB_NumFATs:%#018lx\tBPB_FATSz32:%#018lx\t\n", fbs->BPB_SecPerClus, fbs->BPB_NumFATs, fbs->BPB_FATSz32);
     color_printk(ORANGE, BLACK, "BPB_firstsector:%#018lx\tBPB_RootClus:%#018lx\tBPB_BytesPerSec:%#018lx\n", fsbi->Data_firstsector, fbs->BPB_RootClus, fbs->BPB_BytesPerSec);
     
-    unsigned int bbuf[128], i;
-    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector, 1, (unsigned char *)bbuf);
+    u32_t bbuf[128], i;
+    IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector, 1, (u8_t *)bbuf);
     for (i = 0; i < 128; i++)
     {
         color_printk(ORANGE, BLACK, "%lx    ", bbuf[i]);
@@ -1077,7 +1077,7 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
     // fat32 fsinfo sector
     fsbi->fat_fsinfo = (struct FAT32_FSInfo *)knew(sizeof(struct FAT32_FSInfo), 0);
     memset(fsbi->fat_fsinfo, 0, sizeof(struct FAT32_FSInfo));
-    IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (unsigned char *)fsbi->fat_fsinfo);
+    IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (u8_t *)fsbi->fat_fsinfo);
     color_printk(ORANGE, BLACK, "FAT32 FSInfo\nFSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx\n", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
 
     // ================================== 创建根目录 =====================================

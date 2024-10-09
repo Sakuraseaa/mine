@@ -14,7 +14,7 @@ wait_queue_t keyboard_wait_queue; // 等待队列头
  * @param filp
  * @return long
  */
-long keyboard_open(struct index_node *inode, struct file *filp)
+s64_t keyboard_open(struct index_node *inode, struct file *filp)
 {
     // 给文件描述符filp, 关联上硬盘数据缓冲区keyboard_inputbuffer
     filp->private_data = p_kb;
@@ -32,7 +32,7 @@ long keyboard_open(struct index_node *inode, struct file *filp)
  * @param filp
  * @return long
  */
-long keyboard_close(struct index_node *inode, struct file *filp)
+s64_t keyboard_close(struct index_node *inode, struct file *filp)
 {
     filp->private_data = NULL;
 
@@ -53,7 +53,7 @@ long keyboard_close(struct index_node *inode, struct file *filp)
  * @return long
  */
 #define KEY_CMD_RESET_BUFFER 1
-long keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg)
+s64_t keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg)
 {
     switch (cmd)
     {
@@ -69,11 +69,11 @@ long keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_
     return 1;
 }
 
-long keyboard_read(struct file *flip, char *buf, u64_t count, long *position)
+s64_t keyboard_read(struct file *flip, char_t *buf, u64_t count, s64_t *position)
 {
-    long counter = 0;      // 本次实际读取的字节数
-    long tail_end_gap = 0; // tail 到键盘缓冲区末尾的距离
-    unsigned char *tail = NULL;
+    s64_t counter = 0;      // 本次实际读取的字节数
+    s64_t tail_end_gap = 0; // tail 到键盘缓冲区末尾的距离
+    u8_t *tail = NULL;
 
     if (p_kb->count == 0)
         sleep_on(&keyboard_wait_queue);
@@ -102,7 +102,7 @@ long keyboard_read(struct file *flip, char *buf, u64_t count, long *position)
     return counter;
 }
 
-long keyboard_write(struct file *flip, char *buf, u64_t count, long *position)
+s64_t keyboard_write(struct file *flip, char *buf, u64_t count, long *position)
 {
     return 0;
 }
@@ -126,7 +126,7 @@ hw_int_controller keyboard_int_controller = {
 // 键盘中断处理函数
 void keyboard_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
-    unsigned char x;
+    u8_t x;
     x = io_in8(PORT_KB_DATA);
 
     if (p_kb->p_head == p_kb->buf + KB_BUF_SIZE)

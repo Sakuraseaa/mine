@@ -7,7 +7,7 @@ typedef struct block_device_operation
     long (*open)();
     long (*close)();
     long (*ioctl)(long cmd, long arg);
-    long (*transfer)(long cmd, u64_t blocks, long count, unsigned char *buffer);
+    long (*transfer)(long cmd, u64_t blocks, long count, u8_t *buffer);
 }block_dev_opt_t;
 
 #endif

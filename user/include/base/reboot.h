@@ -7,5 +7,4 @@
 
 unsigned long reboot(unsigned long cmd,void * arg);
 
-
 #endif

@@ -156,7 +156,7 @@ extern struct thread_struct init_thread;
 // ================================ 初始化TSS结构体 ============================
 struct tss_struct
 {
-	unsigned int reserved0;
+	u32_t reserved0;
 	u64_t rsp0;
 	u64_t rsp1;
 	u64_t rsp2;
@@ -169,8 +169,8 @@ struct tss_struct
 	u64_t ist6;
 	u64_t ist7;
 	u64_t reserved2;
-	unsigned short reserved3;
-	unsigned short iomapbaseaddr;
+	u16_t reserved3;
+	u16_t iomapbaseaddr;
 } __attribute__((packed));
 
 #define INIT_TSS                                                                             \

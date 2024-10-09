@@ -186,7 +186,7 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 					if(!(flags & LEFT))
 						while(--field_width > 0)
 							*str++ = ' ';
-					*str++ = (unsigned char)va_arg(args, int);
+					*str++ = (u8_t)va_arg(args, int);
 					while(--field_width > 0)
 						*str++ = ' ';
 					break;
@@ -216,7 +216,7 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 					if(qualifier == 'l')
 						str = number(str,va_arg(args,u64_t),8,field_width,precision,flags);
 					else
-						str = number(str,va_arg(args,unsigned int),8,field_width,precision,flags);
+						str = number(str,va_arg(args,u32_t),8,field_width,precision,flags);
 					break;
 
 				case 'p':
@@ -239,7 +239,7 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 					if(qualifier == 'l')
 						str = number(str,va_arg(args,u64_t),16,field_width,precision,flags);
 					else
-						str = number(str,va_arg(args,unsigned int),16,field_width,precision,flags);
+						str = number(str,va_arg(args,u32_t),16,field_width,precision,flags);
 					break;
 
 				case 'd':

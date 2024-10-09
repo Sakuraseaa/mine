@@ -33,7 +33,7 @@ void softirq_init()
 void do_softirq()
 {
     sti();
-    int i;
+    s32_t i;
     for (i = 0; i < 64 && softirq_status; i++)
     {
         if (softirq_status & (1UL << i))

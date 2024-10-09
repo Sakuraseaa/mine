@@ -39,8 +39,7 @@ void IOAPIC_edge_ack(u64_t irq)
 }
 void init_8259A()
 {
-	int i;
-	for (i = 32; i < 56; i++)					// 64位模式中 中断发送时候，ss-rsp是需要强制保存的
+	for (size_t i = 32; i < 56; i++)					// 64位模式中 中断发送时候，ss-rsp是需要强制保存的
 		set_intr_gate(i, 0, interrupt[i - 32]); // 这里设置ist为0，在中断切换栈的时候，使用原有的栈切换机制
 	// 32位是只有特权级改变的时候，才会栈切换
 	//  color_printk(RED, BLACK, "8259A init \n");

@@ -2,8 +2,8 @@
 #define __SMP_H__
 
 
-extern unsigned char _APU_boot_start[];
-extern unsigned char _APU_boot_end[];
+extern u8_t _APU_boot_start[];
+extern u8_t _APU_boot_end[];
 
 // spinlock_t SMP_lock;
 

@@ -15,7 +15,7 @@
 #define BLUE 0x000000ff	  // 蓝
 #define INDIGO 0x0000ffff // 靛
 #define PURPLE 0x008000ff // 紫
-extern int color_printf(unsigned int FRcolor, const char* fmt, ...);
+extern int color_printf(u32_t FRcolor, const char* fmt, ...);
 extern int kill(long pid, long signum);
 extern sighadler_t signal(long signum, sighadler_t handler);
 
@@ -25,7 +25,7 @@ void run_command(int index, int argc, char **argv);
 int parse_command(char *buf, int *argc, char ***argv);
 
 static char* get_filename_whole(char* buf, char* reletive_path);
-extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
+extern u32_t keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
 
 struct buildincmd
 {
@@ -108,11 +108,11 @@ int usr_init()
  * @brief 从键盘文件中读取键盘扫描码
  *
  * @param fd 键盘文件描述符
- * @return unsigned char
+ * @return u8_t
  */
-unsigned char get_scancode(int fd)
+u8_t get_scancode(int fd)
 {
-	unsigned char ret = 0;
+	u8_t ret = 0;
 	read(fd, &ret, 1);
 	return ret;
 }
@@ -125,7 +125,7 @@ unsigned char get_scancode(int fd)
  */
 int analysis_keycode(int fd)
 {
-	unsigned char x = 0;
+	u8_t x = 0;
 	int i;
 	int key = 0;
 	int make = 0;
@@ -200,7 +200,7 @@ int analysis_keycode(int fd)
 
 	if (key == 0)
 	{
-		unsigned int *keyrow = NULL;
+		u32_t *keyrow = NULL;
 		int column = 0;
 
 		make = (x & FLAG_BREAK ? 0 : 1);

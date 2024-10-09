@@ -385,7 +385,6 @@ u64_t sys_unlink(s8_t* filename) {
 u64_t sys_close(s32_t fd)
 {
     struct file *filp = NULL;
-  //  color_printk(GREEN, BLACK, "sys_close:%d\n", fd);
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
 
@@ -558,8 +557,8 @@ u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
 
 u64_t sys_chdir(s8_t* filename)
 {
-    char* path = NULL;
-    long pathlen = 0;
+    str_t path = NULL;
+    s64_t pathlen = 0;
     dir_entry_t* dentry = NULL;
 
     path = (char*) knew(PAGE_4K_SIZE, 0);
@@ -598,7 +597,7 @@ u64_t sys_chdir(s8_t* filename)
 
 u64_t sys_execve()
 {
-    char* pathname = NULL;
+    str_t pathname = NULL;
     s64_t pathlen = 0;
     s64_t error = 0;
     pt_regs_t* regs = (pt_regs_t*)current->thread->rsp0 - 1;

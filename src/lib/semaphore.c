@@ -44,7 +44,6 @@ void __up(semaphore_t *semaphore)
 // 信号量解锁操作
 void semaphore_up(semaphore_t *semaphore)
 {
-
     if (list_is_empty(&semaphore->wait.wait_list))
         atomic_inc(&semaphore->conter);
     else

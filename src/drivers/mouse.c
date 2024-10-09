@@ -10,7 +10,7 @@ static int mouse_count = 0;
 
 void mouse_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
-    unsigned char x;
+    u8_t x;
     x = io_in8(PORT_KB_DATA);
     if (p_mouse->p_head == p_mouse->buf + KB_BUF_SIZE)
         p_mouse->p_head = p_mouse->buf;
@@ -20,9 +20,9 @@ void mouse_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
     p_mouse->p_head++;
 }
 
-unsigned char get_mousecode()
+u8_t get_mousecode()
 {
-    unsigned char ret = 0;
+    u8_t ret = 0;
 
     if (p_mouse->count == 0)
         while (!p_mouse->count)
@@ -100,7 +100,7 @@ void mouse_init()
 
 void analysis_mousecode()
 {
-    unsigned char x = get_mousecode();
+    u8_t x = get_mousecode();
     switch (mouse_count)
     {
     case 0: // 跳过初始化过程中的8042控制器返回的应答信息0xfA

@@ -27,7 +27,7 @@
 /* e0000000 -bochs
 fd000000  -qemu
 */
-extern unsigned char font_ascii[256][16];
+extern u8_t font_ascii[256][16];
 
 char buf[4096] = {0};
 
@@ -42,7 +42,7 @@ struct position
 	int XCharSize;
 	int YCharSize;
 
-	unsigned int *FB_addr;
+	u32_t *FB_addr;
 	u64_t FB_length;
 
 	fair_spinlock_t printk_lock;

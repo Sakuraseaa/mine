@@ -28,13 +28,13 @@
 
 typedef struct serial_t
 {
-    short iobase;          // 端口号基地址
+    s16_t iobase;          // 端口号基地址
 
-    unsigned char *p_head; // 缓冲区首尾指针
-    unsigned char *p_tail;
+    u8_t *p_head; // 缓冲区首尾指针
+    u8_t *p_tail;
     int count; // 缓冲数据计数器
 
-    unsigned char rx_buf[SERIAL_BUF_LEN];  // 读 缓冲
+    u8_t rx_buf[SERIAL_BUF_LEN];  // 读 缓冲
 } serial_t;
 
 int serial_read(serial_t *serial, char *buf, u64_t count);

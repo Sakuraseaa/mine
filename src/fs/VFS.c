@@ -135,7 +135,7 @@ static int path_depth_cnt(char *pathname)
 {
     char *p = pathname;
     char name[MAX_FILE_NAME_LEN];
-    unsigned int depth = 0;
+    u32_t depth = 0;
     p = path_parse(p, name);
     while (name[0])
     {
@@ -324,7 +324,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     super_init();
     // --------------------
 
-    unsigned char buf[512];
+    u8_t buf[512];
 
     // 在VFS中注册FAT32文件系统
     register_filesystem(&FAT32_fs_type);
@@ -332,7 +332,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
 
     // 读MBR
     memset(buf, 0, 512);
-    IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
+    IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (u8_t *)buf);
     struct Disk_Partition_Table DPT = *(struct Disk_Partition_Table *)buf;
     
     for(u8_t i = 0; i < 4; i++) {
@@ -348,7 +348,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     }
     // 读 FAT32文件系统的引导扇区
     memset(buf, 0, 512);
-    IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (unsigned char *)buf);
+    IDE_device_operation.transfer(ATA_READ_CMD, DPT.DPTE[0].start_LBA, 1, (u8_t *)buf);
 
     // 挂载fat32系统
     sb_vec[0] = current_sb = mount_fs("FAT32", &DPT.DPTE[0], buf);

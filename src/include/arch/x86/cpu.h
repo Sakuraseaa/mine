@@ -13,8 +13,8 @@
  * @param c 传出参数ecx
  * @param d 传出参数edx
  */
-static inline void get_cpuid(unsigned int Mop, unsigned int Sop, unsigned int *a,
-                             unsigned int *b, unsigned int *c, unsigned int *d)
+static inline void get_cpuid(u32_t Mop, u32_t Sop, u32_t *a,
+                             u32_t *b, u32_t *c, u32_t *d)
 {
     __asm__ __volatile__("cpuid \n\t"
                          : "=a"(*a), "=b"(*b), "=c"(*c), "=d"(*d)

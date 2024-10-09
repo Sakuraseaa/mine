@@ -30,11 +30,11 @@ hw_int_controller HPET_int_controller =
 };
 
 static void weakUp_sleepList(void* pid) {
-   wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *((long*)pid));
+   wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *((s64_t*)pid));
 }
 
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
-static void ticks_to_sleep(unsigned int sleep_ticks)
+static void ticks_to_sleep(u32_t sleep_ticks)
 {  
    // bug报告(已解决):: 此处使用栈变量这两个值经过中断-调度之后都被破坏掉了
    // 此处属于系统调用，这个内存开在内核栈上
@@ -63,18 +63,18 @@ static void ticks_to_sleep(unsigned int sleep_ticks)
 
 
 /* 把操作的计数器counter_no、读写锁属性rwl、计数器模式counter_mode写入模式控制寄存器并赋予初始值counter_value */
-static void frequency_set(unsigned char counter_port,
-                          unsigned char counter_no,
-                          unsigned char rwl,
-                          unsigned char counter_mode,
-                          unsigned short counter_value)
+static void frequency_set(u8_t counter_port,
+                          u8_t counter_no,
+                          u8_t rwl,
+                          u8_t counter_mode,
+                          u16_t counter_value)
 {
    /* 往控制字寄存器端口0x43中写入控制字 */
-   io_out8(PIT_CONTROL_PORT, (unsigned char)(counter_no << 6 | rwl << 4 | counter_mode << 1));
+   io_out8(PIT_CONTROL_PORT, (u8_t)(counter_no << 6 | rwl << 4 | counter_mode << 1));
    /* 先写入counter_value的低8位 */
-   io_out8(counter_port, (unsigned char)counter_value);
+   io_out8(counter_port, (u8_t)counter_value);
    /* 再写入counter_value的高8位 */
-   io_out8(counter_port, (unsigned char)(counter_value >> 8));
+   io_out8(counter_port, (u8_t)(counter_value >> 8));
 }
 
 /* 时钟的中断处理函数 */
@@ -139,14 +139,14 @@ void HEPT_init()
 }
 
 /* 以毫秒为单位的sleep   1秒= 1000毫秒 */
-void mtime_sleep(unsigned int m_seconds)
+void mtime_sleep(u32_t m_seconds)
 {
-   unsigned int sleep_ticks = (m_seconds + mil_seconds_per_intr - 1) / mil_seconds_per_intr;
+   u32_t sleep_ticks = (m_seconds + mil_seconds_per_intr - 1) / mil_seconds_per_intr;
    ticks_to_sleep(sleep_ticks);
 }
 
 /* 以秒为单位的sleep   1秒 */
-void time_sleep(unsigned int seconds)
+void time_sleep(u32_t seconds)
 {
    mtime_sleep(seconds * 1000);
 }

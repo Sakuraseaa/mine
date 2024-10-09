@@ -21,7 +21,7 @@ typedef struct equity_spinlock_t{
 #define RW_LOCK_BIAS     0x01000000
 //读写锁的底层数据结构
 typedef struct{
-    unsigned int lock;
+    u32_t lock;
 }rw_spinlock_t;
 
 void spin_init(spinlock_t *lock);

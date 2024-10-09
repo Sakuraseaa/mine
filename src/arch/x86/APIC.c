@@ -4,7 +4,7 @@
 #include "kernelkit.h"
 
 // 读io apic的数据寄存器
-u64_t ioapic_rte_read(unsigned char index)
+u64_t ioapic_rte_read(u8_t index)
 {
 	u64_t ret;
 
@@ -23,7 +23,7 @@ u64_t ioapic_rte_read(unsigned char index)
 }
 
 // 写io apic的数据寄存器
-void ioapic_rte_write(unsigned char index, u64_t value)
+void ioapic_rte_write(u8_t index, u64_t value)
 {
 	*ioapic_map.virtual_index_address = index;
 	io_mfence();
@@ -42,12 +42,12 @@ void ioapic_rte_write(unsigned char index, u64_t value)
 static void IOAPIC_pagetable_remap()
 {
 	u64_t *tmp;
-	unsigned char *IOAPIC_addr = (unsigned char *)Phy_To_Virt(0xfec00000);
+	u8_t *IOAPIC_addr = (u8_t *)Phy_To_Virt(0xfec00000);
 
 	ioapic_map.physical_address = 0xfec00000;
 	ioapic_map.virtual_index_address = IOAPIC_addr;
-	ioapic_map.virtual_data_address = (unsigned int *)(IOAPIC_addr + 0x10);
-	ioapic_map.virtual_EOI_address = (unsigned int *)(IOAPIC_addr + 0x40);
+	ioapic_map.virtual_data_address = (u32_t *)(IOAPIC_addr + 0x10);
+	ioapic_map.virtual_EOI_address = (u32_t *)(IOAPIC_addr + 0x40);
 
 	Global_CR3 = Get_gdt();
 
@@ -85,12 +85,12 @@ static void IOAPIC_pagetable_remap()
 // init local apic
 void Local_APIC_init()
 {
-	unsigned int x, y;
-	unsigned int a, b, c, d;
+	u32_t x, y;
+	u32_t a, b, c, d;
 
 	// check APIC & x2APIC support
 	get_cpuid(1, 0, &a, &b, &c, &d);
-	// void get_cpuid(unsigned int Mop,unsigned int Sop,unsigned int * a,unsigned int * b,unsigned int * c,unsigned int * d)
+	// void get_cpuid(u32_t Mop,u32_t Sop,u32_t * a,u32_t * b,u32_t * c,u32_t * d)
 	color_printk(WHITE, BLACK, "CPUID\t01,eax:%#010x,ebx:%#010x,ecx:%#010x,edx:%#010x\n", a, b, c, d);
 	if ((1UL << 9) & d)
 		color_printk(WHITE, BLACK, "HW support APIC&xAPIC\t");
@@ -200,7 +200,7 @@ void Local_APIC_init()
 // init IOAPIC
 void IOAPIC_init()
 {
-	int i;
+	s32_t i;
 
 	// get I/O APIC ID
 	*ioapic_map.virtual_index_address = 0x00;
@@ -225,9 +225,9 @@ void IOAPIC_init()
 void APIC_IOAPIC_init()
 {
 	//	init trap abort fault
-	int i;
-	unsigned int x;
-	unsigned int *p;
+	s32_t i;
+	u32_t x;
+	u32_t *p;
 
 	memset(interrupt_desc, 0, sizeof(irq_desc_T) * NR_IRQS);
 
@@ -265,7 +265,7 @@ void APIC_IOAPIC_init()
 	// if (x > 0xfec00000 && x < 0xfee00000)
 	// {
 	// 	// OIC 寄存器位于芯片组配置寄存器组的31FEh地址便宜处
-	// 	p = (unsigned int *)Phy_To_Virt(x + 0x31feUL);
+	// 	p = (u32_t *)Phy_To_Virt(x + 0x31feUL);
 	// }
 
 	// // enable IOAPIC

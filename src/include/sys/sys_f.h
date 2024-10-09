@@ -2,7 +2,7 @@
 #define _SYS_H__
 
 u64_t no_system_call(void);
-u64_t sys_putstring(unsigned int FRcolor, char *string);
+u64_t sys_putstring(u32_t FRcolor, char *string);
 u64_t sys_open(char *filename, int flags);
 u64_t sys_close(int fd);
 u64_t sys_read(int fd, void *buf, long count);

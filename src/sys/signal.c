@@ -3,8 +3,8 @@
 
 typedef struct signal_frame {
     u64_t restorer;  //恢复函数
-    long signum;
-    long blocked; // 屏蔽位图
+    s64_t signum;
+    s64_t blocked; // 屏蔽位图
 
     // 依据ABI保存调用时的寄存器，用于恢复执行信号之前的代码
     u64_t rdi;
@@ -22,7 +22,7 @@ typedef struct signal_frame {
 }signal_frame_T;
 
 // 设置信号
-sighadler_t sys_signal(long signum, sighadler_t  hander, void (*restorer)(void))
+sighadler_t sys_signal(s64_t signum, sighadler_t  hander, void (*restorer)(void))
 {
     sigaction_t* sa = (current->sigaction + signum);
     sa->sa_handler = hander;
@@ -32,7 +32,7 @@ sighadler_t sys_signal(long signum, sighadler_t  hander, void (*restorer)(void))
 }
 
 // 发送信号
-int sys_kill(long pid, int signum)
+s32_t sys_kill(s64_t pid, s32_t signum)
 {
     task_t *tsk = NULL;
 
@@ -58,8 +58,8 @@ void do_signal(pt_regs_t* regs)
     
     sigaction_t* sa;
     signal_frame_T sf;
-    long signal = current->signal;
-    long signr = 1;
+    s64_t signal = current->signal;
+    s64_t signr = 1;
 
     for(; signr < NSIG; signr++)  
         if((signal >> signr) & 1) {
@@ -108,5 +108,3 @@ void do_signal(pt_regs_t* regs)
     }
 
 }
-
-

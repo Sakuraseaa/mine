@@ -22,7 +22,7 @@ typedef __gnuc_va_list va_list;
 
 
 # 4 "/home/steven/mine/src/include/base/font.h"
-unsigned char font_ascii[256][16] =
+u8_t font_ascii[256][16] =
  {
 
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -350,9 +350,9 @@ typedef short int16;
 typedef int int32;
 typedef long int64;
 
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
+typedef u8_t u8;
+typedef u16_t u16;
+typedef u32_t u32;
 typedef u64_t u64;
 
 typedef int32 pid_t;
@@ -396,7 +396,7 @@ typedef struct equity_spinlock_t{
 
 
 typedef struct{
-    unsigned int lock;
+    u32_t lock;
 }rw_spinlock_t;
 
 void spin_init(spinlock_t *lock);
@@ -417,7 +417,7 @@ void fair_spin_unlock(fair_spinlock_t* lock);
 
 
 
-typedef unsigned int sigset_t;
+typedef u32_t sigset_t;
 # 45 "/home/steven/mine/src/include/signal.h"
 typedef void(*sighadler_t)(long);
 
@@ -487,7 +487,7 @@ int memcmp(void *FirstPart, void *SecondPart, long Count);
 
 
 
-void *memset(void *Address, unsigned char C, long Count);
+void *memset(void *Address, u8_t C, long Count);
 
 
 
@@ -533,13 +533,13 @@ u64_t bit_get(u64_t *addr, u64_t nr);
 
 u64_t bit_clean(u64_t *addr, u64_t nr);
 
-unsigned char io_in8(unsigned short port);
+u8_t io_in8(u16_t port);
 
-unsigned int io_in32(unsigned short port);
+u32_t io_in32(u16_t port);
 
-void io_out8(unsigned short port, unsigned char value);
+void io_out8(u16_t port, u8_t value);
 
-void io_out32(unsigned short port, unsigned int value);
+void io_out32(u16_t port, u32_t value);
 # 144 "/home/steven/mine/src/include/lib/lib.h"
 u64_t rdmsr(u64_t address);
 
@@ -550,11 +550,11 @@ void lower(char *str);
 void upper(char *str);
 u64_t get_rflags();
 long str_find_char(char *string, char ch, long strlen);
-long verify_area(unsigned char *addr, u64_t size);
+long verify_area(u8_t *addr, u64_t size);
 
 long copy_from_user(void *from, void *to, u64_t size);
 long copy_to_user(void *from, void *to, u64_t size);
-long verify_area(unsigned char *addr, u64_t size);
+long verify_area(u8_t *addr, u64_t size);
 long copy_from_user(void *from, void *to, u64_t size);
 long copy_to_user(void *from, void *to, u64_t size);
 long strncpy_from_user(void *from, void *to, u64_t size);
@@ -589,11 +589,11 @@ typedef struct
 # 147 "/home/steven/mine/src/include/memory.h"
 struct Memory_E820_Formate
 {
-    unsigned int address1;
-    unsigned int address2;
-    unsigned int length1;
-    unsigned int length2;
-    unsigned int type;
+    u32_t address1;
+    u32_t address2;
+    u32_t length1;
+    u32_t length2;
+    u32_t type;
 };
 u64_t *Global_CR3 = ((void *)0);
 
@@ -601,7 +601,7 @@ struct E820
 {
     u64_t address;
     u64_t length;
-    unsigned int type;
+    u32_t type;
 } __attribute__((packed));
 
 
@@ -762,8 +762,8 @@ void pagetable_4K_init();
 # 6 "/home/steven/mine/src/include/task.h" 2
 # 1 "/home/steven/mine/src/include/lib/cpu.h" 1
 # 16 "/home/steven/mine/src/include/lib/cpu.h"
-static inline void get_cpuid(unsigned int Mop, unsigned int Sop, unsigned int *a,
-                             unsigned int *b, unsigned int *c, unsigned int *d)
+static inline void get_cpuid(u32_t Mop, u32_t Sop, u32_t *a,
+                             u32_t *b, u32_t *c, u32_t *d)
 {
     __asm__ __volatile__("cpuid \n\t"
                          : "=a"(*a), "=b"(*b), "=c"(*c), "=d"(*d)
@@ -840,48 +840,48 @@ void wakeup_pid(wait_queue_t *wait_queue_head, long state, long pid);
 
 struct FAT32_BootSector
 {
-    unsigned char BS_jmpBoot[3];
-    unsigned char BS_OEMName[8];
-    unsigned short BPB_BytesPerSec;
-    unsigned char BPB_SecPerClus;
-    unsigned short BPB_RsvdSecCnt;
-    unsigned char BPB_NumFATs;
-    unsigned short BPB_RootEntCnt;
-    unsigned short BPB_TotSec16;
-    unsigned char BPB_Media;
-    unsigned short BPB_FATSz16;
-    unsigned short BPB_SecPerTrk;
-    unsigned short BPB_NumHeads;
-    unsigned int BPB_HiddSec;
-    unsigned int BPB_TotSec32;
-    unsigned int BPB_FATSz32;
-    unsigned short BPB_ExtFlags;
-    unsigned short BPB_FSVer;
-    unsigned int BPB_RootClus;
-    unsigned short BPB_FSInfo;
-    unsigned short BPB_BkBootSec;
-    unsigned char BPB_Reserved[12];
-    unsigned char BS_DrvNum;
-    unsigned char BS_Reserved1;
-    unsigned char BS_BootSig;
-    unsigned int BS_VolID;
-    unsigned char BS_VolLab[11];
-    unsigned char BS_FilSysType[8];
+    u8_t BS_jmpBoot[3];
+    u8_t BS_OEMName[8];
+    u16_t BPB_BytesPerSec;
+    u8_t BPB_SecPerClus;
+    u16_t BPB_RsvdSecCnt;
+    u8_t BPB_NumFATs;
+    u16_t BPB_RootEntCnt;
+    u16_t BPB_TotSec16;
+    u8_t BPB_Media;
+    u16_t BPB_FATSz16;
+    u16_t BPB_SecPerTrk;
+    u16_t BPB_NumHeads;
+    u32_t BPB_HiddSec;
+    u32_t BPB_TotSec32;
+    u32_t BPB_FATSz32;
+    u16_t BPB_ExtFlags;
+    u16_t BPB_FSVer;
+    u32_t BPB_RootClus;
+    u16_t BPB_FSInfo;
+    u16_t BPB_BkBootSec;
+    u8_t BPB_Reserved[12];
+    u8_t BS_DrvNum;
+    u8_t BS_Reserved1;
+    u8_t BS_BootSig;
+    u32_t BS_VolID;
+    u8_t BS_VolLab[11];
+    u8_t BS_FilSysType[8];
 
-    unsigned char BootCode[420];
-    unsigned short BS_TraiSig;
+    u8_t BootCode[420];
+    u16_t BS_TraiSig;
 } __attribute__((packed));
 
 
 struct FAT32_FSInfo
 {
-    unsigned int FSI_LeadSig;
-    unsigned char FSI_Reserved1[480];
-    unsigned int FSI_StrucSig;
-    unsigned int FSI_Free_Count;
-    unsigned int FSI_Nxt_Free;
-    unsigned char Reserved2[12];
-    unsigned int FSI_TrailSig;
+    u32_t FSI_LeadSig;
+    u8_t FSI_Reserved1[480];
+    u32_t FSI_StrucSig;
+    u32_t FSI_Free_Count;
+    u32_t FSI_Nxt_Free;
+    u8_t Reserved2[12];
+    u32_t FSI_TrailSig;
 } __attribute__((packed));
 
 
@@ -911,28 +911,28 @@ struct FAT32_inode_info
     u64_t dentry_location;
     u64_t dentry_position;
 
-    unsigned short create_date;
-    unsigned short create_time;
-    unsigned short write_date;
-    unsigned short write_time;
+    u16_t create_date;
+    u16_t create_time;
+    u16_t write_date;
+    u16_t write_time;
 };
 # 95 "/home/steven/mine/src/fs/FAT32/fat32.h"
 struct FAT32_Directory
 {
-    unsigned char DIR_Name[11];
-    unsigned char DIR_Attr;
-    unsigned char DIR_NTRes;
+    u8_t DIR_Name[11];
+    u8_t DIR_Attr;
+    u8_t DIR_NTRes;
 
 
-    unsigned char DIR_CrtTimeTenth;
-    unsigned short DIR_CrtTime;
-    unsigned short DIR_CrtDate;
-    unsigned short DIR_LastAccDate;
-    unsigned short DIR_FstClusHI;
-    unsigned short DIR_WrtTime;
-    unsigned short DIR_WrtDate;
-    unsigned short DIR_FstClusLO;
-    unsigned int DIR_FileSize;
+    u8_t DIR_CrtTimeTenth;
+    u16_t DIR_CrtTime;
+    u16_t DIR_CrtDate;
+    u16_t DIR_LastAccDate;
+    u16_t DIR_FstClusHI;
+    u16_t DIR_WrtTime;
+    u16_t DIR_WrtDate;
+    u16_t DIR_FstClusLO;
+    u32_t DIR_FileSize;
 } __attribute__((packed));
 
 
@@ -941,14 +941,14 @@ struct FAT32_Directory
 
 struct FAT32_LongDirectory
 {
-    unsigned char LDIR_Ord;
-    unsigned short LDIR_Name1[5];
-    unsigned char LDIR_Attr;
-    unsigned char LDIR_Type;
-    unsigned char LDIR_Chksum;
-    unsigned short LDIR_Name2[6];
-    unsigned short LDIR_FstClusLO;
-    unsigned short LDIR_Name3[2];
+    u8_t LDIR_Ord;
+    u16_t LDIR_Name1[5];
+    u8_t LDIR_Attr;
+    u8_t LDIR_Type;
+    u8_t LDIR_Chksum;
+    u16_t LDIR_Name2[6];
+    u16_t LDIR_FstClusLO;
+    u16_t LDIR_Name3[2];
 } __attribute__((packed));
 
 extern struct index_node_operations FAT32_inode_ops;
@@ -1106,24 +1106,24 @@ extern Slab_cache_t* Dir_Entry_Pool;
 
 struct Disk_Partition_Table_Entry
 {
-    unsigned char flags;
-    unsigned char start_head;
-    unsigned short start_sector : 6,
+    u8_t flags;
+    u8_t start_head;
+    u16_t start_sector : 6,
         start_cylinder : 10;
-    unsigned char type;
-    unsigned char end_head;
-    unsigned short end_sector : 6,
+    u8_t type;
+    u8_t end_head;
+    u16_t end_sector : 6,
         end_cylinder : 10;
-    unsigned int start_LBA;
-    unsigned int sectors_limit;
+    u32_t start_LBA;
+    u32_t sectors_limit;
 } __attribute__((packed));
 
 
 struct Disk_Partition_Table
 {
-    unsigned char BS_reserved[446];
+    u8_t BS_reserved[446];
     struct Disk_Partition_Table_Entry DPTE[4];
-    unsigned short BS_TRailSig;
+    u16_t BS_TRailSig;
 } __attribute__((packed));
 
 
@@ -1412,7 +1412,7 @@ extern struct thread_struct init_thread;
 
 struct tss_struct
 {
- unsigned int reserved0;
+ u32_t reserved0;
  u64_t rsp0;
  u64_t rsp1;
  u64_t rsp2;
@@ -1425,8 +1425,8 @@ struct tss_struct
  u64_t ist6;
  u64_t ist7;
  u64_t reserved2;
- unsigned short reserved3;
- unsigned short iomapbaseaddr;
+ u16_t reserved3;
+ u16_t iomapbaseaddr;
 } __attribute__((packed));
 # 202 "/home/steven/mine/src/include/task.h"
 extern struct tss_struct init_tss[8];
@@ -1454,7 +1454,7 @@ void exit_files(task_t *tsk);
 void __switch_to(task_t *prev, task_t *next);
 # 9 "/home/steven/mine/src/include/lib/printk.h" 2
 # 35 "/home/steven/mine/src/include/lib/printk.h"
-extern unsigned char font_ascii[256][16];
+extern u8_t font_ascii[256][16];
 
 char buf[4096] = {0};
 
@@ -1475,7 +1475,7 @@ struct position
  fair_spinlock_t printk_lock;
 } Pos;
 
-void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, unsigned int BKcolor, unsigned char font);
+void putchar(u32_t *fb, int Xsize, int x, int y, u32_t FRcolor, u32_t BKcolor, u8_t font);
 int skip_atoi(const char **s);
 
 
@@ -1485,7 +1485,7 @@ int skip_atoi(const char **s);
 int sprintf(char *buf, const char *fmt, ...);
 
  int vsprintf(char *buf, const char *fmt, va_list args);
-int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...);
+int color_printk(u32_t FRcolor, u32_t BKcolor, const char *fmt, ...);
 void frame_buffer_init();
 # 2 "debug.c" 2
 # 23 "debug.c"

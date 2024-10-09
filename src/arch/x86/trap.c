@@ -2,11 +2,11 @@
 #include "kernelkit.h"
 #include "mmkit.h"
 #include "arch_x86kit.h"
-int lookup_kallsyms(u64_t address,int level)
+s32_t lookup_kallsyms(u64_t address,s32_t level)
 {
-	int index = 0;
-	int level_index = 0;
-	char * string =(char *) &kallsyms_names;
+	s32_t index = 0;
+	s32_t level_index = 0;
+	str_t string = (str_t)&kallsyms_names;
 	for(index = 0;index<kallsyms_syms_num;index++)
 		if(address > kallsyms_addresses[index] && address <= kallsyms_addresses[index+1])
 			break;
@@ -27,7 +27,7 @@ void backtrace(pt_regs_t * regs)
 {
 	u64_t *rbp = (u64_t *)regs->rbp;
 	u64_t ret_address = regs->rip;
-	int i = 0;
+	s32_t i = 0;
 
 	color_printk(RED,BLACK,"====================== Kernel Stack Backtrace ======================\n");
 

@@ -2,7 +2,7 @@
 #include "init.h"
 #include "toolkit.h"
 
-unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
+u32_t keycode_map_normal[NR_SCAN_CODES * MAP_COLS] = //
 {
 /*scan-code	unShift		Shift		*/
 /*--------------------------------------------------------------*/
@@ -160,7 +160,7 @@ int printf(const char *fmt, ...)
 	return count;
 }
 
-int color_printf(unsigned int FRcolor, const char* fmt, ...) {
+int color_printf(u32_t FRcolor, const char* fmt, ...) {
 	
 	char buf[1000];
 	int count = 0;

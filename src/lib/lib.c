@@ -11,7 +11,7 @@ s64_t search_64rlbits(u64_t val)
 }
 
 // verify: 核实， 检测数据是否越过用户层界限
-long verify_area(unsigned char *addr, u64_t size)
+long verify_area(u8_t *addr, u64_t size)
 {
     return 1;
     // if (((u64_t)addr + size) <= (u64_t)0x00007fffffffffff)
@@ -199,9 +199,9 @@ void list_move_tail(list_h_t *list, list_h_t *head)
         From => To memory copy Num bytes
 */
 
-void *memcpy(void *From, void *To, long Num)
+void *memcpy(void *From, void *To, s64_t Num)
 {
-    int d0, d1, d2;
+    s32_t d0, d1, d2;
     __asm__ __volatile__("cld	\n\t"
                          "rep	\n\t"
                          "movsq	\n\t"
@@ -227,7 +227,7 @@ void *memcpy(void *From, void *To, long Num)
         FirstPart < SecondPart		=>	-1
 */
 
-int memcmp(void *FirstPart, void *SecondPart, long Count)
+s32_t memcmp(void *FirstPart, void *SecondPart, s64_t Count)
 {
     register int __res;
 
@@ -249,9 +249,9 @@ int memcmp(void *FirstPart, void *SecondPart, long Count)
         set memory at Address with C ,number is Count
 */
 
-void *memset(void *Address, unsigned char C, long Count)
+void *memset(void *Address, u8_t C, s64_t Count)
 {
-    int d0, d1;
+    s32_t d0, d1;
     u64_t tmp = C * 0x0101010101010101UL;
     __asm__ __volatile__("cld	\n\t"
                          "rep	\n\t"
@@ -276,7 +276,7 @@ void *memset(void *Address, unsigned char C, long Count)
         string copy
 */
 
-char *strcpy(char *Dest,const char *Src)
+str_t strcpy(str_t Dest, cstr_t Src)
 {
     __asm__ __volatile__("cld	\n\t"
                          "1:	\n\t"
@@ -296,7 +296,7 @@ char *strcpy(char *Dest,const char *Src)
         string copy number bytes
 */
 
-char *strncpy(char *Dest, char *Src, long Count)
+str_t strncpy(str_t Dest, str_t Src, long Count)
 {
     __asm__ __volatile__("cld	\n\t"
                          "1:	\n\t"
@@ -319,7 +319,7 @@ char *strncpy(char *Dest, char *Src, long Count)
         string cat Dest + Src
 */
 
-char *strcat(char *Dest, char *Src)
+str_t strcat(str_t Dest, str_t Src)
 {
     __asm__ __volatile__("cld	\n\t"
                          "repne	\n\t"
@@ -343,7 +343,7 @@ char *strcat(char *Dest, char *Src)
         FirstPart < SecondPart => -1
 */
 
-int strcmp(char *FirstPart, const char *SecondPart)
+s32_t strcmp(str_t FirstPart, cstr_t SecondPart)
 {
     register int __res;
     __asm__ __volatile__("cld	\n\t"
@@ -373,7 +373,7 @@ int strcmp(char *FirstPart, const char *SecondPart)
         FirstPart < SecondPart => -1
 */
 
-int strncmp(char *FirstPart, char *SecondPart, long Count)
+s32_t strncmp(str_t FirstPart, str_t SecondPart, s64_t Count)
 {
     register int __res;
     __asm__ __volatile__("cld	\n\t"
@@ -399,7 +399,7 @@ int strncmp(char *FirstPart, char *SecondPart, long Count)
     return __res;
 }
 
-int strlen(const char *String)
+s32_t strlen(cstr_t String)
 {
     register int __res;
     __asm__ __volatile__("cld	\n\t"
@@ -414,24 +414,24 @@ int strlen(const char *String)
 }
 
 /* 从左到右查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
-char *strchr(const char *str, const char ch)
+char_t *strchr(cstr_t str, cchar_t ch)
 {
     while (*str != 0)
     {
         if (*str == ch)
         {
-         return (char *)str; // 需要强制转化成和返回值类型一样,否则编译器会报const属性丢失,下同.
+         return (char_t *)str; // 需要强制转化成和返回值类型一样,否则编译器会报const属性丢失,下同.
         }
         str++;
     }
-    return NULL;
+    return nullptr;
 }
 
 /* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
-char *strrchr(const char *str, const char ch)
+char_t *strrchr(cstr_t str, cchar_t ch)
 {
 
-    const char *last_char = NULL;
+    cstr_t last_char = nullptr;
     /* 从头到尾遍历一次,若存在ch字符,last_char总是该字符最后一次出现在串中的地址(不是下标,是地址)*/
     while (*str != 0)
     {
@@ -441,7 +441,7 @@ char *strrchr(const char *str, const char ch)
         }
         str++;
     }
-    return (char *)last_char;
+    return (char_t *)last_char;
 }
 
 /**
@@ -452,10 +452,10 @@ char *strrchr(const char *str, const char ch)
  * @param strlen  字符串长度
  * @return int 位置信息, ch不存在则返回 -1
  */
-long str_find_char(char *string, char ch, long strlen)
+s64_t str_find_char(str_t string, char_t ch, s64_t strlen)
 {
-    long ret = -1;
-    long i;
+    s64_t ret = -1;
+    s64_t i;
     for (i = strlen - 1; i >= 0; i--)
         if (string[i] == ch)
         {
@@ -466,7 +466,7 @@ long str_find_char(char *string, char ch, long strlen)
     return ret;
 }
 
-void upper(char *str)
+void upper(str_t str)
 {
     while (*str)
     {
@@ -478,7 +478,7 @@ void upper(char *str)
     }
 }
 
-void lower(char *str)
+void lower(str_t str)
 {
     while (*str)
     {
@@ -505,9 +505,9 @@ u64_t bit_clean(u64_t *addr, u64_t nr)
     return *addr & (~(1UL << nr));
 }
 
-unsigned char io_in8(unsigned short port)
+u8_t io_in8(u16_t port)
 {
-    unsigned char ret = 0;
+    u8_t ret = 0;
     __asm__ __volatile__("inb	%%dx,	%0	\n\t"
                          "mfence			\n\t"
                          : "=a"(ret)
@@ -516,9 +516,9 @@ unsigned char io_in8(unsigned short port)
     return ret;
 }
 
-unsigned int io_in32(unsigned short port)
+u32_t io_in32(u16_t port)
 {
-    unsigned int ret = 0;
+    u32_t ret = 0;
     __asm__ __volatile__("inl	%%dx,	%0	\n\t"
                          "mfence			\n\t"
                          : "=a"(ret)
@@ -527,7 +527,7 @@ unsigned int io_in32(unsigned short port)
     return ret;
 }
 
-void io_out8(unsigned short port, unsigned char value)
+void io_out8(u16_t port, u8_t value)
 {
     __asm__ __volatile__("outb	%0,	%%dx	\n\t"
                          "mfence			\n\t"
@@ -536,7 +536,7 @@ void io_out8(unsigned short port, unsigned char value)
                          : "memory");
 }
 
-void io_out32(unsigned short port, unsigned int value)
+void io_out32(u16_t port, u32_t value)
 {
     __asm__ __volatile__("outl	%0,	%%dx	\n\t"
                          "mfence			\n\t"
@@ -547,8 +547,8 @@ void io_out32(unsigned short port, unsigned int value)
 
 u64_t rdmsr(u64_t address)
 {
-    unsigned int tmp0 = 0;
-    unsigned int tmp1 = 0;
+    u32_t tmp0 = 0;
+    u32_t tmp1 = 0;
     __asm__ __volatile__("rdmsr	\n\t"
                          : "=d"(tmp0), "=a"(tmp1)
                          : "c"(address)

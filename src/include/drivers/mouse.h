@@ -7,7 +7,7 @@
 
 struct mouse_packet
 {
-    unsigned char Byte0;
+    u8_t Byte0;
     // 7:Y overflow, 6:X overflow 5:Y sign bit, 4:X sign bit
     // 3:Always, 2:Middle Btn, 1:Right Btn, 0:Left Btn
     char Byte1; // X movement

@@ -3,40 +3,40 @@
 
 /* 不支持x2APIC, 在支持x2APIC的平台上，请使用书上的源代码*/
 // Local APIC Register Address map
-#define APIC_IDR (unsigned int *)Phy_To_Virt(0xFEE00020)
-#define APIC_VesrionR (unsigned int *)Phy_To_Virt(0xFEE00030)
-#define APIC_TaskPR (unsigned int *)Phy_To_Virt(0xFEE00080)
-#define APIC_ProcessorPR (unsigned int *)Phy_To_Virt(0xFEE000A0)
-#define APIC_SpuriousIVR (unsigned int *)Phy_To_Virt(0xFEE000F0);
-#define APIC_EOI (unsigned int *)Phy_To_Virt(0xFEE000B0)
+#define APIC_IDR (u32_t *)Phy_To_Virt(0xFEE00020)
+#define APIC_VesrionR (u32_t *)Phy_To_Virt(0xFEE00030)
+#define APIC_TaskPR (u32_t *)Phy_To_Virt(0xFEE00080)
+#define APIC_ProcessorPR (u32_t *)Phy_To_Virt(0xFEE000A0)
+#define APIC_SpuriousIVR (u32_t *)Phy_To_Virt(0xFEE000F0);
+#define APIC_EOI (u32_t *)Phy_To_Virt(0xFEE000B0)
 // LVT
-#define CMCIR (unsigned int *)Phy_To_Virt(0xFEE002F0)
-#define TimerR (unsigned int *)Phy_To_Virt(0xFEE00320)
-#define ThermalSensorR (unsigned int *)Phy_To_Virt(0xFEE00330)
-#define PerformanceMonitoringCounterR (unsigned int *)Phy_To_Virt(0xFEE00340)
-#define LINT0R (unsigned int *)Phy_To_Virt(0xFEE00350)
-#define LINT1R (unsigned int *)Phy_To_Virt(0xFEE00360)
-#define ErrorR (unsigned int *)Phy_To_Virt(0xFEE00370)
+#define CMCIR (u32_t *)Phy_To_Virt(0xFEE002F0)
+#define TimerR (u32_t *)Phy_To_Virt(0xFEE00320)
+#define ThermalSensorR (u32_t *)Phy_To_Virt(0xFEE00330)
+#define PerformanceMonitoringCounterR (u32_t *)Phy_To_Virt(0xFEE00340)
+#define LINT0R (u32_t *)Phy_To_Virt(0xFEE00350)
+#define LINT1R (u32_t *)Phy_To_Virt(0xFEE00360)
+#define ErrorR (u32_t *)Phy_To_Virt(0xFEE00370)
 
 void ioapic_EOI(u64_t nr);
 void do_IRQ(pt_regs_t *regs, u64_t nr);
 void APIC_IOAPIC_init();
 void Local_APIC_init();
-u64_t ioapic_rte_read(unsigned char index);
-void ioapic_rte_write(unsigned char index, u64_t value);
+u64_t ioapic_rte_read(u8_t index);
+void ioapic_rte_write(u8_t index, u64_t value);
 
 struct IOAPIC_map
 {
-    unsigned int physical_address;        // 4B-保存着间接访问寄存器的物理基地址
-    unsigned char *virtual_index_address; // 记录着I/O APIC寄存器组的间接访问寄存器的索引寄存器_线性地址
-    unsigned int *virtual_data_address;   // 数据寄存器_线性地址
-    unsigned int *virtual_EOI_address;    // EOI寄存器_线性地址
+    u32_t physical_address;        // 4B-保存着间接访问寄存器的物理基地址
+    u8_t *virtual_index_address; // 记录着I/O APIC寄存器组的间接访问寄存器的索引寄存器_线性地址
+    u32_t *virtual_data_address;   // 数据寄存器_线性地址
+    u32_t *virtual_EOI_address;    // EOI寄存器_线性地址
 } ioapic_map;
 
 // I/O 中断定向投递寄存器组 - RTE
 struct IO_APIC_RET_entry
 {
-    unsigned int vector : 8, // 0 ~ 7 中断向量号
+    u32_t vector : 8, // 0 ~ 7 中断向量号
         deliver_mode : 3,    // 8 ~ 10 选择投递模式
         dest_mode : 1,       // 11 目标模式
         deliver_status : 1,  // 12 投递状态
@@ -50,14 +50,14 @@ struct IO_APIC_RET_entry
     {
         struct
         {
-            unsigned int reserved1 : 24, // 32 ~ 55
+            u32_t reserved1 : 24, // 32 ~ 55
                 phy_dest : 4,            // 56 ~ 59, 投递目标
                 reserved2 : 4;           // 60 ~ 63
         } physical;
 
         struct
         {
-            unsigned int reserved1 : 24, // 32 ~ 55 保留
+            u32_t reserved1 : 24, // 32 ~ 55 保留
                 logical_dest : 8;        // 56 ~ 63  投递目标
         } logical;
     } destination;
