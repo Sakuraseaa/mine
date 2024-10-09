@@ -1,7 +1,6 @@
-#include "basetype.h"
+#include "basekit.h"
 #include "memory.h"
 #include "task.h"
-#include "printk.h"
 
 typedef struct{
     u64_t start_vir, end_vir;

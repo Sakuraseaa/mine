@@ -1,8 +1,7 @@
 #ifndef __SUPER_H__
 #define __SUPER_H__
 
-#include "basetype.h"
-#include "lib.h"
+#include "basekit.h"
 #include "VFS.h"
 
 

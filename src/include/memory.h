@@ -1,7 +1,7 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
-#include "basetype.h"
-#include "lib.h"
+
+#include "basekit.h"
 //	8Bytes per cell, 页表项个数
 #define PTRS_PER_PAGE 512
 

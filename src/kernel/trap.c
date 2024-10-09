@@ -1,11 +1,8 @@
+#include "basekit.h"
 #include "trap.h"
-#include "gate.h"
-#include "ptrace.h"
-#include "printk.h"
 #include "SMP.h"
 #include "task.h"
 #include "memory.h"
-#include "errno.h"
 int lookup_kallsyms(unsigned long address,int level)
 {
 	int index = 0;

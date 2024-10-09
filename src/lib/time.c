@@ -1,12 +1,7 @@
-#include "time.h"
-#include "lib.h"
+#include "basekit.h"
 #include "softirq.h"
-#include "printk.h"
 #include "HEPT.h"
-#include "timer.h"
 #include "memory.h"
-#include "debug.h"
-#include "basetype.h"
 
 extern struct timer_list timer_list_head;
 struct time time;

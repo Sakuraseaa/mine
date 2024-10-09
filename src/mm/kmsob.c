@@ -1,6 +1,6 @@
 #include "mm_t.h"
 #include "mm_f.h"
-#include "printk.h"
+#include "task.h"
 
 KLINE sint_t retn_mscidx(uint_t pages)
 {

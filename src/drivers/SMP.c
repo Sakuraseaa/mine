@@ -1,11 +1,7 @@
 // 本系统不支持多核处理器
-#include "SMP.h"
-#include "printk.h"
-#include "lib.h"
-#include "gate.h"
-// #include "spinlock.h"
+#include "basekit.h"
 #include "interrupt.h"
-#include "cpu.h"
+#include "SMP.h"
 
 void SMP_init()
 {

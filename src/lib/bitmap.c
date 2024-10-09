@@ -1,9 +1,5 @@
 #include "memory.h"
-#include "lib.h"
-#include "basetype.h"
-#include "bitmap.h"
-#include "assert.h"
-
+#include "basekit.h"
 /**
  * @brief 判断位图中指定的位是否位1
  *

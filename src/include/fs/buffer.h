@@ -1,9 +1,7 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 #include "memory.h"
-#include "lib.h"
-#include "waitqueue.h"
-#include "semaphore.h"
+#include "basekit.h"
 
 #define HASH_COUNT 63      //
 #define MAX_BUF_COUNT 4096

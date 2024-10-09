@@ -1,8 +1,6 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
 
-#include "lib.h"
-
 typedef struct timer_list
 {
     struct List list;
@@ -13,8 +11,5 @@ typedef struct timer_list
 // 定时功能的队列头，所有定时任务均有序挂在于此队列中
 extern struct timer_list timer_list_head;
 
-void init_timer(struct timer_list *timer, void (*func)(void *data),
-                void *data, unsigned long expire_jiffies);
-void del_timer(struct timer_list *timer);
-void add_timer(struct timer_list *timer);
+
 #endif

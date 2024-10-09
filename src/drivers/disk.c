@@ -1,15 +1,11 @@
+#include "basekit.h"
 #include "disk.h"
 #include "interrupt.h"
 #include "APIC.h"
 #include "memory.h"
-#include "printk.h"
-#include "lib.h"
 #include "disk.h"
 #include "block.h"
-#include "semaphore.h"
 #include "schedule.h"
-#include "waitqueue.h"
-#include "debug.h"
 #include "device.h"
 
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源

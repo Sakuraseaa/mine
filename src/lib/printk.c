@@ -1,9 +1,6 @@
 #include <stdarg.h>
-#include "printk.h"
-#include "lib.h"
-#include "linkage.h"
+#include "basekit.h"
 #include "memory.h"
-#include "semaphore.h"
 
 semaphore_t visual_lock;
 

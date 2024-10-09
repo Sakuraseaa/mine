@@ -1,6 +1,5 @@
+#include "basekit.h"
 #include "softirq.h"
-#include "basetype.h"
-#include "lib.h"
 
 // 那种软中断触发了，就会置为softirq_status中对应的一位
 void set_softirq_status(unsigned long status)

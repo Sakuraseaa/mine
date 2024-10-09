@@ -2,11 +2,6 @@
 #define __PRINTK_H__
 
 #include <stdarg.h>
-#include "font.h"
-#include "linkage.h"
-#include "spinlock.h"
-#include "task.h"
-#include "semaphore.h"
 
 #define ZEROPAD 1  /* pad with zero */
 #define SIGN 2	   /* unsigned/signed long */
@@ -53,18 +48,11 @@ struct position
 	fair_spinlock_t printk_lock;
 } Pos;
 
-void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, unsigned int BKcolor, unsigned char font);
-int skip_atoi(const char **s);
 
 #define do_div(n, base) ({ \
 int __res; \
 __asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
 __res; })
-int sprintf(char *buf, const char *fmt, ...);
-// int vsprintf(char *buf, const char *fmt, va_list args) __attribute__((force_stack_args));
- int vsprintf(char *buf, const char *fmt, va_list args);
-int color_printk(unsigned int FRcolor, unsigned int BKcolor, const char *fmt, ...);
-void frame_buffer_init();
 
 #define system_error(fmt, ...) color_printk(RED, BLACK, fmt, ##__VA_ARGS__)
 

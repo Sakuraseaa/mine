@@ -1,15 +1,9 @@
+#include "basekit.h"
 #include "buffer.h"
 #include "memory.h"
 #include "VFS.h"
-#include "lib.h"
-#include "basetype.h"
 #include "device.h"
-#include "debug.h"
-#include "assert.h"
-#include "semaphore.h"
-#include "waitqueue.h"
-#include "errno.h"
-
+#include "task.h"
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 

@@ -1,6 +1,14 @@
-#include "basetype.h"
-#include "lib.h"
-#include "basetype.h"
+#include "basekit.h"
+
+s64_t search_64rlbits(u64_t val)
+{
+    s64_t retbitnr = -1;
+    __asm__ __volatile__(
+        "bsrq %1,%q0 \t\n"
+        : "+r"(retbitnr)
+        : "rm"(val));
+    return retbitnr + 1;
+}
 
 // verify: 核实， 检测数据是否越过用户层界限
 long verify_area(unsigned char *addr, unsigned long size)

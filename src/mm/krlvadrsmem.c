@@ -1,6 +1,5 @@
 #include "mm_t.h"
 #include "mm_f.h"
-#include "printk.h"
 #include "memory.h"
 
 extern memmgrob_t glomm;

@@ -1,9 +1,8 @@
+#include "basekit.h"
 #include "keyboard.h"
-#include "lib.h"
 #include "interrupt.h"
 #include "APIC.h"
 #include "memory.h"
-#include "printk.h"
 #include "mouse.h"
 
 // 鼠标输入缓存区

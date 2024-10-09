@@ -1,15 +1,10 @@
+#include "basekit.h"
 #include "wait.h"
-#include "basetype.h"
-#include "debug.h"
-#include "lib.h"
-#include "fcntl.h"
 #include "keyboard.h"
 #include "memory.h"
 #include "init.h"
 #include "dirent.h"
 #include "signal.h"
-#include "assert.h"
-#include "errno.h"
 
 #define WHITE 0x00ffffff  // 白
 #define BLACK 0x00000000  // 黑
@@ -45,7 +40,6 @@ static void handler(long sig) {
 }
 extern unsigned long volatile jiffies;
 extern unsigned long startup_time;
-#include "time.h"
 
 static void print_prompt(void) {
 	
@@ -406,7 +400,6 @@ int cd_command(int argc, char **argv)
 }
 
 #include "stat.h"
-#include "time.h"
 static void strftime(time_t stamp, char *buf)
 {
     tm time;

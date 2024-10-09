@@ -1,20 +1,13 @@
-#include "time.h"
+#include "basekit.h"
 #include "execv.h"
-#include "errno.h"
-#include "printk.h"
-#include "fcntl.h"
-#include "lib.h"
 #include "VFS.h"
 #include "fat32.h"
 #include "keyboard.h"
 #include "sys.h"
-#include "debug.h"
-#include "assert.h"
 #include "stat.h"
 #include "fs.h"
 #include "test.h"
 #include "HEPT.h"
-#include "basetype.h"
 // 系统调用有关
 /*
 normal

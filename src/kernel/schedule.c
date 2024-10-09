@@ -1,8 +1,6 @@
+#include "basekit.h"
 #include "schedule.h"
 #include "task.h"
-#include "lib.h"
-#include "printk.h"
-#include "timer.h"
 #include "HEPT.h"
 struct schedule task_schedule;
 extern void switch_to(task_t *prev, task_t *next);

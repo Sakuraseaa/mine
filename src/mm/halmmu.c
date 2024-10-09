@@ -1,8 +1,6 @@
 #include "mm_t.h"
 #include "mm_f.h"
-#include "errno.h"
 #include "memory.h"
-#include "printk.h"
 extern memmgrob_t glomm;
 
 uint_t read_cr3()

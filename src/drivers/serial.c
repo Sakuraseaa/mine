@@ -1,8 +1,8 @@
+#include "basekit.h"
 #include "serial.h"
-#include "lib.h"
 #include "interrupt.h"
 #include "APIC.h"
-#include "printk.h"
+
 hw_int_controller serial_int_controller =
     {
         .enable = IOAPIC_enable,

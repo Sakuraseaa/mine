@@ -1,5 +1,4 @@
-#include "basetype.h"
-#include "lib.h"
+#include "basekit.h"
 #include "signal.h"
 #include "wait.h"
 int wait(int *status)
@@ -38,7 +37,6 @@ int kill(long pid, long signum) {
 
 #include "dirent.h"
 #include "fcntl.h"
-#include "lib.h"
 #include "memory.h"
 
 /**

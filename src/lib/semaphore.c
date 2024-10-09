@@ -1,7 +1,5 @@
-#include "lib.h"
+#include "basekit.h"
 #include "task.h"
-#include "atomic.h"
-#include "semaphore.h"
 #include "schedule.h"
 // 等待队列初始化
 void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk)

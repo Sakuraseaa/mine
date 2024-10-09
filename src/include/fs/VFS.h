@@ -5,9 +5,8 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-#include "lib.h"
+#include "basekit.h"
 #include "fat32.h"
-#include "basetype.h"
 #include "buffer.h"
 #include "memory.h"
 

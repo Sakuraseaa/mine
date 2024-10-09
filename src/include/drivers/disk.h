@@ -1,9 +1,8 @@
 #ifndef __DISK_H__
 #define __DISK_H__
 
-#include "lib.h"
+#include "basekit.h"
 #include "block.h"
-#include "waitqueue.h"
 
 #define PORT_DISK0_DATA 0x1f0		 // Data			数据
 #define PORT_DISK0_ERR_FEATURE 0x1f1 // Error-Featrues 	错误状态

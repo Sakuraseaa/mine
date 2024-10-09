@@ -1,14 +1,10 @@
+#include "basekit.h"
 #include "fs.h"
 #include "dirent.h"
 #include "disk.h"
 #include "fat32.h"
-#include "lib.h"
 #include "VFS.h"
-#include "errno.h"
 #include "memory.h"
-#include "debug.h"
-#include "endebug.h"
-#include "printk.h"
 
 #define FAT_DENRY_SIZE 32
 #define EOC 0x0ffffff8 // end of clusterchain

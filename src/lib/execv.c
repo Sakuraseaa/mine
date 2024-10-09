@@ -1,12 +1,7 @@
+#include "basekit.h"
 #include "VFS.h"
-#include "basetype.h"
-#include "errno.h"
 #include "memory.h"
 #include "task.h"
-#include "fcntl.h"
-#include "printk.h"
-#include "lib.h"
-#include "debug.h"
 
 typedef unsigned int Elf64_Word;
 typedef unsigned long Elf64_Addr;

@@ -8,13 +8,9 @@
  * @copyright Copyright (c) 2024
  * 
  */
-#include "basetype.h"
+#include "basekit.h"
 #include "interrupt.h"
-#include "linkage.h"
-#include "lib.h"
-#include "printk.h"
 #include "memory.h"
-#include "gate.h"
 
 // 这里多余的push了2下，为什么
 // 依照regs结构体，对于中断补充压入rax充当:错误码, 中断处理函数地址，.....rax

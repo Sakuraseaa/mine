@@ -1,8 +1,6 @@
-#include "printk.h"
+#include "basekit.h"
 #include "serial.h"
 #include <stdarg.h>
-#include "lib.h"
-#include "assert.h"
 
 static char debugk_buf[1024];
 extern serial_t serials[2];

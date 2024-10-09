@@ -1,13 +1,10 @@
+#include "basekit.h"
 #include "keyboard.h"
-#include "lib.h"
 #include "interrupt.h"
 #include "APIC.h"
 #include "memory.h"
-#include "printk.h"
 #include "VFS.h"
-#include "waitqueue.h"
-#include "semaphore.h"
-
+#include "task.h"
 struct keyboard_inputbuffer *p_kb = NULL;
 wait_queue_t keyboard_wait_queue; // 等待队列头
 

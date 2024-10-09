@@ -1,14 +1,9 @@
-#include "time.h"
+#include "basekit.h"
 #include "HEPT.h"
 #include "interrupt.h"
 #include "APIC.h"
-#include "printk.h"
-#include "lib.h"
 #include "softirq.h"
-#include "timer.h"
 #include "schedule.h"
-#include "ptrace.h"
-#include "waitqueue.h"
 
 #define IRQ0_FREQUENCY 100 // 1秒100个时钟中断 / 1
 #define INPUT_FREQUENCY 1193180

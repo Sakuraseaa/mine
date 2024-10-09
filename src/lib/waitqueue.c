@@ -1,7 +1,6 @@
+#include "basekit.h"
 #include "task.h"
 #include "memory.h"
-#include "waitqueue.h"
-#include "lib.h"
 #include "schedule.h"
 
 /**
