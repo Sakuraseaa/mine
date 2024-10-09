@@ -1,7 +1,6 @@
 #include "toolkit.h"
-#include "task.h"
+#include "kernelkit.h"
 #include "mmkit.h"
-#include "schedule.h"
 
 /**
  * @brief 初始化等待队列

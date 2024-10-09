@@ -1,7 +1,7 @@
 #include "toolkit.h"
 #include "devkit.h"
-#include "interrupt.h"
-#include "APIC.h"
+#include "arch_x86kit.h"
+#include "kernelkit.h"
 
 hw_int_controller serial_int_controller =
     {

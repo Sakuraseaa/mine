@@ -1,6 +1,7 @@
 #include "toolkit.h"
 #include "fskit.h"
-#include "sys.h"
+#include "syskit.h"
+#include "mmkit.h"
 list_t super_list;
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)

@@ -83,7 +83,8 @@
         "8259a.h": "c",
         "arch_x86kit.h": "c",
         "libfunc.h": "c",
-        "cpu.h": "c"
+        "cpu.h": "c",
+        "kernelkit.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

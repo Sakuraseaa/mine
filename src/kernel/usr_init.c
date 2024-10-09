@@ -1,10 +1,10 @@
 #include "toolkit.h"
 #include "fskit.h"
+#include "syskit.h"
 #include "wait.h"
 #include "devkit.h"
 #include "mmkit.h"
 #include "init.h"
-#include "signal.h"
 
 #define WHITE 0x00ffffff  // 白
 #define BLACK 0x00000000  // 黑

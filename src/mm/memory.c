@@ -10,7 +10,7 @@
  * 
  */
 #include "mmkit.h"
-#include "task.h"
+#include "kernelkit.h"
 // 给page结构体的属性成员赋值, 增加引用
 u64_t page_init(struct Page *page, u64_t flags)
 {

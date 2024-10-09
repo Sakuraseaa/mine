@@ -1,9 +1,7 @@
 #include "toolkit.h"
-#include "HEPT.h"
-#include "interrupt.h"
-#include "APIC.h"
-#include "softirq.h"
-#include "schedule.h"
+#include "arch_x86kit.h"
+#include "syskit.h"
+#include "kernelkit.h"
 
 #define IRQ0_FREQUENCY 100 // 1秒100个时钟中断 / 1
 #define INPUT_FREQUENCY 1193180

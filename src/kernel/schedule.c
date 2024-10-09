@@ -1,7 +1,6 @@
 #include "toolkit.h"
-#include "schedule.h"
-#include "task.h"
-#include "HEPT.h"
+#include "arch_x86kit.h"
+#include "kernelkit.h"
 struct schedule task_schedule;
 extern void switch_to(task_t *prev, task_t *next);
 task_t *get_next_task()

@@ -1,7 +1,7 @@
 #include "toolkit.h"
-#include "softirq.h"
-#include "HEPT.h"
 #include "mmkit.h"
+#include "arch_x86kit.h"
+#include "syskit.h"
 
 extern struct timer_list timer_list_head;
 struct time time;

@@ -2,7 +2,7 @@
 #include "fskit.h"
 #include "mmkit.h"
 #include "devkit.h"
-#include "task.h"
+#include "kernelkit.h"
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 

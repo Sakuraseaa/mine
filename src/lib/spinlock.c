@@ -9,7 +9,7 @@
  * @copyright Copyright (c) 2024
  * 
  */
-#include "task.h"
+#include "kernelkit.h"
 #include "preempt.h"
 #include "spinlock.h"
 #include "basetype.h"

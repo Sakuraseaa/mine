@@ -1,6 +1,5 @@
-#include "signal.h"
-#include "ptrace.h"
-#include "task.h"
+#include "syskit.h"
+#include "kernelkit.h"
 
 typedef struct signal_frame {
     unsigned long restorer;  //恢复函数

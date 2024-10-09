@@ -2,7 +2,7 @@
 #include "fskit.h"
 #include "mmkit.h"
 #include "devkit.h"
-#include "task.h"
+#include "kernelkit.h"
 
 static buffer_t* imap = NULL;
 static buffer_t* zmap[2] = {NULL};

@@ -1,5 +1,5 @@
 #include "toolkit.h"
-#include "softirq.h"
+#include "syskit.h"
 
 // 那种软中断触发了，就会置为softirq_status中对应的一位
 void set_softirq_status(unsigned long status)

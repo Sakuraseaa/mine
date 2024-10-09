@@ -1,10 +1,11 @@
 #include "toolkit.h"
 #include "fskit.h"
-#include "execv.h"
+#include "syskit.h"
 #include "devkit.h"
-#include "sys.h"
+#include "arch_x86kit.h"
+#include "syskit.h"
+#include "kernelkit.h"
 #include "test.h"
-#include "HEPT.h"
 // 系统调用有关
 /*
 normal
@@ -634,7 +635,7 @@ u64_t sys_execve()
  * 		exit_mm()与copy_mm()的分配空间分布结构体初始化过程相逆
  * @param tsk
  */
-void exit_mm(task_t *tsk)
+void exit_mm(struct task_struct *tsk)
 {
 	// u64_t *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
     // u64_t tmp1 = 0; // page address

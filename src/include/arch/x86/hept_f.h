@@ -1,10 +1,9 @@
-#ifndef __DEVICE_TIME_H
-#define __DEVICE_TIME_H
+#ifndef _HEPT_F_H_
+#define _HEPT_F_H_
 
-#include "ptrace.h"
-extern unsigned long volatile jiffies;
 void HEPT_init();
 void mtime_sleep(unsigned int m_seconds);
 void time_sleep(unsigned int seconds);
 void intr_timer_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs);
-#endif
+
+#endif // _HEPT_F_H_

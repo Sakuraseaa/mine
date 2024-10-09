@@ -1,6 +1,5 @@
 #include "toolkit.h"
-#include "task.h"
-#include "schedule.h"
+#include "kernelkit.h"
 
 // 信号量初始化
 void semaphore_init(semaphore_t *semaphore, unsigned long count)

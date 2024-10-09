@@ -1,5 +1,5 @@
 #include "toolkit.h"
-#include "signal.h"
+#include "syskit.h"
 #include "wait.h"
 int wait(int *status)
 {

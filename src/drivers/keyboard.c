@@ -1,10 +1,9 @@
 #include "toolkit.h"
 #include "fskit.h"
 #include "devkit.h"
-#include "interrupt.h"
-#include "APIC.h"
+#include "arch_x86kit.h"
 #include "mmkit.h"
-#include "task.h"
+#include "kernelkit.h"
 struct keyboard_inputbuffer *p_kb = NULL;
 wait_queue_t keyboard_wait_queue; // 等待队列头
 

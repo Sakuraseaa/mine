@@ -1,7 +1,7 @@
 #include "toolkit.h"
 #include "mmkit.h"
-#include "interrupt.h"
-#include "APIC.h"
+#include "arch_x86kit.h"
+#include "kernelkit.h"
 
 // 读io apic的数据寄存器
 unsigned long ioapic_rte_read(unsigned char index)
