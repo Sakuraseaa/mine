@@ -1,5 +1,5 @@
 #include "wait.h"
-#include "types.h"
+#include "basetype.h"
 #include "debug.h"
 #include "lib.h"
 #include "fcntl.h"
@@ -81,7 +81,7 @@ int usr_init()
 	int index = -1;
 	current_dir = (char*)knew(2, 0);
 	current_dir[0] = '/';
-
+	current_dir[1] = 0;
 
 	fd = open(path, 0);
 
@@ -629,7 +629,13 @@ int touch_command(int argc, char **argv) {
 
 // ==========Update==========
 int info_command(int argc, char **argv){
-	info();
+    for (size_t i = 1; i < argc; i++)
+    {
+        if(!strcmp("tree", argv[i]))
+            info('A');
+        else if(!strcmp("tab", argv[i]))
+            info('B');
+    }
 	return 0;
 }
 // =======================

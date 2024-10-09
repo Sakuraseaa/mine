@@ -1,6 +1,6 @@
 #include "fs.h"
 #include "lib.h"
-#include "types.h"
+#include "basetype.h"
 #include "VFS.h"
 #include "errno.h"
 #include "memory.h"
@@ -120,7 +120,7 @@ static idx_t minix_balloc(super_t *super) {
 }
 
 // 回收一个物理块
-static void minix_bfree(super_t* super,u16 block) {
+static void minix_bfree(super_t* super,u16_t block) {
     
     buffer_t *buf = NULL;
     bitmap_t map;
@@ -152,10 +152,10 @@ static void minix_bfree(super_t* super,u16 block) {
 }
 
 // 得到一个 新 inode实体
-static inode_t *minix_new_node(dev_t dev, idx_t nr, int32 file_type) {
+static inode_t *minix_new_node(dev_t dev, idx_t nr, s32_t file_type) {
 
-    u16 umask = current->umask;
-    int32 mode = 0;
+    u16_t umask = current->umask;
+    s32_t mode = 0;
     inode_t* inode = iget(dev, nr);
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
     
@@ -186,11 +186,11 @@ static inode_t *minix_new_node(dev_t dev, idx_t nr, int32 file_type) {
 
 // 获取 inode 第 block 块的索引值
 // 如果不存在 且 create 为 true，则创建
-u16 minix_bmap(inode_t *inode, idx_t block, bool create) {
+u16_t minix_bmap(inode_t *inode, idx_t block, bool create) {
     assert(block >= 0 && block < TOTAL_BLOCK);
-    u64 index = block;
+    u64_t index = block;
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
-    u16 *array = m_inode->zone;
+    u16_t *array = m_inode->zone;
     buffer_t* buf = NULL;
 
     // 当前处理级别
@@ -243,7 +243,7 @@ reckon:
         index = block / divider;
         block = block % divider;
         divider /= BLOCK_INDEXES;
-        array = (u16 *)buf->data;
+        array = (u16_t *)buf->data;
     }
 
     return -1;
@@ -284,15 +284,15 @@ struct dir_entry_operations minix_dentry_ops =
 long minix_open(struct index_node *inode, struct file *filp) { return 1; }
 long minix_close(struct index_node *inode, struct file *filp) { return 1; }
 
-long minix_read(struct file *filp, char *buf, u64 count, int64 *position) {
+long minix_read(struct file *filp, char *buf, u64_t count, s64_t *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
 
-    int64 index = *position / BLOCK_SIZE;
-    int64 offset = *position % BLOCK_SIZE;
-    u64 cnt = 0, length = 0, block = 0;
+    s64_t index = *position / BLOCK_SIZE;
+    s64_t offset = *position % BLOCK_SIZE;
+    u64_t cnt = 0, length = 0, block = 0;
     buffer_t* bh;
-    int64 ret = 0;
+    s64_t ret = 0;
 
     // B.计算出可读取数据长度
     if (*position + count > inode->file_size)
@@ -343,11 +343,11 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
     inode_t* inode = filp->dentry->dir_inode;
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
 
-    int64 index = *position / BLOCK_SIZE;
-    int64 offset = *position % BLOCK_SIZE;
-    u64 cnt = count, length = 0, block = 0;
+    s64_t index = *position / BLOCK_SIZE;
+    s64_t offset = *position % BLOCK_SIZE;
+    u64_t cnt = count, length = 0, block = 0;
     buffer_t* bh;
-    int64 ret = 0;
+    s64_t ret = 0;
 
     ret = cnt;    
     // C. 循环体实现数据读取过程
@@ -398,7 +398,7 @@ long minix_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd,
 long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {
     minix_dentry_t mentry;
 
-    int64 ret = -1;
+    s64_t ret = -1;
     if((ret = minix_read(filp, (char*)&mentry, sizeof(minix_dentry_t), &filp->position))!= sizeof(minix_dentry_t))
         return -1;
 
@@ -441,14 +441,14 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
     memcpy(dentry->name, dent->name, dentry->name_length);
 
     // B. 遍历目录文件, 增加目录项
-    u64 zone_idx = 0, block = 0;
+    u64_t zone_idx = 0, block = 0;
     buffer_t* buf = NULL;
     minix_inode_t* m_parent_inode = dir->private_index_info;
     minix_inode_t* m_inode = dentry->dir_inode->private_index_info;
     minix_dentry_t* entry = NULL;
     while(true) {
 
-        if(!buf || ((u64)entry) > ((u64)(buf->data) + BLOCK_SIZE)) {
+        if(!buf || ((u64_t)entry) > ((u64_t)(buf->data) + BLOCK_SIZE)) {
             
             brelse(buf);
             block = minix_bmap(dir, zone_idx, true);
@@ -495,17 +495,17 @@ static buffer_t *add_dentry(inode_t *dir, struct dir_entry* dentry) {
  * @param nr  
  * @param name 被删除文件的 文件名
  */
-static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char* name) {
+static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16_t nr, char* name) {
     assert(dir->attribute == FS_ATTR_DIR)
 
     //遍历目录文件, 寻找目录项
-    u64 zone_idx = 0, block = 0;
+    u64_t zone_idx = 0, block = 0;
     buffer_t* buf = NULL;
     minix_inode_t* m_parent_inode = dir->private_index_info;
     minix_dentry_t* entry = NULL;
     while(true) {
 
-        if(!buf || ((u64)entry) > ((u64)(buf->data) + BLOCK_SIZE)) {
+        if(!buf || ((u64_t)entry) > ((u64_t)(buf->data) + BLOCK_SIZE)) {
             
             brelse(buf);
             block = minix_bmap(dir, zone_idx, true);
@@ -550,8 +550,8 @@ static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16 nr, char*
  */
 static void realse_file_data(super_t* minix_sb, minix_inode_t* m_inode) {
     
-    u64 index = 0, i = 0;
-    u16 block = 0, *blk_indexs = NULL;
+    u64_t index = 0, i = 0;
+    u16_t block = 0, *blk_indexs = NULL;
     buffer_t* buf = NULL;
     
     // a. 释放文件数据
@@ -564,7 +564,7 @@ static void realse_file_data(super_t* minix_sb, minix_inode_t* m_inode) {
     if(m_inode->zone[index] != 0) { // 间接块
         block = m_inode->zone[index];
         buf = bread(minix_sb->dev, block, BLOCK_SIZE);
-        blk_indexs = (u16*)buf->data;
+        blk_indexs = (u16_t*)buf->data;
         
         for(; i < INDIRECT1_BLOCK; i++) { // 释放块内存
             if(blk_indexs[i] != 0 )
@@ -590,9 +590,9 @@ static void realse_file_data(super_t* minix_sb, minix_inode_t* m_inode) {
  * @param mode
  * @return long
  */
-long minix_create(struct index_node *inode, struct dir_entry *dentry, int32 mode) {
+long minix_create(struct index_node *inode, struct dir_entry *dentry, s32_t mode) {
     super_t* sb = inode->sb;
-    u64 nr = 0;
+    u64_t nr = 0;
 
     if(dentry->name_length >= MINIX1_NAME_LEN)
         return -1;
@@ -609,14 +609,14 @@ long minix_create(struct index_node *inode, struct dir_entry *dentry, int32 mode
 
 struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry) {
     
-    u64 dentries = parent_inode->file_size / sizeof(minix_dentry_t);
+    u64_t dentries = parent_inode->file_size / sizeof(minix_dentry_t);
     idx_t i = 0, block = 0;
     buffer_t *buf = NULL;
     minix_dentry_t *entry = NULL;
 
 
     for(; i < dentries; entry++) {
-        if(!buf || ((u64)entry) >= ((u64)buf->data + BLOCK_SIZE)) {
+        if(!buf || ((u64_t)entry) >= ((u64_t)buf->data + BLOCK_SIZE)) {
 
             brelse(buf);
             block = minix_bmap(parent_inode, i / BLOCK_DENTRIES, false);
@@ -652,7 +652,7 @@ struct dir_entry *minix_lookup(struct index_node *parent_inode, struct dir_entry
 long minix_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { 
 
     super_t* sb = inode->sb;
-    u64 nr = 0;
+    u64_t nr = 0;
     char name[4] = {0};
 
     if(dentry->name_length >= MINIX1_NAME_LEN)

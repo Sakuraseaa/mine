@@ -277,12 +277,12 @@ out:
 } */
 
 
-static void copy_pageTables(struct mm_struct* newmm, u64 addr){
+static void copy_pageTables(struct mm_struct* newmm, u64_t addr){
 	
 	// here is only copy Page Table. 
 	// when page_fault occur, allcot memory and copy user data
-	u64 *tmp = NULL, *virtual = NULL, *parent_tmp;
-	u64 attr = 0;
+	u64_t *tmp = NULL, *virtual = NULL, *parent_tmp;
+	u64_t attr = 0;
 	struct Page *p = NULL;
 
 	// alter page directory entry of parent_process(current_process)
@@ -343,7 +343,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
 	memset(Phy_To_Virt(newmm->pgd), 0, PAGE_4K_SIZE / 2); // clear user memory space
 
-	u64 vaddr = 0;
+	u64_t vaddr = 0;
 	
 	for(vaddr = newmm->start_code; vaddr < newmm->end_code; vaddr += PAGE_2M_SIZE) // 代码段
 		copy_pageTables(newmm, vaddr);
@@ -382,7 +382,7 @@ void exit_mm_fork(task_t *tsk)
 		return;
 
 	struct mm_struct *newmm = tsk->mm;
-	tmp4 = (u64*)newmm->pgd;
+	tmp4 = (u64_t*)newmm->pgd;
 
 	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
 		if((*(tmp4 + i)) & PAGE_Present) {

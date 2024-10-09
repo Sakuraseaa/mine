@@ -1,11 +1,11 @@
-#include "types.h"
+#include "basetype.h"
 #include "memory.h"
 #include "task.h"
 #include "printk.h"
 
 typedef struct{
-    u64 start_vir, end_vir;
-    u64 start_phy, end_phy;
+    u64_t start_vir, end_vir;
+    u64_t start_phy, end_phy;
 }map_entry_t;
 
 static void Print_Map(map_entry_t* map, const long i_m) {
@@ -40,13 +40,13 @@ static void Print_Map(map_entry_t* map, const long i_m) {
  * 
  * @param tsk 
  */
-void User_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
-    u64 *PTDPE = 0, *PTDE = 0, *PTE = 0;
+void User_Map(u64_t* PML4, map_entry_t* map, size_t* i_m) {
+    u64_t *PTDPE = 0, *PTDE = 0, *PTE = 0;
 	size_t i = 0, j = 0, k = 0, z = 0;
 
-    u64 start_vir = 0, end_vir = 0;
-    u64 start_phy = 0, end_phy = 0;
-    u64 tmp4 = 0, tmp3 = 0, tmp2 = 0, KernelLine = 0;
+    u64_t start_vir = 0, end_vir = 0;
+    u64_t start_phy = 0, end_phy = 0;
+    u64_t tmp4 = 0, tmp3 = 0, tmp2 = 0, KernelLine = 0;
 	for(i = 0; i < 512; i++) {	// 遍历四级页表
 
         if(i == 256)
@@ -106,7 +106,7 @@ void test_show_vir_phy(task_t *tsk) {
 	size_t i_m = 0;
 
 	struct mm_struct *newmm = tsk->mm;
-	u64* PML4 = Phy_To_Virt(newmm->pgd);
+	u64_t* PML4 = Phy_To_Virt(newmm->pgd);
 
     map_entry_t* map = knew(sizeof(map_entry_t) * 15, 0);
 

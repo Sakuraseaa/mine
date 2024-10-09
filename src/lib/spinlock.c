@@ -12,7 +12,7 @@
 #include "task.h"
 #include "preempt.h"
 #include "spinlock.h"
-#include "types.h"
+#include "basetype.h"
 
 /**
  * @brief 保存当前中断状态 并 关闭中断
@@ -44,8 +44,8 @@ void fair_spin_init(fair_spinlock_t* lock) { lock->slock = 0;}
 // 公平的自旋锁，加锁的对象会排成一个有序队列, 这个锁经过测试时有错误的
 void fair_spin_lock(fair_spinlock_t* lock) {
     preempt_disable();
-    u32 inc = 0x00010000;
-    u32 tmp;
+    u32_t inc = 0x00010000;
+    u32_t tmp;
     __asm__ __volatile__ (
         "lock; xaddl %0, %1 \n\t"   // 将 inc 和 slock 的值交换，然后 inc = inc + slock. 相当于原子读取next和owner并对 next + 1
         "movzwl %w0, %2     \n\t"   // 将inc的低16位做0扩展后送tmp tmp=(u16)inc = owner

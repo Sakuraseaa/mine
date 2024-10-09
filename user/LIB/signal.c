@@ -1,6 +1,6 @@
 #include "signal.h"
 #include "stdio.h"
-#include "types.h"
+#include "basetype.h"
 extern sighadler_t SIGNAL(long signum, sighadler_t  hander, void (*restorer)(void));
 extern int SYSKILL(long pid, int signum);
 extern void sig_restore(void);

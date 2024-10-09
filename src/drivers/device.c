@@ -5,7 +5,7 @@
 #include "errno.h"
 #include "block.h"
 #include "disk.h"
-#include "types.h"
+#include "basetype.h"
 
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)

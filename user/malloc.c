@@ -1,7 +1,7 @@
 #include "stddef.h"
 #include "stdio.h"
 #include "string.h"
-#include "types.h"
+#include "basetype.h"
 
 static unsigned long brk_start_address = 0;
 static unsigned long brk_used_address = 0;

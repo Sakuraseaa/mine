@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2024
  * 
  */
-#include "types.h"
+#include "basetype.h"
 #include "interrupt.h"
 #include "linkage.h"
 #include "lib.h"

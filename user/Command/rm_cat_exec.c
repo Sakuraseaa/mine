@@ -4,7 +4,7 @@
 #include "dirent.h"
 #include "string.h"
 #include "reboot.h"
-#include "types.h"
+#include "basetype.h"
 #include "unistd.h"
 #include "wait.h"
 #include "errno.h"

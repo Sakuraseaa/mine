@@ -41,6 +41,7 @@ int main()
 	int index = -1;
 	current_dir = (char*)malloc(2, 0);
 	current_dir[0] = '/';
+	current_dir[1] = 0;
 
 	fd = open(path, 0);
 

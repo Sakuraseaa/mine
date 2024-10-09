@@ -80,10 +80,9 @@ void Start_Kernel(void)
 	
 	slab_init();
 
-
-	pagetable_4K_init();
 	frame_buffer_init();
-
+	pagetable_4K_init();
+	
 	test_mmobj();
 	init_krlmm();
 	

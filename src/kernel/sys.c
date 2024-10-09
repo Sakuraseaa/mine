@@ -83,7 +83,7 @@ u64_t sys_putstring(u32_t FRcolor, s8_t *string)
  * @param size 若调用者提供buf, 则size为buf的大小
  * @return char* 若成功且buf为NULL, 则操作系统会分配存储工作目录路径的缓冲区, 并返回首地址; 若失败则为NULL
  */
-s8_t *sys_getcwd(s8_t *buf, u64 size) {
+s8_t *sys_getcwd(s8_t *buf, u64_t size) {
     assert(buf != NULL);
     
     dir_entry_t* dir = current->i_pwd;
@@ -248,7 +248,7 @@ sys_open_over_judge:
     return fd; // 返回文件描述符数组下标
 }
 
-u64 sys_mkdir(s8_t* filename) {
+u64_t sys_mkdir(s8_t* filename) {
     s8_t *path = NULL;
     s64_t pathlen = 0;
     s64_t error = 0;
@@ -285,7 +285,7 @@ u64 sys_mkdir(s8_t* filename) {
     return error;
 }
 
-u64 sys_rmdir(s8_t* filename) {
+u64_t sys_rmdir(s8_t* filename) {
     s8_t *path = NULL;
     s64_t pathlen = 0;
     s64_t error = 0;
@@ -331,7 +331,7 @@ u64 sys_rmdir(s8_t* filename) {
     return error;
 }
 
-u64 sys_unlink(s8_t* filename) {
+u64_t sys_unlink(s8_t* filename) {
     s8_t *path = NULL;
     s64_t pathlen = 0;
     s64_t error = 0;

@@ -1,7 +1,7 @@
 #ifndef _spinlock_h_
 #define _spinlock_h_
 
-#include "types.h"
+#include "basetype.h"
 // 本文件定义自旋锁，自旋锁用来防止多核侵略存储区
 typedef struct
 {
@@ -11,10 +11,10 @@ typedef struct
 // 排队自旋锁 
 typedef struct equity_spinlock_t{
     union {
-        __volatile__ u32 slock;//真正的锁值变量
+        __volatile__ u32_t slock;//真正的锁值变量
         struct {
-            volatile u16 owner;
-            volatile u16 next;
+            volatile u16_t owner;
+            volatile u16_t next;
         };
     };
 }fair_spinlock_t;

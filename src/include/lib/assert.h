@@ -1,8 +1,8 @@
 #ifndef __LIB_USER_ASSERT_H
 #define __LIB_USER_ASSERT_H
-#include "types.h"
+#include "basetype.h"
 
-void user_spin(char *filename, const char *func, u64 line, const char *condition);
+void user_spin(char *filename, const char *func, u64_t line, const char *condition);
 #define panic(...) user_spin(__BASE_FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 
 #ifdef NDEBUG

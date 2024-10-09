@@ -17,7 +17,8 @@ typedef long sint_t;
 typedef unsigned long uint_t;
 typedef u64_t cpuflg_t;
 typedef unsigned long adr_t;
-
+typedef unsigned long size_t;
+typedef char bool;
 typedef sint_t bool_t;
 // typedef u32_t dev_t;
 typedef const char* str_t;
@@ -30,6 +31,14 @@ typedef sint_t hand_t;
 typedef void* buf_t;
 typedef unsigned long size_t;
 typedef u32_t reg_t;
+typedef int pid_t;
+typedef int dev_t;
+typedef u64_t time_t;
+typedef u64_t idx_t;
+typedef s64_t fd_t;
+typedef int err_t;
+typedef u16_t mode_t; // 文件权限
+
 
 #define ALIGN_UP8(x) (((x) + 7) & ~7)
 
@@ -55,5 +64,10 @@ typedef u64_t mmstus_t;
 #define LKHEAD_T __attribute__((section(".head.text")))
 #define LKHEAD_D __attribute__((section(".head.data")))
 #define LKINIT 
+
+#define EOS '\0' // 字符串结尾
+
+#define false 0
+#define true 1
 
 #endif

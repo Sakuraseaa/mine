@@ -890,7 +890,7 @@ void pagetable_4K_init()
             set_pt(tmp, mk_pt(i, PAGE_USER_Page_4K));
     }
 
-    flush_tlb();             
+    flush_tlb();
     
     u64_t*  sk_addr = Phy_To_Virt(toMem  - PAGE_4K_SIZE);
     *sk_addr = 0xff;
@@ -1203,7 +1203,7 @@ u64_t* pte_ptr(u64_t vaddr) {
  * @param vaddr 需要转换的虚拟地址
  * @return uint32_t 虚拟地址对应的物理地址
  */
-u64_t addr_v2p(u64 vaddr) {
+u64_t addr_v2p(u64_t vaddr) {
     u64_t* pde = pde_ptr(vaddr);
     return ((*pde) & (PAGE_2M_MASK));
 }
@@ -1250,7 +1250,7 @@ u64_t do_wp_page(u64_t virtual_address) {
  * @param address The address that cause the exception
  */
 extern long krluserspace_accessfailed(adr_t fairvadrs);
-int64 do_no_page(u64_t virtual_address)
+s64_t do_no_page(u64_t virtual_address)
 {
     return krluserspace_accessfailed(virtual_address);
 }

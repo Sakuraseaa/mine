@@ -1,5 +1,5 @@
 #include "device.h"
-#include "types.h"
+#include "basetype.h"
 #include "debug.h"
 #include "VFS.h"
 #include "fat32.h"
@@ -163,7 +163,7 @@ static int path_depth_cnt(char *pathname)
  * @param path 需要查找的文件名称
  * @return dir_entry* 返回path文件的目录项
  */
-static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32 pathLen) {
+static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pathLen) {
     list_t* head = &parent->subdirs_list;
     dir_entry_t* det = NULL;
     for(list_t* node = head->next; node != head; node = node->next) {
@@ -342,7 +342,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     IDE_device_operation.transfer(ATA_READ_CMD, 0x0, 1, (unsigned char *)buf);
     struct Disk_Partition_Table DPT = *(struct Disk_Partition_Table *)buf;
     
-    for(u8 i = 0; i < 4; i++) {
+    for(u8_t i = 0; i < 4; i++) {
         
         if(DPT.DPTE[i].start_LBA != 0) {
             DEBUGK("DPTE[%d] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", i, DPT.DPTE[i].start_LBA, DPT.DPTE[i].type, DPT.DPTE[i].sectors_limit);

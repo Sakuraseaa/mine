@@ -7,7 +7,7 @@
 
 #include "lib.h"
 #include "fat32.h"
-#include "types.h"
+#include "basetype.h"
 #include "buffer.h"
 #include "memory.h"
 
@@ -61,9 +61,9 @@ typedef struct ide_part_t
 {
     char name[8];            // 分区名称
     struct ide_disk_t *disk; // 磁盘指针
-    u32 system;              // 分区类型
-    u32 start;               // 分区起始物理扇区号 LBA
-    u32 count;               // 分区占用的扇区数
+    u32_t system;              // 分区类型
+    u32_t start;               // 分区起始物理扇区号 LBA
+    u32_t count;               // 分区占用的扇区数
 } ide_part_t;
 
 // 记录着目标文件系统的引导扇区信息-操作系统为文件系统分配的资源信息
@@ -75,7 +75,7 @@ typedef struct super_block
 
     struct buffer *buf; // 超级块描述符 buffer
     dev_t dev;            // 设备号
-    u32 count;            // 引用计数
+    u32_t count;            // 引用计数
     int type;             // 文件系统类型
     size_t sector_size;   // 扇区大小
     size_t block_size;    // 块大小
@@ -85,7 +85,7 @@ typedef struct super_block
     // 包含操作： superblock结构的读写, inode的写
     struct super_block_operations *sb_ops;
 
-    u64 s_flags; // mount mark
+    u64_t s_flags; // mount mark
     // 用于保存各类文件系统的特有数据信息
     void *private_sb_info; // 对于fat32文件系统来说，该指针连接的是 FAT32_sb_info 结构体
 }super_t;

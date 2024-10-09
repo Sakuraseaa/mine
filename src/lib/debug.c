@@ -20,7 +20,7 @@ void debugk(const char *file, const char* func, int line, const char *fmt, ...)
     serial_write(&serials[0], debugk_buf, i);
 }
 
-void user_spin(char *filename, const char *func, u64 line, const char *condition)
+void user_spin(char *filename, const char *func, u64_t line, const char *condition)
 {
     system_error("[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);
     // color_printk(RED, BLACK,  "[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);

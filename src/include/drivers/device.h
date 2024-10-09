@@ -1,7 +1,7 @@
 #ifndef __DEVICE_H__
 #define __DEVICE_H__
 
-#include "types.h"
+#include "basetype.h"
 
 #define DEVICE_NR 64 // 设备数量
 #define NAMELEN 16

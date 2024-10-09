@@ -1,7 +1,7 @@
 #ifndef __INODE_H__
 #define __INODE_H__
 
-#include "types.h"
+#include "basetype.h"
 #include "lib.h"
 #include "VFS.h"
 

@@ -335,8 +335,8 @@ u64_t* pde_ptr(u64_t vaddr);
 u64_t* pml4e_ptr(u64_t vaddr);
 u64_t* pdpe_ptr(u64_t vaddr);
 u64_t* pte_ptr(u64_t vaddr);
-u64 do_wp_page(u64 virtual_address);
-int64 do_no_page(u64 virtual_address);
+u64_t do_wp_page(u64_t virtual_address);
+s64_t do_no_page(u64_t virtual_address);
 void pagetable_4K_init();
 // u64_t kfree(void* address, u64 size);
 

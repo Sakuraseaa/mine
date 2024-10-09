@@ -1,7 +1,7 @@
 #ifndef __LIB_H__
 #define __LIB_H__
 
-#include "types.h"
+#include "basetype.h"
 #include "basetype.h"
 
 #define container_of(ptr, type, member)                                     \
@@ -149,9 +149,9 @@ void io_out8(unsigned short port, unsigned char value);
 void io_out32(unsigned short port, unsigned int value);
 
 //获得64位数中最高有效位（即最高的设置为1的位）的位置的函数
-int64 search_64rlbits(u64 val)
+s64_t search_64rlbits(u64_t val)
 {
-    int64 retbitnr = -1;
+    s64_t retbitnr = -1;
     __asm__ __volatile__(
         "bsrq %1,%q0 \t\n"
         : "+r"(retbitnr)

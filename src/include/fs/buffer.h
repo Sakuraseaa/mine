@@ -10,8 +10,8 @@
 
 typedef struct block_buf{
     
-    u64 count;                     // 缓冲池中 缓冲块的数量
-    u64 size;                     
+    u64_t count;                     // 缓冲池中 缓冲块的数量
+    u64_t size;                     
 
     list_t free_list;                   // 已经申请但没使用的块
     list_t idle_list;                   // 使用过，但被释放的块
@@ -21,7 +21,7 @@ typedef struct block_buf{
 
 typedef struct buffer
 {
-    u8 *data;          // 数据区
+    u8_t *data;          // 数据区
     bdesc_t *desc;       // 描述符指针
     dev_t dev;           // 设备号
     idx_t block;         // 块号

@@ -101,9 +101,9 @@ typedef struct task_struct
 
 	long pid;
 
-	u32 uid;				// 用户 id
-	u32 gid;				// 用户组 id
-	u16 umask;				// 进程用户文件掩码
+	u32_t uid;				// 用户 id
+	u32_t gid;				// 用户组 id
+	u16_t umask;				// 进程用户文件掩码
 
 	long priority;			// 进程可用时间片
 	long vrun_time; 		// 记录进程虚拟运行时间的成员变量 vrun_time

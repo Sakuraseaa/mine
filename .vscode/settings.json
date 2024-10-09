@@ -1,7 +1,7 @@
 {
     "files.associations": {
         "stab.h": "c",
-        "types.h": "c",
+        "basetype.h": "c",
         "keyboard.h": "c",
         "syscalls.h": "c",
         "errno.h": "c",

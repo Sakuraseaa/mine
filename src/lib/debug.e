@@ -339,8 +339,8 @@ unsigned char font_ascii[256][16] =
 
 
 
-# 1 "/home/steven/mine/src/include/base/types.h" 1
-# 10 "/home/steven/mine/src/include/base/types.h"
+# 1 "/home/steven/mine/src/include/base/basetype.h" 1
+# 10 "/home/steven/mine/src/include/base/basetype.h"
 typedef char bool;
 
 typedef unsigned long size_t;

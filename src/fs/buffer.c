@@ -2,7 +2,7 @@
 #include "memory.h"
 #include "VFS.h"
 #include "lib.h"
-#include "types.h"
+#include "basetype.h"
 #include "device.h"
 #include "debug.h"
 #include "assert.h"
@@ -24,7 +24,7 @@ static bdesc_t *get_desc(size_t sz) {
 
     assert(sz >= 0);
 
-    for(u8 i = 0; i < BUFFER_DESC_NR; i++)
+    for(u8_t i = 0; i < BUFFER_DESC_NR; i++)
         if(bdescs[i].size == sz)
             return &bdescs[i];
     
@@ -36,7 +36,7 @@ static bdesc_t *get_desc(size_t sz) {
 // 把 缓冲块 放入哈希表
 static void hash_locate(bdesc_t* desc, buffer_t* buf) {
     
-    u64 idx = hash(buf->dev, buf->block);
+    u64_t idx = hash(buf->dev, buf->block);
     list_t* list = &desc->hash_table[idx];
 
     assert(!list_search(list, &buf->hnode));
@@ -46,7 +46,7 @@ static void hash_locate(bdesc_t* desc, buffer_t* buf) {
 
 static void hash_remove(bdesc_t *desc, buffer_t* buf) {
 
-    u64 idx = hash(buf->dev, buf->block);
+    u64_t idx = hash(buf->dev, buf->block);
     list_t* list = &desc->hash_table[idx];
 
     // 有 才 删除
@@ -56,7 +56,7 @@ static void hash_remove(bdesc_t *desc, buffer_t* buf) {
 
 static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
     
-    u64 idx = hash(dev, block);
+    u64_t idx = hash(dev, block);
     list_t* list = &desc->hash_table[idx];
 
     buffer_t *buf = NULL;
@@ -85,10 +85,10 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
 
 static err_t buffer_alloc(bdesc_t *desc) {
     // here allocated memory is too small, i think 16KB for suitable
-    u8* addr = (u8*)knew(PAGE_4K_SIZE, 0); 
+    u8_t* addr = (u8_t*)knew(PAGE_4K_SIZE, 0); 
     
     buffer_t* buf = NULL;
-    for(u8* i = addr; i < addr + 4096; i += desc->size) { 
+    for(u8_t* i = addr; i < addr + 4096; i += desc->size) { 
         
         buf = (buffer_t*)knew(sizeof(buffer_t), 0);
         
@@ -177,9 +177,9 @@ err_t bwrite(buffer_t *buf){
 
     bdesc_t *desc = buf->desc;
 
-    u64 block_size = desc->size;
-    u64 sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
-    u64 bs = block_size / sector_size; // 读取的块数
+    u64_t block_size = desc->size;
+    u64_t sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
+    u64_t bs = block_size / sector_size; // 读取的块数
     int ret = device_write(buf->dev, buf->data, bs, buf->block * bs, 0);
 
     buf->dirty = false;
@@ -223,9 +223,9 @@ buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
         return buf;
     semaphore_down(&buf->lock);
         
-    u64 block_size = m_desc->size; // 缓冲块大小
-    u64 sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
-    u64 bs = block_size / sector_size; // 读取的块数
+    u64_t block_size = m_desc->size; // 缓冲块大小
+    u64_t sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
+    u64_t bs = block_size / sector_size; // 读取的块数
 
 
     device_read(dev, buf->data, bs, block * bs, 0);

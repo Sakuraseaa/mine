@@ -1,5 +1,5 @@
 #include "softirq.h"
-#include "types.h"
+#include "basetype.h"
 #include "lib.h"
 
 // 那种软中断触发了，就会置为softirq_status中对应的一位

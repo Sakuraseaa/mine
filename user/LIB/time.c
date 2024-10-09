@@ -1,4 +1,4 @@
-#include "types.h"
+#include "basetype.h"
 #include "time.h"
 
 #define MINUTE 60          // 每分钟的秒数

@@ -6,7 +6,7 @@
 #include "timer.h"
 #include "memory.h"
 #include "debug.h"
-#include "types.h"
+#include "basetype.h"
 
 extern struct timer_list timer_list_head;
 struct time time;
