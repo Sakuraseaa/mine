@@ -49,7 +49,7 @@ void User_Map(u64_t* PML4, map_entry_t* map, size_t* i_m) {
 	for(i = 0; i < 512; i++) {	// 遍历四级页表
 
         if(i == 256)
-            KernelLine = ((unsigned long)0xffff000000000000);
+            KernelLine = ((u64_t)0xffff000000000000);
 
         if((*(PML4 + i)) & PAGE_Present) {
 			PTDPE = Phy_To_Virt(*(PML4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址

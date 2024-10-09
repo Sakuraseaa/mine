@@ -4,7 +4,7 @@
 struct timer_list timer_list_head;
 // 定时队列元素初始化, 定时器结构体需要动态申请创建
 void init_timer(struct timer_list *timer, void (*func)(void *data),
-                void *data, unsigned long expire_jiffies)
+                void *data, u64_t expire_jiffies)
 {
     list_init(&timer->list);
     timer->data = data;

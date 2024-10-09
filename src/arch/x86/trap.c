@@ -2,7 +2,7 @@
 #include "kernelkit.h"
 #include "mmkit.h"
 #include "arch_x86kit.h"
-int lookup_kallsyms(unsigned long address,int level)
+int lookup_kallsyms(u64_t address,int level)
 {
 	int index = 0;
 	int level_index = 0;
@@ -25,8 +25,8 @@ int lookup_kallsyms(unsigned long address,int level)
 
 void backtrace(pt_regs_t * regs)
 {
-	unsigned long *rbp = (unsigned long *)regs->rbp;
-	unsigned long ret_address = regs->rip;
+	u64_t *rbp = (u64_t *)regs->rbp;
+	u64_t ret_address = regs->rip;
 	int i = 0;
 
 	color_printk(RED,BLACK,"====================== Kernel Stack Backtrace ======================\n");
@@ -35,12 +35,12 @@ void backtrace(pt_regs_t * regs)
 	{
 		if(lookup_kallsyms(ret_address,i))
 			break;
-		if((unsigned long)rbp < (unsigned long)regs->rsp || (unsigned long)rbp > current->thread->rsp0)
+		if((u64_t)rbp < (u64_t)regs->rsp || (u64_t)rbp > current->thread->rsp0)
 			break;
 		
 		/*这里不是特别理解，这与函数调用机制有关*/
 		ret_address = *(rbp + 1);
-		rbp = (unsigned long *)*rbp; // 可以想象但 没有手操过
+		rbp = (u64_t *)*rbp; // 可以想象但 没有手操过
 	}
 }
 
@@ -52,7 +52,7 @@ void display_regs(pt_regs_t * regs)
 	backtrace(regs);
 }
 
-void do_divide_error(pt_regs_t * regs,unsigned long error_code)
+void do_divide_error(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_divide_error(0),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -60,7 +60,7 @@ void do_divide_error(pt_regs_t * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_debug(pt_regs_t * regs,unsigned long error_code)
+void do_debug(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_debug(1),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -68,7 +68,7 @@ void do_debug(pt_regs_t * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_nmi(pt_regs_t * regs,unsigned long error_code)
+void do_nmi(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_nmi(2),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -76,7 +76,7 @@ void do_nmi(pt_regs_t * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_int3(pt_regs_t * regs,unsigned long error_code)
+void do_int3(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_int3(3),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -84,7 +84,7 @@ void do_int3(pt_regs_t * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_overflow(pt_regs_t * regs,unsigned long error_code)
+void do_overflow(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_overflow(4),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -93,7 +93,7 @@ void do_overflow(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_bounds(pt_regs_t * regs,unsigned long error_code)
+void do_bounds(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_bounds(5),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code ,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -101,7 +101,7 @@ void do_bounds(pt_regs_t * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_undefined_opcode(pt_regs_t * regs,unsigned long error_code)
+void do_undefined_opcode(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_undefined_opcode(6),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -110,7 +110,7 @@ void do_undefined_opcode(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_dev_not_available(pt_regs_t * regs,unsigned long error_code)
+void do_dev_not_available(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_dev_not_available(7),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -119,7 +119,7 @@ void do_dev_not_available(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_double_fault(pt_regs_t * regs,unsigned long error_code)
+void do_double_fault(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_double_fault(8),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -128,7 +128,7 @@ void do_double_fault(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_coprocessor_segment_overrun(pt_regs_t * regs,unsigned long error_code)
+void do_coprocessor_segment_overrun(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_coprocessor_segment_overrun(9),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -138,7 +138,7 @@ void do_coprocessor_segment_overrun(pt_regs_t * regs,unsigned long error_code)
 
 
 
-void do_invalid_TSS(pt_regs_t * regs,unsigned long error_code)
+void do_invalid_TSS(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_invalid_TSS(10),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -168,7 +168,7 @@ void do_invalid_TSS(pt_regs_t * regs,unsigned long error_code)
 
 
 
-void do_segment_not_present(pt_regs_t * regs,unsigned long error_code)
+void do_segment_not_present(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_segment_not_present(11),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -196,7 +196,7 @@ void do_segment_not_present(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_stack_segment_fault(pt_regs_t * regs,unsigned long error_code)
+void do_stack_segment_fault(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_stack_segment_fault(12),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -224,7 +224,7 @@ void do_stack_segment_fault(pt_regs_t * regs,unsigned long error_code)
 
 
 
-void do_general_protection(pt_regs_t * regs,unsigned long error_code)
+void do_general_protection(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_general_protection(13),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -251,9 +251,9 @@ void do_general_protection(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_page_fault(pt_regs_t * regs,unsigned long error_code)
+void do_page_fault(pt_regs_t * regs,u64_t error_code)
 {
-	unsigned long cr2 = 0;
+	u64_t cr2 = 0;
 
 	__asm__	__volatile__("movq	%%cr2,	%0":"=r"(cr2)::"memory");
 
@@ -292,7 +292,7 @@ void do_page_fault(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_x87_FPU_error(pt_regs_t * regs,unsigned long error_code)
+void do_x87_FPU_error(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_x87_FPU_error(16),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -302,7 +302,7 @@ void do_x87_FPU_error(pt_regs_t * regs,unsigned long error_code)
 
 
 
-void do_alignment_check(pt_regs_t * regs,unsigned long error_code)
+void do_alignment_check(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_alignment_check(17),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -311,7 +311,7 @@ void do_alignment_check(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_machine_check(pt_regs_t * regs,unsigned long error_code)
+void do_machine_check(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_machine_check(18),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -320,7 +320,7 @@ void do_machine_check(pt_regs_t * regs,unsigned long error_code)
 }
 
 
-void do_SIMD_exception(pt_regs_t * regs,unsigned long error_code)
+void do_SIMD_exception(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_SIMD_exception(19),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -328,7 +328,7 @@ void do_SIMD_exception(pt_regs_t * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_virtualization_exception(pt_regs_t * regs,unsigned long error_code)
+void do_virtualization_exception(pt_regs_t * regs,u64_t error_code)
 {
 	color_printk(RED,BLACK,"do_virtualization_exception(20),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);

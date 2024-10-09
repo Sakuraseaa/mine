@@ -45,9 +45,9 @@ void VFS_init(void) {
  * @brief
  *
  * @param fs 文件系统类型元素
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long register_filesystem(struct file_system_type *fs)
+u64_t register_filesystem(struct file_system_type *fs)
 {
     struct file_system_type *p = NULL;
     // 阻止重复注册相同类型文件系统
@@ -82,7 +82,7 @@ struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE
 }
 
 // 文件系统的注销
-unsigned long unregister_filesystem(struct file_system_type *fs)
+u64_t unregister_filesystem(struct file_system_type *fs)
 {
     struct file_system_type *p = &filesystem;
 
@@ -178,7 +178,7 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pat
  * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
  * @return struct dir_entry* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
-struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file)
+struct dir_entry *path_walk(char *name, u64_t flags, struct dir_entry **create_file)
 {
     char *tmpname = NULL;
     int tmpnamelen = 0, nameDep = 0, Count = 0;

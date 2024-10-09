@@ -17,7 +17,7 @@
 
 #define __STDLIB_H__
 
-void * malloc(unsigned long size);
+void * malloc(u64_t size);
 void free(void * address);
 
 void exit(int status);

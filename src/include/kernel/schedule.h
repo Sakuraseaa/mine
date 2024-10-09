@@ -1,7 +1,6 @@
 #ifndef __SCHEDULE_H__
 #define __SCHEDULE_H__
 
-
 struct schedule
 {
 	long running_task_count;	   // 当前队列内的进程的数量
@@ -10,9 +9,4 @@ struct schedule
 };
 
 extern struct schedule task_schedule;
-
-void schedule();
-void schedule_init();
-void insert_task_queue(task_t *tsk);
-task_t *get_next_task();
 #endif

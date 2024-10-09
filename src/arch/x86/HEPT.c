@@ -16,7 +16,7 @@
 
 wait_queue_t sleep_queue_head;
 
-unsigned long volatile jiffies = 0; // ticks是内核自中断开启以来总共的嘀嗒数
+u64_t volatile jiffies = 0; // ticks是内核自中断开启以来总共的嘀嗒数
 extern struct timer_list timer_list_head;
 extern struct time time;
 
@@ -52,8 +52,8 @@ static void ticks_to_sleep(unsigned int sleep_ticks)
    interruptible_sleep_on(&sleep_queue_head);
    
    // 睡眠空转
-   // unsigned long Old_ticks = jiffies;
-   // // unsigned long mid_ticks = sleep_ticks;
+   // u64_t Old_ticks = jiffies;
+   // // u64_t mid_ticks = sleep_ticks;
    // /* 若间隔的ticks数不够便让出cpu */
    // while (jiffies - Old_ticks < sleep_ticks) // 此处应该去睡眠
    //    sleep_on(NULL);
@@ -78,7 +78,7 @@ static void frequency_set(unsigned char counter_port,
 }
 
 /* 时钟的中断处理函数 */
-void intr_timer_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
+void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
    jiffies++;
    // 如果定时任务的失效日期没有到，那么不进入中断下半部

@@ -21,7 +21,7 @@ extern unsigned int TSS64_Table[26];
 #define _set_gate(gate_selector_addr, attr, ist, code_addr)                                                 \
 	do                                                                                                      \
 	{                                                                                                       \
-		unsigned long __d0, __d1;                                                                           \
+		u64_t __d0, __d1;                                                                           \
 		__asm__ __volatile__("movw	%%dx,	%%ax	\n\t"                                                         \
 							 "andq	$0x7,	%%rcx	\n\t"                                                        \
 							 "addq	%4,	%%rcx	\n\t"                                                          \
@@ -35,10 +35,10 @@ extern unsigned int TSS64_Table[26];
 							 "movq	%%rax,	%0	\n\t"                                                          \
 							 "shrq	$32,	%%rdx	\n\t"                                                         \
 							 "movq	%%rdx,	%1	\n\t"                                                          \
-							 : "=m"(*((unsigned long *)(gate_selector_addr))),                              \
-							   "=m"(*(1 + (unsigned long *)(gate_selector_addr))), "=&a"(__d0), "=&d"(__d1) \
+							 : "=m"(*((u64_t *)(gate_selector_addr))),                              \
+							   "=m"(*(1 + (u64_t *)(gate_selector_addr))), "=&a"(__d0), "=&d"(__d1) \
 							 : "i"(attr << 8),                                                              \
-							   "3"((unsigned long *)(code_addr)), "2"(0x8 << 16), "c"(ist)                  \
+							   "3"((u64_t *)(code_addr)), "2"(0x8 << 16), "c"(ist)                  \
 							 : "memory");                                                                   \
 	} while (0)
 
@@ -71,20 +71,20 @@ inline static void set_system_intr_gate(unsigned int n, unsigned char ist, void 
 	_set_gate(IDT_Table + n, 0xEE, ist, addr); // P,DPL=3,TYPE=E
 }
 
-inline static void set_tss64(unsigned long rsp0, unsigned long rsp1, unsigned long rsp2, unsigned long ist1, unsigned long ist2, unsigned long ist3,
-			   unsigned long ist4, unsigned long ist5, unsigned long ist6, unsigned long ist7)
+inline static void set_tss64(u64_t rsp0, u64_t rsp1, u64_t rsp2, u64_t ist1, u64_t ist2, u64_t ist3,
+			   u64_t ist4, u64_t ist5, u64_t ist6, u64_t ist7)
 {
-	*(unsigned long *)(TSS64_Table + 1) = rsp0;
-	*(unsigned long *)(TSS64_Table + 3) = rsp1;
-	*(unsigned long *)(TSS64_Table + 5) = rsp2;
+	*(u64_t *)(TSS64_Table + 1) = rsp0;
+	*(u64_t *)(TSS64_Table + 3) = rsp1;
+	*(u64_t *)(TSS64_Table + 5) = rsp2;
 
-	*(unsigned long *)(TSS64_Table + 9) = ist1;
-	*(unsigned long *)(TSS64_Table + 11) = ist2;
-	*(unsigned long *)(TSS64_Table + 13) = ist3;
-	*(unsigned long *)(TSS64_Table + 15) = ist4;
-	*(unsigned long *)(TSS64_Table + 17) = ist5;
-	*(unsigned long *)(TSS64_Table + 19) = ist6;
-	*(unsigned long *)(TSS64_Table + 21) = ist7;
+	*(u64_t *)(TSS64_Table + 9) = ist1;
+	*(u64_t *)(TSS64_Table + 11) = ist2;
+	*(u64_t *)(TSS64_Table + 13) = ist3;
+	*(u64_t *)(TSS64_Table + 15) = ist4;
+	*(u64_t *)(TSS64_Table + 17) = ist5;
+	*(u64_t *)(TSS64_Table + 19) = ist6;
+	*(u64_t *)(TSS64_Table + 21) = ist7;
 
 }
 

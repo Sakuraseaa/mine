@@ -4,8 +4,7 @@
 #include "arch_x86kit.h"
 #include "mmkit.h"
 #include "syskit.h"
-#include "interrupt.h"
-#include "task.h"
-#include "schedule.h"
+#include "kerneltype.h"
+#include "kernelfunc.h"
 
 #endif // _KERNELKIT_H_

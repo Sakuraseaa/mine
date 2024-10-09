@@ -2,12 +2,12 @@
 #include "syskit.h"
 
 // 那种软中断触发了，就会置为softirq_status中对应的一位
-void set_softirq_status(unsigned long status)
+void set_softirq_status(u64_t status)
 {
     softirq_status |= status;
 }
 
-unsigned long get_softirq_status()
+u64_t get_softirq_status()
 {
     return softirq_status;
 }

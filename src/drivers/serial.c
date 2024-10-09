@@ -29,7 +29,7 @@ void recv_data(serial_t *serial)
     serial->p_head++;
 
 }
-void serial_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs) {
+void serial_handler(u64_t nr, u64_t parameter, pt_regs_t *regs) {
     
     nr = nr == 0x24 ? 0 : 1;
 
@@ -44,12 +44,12 @@ void serial_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs) 
     // 先不编写串口的相关代码
 }
 
-int serial_read(serial_t *serial, char *buf, unsigned long count)
+int serial_read(serial_t *serial, char *buf, u64_t count)
 {
     return 0;
 }
 
-int serial_write(serial_t *serial, char *buf, unsigned long count) {
+int serial_write(serial_t *serial, char *buf, u64_t count) {
     int nr = 0;
     while (nr < count)
     {

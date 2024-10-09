@@ -3,6 +3,6 @@
 
 void semaphore_down(semaphore_t *semaphore);
 void semaphore_up(semaphore_t *semaphore);
-void semaphore_init(semaphore_t *semaphore, unsigned long count);
+void semaphore_init(semaphore_t *semaphore, u64_t count);
 
 #endif // _SEMAPHORE_F_H_

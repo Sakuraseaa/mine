@@ -302,7 +302,7 @@ long minix_read(struct file *filp, char *buf, u64_t count, s64_t *position) {
         length = cnt <= (BLOCK_SIZE - offset) ? cnt : BLOCK_SIZE - offset;
 
         // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
-        if ((unsigned long)buf < TASK_SIZE)
+        if ((u64_t)buf < TASK_SIZE)
             copy_to_user(bh->data + offset, buf, length);
         else
             memcpy(bh->data + offset, buf, length);
@@ -325,7 +325,7 @@ long minix_read(struct file *filp, char *buf, u64_t count, s64_t *position) {
     return ret;
 }
 
-long minix_write(struct file *filp, char *buf, unsigned long count, long *position) {
+long minix_write(struct file *filp, char *buf, u64_t count, long *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
@@ -348,7 +348,7 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
         length = cnt <= (BLOCK_SIZE - offset) ? cnt : BLOCK_SIZE - offset;
 
         // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
-        if ((unsigned long)buf < TASK_SIZE)
+        if ((u64_t)buf < TASK_SIZE)
             copy_to_user(buf, bh->data + offset, length);
         else
             memcpy(buf, bh->data + offset, length);
@@ -380,7 +380,7 @@ long minix_write(struct file *filp, char *buf, unsigned long count, long *positi
     return ret;
 }
 
-long minix_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) { return 0; }
+long minix_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg) { return 0; }
 
 long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {
     minix_dentry_t mentry;
@@ -746,8 +746,8 @@ long minix_unlink(struct index_node *dir, struct dir_entry *dentry) {
 }
 
 long minix_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
-long minix_getattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
-long minix_setattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
+long minix_getattr(struct dir_entry *dentry, u64_t *attr) { return 0;}
+long minix_setattr(struct dir_entry *dentry, u64_t *attr) { return 0;}
 
 struct index_node_operations minix_inode_ops =
     {

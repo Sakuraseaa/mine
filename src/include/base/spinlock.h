@@ -4,7 +4,7 @@
 // 本文件定义自旋锁，自旋锁用来防止多核侵略存储区
 typedef struct
 {
-    __volatile__ unsigned long lock;
+    __volatile__ u64_t lock;
 } spinlock_t;
 
 // 排队自旋锁 

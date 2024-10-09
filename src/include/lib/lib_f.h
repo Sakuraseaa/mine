@@ -18,27 +18,27 @@ long list_is_empty(struct List *entry);
 struct List *list_prev(struct List *entry);
 struct List *list_next(struct List *entry);
 
-unsigned long rdmsr(unsigned long address);
-void wrmsr(unsigned long address, unsigned long value);
+u64_t rdmsr(u64_t address);
+void wrmsr(u64_t address, u64_t value);
 
-unsigned long get_rsp();
+u64_t get_rsp();
 void lower(char *str);
 void upper(char *str);
-unsigned long get_rflags();
+u64_t get_rflags();
 long str_find_char(char *string, char ch, long strlen); // 自己写的 略显丑陋
-long verify_area(unsigned char *addr, unsigned long size);
+long verify_area(unsigned char *addr, u64_t size);
 // 一对常用的数据复制函数，只不过这对函数会检测应用程序提供的应用层操作地址空间是否越界
-long copy_from_user(void *from, void *to, unsigned long size);
-long copy_to_user(void *from, void *to, unsigned long size);
-long verify_area(unsigned char *addr, unsigned long size);
-long copy_from_user(void *from, void *to, unsigned long size);
-long copy_to_user(void *from, void *to, unsigned long size);
-long strncpy_from_user(void *from, void *to, unsigned long size);
-long strnlen_user(void *src, unsigned long maxlen);
+long copy_from_user(void *from, void *to, u64_t size);
+long copy_to_user(void *from, void *to, u64_t size);
+long verify_area(unsigned char *addr, u64_t size);
+long copy_from_user(void *from, void *to, u64_t size);
+long copy_to_user(void *from, void *to, u64_t size);
+long strncpy_from_user(void *from, void *to, u64_t size);
+long strnlen_user(void *src, u64_t maxlen);
 
-unsigned long bit_set(unsigned long *addr, unsigned long nr);
-unsigned long bit_get(unsigned long *addr, unsigned long nr);
-unsigned long bit_clean(unsigned long *addr, unsigned long nr);
+u64_t bit_set(u64_t *addr, u64_t nr);
+u64_t bit_get(u64_t *addr, u64_t nr);
+u64_t bit_clean(u64_t *addr, u64_t nr);
 
 unsigned char io_in8(unsigned short port);
 unsigned int io_in32(unsigned short port);

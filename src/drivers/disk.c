@@ -122,7 +122,7 @@ long cmd_out()
  * @param buffer  调用者传入的读写缓冲区
  * @return struct block_buffer_node*
  */
-struct block_buffer_node *make_request(long cmd, unsigned long blocks, long count, unsigned char *buffer)
+struct block_buffer_node *make_request(long cmd, u64_t blocks, long count, unsigned char *buffer)
 {
     struct block_buffer_node *node = (struct block_buffer_node *)knew(sizeof(struct block_buffer_node), 0);
     wait_queue_init(&node->wait_queue, current);
@@ -222,7 +222,7 @@ long IDE_ioctl(long cmd, long arg)
  * @param buffer    要读写的缓存区
  * @return long     succeed return 1 OR Failed return 0
  */
-long IDE_transfer(long cmd, unsigned long blocks, long count, unsigned char *buffer)
+long IDE_transfer(long cmd, u64_t blocks, long count, unsigned char *buffer)
 {
     struct block_buffer_node *node = NULL;
     if (cmd == ATA_READ_CMD || cmd == ATA_WRITE_CMD)
@@ -248,7 +248,7 @@ struct block_device_operation IDE_device_operation = {
 };
 
 // do_IQR-函数会跳转到disk_handler
-void disk_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
+void disk_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
     struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
     node->end_handler(nr, parameter);
@@ -257,7 +257,7 @@ void disk_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
 void disk_init()
 {
     /* Get the number of drives from the BIOS data area */
-    unsigned long *pNrDrives = (unsigned long *)(0xffff800000000475);
+    u64_t *pNrDrives = (u64_t *)(0xffff800000000475);
     DEBUGK("NrDrives:%d.\n", *pNrDrives & 0xff);
     // color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
     /*在IO_APIC中，注册硬盘中断函数*/
@@ -282,7 +282,7 @@ void disk_init()
     entry.destination.physical.reserved1 = 0;
     entry.destination.physical.phy_dest = 0;
     entry.destination.physical.reserved2 = 0;
-    register_irq(entry.vector, &entry, &disk_handler, (unsigned long)&disk_request, &disk_int_controller, "disk1");
+    register_irq(entry.vector, &entry, &disk_handler, (u64_t)&disk_request, &disk_int_controller, "disk1");
     io_out8(PORT_DISK1_ALT_STA_CTL, 0);
 
     wait_queue_init(&disk_request.wait_queue_list, NULL);
@@ -295,7 +295,7 @@ void disk_exit()
     unregister_irq(0x2f);
 }
 
-void read_handler(unsigned long nr, unsigned long parameter)
+void read_handler(u64_t nr, u64_t parameter)
 {
     struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
 
@@ -318,7 +318,7 @@ void read_handler(unsigned long nr, unsigned long parameter)
     end_request(node);
 }
 
-void write_handler(unsigned long nr, unsigned long parameter)
+void write_handler(u64_t nr, u64_t parameter)
 {
     struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误
@@ -339,7 +339,7 @@ void write_handler(unsigned long nr, unsigned long parameter)
 }
 
 // identify IDE
-void other_handler(unsigned long nr, unsigned long parameter)
+void other_handler(u64_t nr, u64_t parameter)
 {
     struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误

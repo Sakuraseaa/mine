@@ -4,9 +4,9 @@
 #include "kernelkit.h"
 
 // 读io apic的数据寄存器
-unsigned long ioapic_rte_read(unsigned char index)
+u64_t ioapic_rte_read(unsigned char index)
 {
-	unsigned long ret;
+	u64_t ret;
 
 	*ioapic_map.virtual_index_address = index + 1;
 	io_mfence(); // 进行数值同步 防止乱序执行带来的麻烦
@@ -23,7 +23,7 @@ unsigned long ioapic_rte_read(unsigned char index)
 }
 
 // 写io apic的数据寄存器
-void ioapic_rte_write(unsigned char index, unsigned long value)
+void ioapic_rte_write(unsigned char index, u64_t value)
 {
 	*ioapic_map.virtual_index_address = index;
 	io_mfence();
@@ -41,7 +41,7 @@ void ioapic_rte_write(unsigned char index, unsigned long value)
 // 初始化 Struct IOAPIC_map 并且 把间接访问寄存器的物理基地址映射到线性空间
 static void IOAPIC_pagetable_remap()
 {
-	unsigned long *tmp;
+	u64_t *tmp;
 	unsigned char *IOAPIC_addr = (unsigned char *)Phy_To_Virt(0xfec00000);
 
 	ioapic_map.physical_address = 0xfec00000;
@@ -51,33 +51,33 @@ static void IOAPIC_pagetable_remap()
 
 	Global_CR3 = Get_gdt();
 
-	tmp = Phy_To_Virt(Global_CR3 + (((unsigned long)IOAPIC_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt(Global_CR3 + (((u64_t)IOAPIC_addr >> PAGE_GDT_SHIFT) & 0x1ff));
 	if (*tmp == 0)
 	{
-		unsigned long *virtual = kmalloc(PAGE_4K_SIZE, 0);
+		u64_t *virtual = kmalloc(PAGE_4K_SIZE, 0);
 		// color_printk(WHITE, RED, "IOAPIC_kmalloc_4K"); 检测本次映射中 是否申请了内存
 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
 	}
 
-	// color_printk(YELLOW, BLACK, "1:%#018lx\t%#018lx\n", (unsigned long)tmp, (unsigned long)*tmp);
+	// color_printk(YELLOW, BLACK, "1:%#018lx\t%#018lx\n", (u64_t)tmp, (u64_t)*tmp);
 
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + (((unsigned long)IOAPIC_addr >> PAGE_1G_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + (((u64_t)IOAPIC_addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if (*tmp == 0)
 	{
-		unsigned long *virtual = kmalloc(PAGE_4K_SIZE, 0);
+		u64_t *virtual = kmalloc(PAGE_4K_SIZE, 0);
 		// color_printk(WHITE, RED, "IOAPIC_kmalloc_4K");
 		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_KERNEL_Dir));
 	}
 
-	// color_printk(YELLOW, BLACK, "2:%#018lx\t%#018lx\n", (unsigned long)tmp, (unsigned long)*tmp);
+	// color_printk(YELLOW, BLACK, "2:%#018lx\t%#018lx\n", (u64_t)tmp, (u64_t)*tmp);
 
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + (((unsigned long)IOAPIC_addr >> PAGE_2M_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + (((u64_t)IOAPIC_addr >> PAGE_2M_SHIFT) & 0x1ff));
 	set_pdt(tmp, mk_pdt(ioapic_map.physical_address, PAGE_KERNEL_Page | PAGE_PWT | PAGE_PCD));
 
-	// color_printk(YELLOW, BLACK, "3:%#018lx\t%#018lx\n", (unsigned long)tmp, (unsigned long)*tmp);
+	// color_printk(YELLOW, BLACK, "3:%#018lx\t%#018lx\n", (u64_t)tmp, (u64_t)*tmp);
 
 	// color_printk(BLUE, BLACK, "ioapic_map.physical_address:%#010x\t\t\n", ioapic_map.physical_address);
-	// color_printk(BLUE, BLACK, "ioapic_map.virtual_address:%#018lx\t\t\n", (unsigned long)ioapic_map.virtual_index_address);
+	// color_printk(BLUE, BLACK, "ioapic_map.virtual_address:%#018lx\t\t\n", (u64_t)ioapic_map.virtual_index_address);
 
 	flush_tlb();
 }
@@ -278,7 +278,7 @@ void APIC_IOAPIC_init()
 	sti();
 }
 
-void do_IRQ(pt_regs_t *regs, unsigned long nr) // regs:rsp,nr
+void do_IRQ(pt_regs_t *regs, u64_t nr) // regs:rsp,nr
 {
 	irq_desc_T *irq = &interrupt_desc[nr - 32];
 
@@ -292,40 +292,40 @@ void do_IRQ(pt_regs_t *regs, unsigned long nr) // regs:rsp,nr
 }
 
 // 修改向量号为irq对应I/O中断定向投递寄存器组的屏蔽标志,使其激活
-void IOAPIC_enable(unsigned long irq)
+void IOAPIC_enable(u64_t irq)
 {
-	unsigned long value = 0;
+	u64_t value = 0;
 	value = ioapic_rte_read((irq - 32) * 2 + 0x10);
 	value = value & (~0x10000UL);
 	ioapic_rte_write((irq - 32) * 2 + 0x10, value);
 }
 
 // 修改向量号为irq对应I/O中断定向投递寄存器组的屏蔽标志,使其失效
-void IOAPIC_disable(unsigned long irq)
+void IOAPIC_disable(u64_t irq)
 {
-	unsigned long value = 0;
+	u64_t value = 0;
 	value = ioapic_rte_read((irq - 32) * 2 + 0x10);
 	value = value | 0x10000UL;
 	ioapic_rte_write((irq - 32) * 2 + 0x10, value);
 }
 
 // 给向量号为irq的中断创建I/O中断向量投递寄存器
-unsigned long IOAPIC_install(unsigned long irq, void *arg)
+u64_t IOAPIC_install(u64_t irq, void *arg)
 {
 	struct IO_APIC_RET_entry *entry = (struct IO_APIC_RET_entry *)arg;
-	ioapic_rte_write((irq - 32) * 2 + 0x10, *(unsigned long *)entry);
+	ioapic_rte_write((irq - 32) * 2 + 0x10, *(u64_t *)entry);
 
 	return 1;
 }
 
 // 回收分配给向量号irq中断创建的I/O中断向量投递寄存器
-void IOAPIC_uninstall(unsigned long irq)
+void IOAPIC_uninstall(u64_t irq)
 {
 	ioapic_rte_write((irq - 32) * 2 + 0x10, 0x10000UL);
 }
 
 // 电平触发后给中断控制器的ack(EOI)
-void IOAPIC_level_ack(unsigned long irq)
+void IOAPIC_level_ack(u64_t irq)
 {
 	__asm__ __volatile__("movq	$0x00,	%%rdx	\n\t"
 						 "movq	$0x00,	%%rax	\n\t"
@@ -336,7 +336,7 @@ void IOAPIC_level_ack(unsigned long irq)
 }
 
 // 边沿触发后给中断触发器的ack(EOI)
-void IOAPIC_edge_ack(unsigned long irq)
+void IOAPIC_edge_ack(u64_t irq)
 {
 	__asm__ __volatile__("movq	$0x00,	%%rdx	\n\t"
 						 "movq	$0x00,	%%rax	\n\t"
@@ -344,7 +344,7 @@ void IOAPIC_edge_ack(unsigned long irq)
 						 "wrmsr	\n\t" ::: "memory");
 }
 
-void Local_APIC_edge_level_ack(unsigned long irq)
+void Local_APIC_edge_level_ack(u64_t irq)
 {
 	__asm__ __volatile__("movq	$0x00,	%%rdx	\n\t"
 						 "movq	$0x00,	%%rax	\n\t"

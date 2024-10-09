@@ -52,29 +52,29 @@ typedef struct FAT32_FSInfo
 // fat32文件系统超级块信息结构体,描述出一个FAT32文件系统元数据
 typedef struct FAT32_sb_info
 {
-    unsigned long start_sector; // 文件系统起始扇区
-    unsigned long sector_count; // 文件系统扇区总数
+    u64_t start_sector; // 文件系统起始扇区
+    u64_t sector_count; // 文件系统扇区总数
 
     long sector_per_cluster; // 每簇多少扇区
     long bytes_per_cluster;  // 每簇多少字节
     long bytes_per_sector;   // 每扇区多少字节
 
-    unsigned long Data_firstsector; // 数据区起始扇区
-    unsigned long FAT1_firstsector; // FAT1起始扇区
-    unsigned long sector_per_FAT;   // FAT占用扇区数
-    unsigned long NumFATs;          // FAT数 （file alloction table 文件分配表）
+    u64_t Data_firstsector; // 数据区起始扇区
+    u64_t FAT1_firstsector; // FAT1起始扇区
+    u64_t sector_per_FAT;   // FAT占用扇区数
+    u64_t NumFATs;          // FAT数 （file alloction table 文件分配表）
 
-    unsigned long fsinfo_sector_infat; // FSinfo结构体的扇区号
-    unsigned long bootsector_bk_infat; // 引导扇区的备份扇区号
+    u64_t fsinfo_sector_infat; // FSinfo结构体的扇区号
+    u64_t bootsector_bk_infat; // 引导扇区的备份扇区号
 
     struct FAT32_FSInfo *fat_fsinfo;
 }FAT32_sb_info_t;
 // 为 VFS系统 提供建立fat32文件系统的数据
 typedef struct FAT32_inode_info
 {
-    unsigned long first_cluster;   // 本文件在fat32系统中的起始簇号
-    unsigned long dentry_location; // dentry struct in cluster(0 is root, 1 is invalid),本文件的目录项在文件系统中对应的簇号
-    unsigned long dentry_position; // dentry struct offset in cluster,本文件目录项在文件系统对应的簇中偏移
+    u64_t first_cluster;   // 本文件在fat32系统中的起始簇号
+    u64_t dentry_location; // dentry struct in cluster(0 is root, 1 is invalid),本文件的目录项在文件系统中对应的簇号
+    u64_t dentry_position; // dentry struct offset in cluster,本文件目录项在文件系统对应的簇中偏移
 
     unsigned short create_date; // 创建日期
     unsigned short create_time; // 创建时间

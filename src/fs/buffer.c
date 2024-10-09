@@ -205,7 +205,7 @@ err_t brelse(buffer_t *buf) {
 }
 
 // 缓冲读
-buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size) {
+buffer_t *bread(u64_t dev, u64_t block, u64_t size) {
 
     bdesc_t* m_desc = get_desc(size);
 

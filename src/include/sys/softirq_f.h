@@ -3,8 +3,8 @@
 
 void register_softirq(int nr, void (*action)(void *data), void *data);
 void unregister_softirq(int nr);
-void set_softirq_status(unsigned long status);
-unsigned long get_softirq_status();
+void set_softirq_status(u64_t status);
+u64_t get_softirq_status();
 
 void softirq_init();
 struct softirq softirq_vector[64] = {0};

@@ -43,10 +43,10 @@ bool is_leap_year(int year)
  * @brief 计算year年总和是多少天
  * 
  * @param year 
- * @return unsigned long 
+ * @return u64_t 
  */
-unsigned long elapsed_leap_years(int year) {
-    unsigned long res;
+u64_t elapsed_leap_years(int year) {
+    u64_t res;
     res = year * 365 +  ((year + 1) / 4);
     
     // 另外一种算法
@@ -60,10 +60,10 @@ unsigned long elapsed_leap_years(int year) {
     return res;
 }
 
-unsigned long startup_time;
+u64_t startup_time;
 // 计算从 1970-1-1-0时起到开机当日经过的秒数，作为开机的时间
-unsigned long kernel_mktime(struct time* tm) {
-    unsigned long res = 0;
+u64_t kernel_mktime(struct time* tm) {
+    u64_t res = 0;
     int year;
 
     // 距今过去了多少年 - 已然遥远的理想之城。
@@ -90,16 +90,16 @@ unsigned long kernel_mktime(struct time* tm) {
 }
 
 // // 计算从  1970-1-1-0时 起到 现在 经过的秒数
-unsigned long NOW() {
+u64_t NOW() {
     return startup_time + (jiffies / 100);
 }
 // 更新时间
-void localtime(unsigned long stamp, struct time* tm) {
+void localtime(u64_t stamp, struct time* tm) {
     // 确定秒
     tm->second = stamp % 60;
     
     // 确定分
-    unsigned long remain = stamp / 60;
+    u64_t remain = stamp / 60;
     tm->minute = remain % 60;
     
     // 确定时
@@ -107,7 +107,7 @@ void localtime(unsigned long stamp, struct time* tm) {
     tm->hour = remain % 24;
     
     // 计算1970年到现在已经过去了多少天
-    unsigned long days = remain / 24; // 天,
+    u64_t days = remain / 24; // 天,
     // 确定星期,1970-01-01 是周四
     tm->week_day = (days + 4) % 7;
     

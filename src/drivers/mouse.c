@@ -8,7 +8,7 @@
 struct keyboard_inputbuffer *p_mouse = NULL;
 static int mouse_count = 0;
 
-void mouse_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
+void mouse_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
     unsigned char x;
     x = io_in8(PORT_KB_DATA);
@@ -79,7 +79,7 @@ void mouse_init()
 
     mouse_count = 0;
 
-    register_irq(0x2c, &entry, &mouse_handler, (unsigned long)p_mouse, &mouse_int_controller, "ps/2 mouse");
+    register_irq(0x2c, &entry, &mouse_handler, (u64_t)p_mouse, &mouse_int_controller, "ps/2 mouse");
     // 开启鼠标端口
     wait_KB_write();
     io_out8(PORT_KB_CMD, KBCMD_EN_MOUSE_INTFACE);

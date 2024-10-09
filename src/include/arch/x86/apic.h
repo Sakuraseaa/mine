@@ -18,12 +18,12 @@
 #define LINT1R (unsigned int *)Phy_To_Virt(0xFEE00360)
 #define ErrorR (unsigned int *)Phy_To_Virt(0xFEE00370)
 
-void ioapic_EOI(unsigned long nr);
-void do_IRQ(pt_regs_t *regs, unsigned long nr);
+void ioapic_EOI(u64_t nr);
+void do_IRQ(pt_regs_t *regs, u64_t nr);
 void APIC_IOAPIC_init();
 void Local_APIC_init();
-unsigned long ioapic_rte_read(unsigned char index);
-void ioapic_rte_write(unsigned char index, unsigned long value);
+u64_t ioapic_rte_read(unsigned char index);
+void ioapic_rte_write(unsigned char index, u64_t value);
 
 struct IOAPIC_map
 {

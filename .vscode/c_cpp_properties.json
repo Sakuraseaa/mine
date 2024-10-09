@@ -4,8 +4,6 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/steven/mine/src/include/*",
-                "/home/steven/mine/src/include/base/*",
                 "${workspaceFolder}/src/*",
                 "${workspaceFolder}/src/**",
                 "${workspaceFolder}/src/include/*",
@@ -17,6 +15,9 @@
                 "${workspaceFolder}/src/include/lib/*",
                 "${workspaceFolder}/src/include/usr/*",
                 "${workspaceFolder}/src/include/fs/*",
+                "${workspaceFolder}/src/include/arch/x86/*",
+                "${workspaceFolder}/src/include/sys/*",
+                "${workspaceFolder}/src/include/kernel/*",
                 "${workspaceFolder}/src/fs/minix/*",
                 "${workspaceFolder}/src/include/mm/*",
                 "${workspaceFolder}/user/include/base/*",

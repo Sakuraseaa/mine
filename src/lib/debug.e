@@ -343,7 +343,7 @@ unsigned char font_ascii[256][16] =
 # 10 "/home/steven/mine/src/include/base/basetype.h"
 typedef char bool;
 
-typedef unsigned long size_t;
+typedef u64_t size_t;
 
 typedef char int8;
 typedef short int16;
@@ -353,7 +353,7 @@ typedef long int64;
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
-typedef unsigned long u64;
+typedef u64_t u64;
 
 typedef int32 pid_t;
 typedef int32 dev_t;
@@ -379,7 +379,7 @@ typedef int err_t;
 
 typedef struct
 {
-    __volatile__ unsigned long lock;
+    __volatile__ u64_t lock;
 } spinlock_t;
 typedef spinlock_t spinlock_t;
 
@@ -527,11 +527,11 @@ char *strrchr(const char *str, const char ch);
 
 int strlen(const char *String);
 # 122 "/home/steven/mine/src/include/lib/lib.h"
-unsigned long bit_set(unsigned long *addr, unsigned long nr);
+u64_t bit_set(u64_t *addr, u64_t nr);
 
-unsigned long bit_get(unsigned long *addr, unsigned long nr);
+u64_t bit_get(u64_t *addr, u64_t nr);
 
-unsigned long bit_clean(unsigned long *addr, unsigned long nr);
+u64_t bit_clean(u64_t *addr, u64_t nr);
 
 unsigned char io_in8(unsigned short port);
 
@@ -541,50 +541,50 @@ void io_out8(unsigned short port, unsigned char value);
 
 void io_out32(unsigned short port, unsigned int value);
 # 144 "/home/steven/mine/src/include/lib/lib.h"
-unsigned long rdmsr(unsigned long address);
+u64_t rdmsr(u64_t address);
 
-void wrmsr(unsigned long address, unsigned long value);
+void wrmsr(u64_t address, u64_t value);
 
-unsigned long get_rsp();
+u64_t get_rsp();
 void lower(char *str);
 void upper(char *str);
-unsigned long get_rflags();
+u64_t get_rflags();
 long str_find_char(char *string, char ch, long strlen);
-long verify_area(unsigned char *addr, unsigned long size);
+long verify_area(unsigned char *addr, u64_t size);
 
-long copy_from_user(void *from, void *to, unsigned long size);
-long copy_to_user(void *from, void *to, unsigned long size);
-long verify_area(unsigned char *addr, unsigned long size);
-long copy_from_user(void *from, void *to, unsigned long size);
-long copy_to_user(void *from, void *to, unsigned long size);
-long strncpy_from_user(void *from, void *to, unsigned long size);
-long strnlen_user(void *src, unsigned long maxlen);
+long copy_from_user(void *from, void *to, u64_t size);
+long copy_to_user(void *from, void *to, u64_t size);
+long verify_area(unsigned char *addr, u64_t size);
+long copy_from_user(void *from, void *to, u64_t size);
+long copy_to_user(void *from, void *to, u64_t size);
+long strncpy_from_user(void *from, void *to, u64_t size);
+long strnlen_user(void *src, u64_t maxlen);
 # 6 "/home/steven/mine/src/include/memory.h" 2
 # 59 "/home/steven/mine/src/include/memory.h"
 typedef struct
 {
-    unsigned long pml4t;
+    u64_t pml4t;
 } pml4t_t;
 
 
 
 typedef struct
 {
-    unsigned long pdpt;
+    u64_t pdpt;
 } pdpt_t;
 
 
 
 typedef struct
 {
-    unsigned long pdt;
+    u64_t pdt;
 } pdt_t;
 
 
 
 typedef struct
 {
-    unsigned long pt;
+    u64_t pt;
 } pt_t;
 # 147 "/home/steven/mine/src/include/memory.h"
 struct Memory_E820_Formate
@@ -595,12 +595,12 @@ struct Memory_E820_Formate
     unsigned int length2;
     unsigned int type;
 };
-unsigned long *Global_CR3 = ((void *)0);
+u64_t *Global_CR3 = ((void *)0);
 
 struct E820
 {
-    unsigned long address;
-    unsigned long length;
+    u64_t address;
+    u64_t length;
     unsigned int type;
 } __attribute__((packed));
 
@@ -609,52 +609,52 @@ struct E820
 struct Page
 {
     struct Zone *zone_struct;
-    unsigned long PHY_address;
-    unsigned long attribute;
-    unsigned long reference_count;
-    unsigned long age;
+    u64_t PHY_address;
+    u64_t attribute;
+    u64_t reference_count;
+    u64_t age;
 };
 
 
 struct Zone
 {
     struct Page *pages_group;
-    unsigned long pages_length;
-    unsigned long zone_start_address;
-    unsigned long zone_end_address;
-    unsigned long zone_length;
-    unsigned long attribute;
+    u64_t pages_length;
+    u64_t zone_start_address;
+    u64_t zone_end_address;
+    u64_t zone_length;
+    u64_t attribute;
     struct Global_Memory_Descriptor *GMD_struct;
-    unsigned long page_using_count;
-    unsigned long page_free_count;
-    unsigned long total_pages_link;
+    u64_t page_using_count;
+    u64_t page_free_count;
+    u64_t total_pages_link;
 };
 
 struct Global_Memory_Descriptor
 {
     struct E820 e820[32];
-    unsigned long e820_length;
+    u64_t e820_length;
 
-    unsigned long *bits_map;
-    unsigned long bits_size;
-    unsigned long bits_length;
+    u64_t *bits_map;
+    u64_t bits_size;
+    u64_t bits_length;
 
     struct Page *pages_struct;
-    unsigned long pages_size;
-    unsigned long pages_length;
+    u64_t pages_size;
+    u64_t pages_length;
 
     struct Zone *zones_struct;
-    unsigned long zones_size;
-    unsigned long zones_length;
+    u64_t zones_size;
+    u64_t zones_length;
 
-    unsigned long start_code;
-    unsigned long end_code;
-    unsigned long end_data;
-    unsigned long start_brk;
+    u64_t start_code;
+    u64_t end_code;
+    u64_t end_data;
+    u64_t start_brk;
 
-    unsigned long end_rodata;
+    u64_t end_rodata;
 
-    unsigned long end_of_struct;
+    u64_t end_of_struct;
 };
 
 
@@ -664,27 +664,27 @@ typedef struct Slab
     struct List list;
     struct Page *page;
 
-    unsigned long using_count;
-    unsigned long free_count;
+    u64_t using_count;
+    u64_t free_count;
 
     void *Vaddress;
 
 
-    unsigned long color_length;
-    unsigned long color_count;
-    unsigned long *color_map;
+    u64_t color_length;
+    u64_t color_count;
+    u64_t *color_map;
 }Slab_t;
 
 
 typedef struct Slab_cache
 {
-    unsigned long size;
-    unsigned long total_using;
-    unsigned long total_free;
+    u64_t size;
+    u64_t total_using;
+    u64_t total_free;
     struct Slab *cache_pool;
     struct Slab *cache_dma_pool;
-    void *(*constructor)(void *Vaddress, unsigned long arg);
-    void *(*destructor)(void *vaddress, unsigned long arg);
+    void *(*constructor)(void *Vaddress, u64_t arg);
+    void *(*destructor)(void *vaddress, u64_t arg);
 }Slab_cache_t;
 
 extern struct Global_Memory_Descriptor memory_management_struct;
@@ -717,9 +717,9 @@ struct Slab_cache kmalloc_cache_size[16] =
         {1048576, 0, 0, ((void *)0), ((void *)0), ((void *)0), ((void *)0)},
 };
 # 298 "/home/steven/mine/src/include/memory.h"
-inline static unsigned long *Get_gdt()
+inline static u64_t *Get_gdt()
 {
-    unsigned long *tmp;
+    u64_t *tmp;
     __asm__ __volatile__(
         "movq	%%cr3,	%0	\n\t"
         : "=r"(tmp)
@@ -728,34 +728,34 @@ inline static unsigned long *Get_gdt()
     return tmp;
 }
 
-unsigned long page_init(struct Page *page, unsigned long flags);
-unsigned long page_clean(struct Page *page);
-unsigned long get_page_attribute(struct Page *page);
-unsigned long set_page_attribute(struct Page *page, unsigned long flags);
+u64_t page_init(struct Page *page, u64_t flags);
+u64_t page_clean(struct Page *page);
+u64_t get_page_attribute(struct Page *page);
+u64_t set_page_attribute(struct Page *page, u64_t flags);
 
-struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags);
+struct Page *alloc_pages(int zone_select, int number, u64_t page_flags);
 void free_pages(struct Page *page, int number);
 
 
 
 
-void *kmalloc(unsigned long size, unsigned long flags);
-struct Slab *kmalloc_create(unsigned long size);
-unsigned long kfree(void *address);
+void *kmalloc(u64_t size, u64_t flags);
+struct Slab *kmalloc_create(u64_t size);
+u64_t kfree(void *address);
 
-struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Vaddress, unsigned long arg), void *(*destructor)(void *Vaddress, unsigned long arg), unsigned long arg);
-unsigned long slab_destroy(struct Slab_cache *slab_cache);
+struct Slab_cache *slab_create(u64_t size, void *(*constructor)(void *Vaddress, u64_t arg), void *(*destructor)(void *Vaddress, u64_t arg), u64_t arg);
+u64_t slab_destroy(struct Slab_cache *slab_cache);
 
-unsigned long slab_init();
-void *slab_malloc(struct Slab_cache *slab_cache, unsigned long arg);
-unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg);
-unsigned long do_brk(unsigned long addr, unsigned long len);
+u64_t slab_init();
+void *slab_malloc(struct Slab_cache *slab_cache, u64_t arg);
+u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg);
+u64_t do_brk(u64_t addr, u64_t len);
 void pagetable_init();
 void init_memory();
-unsigned long* pde_ptr(unsigned long vaddr);
-unsigned long* pml4e_ptr(unsigned long vaddr);
-unsigned long* pdpe_ptr(unsigned long vaddr);
-unsigned long* pte_ptr(unsigned long vaddr);
+u64_t* pde_ptr(u64_t vaddr);
+u64_t* pml4e_ptr(u64_t vaddr);
+u64_t* pdpe_ptr(u64_t vaddr);
+u64_t* pte_ptr(u64_t vaddr);
 u64 do_wp_page(u64 virtual_address);
 void do_no_page(u64 virtual_address);
 void pagetable_4K_init();
@@ -780,30 +780,30 @@ void init_cpu(void);
 
 pt_regs_t
 {
- unsigned long r15;
- unsigned long r14;
- unsigned long r13;
- unsigned long r12;
- unsigned long r11;
- unsigned long r10;
- unsigned long r9;
- unsigned long r8;
- unsigned long rbx;
- unsigned long rcx;
- unsigned long rdx;
- unsigned long rsi;
- unsigned long rdi;
- unsigned long rbp;
- unsigned long ds;
- unsigned long es;
- unsigned long rax;
- unsigned long func;
- unsigned long errcode;
- unsigned long rip;
- unsigned long cs;
- unsigned long rflags;
- unsigned long rsp;
- unsigned long ss;
+ u64_t r15;
+ u64_t r14;
+ u64_t r13;
+ u64_t r12;
+ u64_t r11;
+ u64_t r10;
+ u64_t r9;
+ u64_t r8;
+ u64_t rbx;
+ u64_t rcx;
+ u64_t rdx;
+ u64_t rsi;
+ u64_t rdi;
+ u64_t rbp;
+ u64_t ds;
+ u64_t es;
+ u64_t rax;
+ u64_t func;
+ u64_t errcode;
+ u64_t rip;
+ u64_t cs;
+ u64_t rflags;
+ u64_t rsp;
+ u64_t ss;
 };
 # 9 "/home/steven/mine/src/include/task.h" 2
 # 1 "/home/steven/mine/src/include/lib/printk.h" 1
@@ -887,29 +887,29 @@ struct FAT32_FSInfo
 
 struct FAT32_sb_info
 {
-    unsigned long start_sector;
-    unsigned long sector_count;
+    u64_t start_sector;
+    u64_t sector_count;
 
     long sector_per_cluster;
     long bytes_per_cluster;
     long bytes_per_sector;
 
-    unsigned long Data_firstsector;
-    unsigned long FAT1_firstsector;
-    unsigned long sector_per_FAT;
-    unsigned long NumFATs;
+    u64_t Data_firstsector;
+    u64_t FAT1_firstsector;
+    u64_t sector_per_FAT;
+    u64_t NumFATs;
 
-    unsigned long fsinfo_sector_infat;
-    unsigned long bootsector_bk_infat;
+    u64_t fsinfo_sector_infat;
+    u64_t bootsector_bk_infat;
 
     struct FAT32_FSInfo *fat_fsinfo;
 };
 
 struct FAT32_inode_info
 {
-    unsigned long first_cluster;
-    unsigned long dentry_location;
-    unsigned long dentry_position;
+    u64_t first_cluster;
+    u64_t dentry_location;
+    u64_t dentry_position;
 
     unsigned short create_date;
     unsigned short create_time;
@@ -1052,7 +1052,7 @@ typedef struct SEMAPHORE
 
 void semaphore_down(semaphore_t *semaphore);
 void semaphore_up(semaphore_t *semaphore);
-void semaphore_init(semaphore_t *semaphore, unsigned long count);
+void semaphore_init(semaphore_t *semaphore, u64_t count);
 void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk);
 # 7 "/home/steven/mine/src/include/fs/buffer.h" 2
 
@@ -1091,7 +1091,7 @@ err_t bwrite(buffer_t *buf);
 err_t brelse(buffer_t *buf);
 
 
-buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size);
+buffer_t *bread(u64_t dev, u64_t block, u64_t size);
 
 
 
@@ -1186,8 +1186,8 @@ typedef struct index_node
 
     mode_t i_mode;
     size_t file_size;
-    unsigned long blocks;
-    unsigned long attribute;
+    u64_t blocks;
+    u64_t attribute;
 
     struct buffer *buf;
 
@@ -1249,7 +1249,7 @@ typedef int (*filldir_t)(void *buf,char *name, long namelen,long offset);
 struct file
 {
     long position;
-    unsigned long mode;
+    u64_t mode;
 
     struct dir_entry *dentry;
 
@@ -1274,8 +1274,8 @@ struct index_node_operations
     long (*mkdir)(struct index_node *inode, struct dir_entry *dentry, int mode);
     long (*rmdir)(struct index_node *inode, struct dir_entry *dentry);
     long (*rename)(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry);
-    long (*getattr)(struct dir_entry *dentry, unsigned long *attr);
-    long (*setattr)(struct dir_entry *dentry, unsigned long *attr);
+    long (*getattr)(struct dir_entry *dentry, u64_t *attr);
+    long (*setattr)(struct dir_entry *dentry, u64_t *attr);
     long (*unlink)(struct index_node *dir, struct dentry* dentry);
 };
 
@@ -1293,17 +1293,17 @@ struct file_operations
 {
     long (*open)(struct index_node *inode, struct file *filp);
     long (*close)(struct index_node *inode, struct file *filp);
-    long (*read)(struct file *filp, char *buf, unsigned long count, long *position);
-    long (*write)(struct file *filp, char *buf, unsigned long count, long *position);
+    long (*read)(struct file *filp, char *buf, u64_t count, long *position);
+    long (*write)(struct file *filp, char *buf, u64_t count, long *position);
     long (*lseek)(struct file *filp, long offset, long origin);
-    long (*ioctl)(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg);
+    long (*ioctl)(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg);
     long (*readdir)(struct file* filp, void* dirent, filldir_t filler);
 };
 
 struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf);
-unsigned long register_filesystem(struct file_system_type *fs);
-unsigned long unregister_filesystem(struct file_system_type *fs);
-struct dir_entry *path_walk(char *name, unsigned long flags, struct dir_entry **create_file);
+u64_t register_filesystem(struct file_system_type *fs);
+u64_t unregister_filesystem(struct file_system_type *fs);
+struct dir_entry *path_walk(char *name, u64_t flags, struct dir_entry **create_file);
 long FS_lseek(struct file *filp, long offset, long origin);
 
 void DISK1_FAT32_FS_init(void);
@@ -1320,12 +1320,12 @@ extern char _bss;
 extern char _ebss;
 extern char _end;
 
-extern unsigned long _stack_start;
+extern u64_t _stack_start;
 extern long global_pid;
 
 extern void ret_system_call();
 
-extern unsigned long kallsyms_addresses[] __attribute__((__weak__));
+extern u64_t kallsyms_addresses[] __attribute__((__weak__));
 extern long kallsyms_syms_num __attribute__((__weak__));
 extern long kallsyms_index[] __attribute__((__weak__));
 extern char* kallsyms_names __attribute((__weak__));
@@ -1334,27 +1334,27 @@ struct mm_struct
 {
  pml4t_t *pgd;
 
- unsigned long start_code, end_code;
- unsigned long start_data, end_data;
- unsigned long start_rodata, end_rodata;
- unsigned long start_bss, end_bss;
- unsigned long start_brk, end_brk;
- unsigned long start_stack, stack_length;
+ u64_t start_code, end_code;
+ u64_t start_data, end_data;
+ u64_t start_rodata, end_rodata;
+ u64_t start_bss, end_bss;
+ u64_t start_brk, end_brk;
+ u64_t start_stack, stack_length;
 };
 
 struct thread_struct
 {
- unsigned long rsp0;
+ u64_t rsp0;
 
- unsigned long rip;
- unsigned long rsp;
+ u64_t rip;
+ u64_t rsp;
 
- unsigned long fs;
- unsigned long gs;
+ u64_t fs;
+ u64_t gs;
 
- unsigned long cr2;
- unsigned long trap_nr;
- unsigned long error_code;
+ u64_t cr2;
+ u64_t trap_nr;
+ u64_t error_code;
 };
 
 
@@ -1362,7 +1362,7 @@ task_t
 {
 
  volatile long state;
- unsigned long flags;
+ u64_t flags;
  long preempt_count;
  long signal;
  long blocked;
@@ -1373,7 +1373,7 @@ task_t
  struct thread_struct *thread;
  struct List list;
 
- unsigned long addr_limit;
+ u64_t addr_limit;
 
 
 
@@ -1402,7 +1402,7 @@ task_t
 union task_union
 {
  task_t task;
- unsigned long stack[32768 / sizeof(unsigned long)];
+ u64_t stack[32768 / sizeof(u64_t)];
 } __attribute__((aligned(8)));
 # 159 "/home/steven/mine/src/include/task.h"
 extern task_t *init_task[8];
@@ -1413,18 +1413,18 @@ extern struct thread_struct init_thread;
 struct tss_struct
 {
  unsigned int reserved0;
- unsigned long rsp0;
- unsigned long rsp1;
- unsigned long rsp2;
- unsigned long reserved1;
- unsigned long ist1;
- unsigned long ist2;
- unsigned long ist3;
- unsigned long ist4;
- unsigned long ist5;
- unsigned long ist6;
- unsigned long ist7;
- unsigned long reserved2;
+ u64_t rsp0;
+ u64_t rsp1;
+ u64_t rsp2;
+ u64_t reserved1;
+ u64_t ist1;
+ u64_t ist2;
+ u64_t ist3;
+ u64_t ist4;
+ u64_t ist5;
+ u64_t ist6;
+ u64_t ist7;
+ u64_t reserved2;
  unsigned short reserved3;
  unsigned short iomapbaseaddr;
 } __attribute__((packed));
@@ -1445,8 +1445,8 @@ static inline task_t *get_current()
  return current;
 }
 # 249 "/home/steven/mine/src/include/task.h"
-unsigned long do_exit(unsigned long exit_code);
-unsigned long do_fork(pt_regs_t *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
+u64_t do_exit(u64_t exit_code);
+u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack_size);
 void task_init();
 void switch_mm(task_t *prev, task_t *next);
 void wakeup_process(task_t *tsk);
@@ -1469,8 +1469,8 @@ struct position
  int XCharSize;
  int YCharSize;
 
- unsigned long *FB_addr;
- unsigned long FB_length;
+ u64_t *FB_addr;
+ u64_t FB_length;
 
  fair_spinlock_t printk_lock;
 } Pos;

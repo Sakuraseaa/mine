@@ -2,23 +2,23 @@
 #include "kernelkit.h"
 
 typedef struct signal_frame {
-    unsigned long restorer;  //恢复函数
+    u64_t restorer;  //恢复函数
     long signum;
     long blocked; // 屏蔽位图
 
     // 依据ABI保存调用时的寄存器，用于恢复执行信号之前的代码
-    unsigned long rdi;
+    u64_t rdi;
     
-    unsigned long rax;  // 按照系统调用退出要求，保存栈帧
-    unsigned long r10;
-    unsigned long r11;
+    u64_t rax;  // 按照系统调用退出要求，保存栈帧
+    u64_t r10;
+    u64_t r11;
     
-    unsigned long rbx; // ABI 规范要求保存
-    unsigned long r12;
-    unsigned long r15;
+    u64_t rbx; // ABI 规范要求保存
+    u64_t r12;
+    u64_t r15;
 
-    unsigned long rflags; // 返回地址
-    unsigned long rip;
+    u64_t rflags; // 返回地址
+    u64_t rip;
 }signal_frame_T;
 
 // 设置信号
@@ -83,7 +83,7 @@ void do_signal(pt_regs_t* regs)
 
     // 为信号的执行准备栈帧
     sf.blocked = current->blocked;
-    sf.restorer = (unsigned long)sa->sa_restorer;
+    sf.restorer = (u64_t)sa->sa_restorer;
     sf.signum = signr;
     sf.rflags = regs->rflags;
     sf.r12 = regs->r12;
@@ -99,12 +99,12 @@ void do_signal(pt_regs_t* regs)
         regs->rsp = (regs->rsp - sizeof(signal_frame_T));
         sf.rip = regs->rip;
         copy_to_user(&sf, (void*)(regs->rsp), sizeof(signal_frame_T));
-        regs->rip = (unsigned long)sa->sa_handler;
+        regs->rip = (u64_t)sa->sa_handler;
     } else { // 从系统调用退出
         regs->r11 = (regs->r11 - sizeof(signal_frame_T));
         sf.rip = regs->r10;
         copy_to_user(&sf, (void*)(regs->r11), sizeof(signal_frame_T));
-        regs->r10 = (unsigned long)sa->sa_handler;
+        regs->r10 = (u64_t)sa->sa_handler;
     }
 
 }

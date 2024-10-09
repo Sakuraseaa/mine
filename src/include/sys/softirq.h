@@ -2,7 +2,7 @@
 #define __SOFTIRQ_H_
 
 // 记录软中断的状态
-unsigned long softirq_status = 0;
+u64_t softirq_status = 0;
 
 #define TIMER_SIRQ (1UL << 0) // 只属于定时任务的软中断
 

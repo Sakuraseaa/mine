@@ -10,10 +10,10 @@ struct Disk_Partition_Table DPT;
 struct FAT32_BootSector fat32_bootsector;
 struct FAT32_FSInfo fat32_fsinfo;
 
-// unsigned long FirstDataSector = 0; // 数据区起始扇区号
-// unsigned long BytesPerClus = 0;    // 每簇字节数
-// unsigned long FirstFAT1Sector = 0; // FAT1表起始扇区号
-// unsigned long FirstFAT2Sector = 0; // FAT2 表起始扇区号
+// u64_t FirstDataSector = 0; // 数据区起始扇区号
+// u64_t BytesPerClus = 0;    // 每簇字节数
+// u64_t FirstFAT1Sector = 0; // FAT1表起始扇区号
+// u64_t FirstFAT2Sector = 0; // FAT2 表起始扇区号
 
 /*FAT32簇号虽然占用32位，但只有28位有效*/
 /**
@@ -40,9 +40,9 @@ unsigned int DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int
  *
  * @param fat_entry
  * @param value
- * @return unsigned long 成功返回1
+ * @return u64_t 成功返回1
  */
-unsigned long DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int fat_entry, unsigned int value)
+u64_t DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned int fat_entry, unsigned int value)
 {
     unsigned int buf[128];
     int i;
@@ -61,12 +61,12 @@ unsigned long DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, unsigned i
  * @brief 从FAT32文件系统中搜索出空闲簇号
  *
  * @param fsbi
- * @return unsigned long
+ * @return u64_t
  */
-unsigned long FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
+u64_t FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
 {
     int i, j;
-    unsigned long sector_per_fat = fsbi->sector_per_FAT;
+    u64_t sector_per_fat = fsbi->sector_per_FAT;
     unsigned int buf[128];
 
     // fsbi->fat_fsinfo->FSI_Free_Count & fsbi->fat_fsinfo->FSI_Nxt_Free not exactly, so unuse
@@ -97,13 +97,13 @@ long FAT32_close(struct index_node *inode, struct file *filp) { return 1; }
  * @param position 相对于文件的偏移位置/目标位置, 该参数会被FAT32_read进行修改
  * @return long 成功返回读取的字节数，失败返回错误码
  */
-long FAT32_read(struct file *filp, char *buf, unsigned long count, long *position)
+long FAT32_read(struct file *filp, char *buf, u64_t count, long *position)
 {
     struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
     struct FAT32_sb_info *fsbi = filp->dentry->dir_inode->sb->private_sb_info;
 
-    unsigned long cluster = finode->first_cluster; // 文件访问位置所在簇号
-    unsigned long sector = 0;
+    u64_t cluster = finode->first_cluster; // 文件访问位置所在簇号
+    u64_t sector = 0;
     int i, length = 0;
     long retval = 0;
     int index = *position / fsbi->bytes_per_cluster;   // 目标位置偏移簇数 / 扇区数
@@ -145,7 +145,7 @@ long FAT32_read(struct file *filp, char *buf, unsigned long count, long *positio
         length = index <= (fsbi->bytes_per_cluster - offset) ? index : fsbi->bytes_per_cluster - offset;
 
         // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
-        if ((unsigned long)buf < TASK_SIZE)
+        if ((u64_t)buf < TASK_SIZE)
             copy_to_user(buffer + offset, buf, length);
         else
             memcpy(buffer + offset, buf, length);
@@ -176,15 +176,15 @@ long FAT32_read(struct file *filp, char *buf, unsigned long count, long *positio
  * @param position 相对于文件的偏移位置/目标位置
  * @return long 成功返回读取的字节数，失败返回错误码
  */
-long FAT32_write(struct file *filp, char *buf, unsigned long count, long *position)
+long FAT32_write(struct file *filp, char *buf, u64_t count, long *position)
 {
     // a. 得到FAT32文件系统的元数据
     struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
     struct FAT32_sb_info *fsbi = filp->dentry->dir_inode->sb->private_sb_info;
 
-    unsigned long cluster = finode->first_cluster; // 要写入文件的第一个簇
-    unsigned long next_cluster = 0;
-    unsigned long sector = 0;
+    u64_t cluster = finode->first_cluster; // 要写入文件的第一个簇
+    u64_t next_cluster = 0;
+    u64_t sector = 0;
     int i, length = 0;
     long retval = 0;
     long flags = 0; // 是否要第一次写空文件
@@ -239,7 +239,7 @@ long FAT32_write(struct file *filp, char *buf, unsigned long count, long *positi
 
         length = index <= (fsbi->bytes_per_cluster - offset) ? index : fsbi->bytes_per_cluster - offset;
 
-        if ((unsigned long)buf < TASK_SIZE)
+        if ((u64_t)buf < TASK_SIZE)
             copy_from_user(buf, buffer + offset, length);
         else
             memcpy(buf, buffer + offset, length);
@@ -296,12 +296,12 @@ long FAT32_write(struct file *filp, char *buf, unsigned long count, long *positi
     return retval;
 }
 
-long FAT32_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg) { return 0; }
+long FAT32_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg) { return 0; }
 
 int fill_dentry(void* buf, char*name, long namelen, long offset)
 {
     struct dirent* dent = (struct dirent*)buf;
-    if((unsigned long) buf < TASK_SIZE && !verify_area(buf, sizeof(struct dirent) + namelen))
+    if((u64_t) buf < TASK_SIZE && !verify_area(buf, sizeof(struct dirent) + namelen))
         return -EFAULT;
     memcpy(name, dent->d_name, namelen);
     dent->d_namelen = namelen;
@@ -316,7 +316,7 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
     struct FAT32_sb_info* fsbi = filp->dentry->dir_inode->sb->private_sb_info;
 
     unsigned int cluster = 0;
-    unsigned long sector = 0;
+    u64_t sector = 0;
     unsigned char * buf = NULL;
     char* name = NULL;
     int namelen = 0;
@@ -469,7 +469,7 @@ static unsigned char FAT32_ChkSum(unsigned char *pFcbName)
  * @param size 传出参数，记录目录项占用字节数
  * @return struct FAT32_LongDirectory*
  */
-static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, struct dir_entry *dentry, int mode, unsigned long *size)
+static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, struct dir_entry *dentry, int mode, u64_t *size)
 {
     struct FAT32_LongDirectory *fld, *fld0;
     struct FAT32_Directory *fd;
@@ -615,11 +615,11 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
     // a. 得到FAT32文件系统的元数据
     struct FAT32_inode_info *Parent_finode = inode->private_index_info, *finode;
     struct FAT32_sb_info *fsbi = inode->sb->private_sb_info;
-    unsigned long cluster = Parent_finode->first_cluster; // 要写入文件的第一个簇
-    unsigned long next_cluster = 0;
-    unsigned long sector = 0;
+    u64_t cluster = Parent_finode->first_cluster; // 要写入文件的第一个簇
+    u64_t next_cluster = 0;
+    u64_t sector = 0;
     long retval = 0, i = 0;
-    unsigned long dir_entry_size_total = 0;
+    u64_t dir_entry_size_total = 0;
     char *buffer = (char *)knew(fsbi->bytes_per_cluster, 0);
 
     struct FAT32_LongDirectory *fld;
@@ -692,7 +692,7 @@ struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry
     struct FAT32_sb_info *fsbi = parent_inode->sb->private_sb_info;
 
     unsigned int cluster = 0;  // 簇号
-    unsigned long sector = 0;  // 扇区号
+    u64_t sector = 0;  // 扇区号
     unsigned char *buf = NULL; // 保存硬盘数据的缓冲区
     int i = 0, j = 0, x = 0;
     struct FAT32_Directory *tmpdentry = NULL;
@@ -935,8 +935,8 @@ find_lookup_success:
 long FAT32_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { return 0; }
 long FAT32_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
 long FAT32_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
-long FAT32_getattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
-long FAT32_setattr(struct dir_entry *dentry, unsigned long *attr) { return 0;}
+long FAT32_getattr(struct dir_entry *dentry, u64_t *attr) { return 0;}
+long FAT32_setattr(struct dir_entry *dentry, u64_t *attr) { return 0;}
 
 struct index_node_operations FAT32_inode_ops =
     {
@@ -984,7 +984,7 @@ void fat32_write_inode(struct index_node *inode)
     struct FAT32_Directory *buf = NULL;
     struct FAT32_inode_info *finode = inode->private_index_info;
     struct FAT32_sb_info *fsbi = inode->sb->private_sb_info;
-    unsigned long sector = 0;
+    u64_t sector = 0;
     if (finode->dentry_location == 0)
     {
         color_printk(RED, BLACK, "FS ERROR:write root inode!\n");

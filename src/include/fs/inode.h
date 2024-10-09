@@ -9,8 +9,8 @@ typedef struct index_node
     
     mode_t i_mode;           // 文件模式
     size_t file_size;        // 文件大小
-    unsigned long blocks;    // 本文件占用了几个512B数据块 ？
-    unsigned long attribute; // 用于保存目录项的属性, 有了i_mode之后，该属性应该被修改删除。
+    u64_t blocks;    // 本文件占用了几个512B数据块 ？
+    u64_t attribute; // 用于保存目录项的属性, 有了i_mode之后，该属性应该被修改删除。
 
     struct buffer *buf; // inode 描述符对应 buffer
     

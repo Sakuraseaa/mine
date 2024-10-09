@@ -25,12 +25,12 @@ extern char _bss;
 extern char _ebss;
 extern char _end;
 
-extern unsigned long _stack_start;
+extern u64_t _stack_start;
 extern long global_pid;
 
 extern void ret_system_call();
 
-extern unsigned long kallsyms_addresses[] __attribute__((__weak__));
+extern u64_t kallsyms_addresses[] __attribute__((__weak__));
 extern long kallsyms_syms_num __attribute__((__weak__));
 extern long kallsyms_index[] __attribute__((__weak__));
 extern char* kallsyms_names __attribute((__weak__));
@@ -52,27 +52,27 @@ struct mm_struct
 {
 	pml4t_t *pgd; // page table point
 
-	unsigned long start_code, end_code;		// code segment space
-	unsigned long start_data, end_data;		// data segment space
-	unsigned long start_rodata, end_rodata; // rodata(read-only-data) segment space
-	unsigned long start_bss, end_bss;
-	unsigned long start_brk, end_brk; // 堆空间-动态内存分配区
-	unsigned long start_stack, stack_length;		  // 应用层栈基地址
+	u64_t start_code, end_code;		// code segment space
+	u64_t start_data, end_data;		// data segment space
+	u64_t start_rodata, end_rodata; // rodata(read-only-data) segment space
+	u64_t start_bss, end_bss;
+	u64_t start_brk, end_brk; // 堆空间-动态内存分配区
+	u64_t start_stack, stack_length;		  // 应用层栈基地址
 };
 
 typedef struct thread_struct
 {
-	unsigned long rsp0; // in tss, 记录着应用程序在内核层使用的栈基地址
+	u64_t rsp0; // in tss, 记录着应用程序在内核层使用的栈基地址
 
-	unsigned long rip; // 保存着进程切换回来时执行代码的地址
-	unsigned long rsp; // 保存着进程切换时的栈指针
+	u64_t rip; // 保存着进程切换回来时执行代码的地址
+	u64_t rsp; // 保存着进程切换时的栈指针
 
-	unsigned long fs;
-	unsigned long gs;
+	u64_t fs;
+	u64_t gs;
 
-	unsigned long cr2;		  // CR2控制寄存器
-	unsigned long trap_nr;	  // 产生异常的异常号
-	unsigned long error_code; // 异常的错误码
+	u64_t cr2;		  // CR2控制寄存器
+	u64_t trap_nr;	  // 产生异常的异常号
+	u64_t error_code; // 异常的错误码
 }thread_t;
 
 // 进程PCB
@@ -80,7 +80,7 @@ typedef struct task_struct
 {
 
 	volatile long state;		// 进程状态: 运行态，停止态，可中断态
-	unsigned long flags; 		// 进程标志：进程，线程，内核线程
+	u64_t flags; 		// 进程标志：进程，线程，内核线程
 	long preempt_count;	 		// 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
 	long signal;
 	long blocked;  		// 信号位图 和 bitmap of masked signals
@@ -91,7 +91,7 @@ typedef struct task_struct
 	struct thread_struct *thread; // 进程切换时保存的寄存器(上下文)信息
 	struct List list;			  // 双向链表节点
 
-	unsigned long addr_limit; 	  // 进程地址空间范围
+	u64_t addr_limit; 	  // 进程地址空间范围
 	/*	0x0000,0000,0000,0000 - 0x0000,7fff,ffff,ffff user,   对应第255个PML4页表项， 0 ~ 255   */
 	/*	0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel, 对应第256个PML4页表项， 256 ~ 511 */
 
@@ -120,7 +120,7 @@ typedef struct task_struct
 union task_union
 {
 	task_t task;
-	unsigned long stack[STACK_SIZE / sizeof(unsigned long)];
+	u64_t stack[STACK_SIZE / sizeof(u64_t)];
 } __attribute__((aligned(8))); // 8Bytes align
 
 // ========================== 初始化内核进程的PCB ==============================
@@ -157,18 +157,18 @@ extern struct thread_struct init_thread;
 struct tss_struct
 {
 	unsigned int reserved0;
-	unsigned long rsp0;
-	unsigned long rsp1;
-	unsigned long rsp2;
-	unsigned long reserved1;
-	unsigned long ist1;
-	unsigned long ist2;
-	unsigned long ist3;
-	unsigned long ist4;
-	unsigned long ist5;
-	unsigned long ist6;
-	unsigned long ist7;
-	unsigned long reserved2;
+	u64_t rsp0;
+	u64_t rsp1;
+	u64_t rsp2;
+	u64_t reserved1;
+	u64_t ist1;
+	u64_t ist2;
+	u64_t ist3;
+	u64_t ist4;
+	u64_t ist5;
+	u64_t ist6;
+	u64_t ist7;
+	u64_t reserved2;
 	unsigned short reserved3;
 	unsigned short iomapbaseaddr;
 } __attribute__((packed));
@@ -176,9 +176,9 @@ struct tss_struct
 #define INIT_TSS                                                                             \
 	{                                                                                        \
 		.reserved0 = 0,                                                                      \
-		.rsp0 = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)), \
-		.rsp1 = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)), \
-		.rsp2 = (unsigned long)(init_task_union.stack + STACK_SIZE / sizeof(unsigned long)), \
+		.rsp0 = (u64_t)(init_task_union.stack + STACK_SIZE / sizeof(u64_t)), \
+		.rsp1 = (u64_t)(init_task_union.stack + STACK_SIZE / sizeof(u64_t)), \
+		.rsp2 = (u64_t)(init_task_union.stack + STACK_SIZE / sizeof(u64_t)), \
 		.reserved1 = 0,                                                                      \
 		.ist1 = 0xffff800000007c00,                                                          \
 		.ist2 = 0xffff800000007c00,                                                          \
@@ -237,15 +237,6 @@ static inline task_t *get_current()
 // 	} while (0)*/
 
 
-
-
-unsigned long do_exit(unsigned long exit_code);
-unsigned long do_fork(pt_regs_t *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
-void task_init();
-void switch_mm(task_t *prev, task_t *next);
-void wakeup_process(task_t *tsk);
-void exit_files(task_t *tsk);
-void __switch_to(task_t *prev, task_t *next);
 
 
 #endif

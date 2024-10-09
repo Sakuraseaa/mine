@@ -23,7 +23,7 @@ int open(const char *path, int oflag);
 int mkdir(const char* path);
 int fork(void);
 int vfork(void);
-unsigned long reboot(unsigned long cmd,void * arg);
+u64_t reboot(u64_t cmd,void * arg);
 int putstring(unsigned int FRcolor,char *string);
 int printf(const char *fmt, ...);
 int execve(const char* path, char* const argv[], char* const envp[]);
@@ -31,5 +31,5 @@ long getpid();
 void sleep(long);
 char *getcwd(char *buf, int size);
 long stat(char* pahtname, stat_t* statBuf);
-unsigned long chdir(char* path);
+u64_t chdir(char* path);
 #endif

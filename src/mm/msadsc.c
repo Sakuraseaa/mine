@@ -74,7 +74,7 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
     // 把可操作的地址对齐到2MB, 计算有多少2MB物理页可用
     for (i = 0; i <= memory_management_struct.e820_length; i++)
     {
-        unsigned long start, end;
+        u64_t start, end;
         if (memory_management_struct.e820[i].type != 1)
             continue;
 

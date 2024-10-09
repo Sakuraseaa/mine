@@ -17,8 +17,8 @@ void SMP_init()
 
         color_printk(WHITE, BLACK, "x2APIC ID level:%#010x\tx2APIC ID the current logical processor:%#010x\n", c & 0xff, d);
 
-        // color_printk(WHITE, BLACK, "SMP copy byte:%#010x\n", (unsigned long)&_APU_boot_end - (unsigned long)&_APU_boot_start);
-        // memcpy(_APU_boot_start, (unsigned char *)0xffff800000020000, (unsigned long)&_APU_boot_end - (unsigned long)&_APU_boot_start);
+        // color_printk(WHITE, BLACK, "SMP copy byte:%#010x\n", (u64_t)&_APU_boot_end - (u64_t)&_APU_boot_start);
+        // memcpy(_APU_boot_start, (unsigned char *)0xffff800000020000, (u64_t)&_APU_boot_end - (u64_t)&_APU_boot_start);
     }
 }
 

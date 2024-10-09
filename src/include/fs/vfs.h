@@ -30,7 +30,7 @@ typedef struct ide_part_t
 typedef struct file
 {
     long position;      // 本文件的当前访问位置
-    unsigned long mode; // mode 保存着文件的访问模式和操作模式
+    u64_t mode; // mode 保存着文件的访问模式和操作模式
 
     struct dir_entry *dentry; // 本文件对应的目录项
 
@@ -54,8 +54,8 @@ struct index_node_operations
     long (*mkdir)(struct index_node *inode, struct dir_entry *dentry, int mode);                                                            // 创建一个新目录
     long (*rmdir)(struct index_node *inode, struct dir_entry *dentry);                                                                      // 删除inode目录中的dentry目录项代表的文件
     long (*rename)(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry); // 移动文件
-    long (*getattr)(struct dir_entry *dentry, unsigned long *attr);                                                                         // 在通知所有节点需要对磁盘中更新时，VFS会调用该函数
-    long (*setattr)(struct dir_entry *dentry, unsigned long *attr);                                                                         // 在修改索引节点后，通知发生了”改变事件“
+    long (*getattr)(struct dir_entry *dentry, u64_t *attr);                                                                         // 在通知所有节点需要对磁盘中更新时，VFS会调用该函数
+    long (*setattr)(struct dir_entry *dentry, u64_t *attr);                                                                         // 在修改索引节点后，通知发生了”改变事件“
     long (*unlink)(struct index_node *dir, struct dir_entry* dentry); // 删除文件
 };
 
@@ -74,10 +74,10 @@ struct file_operations
 {
     long (*open)(struct index_node *inode, struct file *filp);
     long (*close)(struct index_node *inode, struct file *filp);
-    long (*read)(struct file *filp, char *buf, unsigned long count, long *position);
-    long (*write)(struct file *filp, char *buf, unsigned long count, long *position);
+    long (*read)(struct file *filp, char *buf, u64_t count, long *position);
+    long (*write)(struct file *filp, char *buf, u64_t count, long *position);
     long (*lseek)(struct file *filp, long offset, long origin);
-    long (*ioctl)(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg);
+    long (*ioctl)(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg);
     long (*readdir)(struct file* filp, void* dirent, filldir_t filler);
 };
 

@@ -1,36 +1,36 @@
 # 6 "syscalls.c"
-extern unsigned long no_system_call(void);
+extern u64_t no_system_call(void);
 # 1 "../include/syscalls.h" 1
-extern unsigned long sys_putstring(void);
+extern u64_t sys_putstring(void);
 
-extern unsigned long sys_open(void);
-extern unsigned long sys_close(void);
-extern unsigned long sys_read(void);
-extern unsigned long sys_write(void);
-extern unsigned long sys_lseek(void);
-extern unsigned long sys_fork(void);
-extern unsigned long sys_vfork(void);
-extern unsigned long sys_execve(void);
-extern unsigned long sys_exit(void);
-extern unsigned long sys_wait4(void);
+extern u64_t sys_open(void);
+extern u64_t sys_close(void);
+extern u64_t sys_read(void);
+extern u64_t sys_write(void);
+extern u64_t sys_lseek(void);
+extern u64_t sys_fork(void);
+extern u64_t sys_vfork(void);
+extern u64_t sys_execve(void);
+extern u64_t sys_exit(void);
+extern u64_t sys_wait4(void);
 
 
-extern unsigned long sys_brk(void);
-extern unsigned long sys_reboot(void);
-extern unsigned long sys_chdir(void);
-extern unsigned long sys_getdents(void);
-extern unsigned long sys_signal(void);
-extern unsigned long sys_kill(void);
-extern unsigned long sys_getpid(void);
-extern unsigned long sys_sleep(void);
-extern unsigned long sys_mkdir(void);
+extern u64_t sys_brk(void);
+extern u64_t sys_reboot(void);
+extern u64_t sys_chdir(void);
+extern u64_t sys_getdents(void);
+extern u64_t sys_signal(void);
+extern u64_t sys_kill(void);
+extern u64_t sys_getpid(void);
+extern u64_t sys_sleep(void);
+extern u64_t sys_mkdir(void);
 # 8 "syscalls.c" 2
 
 
 
 
 
-typedef unsigned long (*system_call_t)(void);
+typedef u64_t (*system_call_t)(void);
 
 system_call_t system_call_table[128] = {
     [0 ... 128 - 1] = no_system_call,

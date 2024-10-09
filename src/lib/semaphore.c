@@ -2,7 +2,7 @@
 #include "kernelkit.h"
 
 // 信号量初始化
-void semaphore_init(semaphore_t *semaphore, unsigned long count)
+void semaphore_init(semaphore_t *semaphore, u64_t count)
 {
     atomic_set(&semaphore->conter, count);
     wait_queue_init(&semaphore->wait, NULL);

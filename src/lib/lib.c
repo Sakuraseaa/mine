@@ -11,18 +11,18 @@ s64_t search_64rlbits(u64_t val)
 }
 
 // verify: 核实， 检测数据是否越过用户层界限
-long verify_area(unsigned char *addr, unsigned long size)
+long verify_area(unsigned char *addr, u64_t size)
 {
     return 1;
-    // if (((unsigned long)addr + size) <= (unsigned long)0x00007fffffffffff)
+    // if (((u64_t)addr + size) <= (u64_t)0x00007fffffffffff)
     //     return 1;
     // else
     //     return 0;
 }
 
-long copy_from_user(void *from, void *to, unsigned long size)
+long copy_from_user(void *from, void *to, u64_t size)
 {
-    unsigned long d0, d1;
+    u64_t d0, d1;
     if (!verify_area(from, size))
         return 0;
     // 输出描述符&: 不为任何输入操作表达式分配该寄存器
@@ -38,7 +38,7 @@ long copy_from_user(void *from, void *to, unsigned long size)
     return size;
 }
 
-long copy_to_user(void *from, void *to, unsigned long size)
+long copy_to_user(void *from, void *to, u64_t size)
 {
     if (!verify_area(to, size))
         return 0;
@@ -63,7 +63,7 @@ long copy_to_user(void *from, void *to, unsigned long size)
     return size;
 }
 
-long strncpy_from_user(void *from, void *to, unsigned long size)
+long strncpy_from_user(void *from, void *to, u64_t size)
 {
     if (!verify_area(from, size))
         return 0;
@@ -76,9 +76,9 @@ long strncpy_from_user(void *from, void *to, unsigned long size)
  *
  * @return long 字符串长度。 如果字符串越界，返回的是 0
  */
-long strnlen_user(void *src, unsigned long maxlen)
+long strnlen_user(void *src, u64_t maxlen)
 {
-    unsigned long size = strlen(src);
+    u64_t size = strlen(src);
     if (!verify_area(src, size))
         return 0;
 
@@ -252,7 +252,7 @@ int memcmp(void *FirstPart, void *SecondPart, long Count)
 void *memset(void *Address, unsigned char C, long Count)
 {
     int d0, d1;
-    unsigned long tmp = C * 0x0101010101010101UL;
+    u64_t tmp = C * 0x0101010101010101UL;
     __asm__ __volatile__("cld	\n\t"
                          "rep	\n\t"
                          "stosq	\n\t"
@@ -490,17 +490,17 @@ void lower(char *str)
     }
 }
 
-unsigned long bit_set(unsigned long *addr, unsigned long nr)
+u64_t bit_set(u64_t *addr, u64_t nr)
 {
     return *addr | (1UL << nr);
 }
 
-unsigned long bit_get(unsigned long *addr, unsigned long nr)
+u64_t bit_get(u64_t *addr, u64_t nr)
 {
     return *addr & (1UL << nr);
 }
 
-unsigned long bit_clean(unsigned long *addr, unsigned long nr)
+u64_t bit_clean(u64_t *addr, u64_t nr)
 {
     return *addr & (~(1UL << nr));
 }
@@ -545,7 +545,7 @@ void io_out32(unsigned short port, unsigned int value)
                          : "memory");
 }
 
-unsigned long rdmsr(unsigned long address)
+u64_t rdmsr(u64_t address)
 {
     unsigned int tmp0 = 0;
     unsigned int tmp1 = 0;
@@ -553,26 +553,26 @@ unsigned long rdmsr(unsigned long address)
                          : "=d"(tmp0), "=a"(tmp1)
                          : "c"(address)
                          : "memory");
-    return (unsigned long)tmp0 << 32 | tmp1;
+    return (u64_t)tmp0 << 32 | tmp1;
 }
 
-void wrmsr(unsigned long address, unsigned long value)
+void wrmsr(u64_t address, u64_t value)
 {
     __asm__ __volatile__("wrmsr	\n\t" ::"d"(value >> 32), "a"(value & 0xffffffff), "c"(address)
                          : "memory");
 }
 
-unsigned long get_rsp()
+u64_t get_rsp()
 {
-    unsigned long tmp = 0;
+    u64_t tmp = 0;
     __asm__ __volatile__("movq	%%rsp, %0	\n\t"
                          : "=r"(tmp)::"memory");
     return tmp;
 }
 
-unsigned long get_rflags()
+u64_t get_rflags()
 {
-    unsigned long tmp = 0;
+    u64_t tmp = 0;
     __asm__ __volatile__("pushfq	\n\t"
                          "movq	(%%rsp), %0	\n\t"
                          "popfq	\n\t"

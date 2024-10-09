@@ -4,10 +4,10 @@
 #include "kernelkit.h"
 
 typedef unsigned int Elf64_Word;
-typedef unsigned long Elf64_Addr;
-typedef unsigned long Elf64_Off;
+typedef u64_t Elf64_Addr;
+typedef u64_t Elf64_Off;
 typedef unsigned short Elf64_Half;
-typedef unsigned long Elf64_Xword;
+typedef u64_t Elf64_Xword;
 
 
 #define EI_NIDENT 16
@@ -106,13 +106,13 @@ struct file *open_exec_file(char *path)
  * 
  * @param user_addr 
  */
-static void virtual_map(unsigned long user_addr){
+static void virtual_map(u64_t user_addr){
 	
-	unsigned long *tmp;
-	unsigned long *virtual = NULL;
+	u64_t *tmp;
+	u64_t *virtual = NULL;
 	
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
-	tmp = Phy_To_Virt((unsigned long *)((unsigned long)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
 	if (*tmp == 0) {
 		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
@@ -120,7 +120,7 @@ static void virtual_map(unsigned long user_addr){
 	}
 	
 	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
 	if (*tmp == 0) {
 		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
@@ -129,14 +129,14 @@ static void virtual_map(unsigned long user_addr){
 	
 	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
 	// 申请用户占用的内存,填充页表, 填充PDT内存
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
 	if (*tmp == 0) {
 		virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
 		memset(virtual, 0, PAGE_4K_SIZE);
 		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 	}
 
-	tmp = Phy_To_Virt((unsigned long *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
 	if (*tmp == 0)
 	{
 		virtual = knew(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
@@ -158,21 +158,21 @@ static void virtual_map(unsigned long user_addr){
  * @return true 加载成功
  * @return false 加载失败
  */
-static bool segment_load(struct file* filp, unsigned long offset, unsigned long filesz, unsigned long vaddr) {
+static bool segment_load(struct file* filp, u64_t offset, u64_t filesz, u64_t vaddr) {
     // 计算段将要加载到的虚拟页
-    unsigned long vaddr_first_page = vaddr & TASK_SIZE;
+    u64_t vaddr_first_page = vaddr & TASK_SIZE;
     // 表示文件在第一个页框中占用的字节大小
     long size_in_first_page = PAGE_4K_SIZE - (vaddr & (PAGE_4K_SIZE - 1));
 
     // 如果虚拟页内装不下, 则计算额外需要的页数
-    unsigned long occupy_pages = 1; // 计算本次加载要占用的物理页数
+    u64_t occupy_pages = 1; // 计算本次加载要占用的物理页数
     if (filesz > size_in_first_page) {
-        unsigned long left_size = filesz - size_in_first_page;
+        u64_t left_size = filesz - size_in_first_page;
         occupy_pages = (PAGE_4K_ALIGN(left_size) / PAGE_4K_SIZE) + 1;
     }
 
-    unsigned long page_idx = 0;
-    unsigned long vaddr_page = vaddr_first_page;
+    u64_t page_idx = 0;
+    u64_t vaddr_page = vaddr_first_page;
 	do
     { 	
 		if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) 
@@ -190,16 +190,16 @@ static bool segment_load(struct file* filp, unsigned long offset, unsigned long 
     return true;
 }
 
-static unsigned long code_start_addr = 0;
+static u64_t code_start_addr = 0;
 
 /**
  * @brief analysis The Section Table
  * 
  * @param filp 
  * @param elf_header 
- * @return unsigned long 
+ * @return u64_t 
  */
-static unsigned long section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
+static u64_t section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
     
 	Elf64_Half	s_size = elf_header->e_shentsize;		/* Section header table entry size */  
     Elf64_Half	s_num = elf_header->e_shnum;		    /* Section header table entry count */
@@ -263,10 +263,10 @@ static unsigned long section_analysis(struct file *filp, Elf64_Ehdr* elf_header)
  * @param pathname 需要加载的程序文件的名称
  * @return unsiged long 若加载成功, 则返回程序的 bss 段的结束地址; 若加载失败, 则返回-1
  */
-static unsigned long load(char *pathname)
+static u64_t load(char *pathname)
 {
 	struct file *filp = NULL;
-	unsigned long end_bss = 0;
+	u64_t end_bss = 0;
 	long ret = -1;
 
 	Elf64_Ehdr elf_header;
@@ -275,8 +275,8 @@ static unsigned long load(char *pathname)
 	memset(&prog_header, 0, sizeof(Elf64_Phdr));
 	
 	filp = open_exec_file(pathname);
-	if((unsigned long)filp > -0x1000UL) // 这是什么意思？
-		return (unsigned long)filp;
+	if((u64_t)filp > -0x1000UL) // 这是什么意思？
+		return (u64_t)filp;
 	
 
 	// 读取程序头
@@ -335,11 +335,11 @@ static unsigned long load(char *pathname)
 
 
 // 被init调用,加载用户进程体，到用户空间800000
-unsigned long do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
+u64_t do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 {
   	// color_printk(RED, BLACK, "do_execve task is running\n");
-	unsigned long stack_start_addr = TASK_SIZE + 1;
-	unsigned long retval = 0;
+	u64_t stack_start_addr = TASK_SIZE + 1;
+	u64_t retval = 0;
 	long pos = 0;
 	
 	if (current->flags & PF_VFORK)
@@ -384,7 +384,7 @@ unsigned long do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 	if( argv != NULL ) {
 		int len = 0, i = 0;
 		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
-		pos = (unsigned long)dargv;
+		pos = (u64_t)dargv;
 
 		for(i = 0; i < 10 && argv[i] != NULL; i++)
 		{
@@ -396,7 +396,7 @@ unsigned long do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 
 		stack_start_addr = pos - 10;
 		regs->rdi = i; // argc
-		regs->rsi = (unsigned long)dargv; // argv
+		regs->rsi = (u64_t)dargv; // argv
 	}
 
     __asm__ __volatile__("movq %0,%%gs; movq %0, %%fs;"::"r"(0UL));

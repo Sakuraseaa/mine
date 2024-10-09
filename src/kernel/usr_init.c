@@ -38,8 +38,8 @@ static void handler(long sig) {
 	printf("The signal is %d\n", sig);
 
 }
-extern unsigned long volatile jiffies;
-extern unsigned long startup_time;
+extern u64_t volatile jiffies;
+extern u64_t startup_time;
 
 static void print_prompt(void) {
 	

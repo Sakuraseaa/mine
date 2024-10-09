@@ -43,7 +43,7 @@ struct position
 	int YCharSize;
 
 	unsigned int *FB_addr;
-	unsigned long FB_length;
+	u64_t FB_length;
 
 	fair_spinlock_t printk_lock;
 } Pos;

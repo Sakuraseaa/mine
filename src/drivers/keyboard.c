@@ -53,7 +53,7 @@ long keyboard_close(struct index_node *inode, struct file *filp)
  * @return long
  */
 #define KEY_CMD_RESET_BUFFER 1
-long keyboard_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg)
+long keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg)
 {
     switch (cmd)
     {
@@ -69,7 +69,7 @@ long keyboard_ioctl(struct index_node *inode, struct file *filp, unsigned long c
     return 1;
 }
 
-long keyboard_read(struct file *flip, char *buf, unsigned long count, long *position)
+long keyboard_read(struct file *flip, char *buf, u64_t count, long *position)
 {
     long counter = 0;      // 本次实际读取的字节数
     long tail_end_gap = 0; // tail 到键盘缓冲区末尾的距离
@@ -102,7 +102,7 @@ long keyboard_read(struct file *flip, char *buf, unsigned long count, long *posi
     return counter;
 }
 
-long keyboard_write(struct file *flip, char *buf, unsigned long count, long *position)
+long keyboard_write(struct file *flip, char *buf, u64_t count, long *position)
 {
     return 0;
 }
@@ -124,7 +124,7 @@ hw_int_controller keyboard_int_controller = {
 };
 
 // 键盘中断处理函数
-void keyboard_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
+void keyboard_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
     unsigned char x;
     x = io_in8(PORT_KB_DATA);
@@ -143,7 +143,7 @@ void keyboard_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs
 void keyboard_init()
 {
     struct IO_APIC_RET_entry entry;
-    unsigned long i, j;
+    u64_t i, j;
 
     p_kb = (struct keyboard_inputbuffer *)knew(sizeof(struct keyboard_inputbuffer), 0);
 
@@ -173,7 +173,7 @@ void keyboard_init()
         for (j = 0; j < 1000; j++)
             nop();
 
-    register_irq(0x21, &entry, &keyboard_handler, (unsigned long)p_kb, &keyboard_int_controller, "ps/2 keyboard");
+    register_irq(0x21, &entry, &keyboard_handler, (u64_t)p_kb, &keyboard_int_controller, "ps/2 keyboard");
 }
 
 // sktest 驱动卸载函数 - 什么时候实现动态加载？
