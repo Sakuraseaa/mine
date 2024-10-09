@@ -1,9 +1,6 @@
 #ifndef _MEMAREA_T_H
 #define _MEMAREA_T_H
 
-#include "lib.h"
-#include "basetype.h"
-#include "msadsc_t.h"
 #define MMSTUS_ERR (0)
 #define MMSTUS_OK (1)
 

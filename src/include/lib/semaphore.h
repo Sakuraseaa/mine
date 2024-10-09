@@ -11,11 +11,11 @@
 typedef struct SEMAPHORE
 {
     atomic_t conter;   // 原子量，记录信号量拥有的资源数量
-    wait_queue_T wait; // 等待队列
-} semaphore_T;
+    wait_queue_t wait; // 等待队列
+} semaphore_t;
 
-void semaphore_down(semaphore_T *semaphore);
-void semaphore_up(semaphore_T *semaphore);
-void semaphore_init(semaphore_T *semaphore, unsigned long count);
-void wait_queue_init(wait_queue_T *wait_queue, struct task_struct *tsk);
+void semaphore_down(semaphore_t *semaphore);
+void semaphore_up(semaphore_t *semaphore);
+void semaphore_init(semaphore_t *semaphore, unsigned long count);
+void wait_queue_init(wait_queue_t *wait_queue, struct task_struct *tsk);
 #endif

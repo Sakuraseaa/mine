@@ -10,7 +10,7 @@
 struct keyboard_inputbuffer *p_mouse = NULL;
 static int mouse_count = 0;
 
-void mouse_handler(unsigned long nr, unsigned long parameter, struct pt_regs *regs)
+void mouse_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
 {
     unsigned char x;
     x = io_in8(PORT_KB_DATA);

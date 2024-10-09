@@ -1,10 +1,6 @@
 #ifndef _HALMMU_H
 #define _HALMMU_H
 
-#include "halmmu_t.h"
-#include "bastype.h"
-#include "msadsc_t.h"
-#include "memory.h"
 
 void mmudsc_t_init(mmudsc_t* init);
 msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked);
@@ -42,6 +38,8 @@ bool_t hal_mmu_clean(mmudsc_t* mmu);
 void dump_mmu(mmudsc_t* dump);
 
 #if 1
+extern adr_t viradr_to_phyadr(adr_t kviradr);
+extern adr_t phyadr_to_viradr(adr_t kphyadr);
 
 KLINE uint_t mmu_tdire_index(adr_t vadrs)
 {

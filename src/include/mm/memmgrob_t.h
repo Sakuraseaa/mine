@@ -1,11 +1,6 @@
 #ifndef _MEMMGROB_H_
 #define _MEMMGROB_H_
 
-#include "basetype.h"
-#include "msadsc_t.h"
-#include "marea_t.h"
-#include "kmsob_t.h"
-
 typedef struct s_MEMMGROB
 {
     list_h_t mo_list;

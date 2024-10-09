@@ -10,7 +10,7 @@
  * @param wait_queue
  * @param tsk
  */
-void wait_queue_init(wait_queue_T *wait_queue, struct task_struct *tsk)
+void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk)
 {
     wait_queue->tsk = tsk;
     list_init(&wait_queue->wait_list);
@@ -21,13 +21,13 @@ void wait_queue_init(wait_queue_T *wait_queue, struct task_struct *tsk)
  *
  * @param wait_queue_head
  */
-void sleep_on(wait_queue_T *wait_queue_head)
+void sleep_on(wait_queue_t *wait_queue_head)
 {   
     if(wait_queue_head == NULL)
         return;
 
     // a. 创建等待结点, 将node和当前进程相关联
-    wait_queue_T node;
+    wait_queue_t node;
     wait_queue_init(&node, current);
     // b. 修改当前进程运行状态为不可中断状态
     current->state = TASK_UNINTERRUPTIBLE;
@@ -42,10 +42,10 @@ void sleep_on(wait_queue_T *wait_queue_head)
  *
  * @param wait_queue_head
  */
-void interruptible_sleep_on(wait_queue_T *wait_queue_head)
+void interruptible_sleep_on(wait_queue_t *wait_queue_head)
 {
     // a. 创建等待结点, 将node和当前进程相关联
-    wait_queue_T node;
+    wait_queue_t node;
     wait_queue_init(&node, current);
     // b. 修改当前进程运行状态为可中断状态
     current->state = TASK_INTERRUPTIBLE;
@@ -61,13 +61,13 @@ void interruptible_sleep_on(wait_queue_T *wait_queue_head)
  * @param wait_queue_head 等待队列头结点
  * @param state 需要被唤醒的线程，现在处于什么状态
  */
-void wakeup(wait_queue_T *wait_queue_head, long state)
+void wakeup(wait_queue_t *wait_queue_head, long state)
 {
-    wait_queue_T *node = NULL;
+    wait_queue_t *node = NULL;
     if (list_is_empty(&wait_queue_head->wait_list))
         return;
 
-    node = container_of(list_next(&wait_queue_head->wait_list), wait_queue_T, wait_list);
+    node = container_of(list_next(&wait_queue_head->wait_list), wait_queue_t, wait_list);
 
     // 需要唤醒的进程和传入参数state相等 ，才进行唤醒
     if (node->tsk->state & state)
@@ -80,16 +80,16 @@ void wakeup(wait_queue_T *wait_queue_head, long state)
 /**
  * @brief 唤醒线程
  */
-void wakeup_pid(wait_queue_T *wait_queue_head, long state, long pid)
+void wakeup_pid(wait_queue_t *wait_queue_head, long state, long pid)
 {
-    wait_queue_T *node = wait_queue_head;
+    wait_queue_t *node = wait_queue_head;
     if (list_is_empty(&wait_queue_head->wait_list))
         return;
 
     // 在等待队列上寻找进程号是pid的进程
     do {
     
-        node = container_of(list_next(&node->wait_list), wait_queue_T, wait_list);
+        node = container_of(list_next(&node->wait_list), wait_queue_t, wait_list);
 
     } while(node->tsk->pid != pid);
 
@@ -103,6 +103,6 @@ void wakeup_pid(wait_queue_T *wait_queue_head, long state, long pid)
 
 
 
-bool wait_queue_is_empty(wait_queue_T* wait_queue) {
+bool wait_queue_is_empty(wait_queue_t* wait_queue) {
     return list_is_empty(&wait_queue->wait_list);
 }

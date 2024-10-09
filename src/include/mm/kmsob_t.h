@@ -104,7 +104,4 @@ typedef struct s_KOBCKS
 	size_t kk_sz;
 }kobcks_t;
 
-void init_kmsob();
-void *kmsob_new(size_t msz);
-bool_t kmsob_delete(void *fadrs, size_t fsz);
 #endif // _KMSOB_T_H_

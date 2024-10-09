@@ -5,25 +5,25 @@
 #include "timer.h"
 #include "HEPT.h"
 struct schedule task_schedule;
-extern void switch_to(struct task_struct *prev, struct task_struct *next);
-struct task_struct *get_next_task()
+extern void switch_to(task_t *prev, task_t *next);
+task_t *get_next_task()
 {
-	struct task_struct *tsk = NULL;
+	task_t *tsk = NULL;
 	// 就绪队列为空，返回内核主线程, 这将会是一个空转的线程
 	if (list_is_empty(&task_schedule.task_queue.list))
 		return &init_task_union.task;
 
 	//  从就绪队列中得到一个进程
-	tsk = container_of(list_next(&task_schedule.task_queue.list), struct task_struct, list);
+	tsk = container_of(list_next(&task_schedule.task_queue.list), task_t, list);
 	list_del(&tsk->list);
 	task_schedule.running_task_count -= 1;
 	return tsk;
 }
 
 // 加入一个任务到就绪队列, 该队列按照虚拟运行时间由小到大进行排序
-void insert_task_queue(struct task_struct *tsk)
+void insert_task_queue(task_t *tsk)
 {
-	struct task_struct *tmp = container_of(list_next(&task_schedule.task_queue.list), struct task_struct, list);
+	task_t *tmp = container_of(list_next(&task_schedule.task_queue.list), task_t, list);
 	if (tsk == &init_task_union.task)
 		return;
 
@@ -33,14 +33,14 @@ void insert_task_queue(struct task_struct *tsk)
 	else
 	{
 		while (tmp->vrun_time < tsk->vrun_time)
-			tmp = container_of(list_next(&tmp->list), struct task_struct, list);
+			tmp = container_of(list_next(&tmp->list), task_t, list);
 	}
 	list_add_to_before(&tmp->list, &tsk->list);
 	task_schedule.running_task_count += 1;
 }
 
 
-struct task_struct *tsk = NULL;
+task_t *tsk = NULL;
 // 调度器
 void schedule()
 {

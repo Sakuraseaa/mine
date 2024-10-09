@@ -5,7 +5,7 @@
 #include "memory.h"
 #include "semaphore.h"
 
-semaphore_T visual_lock;
+semaphore_t visual_lock;
 
 void putchar(unsigned int *fb, int Xsize, int x, int y, unsigned int FRcolor, unsigned int BKcolor, unsigned char font)
 {

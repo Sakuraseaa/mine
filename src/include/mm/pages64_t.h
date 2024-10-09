@@ -1,8 +1,6 @@
 #ifndef _PAGES64_T_H
 #define _PAGES64_T_H
 
-#include "basetype.h"
-
 #define KPML4_P (1<<0)
 #define KPML4_RW (1<<1)
 #define KPML4_US (1<<2)

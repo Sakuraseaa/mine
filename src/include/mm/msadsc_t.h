@@ -1,9 +1,6 @@
 #ifndef _MSADSC_T_H_
 #define _MSADSC_T_H_
 
-#include "spinlock.h"
-#include "basetype.h"
-#include "lib.h"
 
 #define PAGPHYADR_SZLSHBIT (12)
 #define MSAD_PAGE_MAX (8)
@@ -73,10 +70,4 @@ typedef struct s_MSADSC
     void* md_odlink;            //相邻且相同大小msadsc的指针
 }__attribute__((packed)) msadsc_t;
 
-
-
-void init_msadsc();
-void init_search_krloccupymm();
-adr_t msadsc_ret_addr(msadsc_t *msa);
-adr_t msadsc_ret_vaddr(msadsc_t *msa);
 #endif // _MSADSC_T_H_

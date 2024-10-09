@@ -23,7 +23,7 @@ unsigned long sys_wait4(unsigned long pid, int *status, int options,void *rusage
 u64 sys_mkdir(char* filename);
 u64 sys_rmdir(char* filename);
 u64 sys_unlink(char* filename);
-void exit_mm(struct task_struct *tsk);
+void exit_mm(task_t *tsk);
 
 
 unsigned long sys_info(char order);

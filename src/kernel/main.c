@@ -30,7 +30,7 @@
 #include "memmgrinit.h"
 #include "krlmm.h"
 
-extern semaphore_T visual_lock;
+extern semaphore_t visual_lock;
 extern struct keyboard_inputbuffer *p_kb;
 extern struct keyboard_inputbuffer *p_mouse;
 extern long global_pid;

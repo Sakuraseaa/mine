@@ -24,7 +24,7 @@ RFLAGS	=	0xa8
 OLDRSP	=	0xb0
 OLDSS	=	0xb8
 
-/// struct task_struct member offset
+/// task_t member offset
 TSK_STATE = 0x00
 TSK_FLAGS = 0x08
 TSK_PREEMPT = 0x10

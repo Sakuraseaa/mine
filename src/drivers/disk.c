@@ -36,8 +36,8 @@ void end_request(struct block_buffer_node *node)
 // 给硬盘发送命令
 long cmd_out()
 {
-    wait_queue_T *wait_queue_tmp =
-        container_of(list_next(&disk_request.wait_queue_list.wait_list), wait_queue_T, wait_list);
+    wait_queue_t *wait_queue_tmp =
+        container_of(list_next(&disk_request.wait_queue_list.wait_list), wait_queue_t, wait_list);
 
     struct block_buffer_node *node = disk_request.in_using =
         container_of(wait_queue_tmp, struct block_buffer_node, wait_queue);
@@ -256,7 +256,7 @@ struct block_device_operation IDE_device_operation = {
 };
 
 // do_IQR-函数会跳转到disk_handler
-void disk_handler(unsigned long nr, unsigned long parameter, struct pt_regs *regs)
+void disk_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
 {
     struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
     node->end_handler(nr, parameter);

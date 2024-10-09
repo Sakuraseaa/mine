@@ -1,14 +1,8 @@
-#include "krlvadrsmem_t.h"
-#include "halplatform_t.h"
+#include "mm_t.h"
+#include "mm_f.h"
 #include "printk.h"
 #include "memory.h"
-#include "kmsob_t.h"
-#include "lib.h"
-#include "basetype.h"
-#include "msadsc_t.h"
-#include "memmgrob.h"
-#include "halmmu.h"
-#include "memdivmer_t.h"
+
 extern memmgrob_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
 kvirmemadrs_t krlvirmemadrs;

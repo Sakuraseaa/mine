@@ -19,7 +19,7 @@ typedef struct
 
     char *irq_name;                                                                   // 中断名
     unsigned long parameter;                                                          // 中断处理函数的参数
-    void (*handler)(unsigned long nr, unsigned long parameter, struct pt_regs *regs); // 中断处理函数
+    void (*handler)(unsigned long nr, unsigned long parameter, pt_regs_t *regs); // 中断处理函数
     unsigned long flags;                                                              // 自定义标志位
 } irq_desc_T;
 
@@ -27,10 +27,10 @@ typedef struct
 irq_desc_T interrupt_desc[NR_IRQS] = {0};
 
 extern void (*interrupt[24])(void);
-extern void do_IRQ(struct pt_regs *regs, unsigned long nr);
+extern void do_IRQ(pt_regs_t *regs, unsigned long nr);
 
 // 中断注册函数，根据中断向量号把中断处理函数，参数以及相关结果和数据赋值到对应irq_desc_T
-int register_irq(unsigned long irq, void *arg, void (*handler)(unsigned long nr, unsigned long parameter, struct pt_regs *regs),
+int register_irq(unsigned long irq, void *arg, void (*handler)(unsigned long nr, unsigned long parameter, pt_regs_t *regs),
                  unsigned long parameter, hw_int_controller *controller, char *irq_name);
 int unregister_irq(unsigned long irq);
 #endif

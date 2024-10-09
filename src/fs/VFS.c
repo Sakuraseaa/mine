@@ -16,7 +16,7 @@ struct file_system_type filesystem = {"filesystem", 0};
 struct super_block * sb_vec[4];
 // 当前文件系统的超级块
 struct super_block *current_sb = NULL;
-
+#if 0
 // Slab_cache_t* Dir_Entry_Pool = NULL;
 static void* dir_entry_consturctor(void* Vaddr, u64 arg) { // 目录项构造函数。
 
@@ -42,7 +42,7 @@ static void* dir_entry_desturctor(void* Vaddr, u64 arg) { // 目录项析构函�
     return (void*)dir;
 
 }
-
+#endif
 void VFS_init(void) {
     // Dir_Entry_Pool = slab_create(sizeof(dir_entry_t), dir_entry_consturctor, dir_entry_desturctor, 0);
 }

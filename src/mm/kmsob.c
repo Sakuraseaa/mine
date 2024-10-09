@@ -1,15 +1,6 @@
-#include "basetype.h"
-#include "memmgrob.h"
-#include "marea_t.h"
-#include "msadsc_t.h"
-#include "pages64_t.h"
-#include "memory.h"
-#include "memdivmer_t.h"
-#include "kmsob_t.h"
+#include "mm_t.h"
+#include "mm_f.h"
 #include "printk.h"
-#include "spinlock.h"
-#include "lib.h"
-
 
 KLINE sint_t retn_mscidx(uint_t pages)
 {

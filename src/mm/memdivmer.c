@@ -1,11 +1,6 @@
-#include "basetype.h"
-#include "memmgrob.h"
-#include "marea_t.h"
-#include "msadsc_t.h"
-#include "pages64_t.h"
-#include "memdivmer_t.h"
+#include "mm_t.h"
+#include "mm_f.h"
 #include "printk.h"
-#include "lib.h"
 
 extern memmgrob_t glomm;
 // 更新整个管理结构的计数

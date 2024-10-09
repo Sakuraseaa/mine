@@ -65,12 +65,12 @@ void fair_spin_unlock(fair_spinlock_t* lock) {
     preempt_enable();
 }
 
-void spin_init(spinlock_T *lock)
+void spin_init(spinlock_t *lock)
 {
     lock->lock = 1;
 }
 
-void spin_lock(spinlock_T *lock)
+void spin_lock(spinlock_t *lock)
 {
     preempt_disable();
     __asm__ __volatile__(
@@ -86,7 +86,7 @@ void spin_lock(spinlock_T *lock)
 }
 
 // 解锁
-void spin_unlock(spinlock_T *lock)
+void spin_unlock(spinlock_t *lock)
 {
     __asm__ __volatile__("movq $1, %0\n\t":"=m"(lock->lock)::"memory");
     preempt_enable();
@@ -94,7 +94,7 @@ void spin_unlock(spinlock_T *lock)
 
 
 // 尝试加锁 - 本系统并没有用到该函数
-long spin_trylock(spinlock_T *lock)
+long spin_trylock(spinlock_t *lock)
 {
     unsigned long tmp_value = 0;
     preempt_disable();

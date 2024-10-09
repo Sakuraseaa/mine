@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "debug.h"
 #include "endebug.h"
+#include "printk.h"
 
 #define FAT_DENRY_SIZE 32
 #define EOC 0x0ffffff8 // end of clusterchain

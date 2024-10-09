@@ -3,6 +3,6 @@
 
 #include "task.h"
 
-void test_show_vir_phy(struct task_struct *tsk);
+void test_show_vir_phy(task_t *tsk);
 
 #endif

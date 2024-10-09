@@ -35,7 +35,7 @@ sighadler_t sys_signal(long signum, sighadler_t  hander, void (*restorer)(void))
 // 发送信号
 int sys_kill(long pid, int signum)
 {
-    struct task_struct *tsk = NULL;
+    task_t *tsk = NULL;
 
 	for (tsk = init_task_union.task.next; tsk != &init_task_union.task; tsk = tsk->next)
 	{
@@ -52,7 +52,7 @@ int sys_kill(long pid, int signum)
     return 0;
 }
 
-void do_signal(struct pt_regs* regs)
+void do_signal(pt_regs_t* regs)
 {
     if(current->signal == 0)
         return;

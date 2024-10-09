@@ -349,12 +349,12 @@ typedef struct block_buffer_node
 	unsigned long LBA;												// 索引硬盘地址
 	unsigned char *buffer;											// 指向的缓冲区
 	void (*end_handler)(unsigned long nr, unsigned long parameter); // 命令对应的中断处理程序
-	wait_queue_T wait_queue;
+	wait_queue_t wait_queue;
 }block_buffer_node_t;
 
 typedef struct request_queue
 {
-	wait_queue_T wait_queue_list;		// 请求硬盘操作的等待队列
+	wait_queue_t wait_queue_list;		// 请求硬盘操作的等待队列
 	struct block_buffer_node *in_using; // 正在处理的硬盘操作请求
 	long block_request_count;			// 剩余请求数
 }request_queue_t;

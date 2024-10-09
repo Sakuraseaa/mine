@@ -298,7 +298,7 @@ void APIC_IOAPIC_init()
 	sti();
 }
 
-void do_IRQ(struct pt_regs *regs, unsigned long nr) // regs:rsp,nr
+void do_IRQ(pt_regs_t *regs, unsigned long nr) // regs:rsp,nr
 {
 	irq_desc_T *irq = &interrupt_desc[nr - 32];
 

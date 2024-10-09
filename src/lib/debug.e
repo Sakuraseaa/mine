@@ -380,8 +380,8 @@ typedef int err_t;
 typedef struct
 {
     __volatile__ unsigned long lock;
-} spinlock_T;
-typedef spinlock_T spinlock_t;
+} spinlock_t;
+typedef spinlock_t spinlock_t;
 
 typedef struct equity_spinlock_t{
     union {
@@ -399,11 +399,11 @@ typedef struct{
     unsigned int lock;
 }rw_spinlock_t;
 
-void spin_init(spinlock_T *lock);
-void spin_lock(spinlock_T *lock);
-void spin_unlock(spinlock_T *lock);
+void spin_init(spinlock_t *lock);
+void spin_lock(spinlock_t *lock);
+void spin_unlock(spinlock_t *lock);
 
-long spin_trylock(spinlock_T *lock);
+long spin_trylock(spinlock_t *lock);
 
 void fair_spin_init(fair_spinlock_t* lock);
 void fair_spin_lock(fair_spinlock_t* lock);
@@ -778,7 +778,7 @@ void init_cpu(void);
 
 
 
-struct pt_regs
+pt_regs_t
 {
  unsigned long r15;
  unsigned long r14;
@@ -820,15 +820,15 @@ struct pt_regs
 typedef struct WAIT_QUEUE
 {
     struct List wait_list;
-    struct task_struct *tsk;
-} wait_queue_T;
+    task_t *tsk;
+} wait_queue_t;
 
-bool wait_queue_is_empty(wait_queue_T* wait_queue);
-void wait_queue_init(wait_queue_T *wait_queue, struct task_struct *tsk);
-void sleep_on(wait_queue_T *wait_queue_head);
-void interruptible_sleep_on(wait_queue_T *wait_queue_head);
-void wakeup(wait_queue_T *wait_queue_head, long state);
-void wakeup_pid(wait_queue_T *wait_queue_head, long state, long pid);
+bool wait_queue_is_empty(wait_queue_t* wait_queue);
+void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk);
+void sleep_on(wait_queue_t *wait_queue_head);
+void interruptible_sleep_on(wait_queue_t *wait_queue_head);
+void wakeup(wait_queue_t *wait_queue_head, long state);
+void wakeup_pid(wait_queue_t *wait_queue_head, long state, long pid);
 # 12 "/home/steven/mine/src/include/task.h" 2
 # 1 "/home/steven/mine/src/include/fs/VFS.h" 1
 # 9 "/home/steven/mine/src/include/fs/VFS.h"
@@ -1047,13 +1047,13 @@ static inline void atomic_clear_mask(atomic_T *atomic, long mask)
 typedef struct SEMAPHORE
 {
     atomic_T conter;
-    wait_queue_T wait;
-} semaphore_T;
+    wait_queue_t wait;
+} semaphore_t;
 
-void semaphore_down(semaphore_T *semaphore);
-void semaphore_up(semaphore_T *semaphore);
-void semaphore_init(semaphore_T *semaphore, unsigned long count);
-void wait_queue_init(wait_queue_T *wait_queue, struct task_struct *tsk);
+void semaphore_down(semaphore_t *semaphore);
+void semaphore_up(semaphore_t *semaphore);
+void semaphore_init(semaphore_t *semaphore, unsigned long count);
+void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk);
 # 7 "/home/steven/mine/src/include/fs/buffer.h" 2
 
 
@@ -1066,7 +1066,7 @@ typedef struct block_buf{
 
     list_t free_list;
     list_t idle_list;
-    wait_queue_T wait_list;
+    wait_queue_t wait_list;
     list_t hash_table[63];
 }bdesc_t;
 
@@ -1077,7 +1077,7 @@ typedef struct buffer
     dev_t dev;
     idx_t block;
     int refer_count;
-    semaphore_T lock;
+    semaphore_t lock;
     bool dirty;
     bool valid;
     list_t hnode;
@@ -1206,8 +1206,8 @@ typedef struct index_node
     int uid;
     int gid;
 
-    struct task_struct *rxwaiter;
-    struct task_struct *txwaiter;
+    task_t *rxwaiter;
+    task_t *txwaiter;
 
     struct super_block *sb;
 
@@ -1358,7 +1358,7 @@ struct thread_struct
 };
 
 
-struct task_struct
+task_t
 {
 
  volatile long state;
@@ -1389,9 +1389,9 @@ struct task_struct
  struct file *file_struct[10];
 
 
- wait_queue_T wait_childexit;
- struct task_struct *next;
- struct task_struct *parent;
+ wait_queue_t wait_childexit;
+ task_t *next;
+ task_t *parent;
 
  struct dir_entry *i_pwd;
  struct dir_entry *i_root;
@@ -1401,11 +1401,11 @@ struct task_struct
 
 union task_union
 {
- struct task_struct task;
+ task_t task;
  unsigned long stack[32768 / sizeof(unsigned long)];
 } __attribute__((aligned(8)));
 # 159 "/home/steven/mine/src/include/task.h"
-extern struct task_struct *init_task[8];
+extern task_t *init_task[8];
 extern union task_union init_task_union;
 extern struct mm_struct init_mm;
 extern struct thread_struct init_thread;
@@ -1432,10 +1432,10 @@ struct tss_struct
 extern struct tss_struct init_tss[8];
 
 
-extern struct task_struct *my_cur;
-static inline struct task_struct *get_current()
+extern task_t *my_cur;
+static inline task_t *get_current()
 {
- struct task_struct *current = ((void *)0);
+ task_t *current = ((void *)0);
 
  __asm__ __volatile__("andq %%rsp,%0	\n\t"
        : "=r"(current)
@@ -1446,12 +1446,12 @@ static inline struct task_struct *get_current()
 }
 # 249 "/home/steven/mine/src/include/task.h"
 unsigned long do_exit(unsigned long exit_code);
-unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
+unsigned long do_fork(pt_regs_t *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
 void task_init();
-void switch_mm(struct task_struct *prev, struct task_struct *next);
-void wakeup_process(struct task_struct *tsk);
-void exit_files(struct task_struct *tsk);
-void __switch_to(struct task_struct *prev, struct task_struct *next);
+void switch_mm(task_t *prev, task_t *next);
+void wakeup_process(task_t *tsk);
+void exit_files(task_t *tsk);
+void __switch_to(task_t *prev, task_t *next);
 # 9 "/home/steven/mine/src/include/lib/printk.h" 2
 # 35 "/home/steven/mine/src/include/lib/printk.h"
 extern unsigned char font_ascii[256][16];

@@ -4,12 +4,9 @@
 #include "signal.h"
 #include "memory.h"
 #include "cpu.h"
-#include "lib.h"
 #include "ptrace.h"
-#include "printk.h"
 #include "sched.h"
 #include "waitqueue.h"
-#include "VFS.h"
 // 每个任务的文件描述符最大数
 #define TASK_FILE_MAX 10
 
@@ -42,7 +39,7 @@ extern long kallsyms_syms_num __attribute__((__weak__));
 extern long kallsyms_index[] __attribute__((__weak__));
 extern char* kallsyms_names __attribute((__weak__));
 
-//// struct task_struct.falgs
+//// task_t.falgs
 #define PF_KTHREAD (1UL << 0)
 #define NEED_SCHEDULE (1UL << 1) // 若此标志被置位，则表明当前进程可在适当时机进行调度
 #define PF_VFORK (1UL << 2)		 // 当前进程的资源是否存在共享，区分fork与vfork创建出的进程
@@ -114,7 +111,7 @@ typedef struct task_struct
 	struct file *file_struct[TASK_FILE_MAX];
 
 
-	wait_queue_T wait_childexit;
+	wait_queue_t wait_childexit;
 	struct task_struct *next;	// next 用于连接所有进程
 	struct task_struct *parent; // parent 用于记录当前进程的父进程
 
@@ -126,7 +123,7 @@ typedef struct task_struct
 // 进程PCB和内核栈空间 32kb
 union task_union
 {
-	struct task_struct task;
+	task_t task;
 	unsigned long stack[STACK_SIZE / sizeof(unsigned long)];
 } __attribute__((aligned(8))); // 8Bytes align
 
@@ -156,7 +153,7 @@ union task_union
 		.i_root = NULL, \
 		.i_exec = NULL \
 	}
-extern struct task_struct *init_task[NR_CPUS];
+extern task_t *init_task[NR_CPUS];
 extern union task_union init_task_union;
 extern struct mm_struct init_mm;
 extern struct thread_struct init_thread;
@@ -202,10 +199,10 @@ struct tss_struct
 extern struct tss_struct init_tss[NR_CPUS];
 // ========================================================================================
 // 得到当前运行进程的PCB
-extern struct task_struct *my_cur;
-static inline struct task_struct *get_current()
+extern task_t *my_cur;
+static inline task_t *get_current()
 {
-	struct task_struct *current = NULL;
+	task_t *current = NULL;
 
 	__asm__ __volatile__("andq %%rsp,%0	\n\t"
 						 : "=r"(current)
@@ -247,12 +244,12 @@ static inline struct task_struct *get_current()
 
 
 unsigned long do_exit(unsigned long exit_code);
-unsigned long do_fork(struct pt_regs *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
+unsigned long do_fork(pt_regs_t *regs, unsigned long clone_flags, unsigned long stack_start, unsigned long stack_size);
 void task_init();
-void switch_mm(struct task_struct *prev, struct task_struct *next);
-void wakeup_process(struct task_struct *tsk);
-void exit_files(struct task_struct *tsk);
-void __switch_to(struct task_struct *prev, struct task_struct *next);
+void switch_mm(task_t *prev, task_t *next);
+void wakeup_process(task_t *tsk);
+void exit_files(task_t *tsk);
+void __switch_to(task_t *prev, task_t *next);
 
 
 #endif

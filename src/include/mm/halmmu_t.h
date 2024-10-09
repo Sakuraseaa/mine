@@ -1,10 +1,6 @@
 #ifndef _HALMMU_T_H
 #define _HALMMU_T_H
 
-#include "basetype.h"
-#include "lib.h"
-#include "spinlock.h"
-
 #define TDIRE_MAX (512)
 #define SDIRE_MAX (512)
 #define IDIRE_MAX (512)

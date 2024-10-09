@@ -1,13 +1,12 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
-
-#include "types.h"
+#include "basetype.h"
 #include "lib.h"
 //	8Bytes per cell, 页表项个数
 #define PTRS_PER_PAGE 512
 
-#define PAGE_OFFSET ((unsigned long)0xffff800000000000)
-#define TASK_SIZE ((unsigned long)0x00007fffffffffff)
+#define PAGE_OFFSET ((u64_t)0xffff800000000000)
+#define TASK_SIZE ((u64_t)0x00007fffffffffff)
 
 #define PAGE_GDT_SHIFT 39
 #define PAGE_1G_SHIFT 30 // 2的30次方是1GB
@@ -27,19 +26,19 @@
 #define PAGE_2M_MASK (~(PAGE_2M_SIZE - 1)) // 用于屏蔽低2MB的数值
 #define PAGE_4K_MASK (~(PAGE_4K_SIZE - 1))
 
-#define PAGE_2M_ALIGN(addr) (((unsigned long)(addr) + PAGE_2M_SIZE - 1) & PAGE_2M_MASK) // 把参数addr按2MB页的上边界对齐
-#define PAGE_4K_ALIGN(addr) (((unsigned long)(addr) + PAGE_4K_SIZE - 1) & PAGE_4K_MASK)
+#define PAGE_2M_ALIGN(addr) (((u64_t)(addr) + PAGE_2M_SIZE - 1) & PAGE_2M_MASK) // 把参数addr按2MB页的上边界对齐
+#define PAGE_4K_ALIGN(addr) (((u64_t)(addr) + PAGE_4K_SIZE - 1) & PAGE_4K_MASK)
 
-#define Virt_To_Phy(addr) ((unsigned long)(addr) - PAGE_OFFSET) // 该函数将内核层虚拟地址转换成物理地址
+#define Virt_To_Phy(addr) ((u64_t)(addr) - PAGE_OFFSET) // 该函数将内核层虚拟地址转换成物理地址
 
 // 把物理地址转换成虚拟地址，这种切换的把戏，只有一一映射，才能使用
-#define Phy_To_Virt(addr) ((unsigned long *)((unsigned long)(addr) + PAGE_OFFSET))
+#define Phy_To_Virt(addr) ((u64_t *)((u64_t)(addr) + PAGE_OFFSET))
 
 adr_t viradr_to_phyadr(adr_t kviradr);
 adr_t phyadr_to_viradr(adr_t kphyadr);
 
 #define Virt_To_2M_Page(kaddr) (memory_management_struct.pages_struct + (Virt_To_Phy(kaddr) >> PAGE_2M_SHIFT))
-#define Phy_to_2M_Page(kaddr) (memory_management_struct.pages_struct + ((unsigned long)(kaddr) >> PAGE_2M_SHIFT))
+#define Phy_to_2M_Page(kaddr) (memory_management_struct.pages_struct + ((u64_t)(kaddr) >> PAGE_2M_SHIFT))
 
 ////alloc_pages zone_select
 #define ZONE_DMA (1 << 0)
@@ -61,30 +60,30 @@ adr_t phyadr_to_viradr(adr_t kphyadr);
 // =============================================================
 typedef struct
 {
-    unsigned long pml4t;
+    u64_t pml4t;
 } pml4t_t;
-#define mk_mpl4t(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define mk_mpl4t(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
 #define set_mpl4t(mpl4tptr, mpl4tval) (*(mpl4tptr) = (mpl4tval))
 
 typedef struct
 {
-    unsigned long pdpt;
+    u64_t pdpt;
 } pdpt_t;
-#define mk_pdpt(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define mk_pdpt(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
 #define set_pdpt(pdptptr, pdptval) (*(pdptptr) = (pdptval))
 
 typedef struct
 {
-    unsigned long pdt;
+    u64_t pdt;
 } pdt_t;
-#define mk_pdt(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define mk_pdt(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
 #define set_pdt(pdtptr, pdtval) (*(pdtptr) = (pdtval))
 
 typedef struct
 {
-    unsigned long pt;
+    u64_t pt;
 } pt_t;
-#define mk_pt(addr, attr) ((unsigned long)(addr) | (unsigned long)(attr))
+#define mk_pt(addr, attr) ((u64_t)(addr) | (u64_t)(attr))
 #define set_pt(ptptr, ptval) (*(ptptr) = (ptval))
 // ===============================================================
 
@@ -155,12 +154,12 @@ struct Memory_E820_Formate
     unsigned int length2;  // 内存长度高32位
     unsigned int type;     // 本段内存的类型
 };
-unsigned long *Global_CR3 = NULL;
+u64_t *Global_CR3 = NULL;
 // E820 是 Memory_E820_Formate 的简单整合
 struct E820
 {
-    unsigned long address;
-    unsigned long length;
+    u64_t address;
+    u64_t length;
     unsigned int type;
 } __attribute__((packed));
 // 修饰结构体不会生成对齐空间，改用紧凑格式
@@ -169,52 +168,52 @@ struct E820
 struct Page
 {
     struct Zone *zone_struct;      // 指向本页所属的区域结构体
-    unsigned long PHY_address;     // 页的物理地址
-    unsigned long attribute;       // 页的属性
-    unsigned long reference_count; // 记录该页的引用次数
-    unsigned long age;             // 该页的创建时间
+    u64_t PHY_address;     // 页的物理地址
+    u64_t attribute;       // 页的属性
+    u64_t reference_count; // 记录该页的引用次数
+    u64_t age;             // 该页的创建时间
 };
 
 // 描述 各个可用物理内存区域(可用的物理内存段)
 struct Zone
 {
     struct Page *pages_group;                    // struct page结构体数组指针
-    unsigned long pages_length;                  // 本区域包含的struct page结构体数量
-    unsigned long zone_start_address;            // 本区域的起始页对齐地址
-    unsigned long zone_end_address;              // 本区域的结束页对齐地址
-    unsigned long zone_length;                   // 本区域经过页对齐后的地址长度
-    unsigned long attribute;                     // 本区域空间的属性
+    u64_t pages_length;                  // 本区域包含的struct page结构体数量
+    u64_t zone_start_address;            // 本区域的起始页对齐地址
+    u64_t zone_end_address;              // 本区域的结束页对齐地址
+    u64_t zone_length;                   // 本区域经过页对齐后的地址长度
+    u64_t attribute;                     // 本区域空间的属性
     struct Global_Memory_Descriptor *GMD_struct; // 指向全局结构体 Global_Memory_Descriptor
-    unsigned long page_using_count;              // 本区域已使用物理内存页数量
-    unsigned long page_free_count;               // 本区域空闲物理内存页数量
-    unsigned long total_pages_link;              // 本区域物理页被引用次数
+    u64_t page_using_count;              // 本区域已使用物理内存页数量
+    u64_t page_free_count;               // 本区域空闲物理内存页数量
+    u64_t total_pages_link;              // 本区域物理页被引用次数
 };
 
 struct Global_Memory_Descriptor
 {
     struct E820 e820[32];      // 物理内存段结构数组
-    unsigned long e820_length; // 物理内存段结构数组长度
+    u64_t e820_length; // 物理内存段结构数组长度
 
-    unsigned long *bits_map;   // 物理地址空间页映射位图
-    unsigned long bits_size;   // 物理地址空间页数量
-    unsigned long bits_length; // 物理地址空间页映射位图长度
+    u64_t *bits_map;   // 物理地址空间页映射位图
+    u64_t bits_size;   // 物理地址空间页数量
+    u64_t bits_length; // 物理地址空间页映射位图长度
 
     struct Page *pages_struct;  // 全局struct page结构体数组指针
-    unsigned long pages_size;   // struct page结构体总数
-    unsigned long pages_length; // struct page结构体占用的字节数
+    u64_t pages_size;   // struct page结构体总数
+    u64_t pages_length; // struct page结构体占用的字节数
 
     struct Zone *zones_struct;  // 全局struct zone结构体数组的指针
-    unsigned long zones_size;   // struct zone结构体数量
-    unsigned long zones_length; // struct zone结构体占用的字节数
+    u64_t zones_size;   // struct zone结构体数量
+    u64_t zones_length; // struct zone结构体占用的字节数
 
-    unsigned long start_code; // 内核程序的起始代码段地址
-    unsigned long end_code;   // 内核程序的结束代码段地址
-    unsigned long end_data;   // 内核程序的结束数据段地址
-    unsigned long start_brk;  // 内核程序的结束地址
+    u64_t start_code; // 内核程序的起始代码段地址
+    u64_t end_code;   // 内核程序的结束代码段地址
+    u64_t end_data;   // 内核程序的结束数据段地址
+    u64_t start_brk;  // 内核程序的结束地址
 
-    unsigned long end_rodata;
+    u64_t end_rodata;
 
-    unsigned long end_of_struct; // 内存页管理结构的结尾地址
+    u64_t end_of_struct; // 内存页管理结构的结尾地址
 };
 
 // 管理每个以物理页为单位的内存空间
@@ -224,27 +223,27 @@ typedef struct Slab
     struct List list;  // 连接其他的Slab结构体
     struct Page *page; // 记录所使用页面的page成员变量
 
-    unsigned long using_count; // 本物理页正在使用的块数
-    unsigned long free_count;  // 本物理页空闲的块数
+    u64_t using_count; // 本物理页正在使用的块数
+    u64_t free_count;  // 本物理页空闲的块数
 
     void *Vaddress; // 记录当前页面所在线性地址
 
     // 管理内存对象使用情况
-    unsigned long color_length;
-    unsigned long color_count; //// 本物理页中的小内存块数
-    unsigned long *color_map;
+    u64_t color_length;
+    u64_t color_count; //// 本物理页中的小内存块数
+    u64_t *color_map;
 }Slab_t;
 
 // 抽象内存池
 typedef struct Slab_cache
 {
-    unsigned long size;
-    unsigned long total_using;                               // 本内存池正在使用的内存块数
-    unsigned long total_free;                                // 本内存池空闲的内存块数
+    u64_t size;
+    u64_t total_using;                               // 本内存池正在使用的内存块数
+    u64_t total_free;                                // 本内存池空闲的内存块数
     struct Slab *cache_pool;                                 // 管理Slab
     struct Slab *cache_dma_pool;                             // 用于索引DMA内存池存储空间结构
-    void *(*constructor)(void *Vaddress, unsigned long arg); // 内存池构造函数
-    void *(*destructor)(void *vaddress, unsigned long arg);  // 内存池析构函数
+    void *(*constructor)(void *Vaddress, u64_t arg); // 内存池构造函数
+    void *(*destructor)(void *vaddress, u64_t arg);  // 内存池析构函数
 }Slab_cache_t;
 
 extern struct Global_Memory_Descriptor memory_management_struct;
@@ -289,7 +288,7 @@ struct Slab_cache kmalloc_cache_size[16] =
 #define flush_tlb()               \
     do                            \
     {                             \
-        unsigned long tmpreg;     \
+        u64_t tmpreg;     \
         __asm__ __volatile__(     \
             "movq	%%cr3,	%0	\n\t" \
             "movq	%0,	%%cr3	\n\t" \
@@ -298,9 +297,9 @@ struct Slab_cache kmalloc_cache_size[16] =
             : "memory");          \
     } while (0)
 
-inline static unsigned long *Get_gdt()
+inline static u64_t *Get_gdt()
 {
-    unsigned long *tmp;
+    u64_t *tmp;
     __asm__ __volatile__(
         "movq	%%cr3,	%0	\n\t"
         : "=r"(tmp)
@@ -309,40 +308,40 @@ inline static unsigned long *Get_gdt()
     return tmp;
 }
 
-unsigned long page_init(struct Page *page, unsigned long flags);
-unsigned long page_clean(struct Page *page);
-unsigned long get_page_attribute(struct Page *page);
-unsigned long set_page_attribute(struct Page *page, unsigned long flags);
+u64_t page_init(struct Page *page, u64_t flags);
+u64_t page_clean(struct Page *page);
+u64_t get_page_attribute(struct Page *page);
+u64_t set_page_attribute(struct Page *page, u64_t flags);
 
-struct Page *alloc_pages(int zone_select, int number, unsigned long page_flags);
+struct Page *alloc_pages(int zone_select, int number, u64_t page_flags);
 void free_pages(struct Page *page, int number);
 
 /*
     return virtual kernel address
 */
-void *kmalloc(unsigned long size, unsigned long flags);
-struct Slab *kmalloc_create(unsigned long size);
-unsigned long kfree(void *address);
+void *kmalloc(u64_t size, u64_t flags);
+struct Slab *kmalloc_create(u64_t size);
+u64_t kfree(void *address);
 
-struct Slab_cache *slab_create(unsigned long size, void *(*constructor)(void *Vaddress, unsigned long arg), void *(*destructor)(void *Vaddress, unsigned long arg), unsigned long arg);
-unsigned long slab_destroy(struct Slab_cache *slab_cache);
+struct Slab_cache *slab_create(u64_t size, void *(*constructor)(void *Vaddress, u64_t arg), void *(*destructor)(void *Vaddress, u64_t arg), u64_t arg);
+u64_t slab_destroy(struct Slab_cache *slab_cache);
 
-unsigned long slab_init();
-void *slab_malloc(struct Slab_cache *slab_cache, unsigned long arg);
-unsigned long slab_free(struct Slab_cache *slab_cache, void *address, unsigned long arg);
-unsigned long do_brk(unsigned long addr, unsigned long len);
+u64_t slab_init();
+void *slab_malloc(struct Slab_cache *slab_cache, u64_t arg);
+u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg);
+u64_t do_brk(u64_t addr, u64_t len);
 void init_memory();
-unsigned long* pde_ptr(unsigned long vaddr);
-unsigned long* pml4e_ptr(unsigned long vaddr);
-unsigned long* pdpe_ptr(unsigned long vaddr);
-unsigned long* pte_ptr(unsigned long vaddr);
+u64_t* pde_ptr(u64_t vaddr);
+u64_t* pml4e_ptr(u64_t vaddr);
+u64_t* pdpe_ptr(u64_t vaddr);
+u64_t* pte_ptr(u64_t vaddr);
 u64 do_wp_page(u64 virtual_address);
 int64 do_no_page(u64 virtual_address);
 void pagetable_4K_init();
-// unsigned long kfree(void* address, u64 size);
+// u64_t kfree(void* address, u64 size);
 
 
-void kdelete(void* address, u64 size);
-void *knew(unsigned long size, unsigned long gfp_flags);
+void kdelete(void* address, u64_t size);
+void *knew(u64_t size, u64_t gfp_flags);
 
 #endif

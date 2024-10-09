@@ -341,7 +341,7 @@ static unsigned long load(char *pathname)
 
 
 // 被init调用,加载用户进程体，到用户空间800000
-unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *envp[])
+unsigned long do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 {
   	// color_printk(RED, BLACK, "do_execve task is running\n");
 	unsigned long stack_start_addr = TASK_SIZE + 1;

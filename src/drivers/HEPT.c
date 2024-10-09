@@ -21,7 +21,7 @@
 
 #define mil_seconds_per_intr (1000 / IRQ0_FREQUENCY) // 1个时钟中断10毫秒, 1000/100
 
-wait_queue_T sleep_queue_head;
+wait_queue_t sleep_queue_head;
 
 unsigned long volatile jiffies = 0; // ticks是内核自中断开启以来总共的嘀嗒数
 extern struct timer_list timer_list_head;
@@ -85,7 +85,7 @@ static void frequency_set(unsigned char counter_port,
 }
 
 /* 时钟的中断处理函数 */
-void intr_timer_handler(unsigned long nr, unsigned long parameter, struct pt_regs *regs)
+void intr_timer_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
 {
    jiffies++;
    // 如果定时任务的失效日期没有到，那么不进入中断下半部

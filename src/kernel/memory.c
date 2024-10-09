@@ -14,9 +14,8 @@
 #include "printk.h"
 #include "errno.h"
 #include "assert.h"
-#include "kmsob_t.h"
-#include "memdivmer_t.h"
-#include "basetype.h"
+#include "mm_t.h"
+#include "mm_f.h"
 // 给page结构体的属性成员赋值, 增加引用
 u64_t page_init(struct Page *page, u64_t flags)
 {

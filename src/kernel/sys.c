@@ -714,7 +714,7 @@ u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
 
     copy_to_user(&child->exit_code, status, sizeof(long));
     tsk->next = child->next; // 在PCB列表中，删除掉当前进程PCB
-    kdelete(child, sizeof(struct task_struct)); // 回收PCB, 内核栈
+    kdelete(child, sizeof(task_t)); // 回收PCB, 内核栈
 
     return retval;
 }

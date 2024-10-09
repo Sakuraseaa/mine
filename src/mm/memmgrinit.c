@@ -1,8 +1,5 @@
-#include "basetype.h"
-#include "msadsc_t.h"
-#include "marea_t.h"
-#include "memmgrob.h"
-#include "memdivmer_t.h"
+#include "mm_t.h"
+#include "mm_f.h"
 
 memmgrob_t glomm;
 

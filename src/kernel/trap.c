@@ -27,7 +27,7 @@ int lookup_kallsyms(unsigned long address,int level)
 		return 1;
 }
 
-void backtrace(struct pt_regs * regs)
+void backtrace(pt_regs_t * regs)
 {
 	unsigned long *rbp = (unsigned long *)regs->rbp;
 	unsigned long ret_address = regs->rip;
@@ -48,7 +48,7 @@ void backtrace(struct pt_regs * regs)
 	}
 }
 
-void display_regs(struct pt_regs * regs)
+void display_regs(pt_regs_t * regs)
 {
 	color_printk(RED,BLACK,"CS:%#010x,SS:%#010x\nDS:%#010x,ES:%#010x\nRFLAGS:%#018lx\n",regs->cs,regs->ss,regs->ds,regs->es,regs->rflags);
 	color_printk(RED,BLACK,"RAX:%#018lx,RBX:%#018lx,RCX:%#018lx,RDX:%#018lx\nRSP:%#018lx,RBP:%#018lx,RIP:%#018lx\nRSI:%#018lx,RDI:%#018lx\n",regs->rax,regs->rbx,regs->rcx,regs->rdx,regs->rsp,regs->rbp,regs->rip,regs->rsi,regs->rdi);
@@ -56,7 +56,7 @@ void display_regs(struct pt_regs * regs)
 	backtrace(regs);
 }
 
-void do_divide_error(struct pt_regs * regs,unsigned long error_code)
+void do_divide_error(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_divide_error(0),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -64,7 +64,7 @@ void do_divide_error(struct pt_regs * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_debug(struct pt_regs * regs,unsigned long error_code)
+void do_debug(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_debug(1),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -72,7 +72,7 @@ void do_debug(struct pt_regs * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_nmi(struct pt_regs * regs,unsigned long error_code)
+void do_nmi(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_nmi(2),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -80,7 +80,7 @@ void do_nmi(struct pt_regs * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_int3(struct pt_regs * regs,unsigned long error_code)
+void do_int3(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_int3(3),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -88,7 +88,7 @@ void do_int3(struct pt_regs * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_overflow(struct pt_regs * regs,unsigned long error_code)
+void do_overflow(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_overflow(4),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -97,7 +97,7 @@ void do_overflow(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_bounds(struct pt_regs * regs,unsigned long error_code)
+void do_bounds(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_bounds(5),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code ,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -105,7 +105,7 @@ void do_bounds(struct pt_regs * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_undefined_opcode(struct pt_regs * regs,unsigned long error_code)
+void do_undefined_opcode(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_undefined_opcode(6),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -114,7 +114,7 @@ void do_undefined_opcode(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_dev_not_available(struct pt_regs * regs,unsigned long error_code)
+void do_dev_not_available(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_dev_not_available(7),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -123,7 +123,7 @@ void do_dev_not_available(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_double_fault(struct pt_regs * regs,unsigned long error_code)
+void do_double_fault(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_double_fault(8),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -132,7 +132,7 @@ void do_double_fault(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_coprocessor_segment_overrun(struct pt_regs * regs,unsigned long error_code)
+void do_coprocessor_segment_overrun(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_coprocessor_segment_overrun(9),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -142,7 +142,7 @@ void do_coprocessor_segment_overrun(struct pt_regs * regs,unsigned long error_co
 
 
 
-void do_invalid_TSS(struct pt_regs * regs,unsigned long error_code)
+void do_invalid_TSS(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_invalid_TSS(10),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -172,7 +172,7 @@ void do_invalid_TSS(struct pt_regs * regs,unsigned long error_code)
 
 
 
-void do_segment_not_present(struct pt_regs * regs,unsigned long error_code)
+void do_segment_not_present(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_segment_not_present(11),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -200,7 +200,7 @@ void do_segment_not_present(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_stack_segment_fault(struct pt_regs * regs,unsigned long error_code)
+void do_stack_segment_fault(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_stack_segment_fault(12),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -228,7 +228,7 @@ void do_stack_segment_fault(struct pt_regs * regs,unsigned long error_code)
 
 
 
-void do_general_protection(struct pt_regs * regs,unsigned long error_code)
+void do_general_protection(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_general_protection(13),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 
@@ -255,7 +255,7 @@ void do_general_protection(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_page_fault(struct pt_regs * regs,unsigned long error_code)
+void do_page_fault(pt_regs_t * regs,unsigned long error_code)
 {
 	unsigned long cr2 = 0;
 
@@ -296,7 +296,7 @@ void do_page_fault(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_x87_FPU_error(struct pt_regs * regs,unsigned long error_code)
+void do_x87_FPU_error(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_x87_FPU_error(16),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -306,7 +306,7 @@ void do_x87_FPU_error(struct pt_regs * regs,unsigned long error_code)
 
 
 
-void do_alignment_check(struct pt_regs * regs,unsigned long error_code)
+void do_alignment_check(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_alignment_check(17),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -315,7 +315,7 @@ void do_alignment_check(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_machine_check(struct pt_regs * regs,unsigned long error_code)
+void do_machine_check(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_machine_check(18),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -324,7 +324,7 @@ void do_machine_check(struct pt_regs * regs,unsigned long error_code)
 }
 
 
-void do_SIMD_exception(struct pt_regs * regs,unsigned long error_code)
+void do_SIMD_exception(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_SIMD_exception(19),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);
@@ -332,7 +332,7 @@ void do_SIMD_exception(struct pt_regs * regs,unsigned long error_code)
 		hlt();
 }
 
-void do_virtualization_exception(struct pt_regs * regs,unsigned long error_code)
+void do_virtualization_exception(pt_regs_t * regs,unsigned long error_code)
 {
 	color_printk(RED,BLACK,"do_virtualization_exception(20),ERROR_CODE:%#018lx,CPU:%#010x,PID:%#010x\n",error_code,SMP_cpu_id(),current->pid);
 	display_regs(regs);

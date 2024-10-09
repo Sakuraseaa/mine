@@ -29,7 +29,7 @@ void recv_data(serial_t *serial)
     serial->p_head++;
 
 }
-void serial_handler(unsigned long nr, unsigned long parameter, struct pt_regs *regs) {
+void serial_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs) {
     
     nr = nr == 0x24 ? 0 : 1;
 

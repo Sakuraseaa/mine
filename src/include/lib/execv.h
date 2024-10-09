@@ -4,7 +4,7 @@
 #include "ptrace.h"
 
 struct file *open_exec_file(char *path);
-unsigned long do_execve(struct pt_regs *regs, char *name, char* argv[], char *envp[]);
+unsigned long do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[]);
 
 #endif
 

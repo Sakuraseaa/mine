@@ -75,7 +75,7 @@ void init_8259A()
  * @param regs 栈基址
  * @param nr 中断号
  */
-void do_IRQ(struct pt_regs *regs, unsigned long nr) // regs,nr
+void do_IRQ(pt_regs_t *regs, unsigned long nr) // regs,nr
 {
 	irq_desc_T *irq = &interrupt_desc[nr - 32];
 	// color_printk(BLUE, WHITE, "rip:%#018lx,  rsp:%#018lx\n", regs->rip, regs->rsp);

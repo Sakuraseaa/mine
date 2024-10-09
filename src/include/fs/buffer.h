@@ -15,7 +15,7 @@ typedef struct block_buf{
 
     list_t free_list;                   // 已经申请但没使用的块
     list_t idle_list;                   // 使用过，但被释放的块
-    wait_queue_T wait_list;             // 等待进程队列
+    wait_queue_t wait_list;             // 等待进程队列
     list_t hash_table[HASH_COUNT];      // 缓冲哈希表
 }bdesc_t;
 
@@ -26,7 +26,7 @@ typedef struct buffer
     dev_t dev;           // 设备号
     idx_t block;         // 块号
     int refer_count;     // 引用计数
-    semaphore_T lock;    // 锁
+    semaphore_t lock;    // 锁
     bool dirty;          // 是否与磁盘不一致
     bool valid;          // 缓冲数据是否有效
     list_t hnode;        // 哈希表拉链节点

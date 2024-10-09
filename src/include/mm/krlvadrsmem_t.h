@@ -1,12 +1,6 @@
 #ifndef _KRLVADRSMEM_T_H_
 #define _KRLVADRSMEM_T_H_
 
-#include "basetype.h"
-#include "lib.h"
-#include "atomic.h"
-#include "spinlock.h"
-#include "halmmu_t.h"
-
 #define RET4PT_PML4EVDR (1)
 #define RET4PT_PDPTEVDR (2)
 #define RET4PT_PDETEVDR (3)
@@ -187,8 +181,6 @@ typedef struct s_MMADRSDSC
 #define VADSZ_ALIGN(x) ALIGN(x,0x1000)
 #define KVMCOBJ_FLG_DELLPAGE (1)
 #define KVMCOBJ_FLG_UDELPAGE (2)
-
-// #endif
 
 
 #endif // _KRLVADRSMEM_T_H_

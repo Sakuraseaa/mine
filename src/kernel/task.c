@@ -19,7 +19,7 @@
 union task_union init_task_union
 	__attribute__((__section__(".data.init_task"))) = {INIT_TASK(init_task_union.task)};
 
-struct task_struct *init_task[NR_CPUS] = {&init_task_union.task, 0};
+task_t *init_task[NR_CPUS] = {&init_task_union.task, 0};
 
 struct mm_struct init_mm = {0};
 
@@ -34,7 +34,7 @@ struct thread_struct init_thread =
 		.error_code = 0};
 
 struct tss_struct init_tss[NR_CPUS] = {[0 ... NR_CPUS - 1] = INIT_TSS};
-struct task_struct *my_cur;
+task_t *my_cur;
 extern void ret_system_call(void);	  // 进入特权级3
 extern void kernel_thread_func(void); // 进入用户进程，在执行完用户进程后，会执行do_exit()程序
 extern void system_call(void);
@@ -42,9 +42,9 @@ extern void system_call(void);
 u64_t shell_boot(u64_t arg);
 s64_t global_pid;
 
-struct task_struct *get_task(long pid)
+task_t *get_task(long pid)
 {
-	struct task_struct *tsk = NULL;
+	task_t *tsk = NULL;
 
 	for (tsk = init_task_union.task.next; tsk != &init_task_union.task; tsk = tsk->next)
 	{
@@ -61,7 +61,7 @@ struct task_struct *get_task(long pid)
 // 新的程序位于文件系统根目录下，名为init.bin
 u64_t init(u64_t arg)
 {
-	// struct pt_regs *regs; // 这里破坏了中断栈
+	// pt_regs_t *regs; // 这里破坏了中断栈
 	DISK1_FAT32_FS_init();
  	DEBUGK("init task is running, arg:%#018lx\n", arg);
 	// color_printk(RED, BLACK, "init task is running, arg:%#018lx\n", arg);
@@ -69,7 +69,7 @@ u64_t init(u64_t arg)
 	// sys_open("/The quick brown.fox", O_CREAT);
 
 	current->thread->rip = (u64_t)ret_system_call;
-	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(struct pt_regs);
+	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(pt_regs_t);
 	current->thread->gs = USER_DS;
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
@@ -90,7 +90,7 @@ u64_t init(u64_t arg)
 // ------------------DEBUG----------------------
 extern int usr_init();
 // 被init调用,加载用户进程体，到用户空间800000
-u64_t shell_execve(struct pt_regs *regs, char *name)
+u64_t shell_execve(pt_regs_t *regs, char *name)
 {
 	u64_t retval = 0;
 
@@ -117,7 +117,7 @@ u64_t shell_execve(struct pt_regs *regs, char *name)
 u64_t shell_boot(u64_t arg)
 {
 	current->thread->rip = (u64_t)ret_system_call;
-	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(struct pt_regs);
+	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(pt_regs_t);
 	current->thread->gs = USER_DS;
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
@@ -133,7 +133,7 @@ u64_t shell_boot(u64_t arg)
 }
 //--------------------DEBUG----------------------
 
-void switch_mm(struct task_struct *prev, struct task_struct *next)
+void switch_mm(task_t *prev, task_t *next)
 {
 	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(next->mm->pgd)
 						 : "memory");
@@ -144,7 +144,7 @@ void switch_mm(struct task_struct *prev, struct task_struct *next)
  *
  * @param tsk CPCB = Child Process control block
  */
-void wakeup_process(struct task_struct *tsk)
+void wakeup_process(task_t *tsk)
 {
 	tsk->state = TASK_RUNNING;
 	insert_task_queue(tsk);
@@ -158,7 +158,7 @@ void wakeup_process(struct task_struct *tsk)
  * @param tsk
  * @return u64_t
  */
-u64_t copy_flags(u64_t clone_flags, struct task_struct *tsk)
+u64_t copy_flags(u64_t clone_flags, task_t *tsk)
 {
 	// 如果子进程要与父进程共享内存空间，那么设置子进程标志PF_VFORK
 	if (clone_flags & CLONE_VM)
@@ -173,7 +173,7 @@ u64_t copy_flags(u64_t clone_flags, struct task_struct *tsk)
  * @param tsk CPCB
  * @return u64_t
  */
-u64_t copy_files(u64_t clone_flags, struct task_struct *tsk)
+u64_t copy_files(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
 	s32_t i = 0;
@@ -194,7 +194,7 @@ out:
  *		整个回收过程将包括文件描述符结构体的释放和文件描述符指针数组
  * @param tsk
  */
-void exit_files(struct task_struct *tsk)
+void exit_files(task_t *tsk)
 {
 	s32_t i = 0;
 	if (tsk->flags & PF_VFORK)
@@ -215,7 +215,7 @@ void exit_files(struct task_struct *tsk)
  * @return u64_t
  */
 /*
-u64_t copy_mm(u64_t clone_flags, struct task_struct *tsk)
+u64_t copy_mm(u64_t clone_flags, task_t *tsk)
 {
 	int error = 0;
 	struct mm_struct *newmm = NULL;
@@ -326,7 +326,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64 addr){
 	return;
 }
 
-u64_t copy_mm_fork(u64_t clone_flags, struct task_struct *tsk)
+u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
 	struct mm_struct *newmm = NULL;
@@ -372,7 +372,7 @@ out:
 	return error;
 }
 
-void exit_mm_fork(struct task_struct *tsk)
+void exit_mm_fork(task_t *tsk)
 {
 	u64_t *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
 	u64_t tmp1 = 0;
@@ -448,7 +448,7 @@ u64_t copy_thread(u64_t clone_flags, u64_t stack_start, u64_t stack_size, task_t
 	return 0;
 }
 
-void exit_thread(struct task_struct *tsk) {}
+void exit_thread(task_t *tsk) {}
 
 /**
  * @brief a.do_fork函数会先为PCB分配存储空间并对其进行初步赋值
@@ -459,13 +459,13 @@ void exit_thread(struct task_struct *tsk) {}
  * @param stack_size
  * @return u64_t 为父进程返回子进程的ID号
  */
-u64_t do_fork(struct pt_regs *regs, u64_t clone_flags, u64_t stack_start, u64_t stack_size)
+u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack_size)
 {
 	s32_t retval = 0;
-	struct task_struct *tsk = NULL;
+	task_t *tsk = NULL;
 
 	// alloc & copy task struct
-	tsk = (struct task_struct *)knew(STACK_SIZE, 0);
+	tsk = (task_t *)knew(STACK_SIZE, 0);
 	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (u64_t)tsk);
 	if (tsk == NULL)
 	{
@@ -473,7 +473,7 @@ u64_t do_fork(struct pt_regs *regs, u64_t clone_flags, u64_t stack_start, u64_t 
 		goto alloc_copy_task_fail;
 	}
 	memset(tsk, 0, sizeof(*tsk));
-	memcpy(current, tsk, sizeof(struct task_struct));
+	memcpy(current, tsk, sizeof(task_t));
 	list_init(&tsk->list);
 	wait_queue_init(&tsk->wait_childexit, current);
 	
@@ -524,7 +524,7 @@ copy_mm_fail:
 	exit_mm_fork(tsk);
 copy_flags_fail:
 alloc_copy_task_fail:
-	kdelete(tsk, sizeof(struct task_struct));
+	kdelete(tsk, sizeof(task_t));
 	return retval;
 }
 
@@ -535,7 +535,7 @@ void exit_notify(void)
 
 u64_t do_exit(u64_t exit_code)
 {
-	struct task_struct *tsk = current;
+	task_t *tsk = current;
 	DEBUGK("exit task is running,arg:%#018lx\n", exit_code);
 	
 
@@ -564,7 +564,7 @@ do_exit_again:
 // kernel_thread给进程创建了寄存器环境
 int kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags)
 { // 设置中断栈
-	struct pt_regs regs;
+	pt_regs_t regs;
 	memset(&regs, 0, sizeof(regs));
 
 	regs.rbx = (u64_t)fn;  // RBX保存着程序的入口地址
@@ -583,7 +583,7 @@ int kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags)
 }
 
 // 被switch_to宏调用, 用来切换任务
-void __switch_to(struct task_struct *prev, struct task_struct *next)
+void __switch_to(task_t *prev, task_t *next)
 {	
 	// 切换进程的TSS 和 数据段选择子
 	init_tss[0].rsp0 = next->thread->rsp0;

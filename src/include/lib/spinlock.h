@@ -6,8 +6,7 @@
 typedef struct
 {
     __volatile__ unsigned long lock;
-} spinlock_T;
-typedef spinlock_T spinlock_t;
+} spinlock_t;
 
 // 排队自旋锁 
 typedef struct equity_spinlock_t{
@@ -26,11 +25,11 @@ typedef struct{
     unsigned int lock;
 }rw_spinlock_t;
 
-void spin_init(spinlock_T *lock);
-void spin_lock(spinlock_T *lock);
-void spin_unlock(spinlock_T *lock);
+void spin_init(spinlock_t *lock);
+void spin_lock(spinlock_t *lock);
+void spin_unlock(spinlock_t *lock);
 // 尝试加锁 - 本系统并没有用到该函数
-long spin_trylock(spinlock_T *lock);
+long spin_trylock(spinlock_t *lock);
 
 void fair_spin_init(fair_spinlock_t* lock);
 void fair_spin_lock(fair_spinlock_t* lock);

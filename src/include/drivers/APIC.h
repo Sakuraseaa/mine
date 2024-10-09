@@ -19,7 +19,7 @@
 #define ErrorR (unsigned int *)Phy_To_Virt(0xFEE00370)
 
 void ioapic_EOI(unsigned long nr);
-void do_IRQ(struct pt_regs *regs, unsigned long nr);
+void do_IRQ(pt_regs_t *regs, unsigned long nr);
 void APIC_IOAPIC_init();
 void Local_APIC_init();
 unsigned long ioapic_rte_read(unsigned char index);

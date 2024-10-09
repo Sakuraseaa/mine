@@ -1,12 +1,7 @@
-#include "bastype.h"
-#include "halmmu_t.h"
-#include "msadsc_t.h"
-#include "memmgrob.h"
-#include "memdivmer_t.h"
-#include "halmmu.h"
+#include "mm_t.h"
+#include "mm_f.h"
 #include "errno.h"
 #include "memory.h"
-#include "spinlock.h"
 #include "printk.h"
 extern memmgrob_t glomm;
 

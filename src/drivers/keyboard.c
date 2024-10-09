@@ -9,7 +9,7 @@
 #include "semaphore.h"
 
 struct keyboard_inputbuffer *p_kb = NULL;
-wait_queue_T keyboard_wait_queue; // 等待队列头
+wait_queue_t keyboard_wait_queue; // 等待队列头
 
 /**
  * @brief 在操作前清空缓冲区
@@ -128,7 +128,7 @@ hw_int_controller keyboard_int_controller = {
 };
 
 // 键盘中断处理函数
-void keyboard_handler(unsigned long nr, unsigned long parameter, struct pt_regs *regs)
+void keyboard_handler(unsigned long nr, unsigned long parameter, pt_regs_t *regs)
 {
     unsigned char x;
     x = io_in8(PORT_KB_DATA);

@@ -133,7 +133,7 @@ void (*interrupt[24])(void) =
  */
 s32_t register_irq(u64_t irq,
                  void *arg,
-                 void (*handler)(u64_t nr, u64_t parameter, struct pt_regs *regs),
+                 void (*handler)(u64_t nr, u64_t parameter, pt_regs_t *regs),
                  u64_t parameter,
                  hw_int_controller *controller,
                  char *irq_name)

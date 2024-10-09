@@ -101,7 +101,7 @@ void User_Map(u64* PML4, map_entry_t* map, size_t* i_m) {
     }
 }
 
-void test_show_vir_phy(struct task_struct *tsk) {
+void test_show_vir_phy(task_t *tsk) {
 
 	size_t i_m = 0;
 

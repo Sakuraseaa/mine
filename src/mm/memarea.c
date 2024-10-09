@@ -1,10 +1,7 @@
+#include "mm_t.h"
+#include "mm_f.h"
 #include "memory.h"
-#include "marea_t.h"
-#include "basetype.h"
-#include "memmgrob.h"
 #include "printk.h"
-#include "pages64_t.h"
-#include "lib.h"
 #include "endebug.h"
 
 extern memmgrob_t glomm;

@@ -1,8 +1,6 @@
 #ifndef _HALPLATFORM_T_H_
 #define _HALPLATFORM_T_H_
 
-// #include "bdvideo_t.h"
-#include "basetype.h"
 
 // #ifdef CFG_X86_PLATFORM
 #define CPUCORE_MAX 1
