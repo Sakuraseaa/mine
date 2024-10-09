@@ -1,9 +1,8 @@
 #include "toolkit.h"
-#include "keyboard.h"
+#include "devkit.h"
+#include "mmkit.h"
 #include "interrupt.h"
 #include "APIC.h"
-#include "mmkit.h"
-#include "mouse.h"
 
 // 鼠标输入缓存区
 struct keyboard_inputbuffer *p_mouse = NULL;

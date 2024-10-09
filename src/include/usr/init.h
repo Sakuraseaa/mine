@@ -31,4 +31,5 @@ long getpid();
 void sleep(long);
 char *getcwd(char *buf, int size);
 long stat(char* pahtname, stat_t* statBuf);
+unsigned long chdir(char* path);
 #endif

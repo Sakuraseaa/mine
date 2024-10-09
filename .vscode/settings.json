@@ -76,7 +76,14 @@
         "type_traits": "c",
         "utility": "c",
         "mmtype.h": "c",
-        "mmfunc.h": "c"
+        "mmfunc.h": "c",
+        "base.h": "c",
+        "define.h": "c",
+        "mmkit.h": "c",
+        "8259a.h": "c",
+        "arch_x86kit.h": "c",
+        "libfunc.h": "c",
+        "cpu.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

@@ -4,7 +4,6 @@
 #include "lib.h"
 #include "printk.h"
 #include "bitmap.h"
-#include "cpu.h"
 #include "gate.h"
 #include "time.h"
 #include "timer.h"

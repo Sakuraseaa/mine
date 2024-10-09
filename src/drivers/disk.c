@@ -1,12 +1,9 @@
 #include "toolkit.h"
-#include "disk.h"
+#include "devkit.h"
 #include "interrupt.h"
 #include "APIC.h"
 #include "mmkit.h"
-#include "disk.h"
-#include "block.h"
 #include "schedule.h"
-#include "device.h"
 
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
 void end_request(struct block_buffer_node *node)

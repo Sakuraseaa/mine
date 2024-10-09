@@ -1,7 +1,7 @@
 // 本系统不支持多核处理器
 #include "toolkit.h"
+#include "arch_x86kit.h"
 #include "interrupt.h"
-#include "SMP.h"
 
 void SMP_init()
 {

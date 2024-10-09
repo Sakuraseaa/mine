@@ -1,5 +1,5 @@
 #include "toolkit.h"
-#include "serial.h"
+#include "devkit.h"
 #include <stdarg.h>
 
 static char debugk_buf[1024];

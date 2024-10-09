@@ -2,8 +2,10 @@
 // 变量已定义时为真。 一旦检测结构为真，则执行后续操作直至遇见#endif指令为止
 #define __TASK_H__
 #include "toolkit.h"
+#include "arch_x86kit.h"
 #include "signal.h"
 #include "mmkit.h"
+
 // 每个任务的文件描述符最大数
 #define TASK_FILE_MAX 10
 

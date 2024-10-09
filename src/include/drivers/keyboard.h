@@ -1,7 +1,6 @@
 #ifndef __KEYBOARD_H__
 #define __KEYBOARD_H__
 
-#include "fskit.h"
 #define KB_BUF_SIZE 100
 typedef struct keyboard_inputbuffer
 {
@@ -35,13 +34,5 @@ typedef struct keyboard_inputbuffer
 #define wait_KB_read() while (io_in8(PORT_KB_STATUS) & KBSTATUS_OBF)
 
 extern struct file_operations keyboard_fops;
-
-void keyboard_init();
-void keyboard_exit();
-long keyboard_open(struct index_node *inode, struct file *filp);
-long keyboard_close(struct index_node *inode, struct file *filp);
-long keyboard_ioctl(struct index_node *inode, struct file *filp, unsigned long cmd, unsigned long arg);
-long keyboard_read(struct file *flip, char *buf, unsigned long count, long *position);
-long keyboard_write(struct file *flip, char *buf, unsigned long count, long *position);
 
 #endif

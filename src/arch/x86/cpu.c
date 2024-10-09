@@ -1,4 +1,5 @@
 #include "toolkit.h"
+#include "arch_x86kit.h"
 /**
  * @brief 使用cpuid, 得到处理器的信息
  *

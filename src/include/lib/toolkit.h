@@ -1,9 +1,8 @@
-#ifndef _BASEKIT_H_
-#define _BASEKIT_H_
+#ifndef _TOOLKIT_H_
+#define _TOOLKIT_H_
 
-#include "base.h"
-#include "define.h"
+#include "basekit.h"
 #include "libtype.h"
 #include "libfunc.h"
 
-#endif // _BASEKIT_H_
+#endif // _TOOLKIT_H_

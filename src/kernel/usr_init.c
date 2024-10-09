@@ -1,10 +1,9 @@
 #include "toolkit.h"
 #include "fskit.h"
 #include "wait.h"
-#include "keyboard.h"
+#include "devkit.h"
 #include "mmkit.h"
 #include "init.h"
-#include "dirent.h"
 #include "signal.h"
 
 #define WHITE 0x00ffffff  // 白

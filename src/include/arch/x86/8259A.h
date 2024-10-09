@@ -1,8 +1,6 @@
 #ifndef __8259A_H__
 #define __8259A_H__
 
-#include "linkage.h"
-#include "ptrace.h"
 // // 修改向量号为irq对应I/O中断定向投递寄存器组的屏蔽标志,使其激活
 // void IOAPIC_enable(unsigned long irq);
 

@@ -1,8 +1,5 @@
 #include "fskit.h"
-#include "device.h"
-#include "block.h"
-#include "disk.h"
-
+#include "devkit.h"
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 static device_t devices[DEVICE_NR]; // 设备数组

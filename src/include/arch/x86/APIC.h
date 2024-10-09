@@ -1,7 +1,7 @@
+#ifndef _APIC_H_
+#define _APIC_H_
+
 /* 不支持x2APIC, 在支持x2APIC的平台上，请使用书上的源代码*/
-#include "linkage.h"
-#include "ptrace.h"
-#include "interrupt.h"
 // Local APIC Register Address map
 #define APIC_IDR (unsigned int *)Phy_To_Virt(0xFEE00020)
 #define APIC_VesrionR (unsigned int *)Phy_To_Virt(0xFEE00030)
@@ -118,3 +118,6 @@ unsigned long IOAPIC_install(unsigned long irq, void *arg);
 void IOAPIC_uninstall(unsigned long irq);
 void IOAPIC_level_ack(unsigned long irq);
 void IOAPIC_edge_ack(unsigned long irq);
+
+
+#endif // _APIC_H_

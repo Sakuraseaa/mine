@@ -1,6 +1,5 @@
 #ifndef __DIRENT_H__
 #define __DIRENT_H__
-#include "dirent.h"
 
 // 目录文件的句柄
 struct DIR
@@ -20,8 +19,4 @@ struct dirent
     char d_name[];
 };
 
-struct DIR* opendir(const char* path);
-int closedir(struct DIR* dir);
-struct dirent* readdir(struct DIR*dir);
-unsigned long chdir(char* path);
 #endif

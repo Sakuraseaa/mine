@@ -1,8 +1,7 @@
 #include "toolkit.h"
 #include "fskit.h"
 #include "mmkit.h"
-#include "dirent.h"
-#include "disk.h"
+#include "devkit.h"
 #include "task.h"
 
 static buffer_t* imap = NULL;

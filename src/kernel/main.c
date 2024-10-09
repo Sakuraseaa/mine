@@ -4,20 +4,12 @@
 #include "mmkit.h"
 #include "interrupt.h"
 #include "task.h"
-#if APIC
-#include "APIC.h"
-#else
-#include "8259A.h"
-#endif
-#include "keyboard.h"
-#include "mouse.h"
-#include "disk.h"
+#include "arch_x86kit.h"
+#include "devkit.h"
 #include "HEPT.h"
 #include "softirq.h"
 #include "SMP.h"
 #include "schedule.h"
-#include "serial.h"
-#include "device.h"
 #include "memmgrinit.h"
 #include "krlmm.h"
 

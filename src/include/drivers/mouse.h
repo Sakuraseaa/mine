@@ -16,8 +16,6 @@ struct mouse_packet
 
 struct mouse_packet mouse;
 
-void mouse_init();
-void mouse_exit();
-void analysis_mousecode();
+
 
 #endif

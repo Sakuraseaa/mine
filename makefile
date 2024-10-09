@@ -14,8 +14,8 @@ CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack
 		-fno-builtin -fno-pie -fno-pic -nostdlib \
 		-Wno-address-of-packed-member	-Wno-implicit-function-declaration \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
-		-I $(INC_DIR)/fs/ -I $(SRC_DIR)/fs/FAT32/ -I $(INC_DIR)/usr/ -I $(SRC_DIR)/fs/minix/	\
-		-I $(INC_DIR)/mm/ \
+		-I $(INC_DIR)/fs/ -I $(INC_DIR)/kernel/ -I $(INC_DIR)/usr/ -I $(INC_DIR)/sys/	\
+		-I $(INC_DIR)/mm/ -I $(INC_DIR)/arch/x86 \
 
 # 被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
@@ -59,7 +59,7 @@ $(BUI_DIR)/head.o : $(SRC_DIR)/kernel/head.S
 $(BUI_DIR)/printk.o: $(SRC_DIR)/lib/printk.c 
 	@$(CC) $(CFLAGS) $< -o $@
 
-$(BUI_DIR)/signal.o: $(SRC_DIR)/lib/signal.c 
+$(BUI_DIR)/signal.o: $(SRC_DIR)/sys/signal.c 
 	@$(CC) $(CFLAGS) $< -o $@
 
 $(BUI_DIR)/entry.o : $(SRC_DIR)/kernel/entry.S
@@ -67,9 +67,9 @@ $(BUI_DIR)/entry.o : $(SRC_DIR)/kernel/entry.S
 #	gcc -E  entry.S > entry.s
 #	as --64 -g -o $@ entry.s
 
-$(BUI_DIR)/trap.o: $(SRC_DIR)/kernel/trap.c
+$(BUI_DIR)/trap.o: $(SRC_DIR)/arch/x86/trap.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/memory.o: $(SRC_DIR)/kernel/memory.c
+$(BUI_DIR)/memory.o: $(SRC_DIR)/mm/memory.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/interrupt.o: $(SRC_DIR)/kernel/interrupt.c
 	@$(CC) $(CFLAGS) $< -o $@
@@ -77,15 +77,15 @@ $(BUI_DIR)/switch_to.o: $(SRC_DIR)/kernel/switch_to.S
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/task.o: $(SRC_DIR)/kernel/task.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/cpu.o: $(SRC_DIR)/drivers/cpu.c
+$(BUI_DIR)/cpu.o: $(SRC_DIR)/arch/x86/cpu.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/SMP.o: $(SRC_DIR)/drivers/SMP.c
+$(BUI_DIR)/SMP.o: $(SRC_DIR)/arch/x86/SMP.c
 	@$(CC) $(CFLAGS) $< -o $@
 ifeq ($(PIC), APIC)
-$(BUI_DIR)/PIC.o: $(SRC_DIR)/drivers/APIC.c
+$(BUI_DIR)/PIC.o: $(SRC_DIR)/arch/x86/APIC.c
 	@$(CC) $(CFLAGS) $< -o $@
 else
-$(BUI_DIR)/PIC.o: $(SRC_DIR)/drivers/8259A.c
+$(BUI_DIR)/PIC.o: $(SRC_DIR)/arch/x86/8259A.c
 	@$(CC) $(CFLAGS) $< -o $@
 endif
 $(BUI_DIR)/keyboard.o: $(SRC_DIR)/drivers/keyboard.c
@@ -100,11 +100,11 @@ $(BUI_DIR)/serial.o: $(SRC_DIR)/drivers/serial.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/time.o: $(SRC_DIR)/lib/time.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/HEPT.o: $(SRC_DIR)/drivers/HEPT.c
+$(BUI_DIR)/HEPT.o: $(SRC_DIR)/arch/x86/HEPT.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/softirq.o: $(SRC_DIR)/lib/softirq.c
+$(BUI_DIR)/softirq.o: $(SRC_DIR)/sys/softirq.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/timer.o: $(SRC_DIR)/lib/timer.c
+$(BUI_DIR)/timer.o: $(SRC_DIR)/sys/timer.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/schedule.o: $(SRC_DIR)/kernel/schedule.c
 	@$(CC) $(CFLAGS) $< -o $@
@@ -122,9 +122,9 @@ $(BUI_DIR)/fat32.o: $(SRC_DIR)/fs/FAT32/fat32.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/minix.o: $(SRC_DIR)/fs/minix/minix.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/syscalls.o: $(SRC_DIR)/kernel/syscalls.c
+$(BUI_DIR)/syscalls.o: $(SRC_DIR)/sys/syscalls.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/sys.o: $(SRC_DIR)/kernel/sys.c
+$(BUI_DIR)/sys.o: $(SRC_DIR)/sys/sys.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/VFS.o: $(SRC_DIR)/fs/VFS.c
 	@$(CC) $(CFLAGS) $< -o $@
@@ -136,7 +136,7 @@ $(BUI_DIR)/inode.o: $(SRC_DIR)/fs/inode.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(BUI_DIR)/execv.o: $(SRC_DIR)/lib/execv.c
+$(BUI_DIR)/execv.o: $(SRC_DIR)/sys/execv.c
 	@$(CC) $(CFLAGS) $< -o $@
 
 

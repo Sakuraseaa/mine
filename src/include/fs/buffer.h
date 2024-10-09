@@ -29,8 +29,5 @@ typedef struct buffer
     list_t rnode;        // 缓冲节点
 } buffer_t;
 
-err_t bwrite(buffer_t *buf);
-err_t brelse(buffer_t *buf);
-buffer_t *bread(unsigned long dev, unsigned long block, unsigned long size);
-void buffer_init(void);
+
 #endif

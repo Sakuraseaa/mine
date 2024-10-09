@@ -1,7 +1,6 @@
 #include "toolkit.h"
 #include "fskit.h"
-#include "dirent.h"
-#include "disk.h"
+#include "devkit.h"
 #include "mmkit.h"
 
 #define FAT_DENRY_SIZE 32
