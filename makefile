@@ -13,9 +13,9 @@ CC	  = gcc
 CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack-protector -Wall \
 		-fno-builtin -fno-pie -fno-pic -nostdlib  -nostdinc \
 		-Wno-address-of-packed-member	-Wno-implicit-function-declaration \
-		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
-		-I $(INC_DIR)/fs/ -I $(INC_DIR)/kernel/ -I $(INC_DIR)/usr/ -I $(INC_DIR)/sys/	\
-		-I $(INC_DIR)/mm/ -I $(INC_DIR)/arch/x86 \
+		-c -g -I $(INC_DIR)/ -I $(SRC_DIR)/drivers/inc -I $(SRC_DIR)/lib/inc -I $(INC_DIR)/base/ \
+		-I $(SRC_DIR)/fs/inc -I $(SRC_DIR)/kernel/inc/ -I $(SRC_DIR)/kernel/usrinc -I $(SRC_DIR)/sys/inc	\
+		-I $(SRC_DIR)/mm/inc -I $(SRC_DIR)/arch/x86/inc \
 
 # 被链接的文件
 OBJS = $(BUI_DIR)/head.o $(BUI_DIR)/entry.o $(BUI_DIR)/main.o $(BUI_DIR)/printk.o \
