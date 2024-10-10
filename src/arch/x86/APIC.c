@@ -312,7 +312,7 @@ void IOAPIC_disable(u64_t irq)
 // 给向量号为irq的中断创建I/O中断向量投递寄存器
 u64_t IOAPIC_install(u64_t irq, void *arg)
 {
-	struct IO_APIC_RET_entry *entry = (struct IO_APIC_RET_entry *)arg;
+	io_apic_ret_entry_t *entry = (io_apic_ret_entry_t *)arg;
 	ioapic_rte_write((irq - 32) * 2 + 0x10, *(u64_t *)entry);
 
 	return 1;

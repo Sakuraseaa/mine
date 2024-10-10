@@ -94,7 +94,7 @@ void spin_unlock(spinlock_t *lock)
 
 
 // 尝试加锁 - 本系统并没有用到该函数
-long spin_trylock(spinlock_t *lock)
+s64_t spin_trylock(spinlock_t *lock)
 {
     u64_t tmp_value = 0;
     preempt_disable();

@@ -8,7 +8,7 @@ static buffer_t* imap = nullptr;
 static buffer_t* zmap[2] = {nullptr};
 
 inode_t *iget(dev_t dev, idx_t nr);
-struct super_block_operations minix_super_ops;
+super_block_operations_t minix_super_ops;
 
 // 计算 inode nr 对应的块号
 static inline idx_t inode_block(minix_sb_info_t *desc, idx_t nr)
@@ -181,10 +181,10 @@ u16_t minix_bmap(inode_t *inode, idx_t block, bool create) {
     buffer_t* buf = nullptr;
 
     // 当前处理级别
-    int level = 0;
+    s32_t level = 0;
 
     // 当前子级别块数量
-    int divider = 1;
+    s32_t divider = 1;
 
     // 直接块
     if (block < DIRECT_BLOCK)
@@ -238,11 +238,11 @@ reckon:
 
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
-long minix_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
-long minix_hash(dir_entry_t *dentry, char *filename) { return 0; }
-long minix_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
-long minix_iput(dir_entry_t *dentry, struct index_node *inode) { return 0; } // 释放inode索引
-long minix_delete(dir_entry_t *dentry) { 
+s64_t minix_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
+s64_t minix_hash(dir_entry_t *dentry, char *filename) { return 0; }
+s64_t minix_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
+s64_t minix_iput(dir_entry_t *dentry, inode_t *inode) { return 0; } // 释放inode索引
+s64_t minix_delete(dir_entry_t *dentry) { 
     // 当然这里是需要重写的
     if(ISREG(dentry->dir_inode->i_mode)) {
         kdelete(dentry->dir_inode, sizeof(inode_t));
@@ -268,10 +268,10 @@ struct dir_entry_operations minix_dentry_ops =
 
 
 // 负责为访问文件数据提供操作方法
-long minix_open(struct index_node *inode, struct file *filp) { return 1; }
-long minix_close(struct index_node *inode, struct file *filp) { return 1; }
+s64_t minix_open(inode_t *inode, file_t *filp) { return 1; }
+s64_t minix_close(inode_t *inode, file_t *filp) { return 1; }
 
-long minix_read(struct file *filp, char *buf, u64_t count, s64_t *position) {
+s64_t minix_read(file_t *filp, char *buf, u64_t count, s64_t *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
 
@@ -325,7 +325,7 @@ long minix_read(struct file *filp, char *buf, u64_t count, s64_t *position) {
     return ret;
 }
 
-long minix_write(struct file *filp, char *buf, u64_t count, long *position) {
+s64_t minix_write(file_t *filp, char *buf, u64_t count, s64_t *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
@@ -380,9 +380,9 @@ long minix_write(struct file *filp, char *buf, u64_t count, long *position) {
     return ret;
 }
 
-long minix_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg) { return 0; }
+s64_t minix_ioctl(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg) { return 0; }
 
-long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {
+s64_t minix_readdir(file_t* filp, void * dirent, filldir_t filler) {
     minix_dentry_t mentry;
 
     s64_t ret = -1;
@@ -398,7 +398,7 @@ long minix_readdir(struct file* filp, void * dirent, filldir_t filler) {
     return ret;
 }
 
-struct file_operations minix_file_ops =
+file_operations_t minix_file_ops =
     {
         .open = minix_open,
         .close = minix_close,
@@ -577,7 +577,7 @@ static void realse_file_data(spblk_t* minix_sb, minix_inode_t* m_inode) {
  * @param mode
  * @return long
  */
-long minix_create(struct index_node *inode, dir_entry_t *dentry, s32_t mode) {
+s64_t minix_create(inode_t *inode, dir_entry_t *dentry, s32_t mode) {
     spblk_t* sb = inode->sb;
     u64_t nr = 0;
 
@@ -594,7 +594,7 @@ long minix_create(struct index_node *inode, dir_entry_t *dentry, s32_t mode) {
     return 0;
 }
 
-dir_entry_t *minix_lookup(struct index_node *parent_inode, dir_entry_t *dest_dentry) {
+dir_entry_t *minix_lookup(inode_t *parent_inode, dir_entry_t *dest_dentry) {
     
     u64_t dentries = parent_inode->file_size / sizeof(minix_dentry_t);
     idx_t i = 0, block = 0;
@@ -636,7 +636,7 @@ dir_entry_t *minix_lookup(struct index_node *parent_inode, dir_entry_t *dest_den
  * @param mode
  * @return long
  */
-long minix_mkdir(struct index_node *inode, dir_entry_t *dentry, int mode) { 
+s64_t minix_mkdir(inode_t *inode, dir_entry_t *dentry, s32_t mode) { 
 
     spblk_t* sb = inode->sb;
     u64_t nr = 0;
@@ -681,8 +681,8 @@ long minix_mkdir(struct index_node *inode, dir_entry_t *dentry, int mode) {
  * @param dentry 
  * @return long 
  */
-long minix_rmdir(struct index_node *dir, dir_entry_t *dentry) { 
-    long ret = OKay;
+s64_t minix_rmdir(inode_t *dir, dir_entry_t *dentry) { 
+    s64_t ret = OKay;
 
     spblk_t* minix_sb = dentry->d_sb;
     minix_inode_t* m_inode = (minix_inode_t*)dentry->dir_inode->private_index_info;
@@ -717,8 +717,8 @@ long minix_rmdir(struct index_node *dir, dir_entry_t *dentry) {
  * @param dentry 
  * @return long 
  */
-long minix_unlink(struct index_node *dir, dir_entry_t *dentry) {
-    long ret = OKay;
+s64_t minix_unlink(inode_t *dir, dir_entry_t *dentry) {
+    s64_t ret = OKay;
 
     spblk_t* minix_sb = dentry->d_sb;
     minix_inode_t* m_inode = (minix_inode_t*)dentry->dir_inode->private_index_info;
@@ -745,11 +745,11 @@ long minix_unlink(struct index_node *dir, dir_entry_t *dentry) {
     return ret;
 }
 
-long minix_rename(struct index_node *old_inode, dir_entry_t *old_dentry, struct index_node *new_inode, dir_entry_t *new_dentry) { return 0; }
-long minix_getattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
-long minix_setattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
+s64_t minix_rename(inode_t *old_inode, dir_entry_t *old_dentry, inode_t *new_inode, dir_entry_t *new_dentry) { return 0; }
+s64_t minix_getattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
+s64_t minix_setattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
 
-struct index_node_operations minix_inode_ops =
+index_node_operations_t minix_inode_ops =
     {
         .create = minix_create,
         .lookup = minix_lookup,

@@ -33,14 +33,14 @@ char buf[4096] = {0};
 
 struct position
 {
-	int XResolution;
-	int YResolution;
+	s32_t XResolution;
+	s32_t YResolution;
 
-	int XPosition;
-	int YPosition;
+	s32_t XPosition;
+	s32_t YPosition;
 
-	int XCharSize;
-	int YCharSize;
+	s32_t XCharSize;
+	s32_t YCharSize;
 
 	u32_t *FB_addr;
 	u64_t FB_length;
@@ -49,7 +49,7 @@ struct position
 } Pos;
 
 #define do_div(n, base) ({ \
-int __res; \
+s32_t __res; \
 __asm__("divq %%rcx":"=a" (n),"=d" (__res):"0" (n),"1" (0),"c" (base)); \
 __res; })
 

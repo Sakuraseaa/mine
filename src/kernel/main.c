@@ -9,9 +9,9 @@
 #include "krlmm.h"
 
 extern semaphore_t visual_lock;
-extern struct keyboard_inputbuffer *p_kb;
-extern struct keyboard_inputbuffer *p_mouse;
-extern long global_pid;
+extern keyboard_inputbuffer_t *p_kb;
+extern keyboard_inputbuffer_t *p_mouse;
+extern s64_t global_pid;
 struct Global_Memory_Descriptor memory_management_struct = {{{0}}, 0};
 extern s32_t usr_init();
 extern u64_t shell_boot(u64_t arg);

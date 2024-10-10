@@ -2,7 +2,7 @@
 #include "devkit.h"
 #include <stdarg.h>
 
-static char debugk_buf[1024];
+static char_t debugk_buf[1024];
 extern serial_t serials[2];
 
 void debugk(const s8_t *file, const s8_t* func,s32_t line, const s8_t *fmt, ...)

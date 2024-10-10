@@ -5,7 +5,7 @@
 #include "kernelkit.h"
 
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
-void end_request(struct block_buffer_node *node)
+void end_request(block_buffer_node_t *node)
 {
     if (node == nullptr)
         color_printk(RED, BLACK, "end_request error\n");
@@ -31,8 +31,8 @@ s64_t cmd_out()
     wait_queue_t *wait_queue_tmp =
         container_of(list_next(&disk_request.wait_queue_list.wait_list), wait_queue_t, wait_list);
 
-    struct block_buffer_node *node = disk_request.in_using =
-        container_of(wait_queue_tmp, struct block_buffer_node, wait_queue);
+    block_buffer_node_t *node = disk_request.in_using =
+        container_of(wait_queue_tmp, block_buffer_node_t, wait_queue);
 
     // 从队列中，删除本节点
     list_del(&disk_request.in_using->wait_queue.wait_list);
@@ -115,16 +115,16 @@ s64_t cmd_out()
 
 /**
  * @brief 把硬盘读写命令封装成block_buffer_node包,
- *          struct block_buffer_node 描述了一次硬盘操作的全部信息
+ *          block_buffer_node_t 描述了一次硬盘操作的全部信息
  * @param cmd       READ/Write
  * @param blocks  LBA地址
  * @param count   扇区数量
  * @param buffer  调用者传入的读写缓冲区
- * @return struct block_buffer_node*
+ * @return block_buffer_node_t*
  */
-struct block_buffer_node *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
+block_buffer_node_t *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
-    struct block_buffer_node *node = (struct block_buffer_node *)knew(sizeof(struct block_buffer_node), 0);
+    block_buffer_node_t *node = (block_buffer_node_t *)knew(sizeof(block_buffer_node_t), 0);
     wait_queue_init(&node->wait_queue, current);
 
     switch (cmd)
@@ -151,14 +151,14 @@ struct block_buffer_node *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_
 }
 
 // 把请求包，加入到等待队列。这里也许可以添加一些操作硬盘的算法
-void add_request(struct block_buffer_node *node)
+void add_request(block_buffer_node_t *node)
 {
     list_add_to_before(&disk_request.wait_queue_list.wait_list, &node->wait_queue.wait_list);
     disk_request.block_request_count++;
 }
 
 // 参见IDE_transfer- 本函数属于子函数
-void submit(struct block_buffer_node *node)
+void submit(block_buffer_node_t *node)
 {
     add_request(node);
     if (disk_request.in_using == nullptr) // 目前没有硬盘操作, 给硬盘发送命令
@@ -199,7 +199,7 @@ s64_t IDE_close()
 s64_t IDE_ioctl(s64_t cmd, s64_t arg)
 {
 
-    struct block_buffer_node *node = nullptr;
+    block_buffer_node_t *node = nullptr;
 
     if (cmd == GET_IDENTIFY_DISK_CMD)
     {
@@ -224,7 +224,7 @@ s64_t IDE_ioctl(s64_t cmd, s64_t arg)
  */
 s64_t IDE_transfer(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
-    struct block_buffer_node *node = nullptr;
+    block_buffer_node_t *node = nullptr;
     if (cmd == ATA_READ_CMD || cmd == ATA_WRITE_CMD)
     {
         // a. 把 Read / Write 操作封装成请求包, 根据命令的不同指定不同的回调函数
@@ -240,7 +240,7 @@ s64_t IDE_transfer(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
     return 1;
 }
 
-struct block_device_operation IDE_device_operation = {
+block_dev_opt_t IDE_device_operation = {
     .open = IDE_open,
     .close = IDE_close,
     .ioctl = IDE_ioctl,
@@ -250,7 +250,7 @@ struct block_device_operation IDE_device_operation = {
 // do_IQR-函数会跳转到disk_handler
 void disk_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
-    struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
+    block_buffer_node_t *node = ((request_queue_t *)parameter)->in_using;
     node->end_handler(nr, parameter);
 }
 
@@ -261,7 +261,7 @@ void disk_init()
     DEBUGK("NrDrives:%d.\n", *pNrDrives & 0xff);
     // color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
     /*在IO_APIC中，注册硬盘中断函数*/
-    struct IO_APIC_RET_entry entry;
+    io_apic_ret_entry_t entry;
     // dev_t dev;
 
     // if(pNrDrives > 1){
@@ -297,7 +297,7 @@ void disk_exit()
 
 void read_handler(u64_t nr, u64_t parameter)
 {
-    struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
+    block_buffer_node_t *node = ((request_queue_t *)parameter)->in_using;
 
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误
         color_printk(RED, BLACK, "read_handler:%#010x\n", io_in8(PORT_DISK1_ERR_FEATURE));
@@ -320,7 +320,7 @@ void read_handler(u64_t nr, u64_t parameter)
 
 void write_handler(u64_t nr, u64_t parameter)
 {
-    struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
+    block_buffer_node_t *node = ((request_queue_t *)parameter)->in_using;
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误
         color_printk(RED, BLACK, "write_handler:%#010x\n", io_in8(PORT_DISK1_ERR_FEATURE));
 
@@ -341,7 +341,7 @@ void write_handler(u64_t nr, u64_t parameter)
 // identify IDE
 void other_handler(u64_t nr, u64_t parameter)
 {
-    struct block_buffer_node *node = ((struct request_queue *)parameter)->in_using;
+    block_buffer_node_t *node = ((request_queue_t *)parameter)->in_using;
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误
         color_printk(RED, BLACK, "write_handler:%#010x\n", io_in8(PORT_DISK1_ERR_FEATURE));
 

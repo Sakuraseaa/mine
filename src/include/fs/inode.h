@@ -24,18 +24,18 @@ typedef struct index_node
     time_t mtime; // 修改时间
     time_t ctime; // 创建时间
 
-    int type;    // 文件系统类型
+    s32_t type;    // 文件系统类型
 
-    int uid; // 用户 id
-    int gid; // 组 id
+    s32_t uid; // 用户 id
+    s32_t gid; // 组 id
 
     struct task_struct *rxwaiter; // 读等待进程
     struct task_struct *txwaiter; // 写等待进程
 
     struct super_block *sb; // 超级块指针
 
-    struct file_operations *f_ops;           // 文件操作： 打开/关闭，读/写
-    struct index_node_operations *inode_ops; // inode操作：创建
+    file_operations_t*f_ops;           // 文件操作： 打开/关闭，读/写
+    index_node_operations_t *inode_ops; // inode操作：创建
     // 用于保存各类文件系统的特有数据信息
     void *private_index_info; // 对于fat32系统，这里指向的是 struct FAT32_inode_info
 }inode_t;

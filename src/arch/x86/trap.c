@@ -364,6 +364,3 @@ void sys_vector_init()
 	//set_system_gate(SYSTEM_CALL_VECTOR,7,system_call);
 
 }
-
-
-

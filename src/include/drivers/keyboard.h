@@ -6,7 +6,7 @@ typedef struct keyboard_inputbuffer
 {
     u8_t *p_head; // 缓冲区首尾指针
     u8_t *p_tail;
-    int count; // 缓冲数据计数器
+    s32_t count; // 缓冲数据计数器
 
     u8_t buf[KB_BUF_SIZE]; // 循环队列缓存区
 }keyboard_inputbuffer_t;
@@ -33,6 +33,6 @@ typedef struct keyboard_inputbuffer
 // 检测缓存区能不能读
 #define wait_KB_read() while (io_in8(PORT_KB_STATUS) & KBSTATUS_OBF)
 
-extern struct file_operations keyboard_fops;
+extern file_operations_t keyboard_fops;
 
 #endif

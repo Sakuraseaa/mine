@@ -15,7 +15,7 @@
 
 #include <stdarg.h>
 #include "stdio.h"
-
+#include "printf.h"
 /*
 
 */
@@ -186,7 +186,7 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 					if(!(flags & LEFT))
 						while(--field_width > 0)
 							*str++ = ' ';
-					*str++ = (u8_t)va_arg(args, int);
+					*str++ = (unsigned char)va_arg(args, int);
 					while(--field_width > 0)
 						*str++ = ' ';
 					break;
@@ -214,9 +214,9 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 				case 'o':
 					
 					if(qualifier == 'l')
-						str = number(str,va_arg(args,u64_t),8,field_width,precision,flags);
+						str = number(str,va_arg(args,unsigned long),8,field_width,precision,flags);
 					else
-						str = number(str,va_arg(args,u32_t),8,field_width,precision,flags);
+						str = number(str,va_arg(args,unsigned int),8,field_width,precision,flags);
 					break;
 
 				case 'p':
@@ -227,7 +227,7 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 						flags |= ZEROPAD;
 					}
 
-					str = number(str,(u64_t)va_arg(args,void *),16,field_width,precision,flags);
+					str = number(str,(unsigned long)va_arg(args,void *),16,field_width,precision,flags);
 					break;
 
 				case 'x':
@@ -237,9 +237,9 @@ int vsprintf(char * buf,const char *fmt, va_list args)
 				case 'X':
 
 					if(qualifier == 'l')
-						str = number(str,va_arg(args,u64_t),16,field_width,precision,flags);
+						str = number(str,va_arg(args,unsigned long),16,field_width,precision,flags);
 					else
-						str = number(str,va_arg(args,u32_t),16,field_width,precision,flags);
+						str = number(str,va_arg(args,unsigned int),16,field_width,precision,flags);
 					break;
 
 				case 'd':

@@ -1,7 +1,7 @@
 #include "toolkit.h"
 #include "arch_x86kit.h"
 #include "kernelkit.h"
-struct schedule task_schedule;
+schedule_t task_schedule;
 extern void switch_to(task_t *prev, task_t *next);
 task_t *get_next_task()
 {
@@ -97,7 +97,7 @@ void schedule()
 
 void schedule_init()
 {
-	memset(&task_schedule, 0, sizeof(struct schedule));
+	memset(&task_schedule, 0, sizeof(schedule_t));
 	list_init(&task_schedule.task_queue.list);
 
 	// 给内核主程序赋值最大值, 主程序无法被动的 被schedule调度

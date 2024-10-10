@@ -29,7 +29,7 @@ extern void system_call(void);
 u64_t shell_boot(u64_t arg);
 s64_t global_pid;
 
-task_t *get_task(long pid)
+task_t *get_task(s64_t pid)
 {
 	task_t *tsk = nullptr;
 
@@ -75,7 +75,7 @@ u64_t init(u64_t arg)
 }
 
 // ------------------DEBUG----------------------
-extern int usr_init();
+extern s32_t usr_init();
 // 被init调用,加载用户进程体，到用户空间800000
 u64_t shell_execve(pt_regs_t *regs, char *name)
 {
@@ -169,8 +169,8 @@ u64_t copy_files(u64_t clone_flags, task_t *tsk)
 	for (; i < TASK_FILE_MAX; i++)
 		if (current->file_struct[i] != nullptr)
 		{
-			tsk->file_struct[i] = (struct file *)knew(sizeof(struct file), 0);
-			memcpy(current->file_struct[i], tsk->file_struct[i], sizeof(struct file));
+			tsk->file_struct[i] = (file_t *)knew(sizeof(file_t), 0);
+			memcpy(current->file_struct[i], tsk->file_struct[i], sizeof(file_t));
 		}
 out:
 	return error;
@@ -189,8 +189,8 @@ void exit_files(task_t *tsk)
 	else
 		for (; i < TASK_FILE_MAX; i++)
 			if (tsk->file_struct[i] != nullptr)
-				kdelete(tsk->file_struct[i], sizeof(struct file));
-	memset(tsk->file_struct, 0, sizeof(struct file *) * TASK_FILE_MAX);
+				kdelete(tsk->file_struct[i], sizeof(file_t));
+	memset(tsk->file_struct, 0, sizeof(file_t *) * TASK_FILE_MAX);
 	// clear current->file_struct
 }
 
@@ -204,7 +204,7 @@ void exit_files(task_t *tsk)
 /*
 u64_t copy_mm(u64_t clone_flags, task_t *tsk)
 {
-	int error = 0;
+	s32_t error = 0;
 	struct mm_struct *newmm = nullptr;
 	u64_t code_start_addr = 0x800000;
 	u64_t stack_start_addr = 0xa00000;
@@ -549,7 +549,7 @@ do_exit_again:
 
 // 线程承载的函数，参数，标志
 // kernel_thread给进程创建了寄存器环境
-int kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags)
+s32_t kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags)
 { // 设置中断栈
 	pt_regs_t regs;
 	memset(&regs, 0, sizeof(regs));

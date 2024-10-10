@@ -173,7 +173,7 @@ err_t bwrite(buffer_t *buf){
     u64_t block_size = desc->size;
     u64_t sector_size =  512;   //设备扇区大小, 此处应该改进为从设备获取，该设备的扇区大小
     u64_t bs = block_size / sector_size; // 读取的块数
-    int ret = device_write(buf->dev, buf->data, bs, buf->block * bs, 0);
+    s32_t ret = device_write(buf->dev, buf->data, bs, buf->block * bs, 0);
 
     buf->dirty = false;
     buf->valid = true;
@@ -185,7 +185,7 @@ err_t brelse(buffer_t *buf) {
     
     if(buf == nullptr) return -1;
 
-    int ret = bwrite(buf); // 我觉得此处同步有点勉强
+    s32_t ret = bwrite(buf); // 我觉得此处同步有点勉强
 
 
     buf->refer_count--;

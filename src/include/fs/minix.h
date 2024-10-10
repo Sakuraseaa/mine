@@ -54,9 +54,9 @@ typedef struct minix_dentry_t
 } minix_dentry_t;
 
 
-extern struct index_node_operations MINIX_inode_ops;
-extern struct file_operations MINIX_file_ops;
+extern index_node_operations_t MINIX_inode_ops;
+extern file_operations_t MINIX_file_ops;
 extern struct dir_entry_operations MINIX_dentry_ops;
-extern struct super_block_operations MINIX_sb_ops;
+extern super_block_operations_t MINIX_sb_ops;
 
 #endif

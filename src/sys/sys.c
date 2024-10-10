@@ -208,7 +208,7 @@ sys_open_over_judge:
     if (error != 1)
     { // 内核只释放了文件描述符占用的内存空间，而未释放inode结构和dentry结构占用的内存空间
         // 因为释放它们是一个漫长的过程，其中必将设计路径所以内所有结构的回收，缓存，销毁等管理细节
-        kdelete(filp, sizeof(struct file));
+        kdelete(filp, sizeof(file_t));
         return -EFAULT;
     }
 
@@ -230,8 +230,8 @@ sys_open_over_judge:
 
     if (i == TASK_FILE_MAX)
     {
-        kdelete(filp, sizeof(struct file));
-        ////reclaim struct index_node & dir_entry_t
+        kdelete(filp, sizeof(file_t));
+        ////reclaim inode_t & dir_entry_t
         return -EMFILE;
     }
     f[fd] = filp;
@@ -538,7 +538,7 @@ u64_t sys_reboot(u64_t cmd, void *arg)
     return EOK;
 }
 
-extern int fill_dentry(void* buf, s8_t*name, s64_t namelen, s64_t offset);
+extern s32_t fill_dentry(void* buf, s8_t*name, s64_t namelen, s64_t offset);
 u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
 {
     file_t* filp = nullptr;
@@ -702,7 +702,7 @@ u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
         interruptible_sleep_on(&current->wait_childexit); // 阻塞
     
 
-    copy_to_user(&child->exit_code, status, sizeof(long));
+    copy_to_user(&child->exit_code, status, sizeof(s64_t));
     tsk->next = child->next; // 在PCB列表中，删除掉当前进程PCB
     kdelete(child, sizeof(task_t)); // 回收PCB, 内核栈
 
@@ -770,12 +770,12 @@ void dir_Tree(dir_entry_t* cur, s32_t depth) {
         child = container_of(node, dir_entry_t, child_node);
 
         // here is format print according to depth
-        for(int i = 0; i < depth; i++)
+        for(s32_t i = 0; i < depth; i++)
             color_printk(WHITE, BLACK, "  ");
         
         color_printk(WHITE, BLACK, "+");
         
-        for(int i = 0; i < depth; i++)
+        for(s32_t i = 0; i < depth; i++)
             color_printk(WHITE, BLACK, "-");
         
         color_printk(WHITE, BLACK, "->");

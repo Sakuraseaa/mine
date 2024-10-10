@@ -24,7 +24,7 @@
 
 #define SEEK_MAX	3
 
-int putstring(u32_t FRcolor, char *string);
+int putstring(int FRcolor, char *string);
 int printf(const char *fmt, ...);
 int sprintf(char * buf,const char * fmt,...);
 int vsprintf(char * buf,const char *fmt, va_list args);

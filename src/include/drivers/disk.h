@@ -351,11 +351,11 @@ typedef struct block_buffer_node
 typedef struct request_queue
 {
 	wait_queue_t wait_queue_list;		// 请求硬盘操作的等待队列
-	struct block_buffer_node *in_using; // 正在处理的硬盘操作请求
-	long block_request_count;			// 剩余请求数
+	block_buffer_node_t *in_using; // 正在处理的硬盘操作请求
+	s64_t block_request_count;			// 剩余请求数
 }request_queue_t;
 
-struct request_queue disk_request;
-extern struct block_device_operation IDE_device_operation;
+request_queue_t disk_request;
+extern block_dev_opt_t IDE_device_operation;
 
 #endif

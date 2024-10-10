@@ -18,7 +18,7 @@ struct time time;
 #define YEAR (365 * DAY)   // 每年的秒数，以 365 天算
 
 // 每个月开始时的已经过去天数, 平年2月28天，润年2月29天
-static int month[13] = {
+static s32_t month[13] = {
     0, // 这里占位，没有 0 月，从 1 月开始
     0,
     (31),
@@ -34,7 +34,7 @@ static int month[13] = {
     (31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30)
 };
 
-bool is_leap_year(int year)
+bool is_leap_year(s32_t year)
 {
     return ((year % 4 == 0) && (year % 100 != 0)) || ((year) % 400 == 0);
 }
@@ -45,7 +45,7 @@ bool is_leap_year(int year)
  * @param year 
  * @return u64_t 
  */
-u64_t elapsed_leap_years(int year) {
+u64_t elapsed_leap_years(s32_t year) {
     u64_t res;
     res = year * 365 +  ((year + 1) / 4);
     
@@ -64,7 +64,7 @@ u64_t startup_time;
 // 计算从 1970-1-1-0时起到开机当日经过的秒数，作为开机的时间
 u64_t kernel_mktime(struct time* tm) {
     u64_t res = 0;
-    int year;
+    s32_t year;
 
     // 距今过去了多少年 - 已然遥远的理想之城。
     year = tm->year - 1970;
@@ -141,7 +141,7 @@ void localtime(u64_t stamp, struct time* tm) {
 }
 
 // 读取cmos芯片获取当前时间
-int get_cmos_time(struct time *time)
+s32_t get_cmos_time(struct time *time)
 {
     do
     {
@@ -179,7 +179,7 @@ void do_timer(void *data)
         // debugk(__BASE_FILE__, __LINE__, "(HPET:%ld):: A timing task is completed\n", jiffies);
     }
 }
-int shell_up = 0;
+s32_t shell_up = 0;
 void test_timer(void *data)
 {
     //BUG:: 此处使用 DEBUGK 会报错
@@ -207,4 +207,3 @@ void timer_init()
     init_timer(tmp, &test_timer, nullptr, 40);
     add_timer(tmp);
 }
-

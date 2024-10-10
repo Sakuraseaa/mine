@@ -11,7 +11,7 @@ s64_t search_64rlbits(u64_t val)
 }
 
 // verify: 核实， 检测数据是否越过用户层界限
-long verify_area(u8_t *addr, u64_t size)
+s64_t verify_area(u8_t *addr, u64_t size)
 {
     return 1;
     // if (((u64_t)addr + size) <= (u64_t)0x00007fffffffffff)
@@ -20,7 +20,7 @@ long verify_area(u8_t *addr, u64_t size)
     //     return 0;
 }
 
-long copy_from_user(void *from, void *to, u64_t size)
+s64_t copy_from_user(void *from, void *to, u64_t size)
 {
     u64_t d0, d1;
     if (!verify_area(from, size))
@@ -38,7 +38,7 @@ long copy_from_user(void *from, void *to, u64_t size)
     return size;
 }
 
-long copy_to_user(void *from, void *to, u64_t size)
+s64_t copy_to_user(void *from, void *to, u64_t size)
 {
     if (!verify_area(to, size))
         return 0;
@@ -63,7 +63,7 @@ long copy_to_user(void *from, void *to, u64_t size)
     return size;
 }
 
-long strncpy_from_user(void *from, void *to, u64_t size)
+s64_t strncpy_from_user(void *from, void *to, u64_t size)
 {
     if (!verify_area(from, size))
         return 0;
@@ -74,9 +74,9 @@ long strncpy_from_user(void *from, void *to, u64_t size)
 /**
  * @brief 在内核态，判断用户字符串src的长度是否越界
  *
- * @return long 字符串长度。 如果字符串越界，返回的是 0
+ * @return s64_t 字符串长度。 如果字符串越界，返回的是 0
  */
-long strnlen_user(void *src, u64_t maxlen)
+s64_t strnlen_user(void *src, u64_t maxlen)
 {
     u64_t size = strlen(src);
     if (!verify_area(src, size))
@@ -130,7 +130,7 @@ void list_del(struct List *entry)
 }
 
 // return: 1 = 空 ， 0 = 不空
-long list_is_empty(struct List *entry)
+s64_t list_is_empty(struct List *entry)
 {
     if (entry == entry->next && entry->prev == entry)
         return 1;
@@ -296,7 +296,7 @@ str_t strcpy(str_t Dest, cstr_t Src)
         string copy number bytes
 */
 
-str_t strncpy(str_t Dest, str_t Src, long Count)
+str_t strncpy(str_t Dest, str_t Src, s64_t Count)
 {
     __asm__ __volatile__("cld	\n\t"
                          "1:	\n\t"

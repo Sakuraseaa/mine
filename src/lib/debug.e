@@ -951,10 +951,10 @@ struct FAT32_LongDirectory
     u16_t LDIR_Name3[2];
 } __attribute__((packed));
 
-extern struct index_node_operations FAT32_inode_ops;
-extern struct file_operations FAT32_file_ops;
+extern index_node_operations_t FAT32_inode_ops;
+extern file_operations_tFAT32_file_ops;
 extern struct dir_entry_operations FAT32_dentry_ops;
-extern struct super_block_operations FAT32_sb_ops;
+extern super_block_operations_t FAT32_sb_ops;
 # 10 "/home/steven/mine/src/include/fs/VFS.h" 2
 
 # 1 "/home/steven/mine/src/include/fs/buffer.h" 1
@@ -1138,11 +1138,11 @@ struct file_system_type
     struct file_system_type *next;
 };
 
-struct super_block_operations;
-struct index_node_operations;
+super_block_operations_t;
+index_node_operations_t;
 struct dir_entry_operations;
 struct file_operations;
-struct index_node;
+inode_t;
 dir_entry_t;
 
 typedef struct ide_part_t
@@ -1171,7 +1171,7 @@ typedef spblk_t
 
 
 
-    struct super_block_operations *sb_ops;
+    super_block_operations_t *sb_ops;
 
     u64 s_flags;
 
@@ -1179,7 +1179,7 @@ typedef spblk_t
 }spblk_t;
 
 
-typedef struct index_node
+typedef inode_t
 {
 
     list_t i_sb_list;
@@ -1211,8 +1211,8 @@ typedef struct index_node
 
     spblk_t *sb;
 
-    struct file_operations *f_ops;
-    struct index_node_operations *inode_ops;
+    file_operations_t*f_ops;
+    index_node_operations_t *inode_ops;
 
     void *private_index_info;
 }inode_t;
@@ -1234,7 +1234,7 @@ typedef dir_entry_t
     struct List child_node;
     struct List subdirs_list;
 
-    struct index_node *dir_inode;
+    inode_t *dir_inode;
     dir_entry_t *parent;
 
     struct dir_entry_operations *dir_ops;
@@ -1246,37 +1246,37 @@ typedef int (*filldir_t)(void *buf,char *name, long namelen,long offset);
 
 
 
-struct file
+file_t
 {
     long position;
     u64_t mode;
 
     dir_entry_t *dentry;
 
-    struct file_operations *f_ops;
+    file_operations_t*f_ops;
 
 
     void *private_data;
 };
 
-struct super_block_operations
+super_block_operations_t
 {
     void (*write_superblock)(spblk_t *sb);
     void (*put_superblock)(spblk_t *sb);
 
-    void (*write_inode)(struct index_node *inode);
+    void (*write_inode)(inode_t *inode);
 };
 
-struct index_node_operations
+index_node_operations_t
 {
-    long (*create)(struct index_node *inode, dir_entry_t *dentry, int mode);
-    dir_entry_t *(*lookup)(struct index_node *parent_inode, dir_entry_t *dest_dentry);
-    long (*mkdir)(struct index_node *inode, dir_entry_t *dentry, int mode);
-    long (*rmdir)(struct index_node *inode, dir_entry_t *dentry);
-    long (*rename)(struct index_node *old_inode, dir_entry_t *old_dentry, struct index_node *new_inode, dir_entry_t *new_dentry);
+    long (*create)(inode_t *inode, dir_entry_t *dentry, int mode);
+    dir_entry_t *(*lookup)(inode_t *parent_inode, dir_entry_t *dest_dentry);
+    long (*mkdir)(inode_t *inode, dir_entry_t *dentry, int mode);
+    long (*rmdir)(inode_t *inode, dir_entry_t *dentry);
+    long (*rename)(inode_t *old_inode, dir_entry_t *old_dentry, inode_t *new_inode, dir_entry_t *new_dentry);
     long (*getattr)(dir_entry_t *dentry, u64_t *attr);
     long (*setattr)(dir_entry_t *dentry, u64_t *attr);
-    long (*unlink)(struct index_node *dir, struct dentry* dentry);
+    long (*unlink)(inode_t *dir, struct dentry* dentry);
 };
 
 struct dir_entry_operations
@@ -1284,27 +1284,27 @@ struct dir_entry_operations
     long (*compare)(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename);
     long (*hash)(dir_entry_t *dentry, char *filename);
     long (*release)(dir_entry_t *dentry);
-    long (*iput)(dir_entry_t *dentry, struct index_node *inode);
+    long (*iput)(dir_entry_t *dentry, inode_t *inode);
     long (*d_delete)(struct dentry *dentry);
 };
 
 
 struct file_operations
 {
-    long (*open)(struct index_node *inode, struct file *filp);
-    long (*close)(struct index_node *inode, struct file *filp);
-    long (*read)(struct file *filp, char *buf, u64_t count, long *position);
-    long (*write)(struct file *filp, char *buf, u64_t count, long *position);
-    long (*lseek)(struct file *filp, long offset, long origin);
-    long (*ioctl)(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg);
-    long (*readdir)(struct file* filp, void* dirent, filldir_t filler);
+    long (*open)(inode_t *inode, file_t *filp);
+    long (*close)(inode_t *inode, file_t *filp);
+    long (*read)(file_t *filp, char *buf, u64_t count, long *position);
+    long (*write)(file_t *filp, char *buf, u64_t count, long *position);
+    long (*lseek)(file_t *filp, long offset, long origin);
+    long (*ioctl)(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg);
+    long (*readdir)(file_t* filp, void* dirent, filldir_t filler);
 };
 
 spblk_t *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf);
 u64_t register_filesystem(struct file_system_type *fs);
 u64_t unregister_filesystem(struct file_system_type *fs);
 dir_entry_t *path_walk(char *name, u64_t flags, dir_entry_t **create_file);
-long FS_lseek(struct file *filp, long offset, long origin);
+long FS_lseek(file_t *filp, long offset, long origin);
 
 void DISK1_FAT32_FS_init(void);
 void VFS_init(void);
@@ -1386,7 +1386,7 @@ task_t
  long priority;
  long vrun_time;
  long exit_code;
- struct file *file_struct[10];
+ file_t *file_struct[10];
 
 
  wait_queue_t wait_childexit;
@@ -1395,7 +1395,7 @@ task_t
 
  dir_entry_t *i_pwd;
  dir_entry_t *i_root;
- struct index_node *i_exec;
+ inode_t *i_exec;
 };
 
 

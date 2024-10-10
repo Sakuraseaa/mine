@@ -2,7 +2,7 @@
 #define _TIME_F_H_
 
 void timer_init();
-int get_cmos_time(struct time *time);
+s32_t get_cmos_time(struct time *time);
 void localtime(u64_t stamp, struct time* tm);
 u64_t NOW();
 

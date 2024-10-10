@@ -156,7 +156,7 @@ s32_t vsprintf(str_t buf, cstr_t fmt, va_list args)
 		else if (*fmt == '*')
 		{
 			fmt++;
-			field_width = va_arg(args, int);
+			field_width = va_arg(args, s32_t);
 			if (field_width < 0)
 			{
 				field_width = -field_width;
@@ -175,7 +175,7 @@ s32_t vsprintf(str_t buf, cstr_t fmt, va_list args)
 			else if (*fmt == '*')
 			{
 				fmt++;
-				precision = va_arg(args, int);
+				precision = va_arg(args, s32_t);
 			}
 			if (precision < 0)
 				precision = 0;
@@ -195,7 +195,7 @@ s32_t vsprintf(str_t buf, cstr_t fmt, va_list args)
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = ' ';
-			*str++ = (u8_t)va_arg(args, int);
+			*str++ = (u8_t)va_arg(args, s32_t);
 			while (--field_width > 0)
 				*str++ = ' ';
 			break;
@@ -258,21 +258,21 @@ s32_t vsprintf(str_t buf, cstr_t fmt, va_list args)
 		case 'u':
 
 			if (qualifier == 'l')
-				str = number(str, va_arg(args, long), 10, field_width, precision, flags);
+				str = number(str, va_arg(args, s64_t), 10, field_width, precision, flags);
 			else
-				str = number(str, va_arg(args, int), 10, field_width, precision, flags);
+				str = number(str, va_arg(args, s32_t), 10, field_width, precision, flags);
 			break;
 
 		case 'n':
 
 			if (qualifier == 'l')
 			{
-				long *ip = va_arg(args, long *);
+				s64_t *ip = va_arg(args, s64_t *);
 				*ip = (str - buf);
 			}
 			else
 			{
-				int *ip = va_arg(args, int *);
+				s32_t *ip = va_arg(args, s32_t *);
 				*ip = (str - buf);
 			}
 			break;

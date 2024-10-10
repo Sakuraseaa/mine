@@ -107,9 +107,9 @@ extern struct Global_Memory_Descriptor memory_management_struct;
 #define Phy_to_2M_Page(kaddr) (memory_management_struct.pages_struct + ((u64_t)(kaddr) >> PAGE_2M_SHIFT))
 
 //// each zone index
-int ZONE_DMA_INDEX = 0;
-int ZONE_NORMAL_INDEX = 0;  // low 1GB RAM ,was mapped in pagetable
-int ZONE_UNMAPED_INDEX = 0; // above 1GB RAM,unmapped in pagetable
+s32_t ZONE_DMA_INDEX = 0;
+s32_t ZONE_NORMAL_INDEX = 0;  // low 1GB RAM ,was mapped in pagetable
+s32_t ZONE_UNMAPED_INDEX = 0; // above 1GB RAM,unmapped in pagetable
 
 /*
     kmalloc`s struct

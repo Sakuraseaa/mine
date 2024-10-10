@@ -26,13 +26,13 @@ extern char _ebss;
 extern char _end;
 
 extern u64_t _stack_start;
-extern long global_pid;
+extern s64_t global_pid;
 
 extern void ret_system_call();
 
 extern u64_t kallsyms_addresses[] __attribute__((__weak__));
-extern long kallsyms_syms_num __attribute__((__weak__));
-extern long kallsyms_index[] __attribute__((__weak__));
+extern s64_t kallsyms_syms_num __attribute__((__weak__));
+extern s64_t kallsyms_index[] __attribute__((__weak__));
 extern char* kallsyms_names __attribute((__weak__));
 
 //// task_t.falgs
@@ -79,11 +79,11 @@ typedef struct thread_struct
 typedef struct task_struct
 {
 
-	volatile long state;		// 进程状态: 运行态，停止态，可中断态
+	volatile s64_t state;		// 进程状态: 运行态，停止态，可中断态
 	u64_t flags; 		// 进程标志：进程，线程，内核线程
-	long preempt_count;	 		// 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
-	long signal;
-	long blocked;  		// 信号位图 和 bitmap of masked signals
+	s64_t preempt_count;	 		// 持有的自旋锁的数量, Linux使用自旋锁来标记非抢占区域: 在持有自旋锁期间关闭抢占功能，直至释放自旋锁为止
+	s64_t signal;
+	s64_t blocked;  		// 信号位图 和 bitmap of masked signals
 	sigaction_t* sigaction;		// 信号将要执行的操作和标志信息, 每一项对应一个信号, 一共三十二项
 
 	
@@ -95,17 +95,16 @@ typedef struct task_struct
 	/*	0x0000,0000,0000,0000 - 0x0000,7fff,ffff,ffff user,   对应第255个PML4页表项， 0 ~ 255   */
 	/*	0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel, 对应第256个PML4页表项， 256 ~ 511 */
 
-	long pid;
+	s64_t pid;
 
 	u32_t uid;				// 用户 id
 	u32_t gid;				// 用户组 id
 	u16_t umask;				// 进程用户文件掩码
 
-	long priority;			// 进程可用时间片
-	long vrun_time; 		// 记录进程虚拟运行时间的成员变量 vrun_time
-	long exit_code;
-	struct file *file_struct[TASK_FILE_MAX];
-
+	s64_t priority;			// 进程可用时间片
+	s64_t vrun_time; 		// 记录进程虚拟运行时间的成员变量 vrun_time
+	s64_t exit_code;
+	file_t *file_struct[TASK_FILE_MAX];
 
 	wait_queue_t wait_childexit;
 	struct task_struct *next;	// next 用于连接所有进程
@@ -113,7 +112,7 @@ typedef struct task_struct
 
 	dir_entry_t *i_pwd;	 // 进程当前目录 inode program work directory
 	dir_entry_t *i_root; // 进程根目录 inode
-	struct index_node *i_exec; // 程序文件 inode
+	inode_t *i_exec; // 程序文件 inode
 }task_t;
 
 // 进程PCB和内核栈空间 32kb

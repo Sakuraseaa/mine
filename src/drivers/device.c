@@ -16,7 +16,7 @@ static device_t *get_null_device()
     return nullptr;
 }
 
-int device_ioctl(dev_t dev, int cmd, void *args, int flags)
+s32_t device_ioctl(dev_t dev, s32_t cmd, void *args, s32_t flags)
 {
     device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART)
@@ -36,9 +36,9 @@ int device_ioctl(dev_t dev, int cmd, void *args, int flags)
  * @param count 需要读的扇区数
  * @param idx 硬盘逻辑块号 LBA
  * @param flags  用这个参数来 来区分 minix 和 fat32 ?
- * @return int 
+ * @return s32_t 
  */
-int device_read(dev_t dev, void *buf, size_t count, idx_t lba, int flags)
+s32_t device_read(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
 {
     device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART) {
@@ -51,7 +51,7 @@ int device_read(dev_t dev, void *buf, size_t count, idx_t lba, int flags)
     return -ENOSYS;
 }
 
-int device_write(dev_t dev, void *buf, size_t count, idx_t lba, int flags)
+s32_t device_write(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
 {
     device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART) {

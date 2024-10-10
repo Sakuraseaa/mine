@@ -9,7 +9,7 @@
 typedef struct dir_entry
 {
     char *name;      // 文件名
-    int name_length; // 文件长度
+    s32_t name_length; // 文件长度
 
     // 描述目录项之间的层级关系
 
@@ -18,7 +18,7 @@ typedef struct dir_entry
     struct List child_node;
     struct List subdirs_list; // subdirectory - 子目录
 
-    struct index_node *dir_inode; // 本目录项描述的文件的inode
+    inode_t *dir_inode; // 本目录项描述的文件的inode
     struct dir_entry *parent;     // 父目录项
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：

@@ -180,8 +180,8 @@ struct Page *alloc_pages(s32_t zone_select, s32_t number, u64_t page_flags)
         // 在内存区域zone中，遍历对应的物理页，按照u64_t类型作为步进长度(这里的处理很绝，值得学习)
         for (j = start; j < end; j += j % 64 ? tmp : 64)
         {
-            u64_t *p = memory_management_struct.bits_map + (j >> 6); // 定位到位图中的long
-            u64_t shift = j % 64;                                    // 在long中的偏移
+            u64_t *p = memory_management_struct.bits_map + (j >> 6); // 定位到位图中的s64_t
+            u64_t shift = j % 64;                                    // 在s64_t中的偏移
             u64_t k = 0;
             u64_t num = (1UL << number) - 1;
 
@@ -300,7 +300,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
             for (j = 0; j < slab_p->color_count; j++)
             {
                 if (*(slab_p->color_map + (j >> 6)) == 0xffffffffffffffffUL)
-                { // 如果本long里面没有空位, 递增 j
+                { // 如果本s64_t里面没有空位, 递增 j
                     j += 63;
                     continue;
                 }
@@ -390,7 +390,7 @@ u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg)
     } while (slab_p != slab_cache->cache_pool);
 
     // 如果执行到这里, 说明程序出错
-    color_printk(RED, BLACK, "slab_free() ERROR: address not int slab\n");
+    color_printk(RED, BLACK, "slab_free() ERROR: address not slab\n");
     return 0;
 }
 
@@ -489,7 +489,7 @@ u64_t slab_init()
     {
         // 给内存池创建Slab结构体(递增内核边界)
         kmalloc_cache_size[i].cache_pool = (struct Slab *)memory_management_struct.end_of_struct;
-        memory_management_struct.end_of_struct = memory_management_struct.end_of_struct + sizeof(struct Slab) + sizeof(long) * 10;
+        memory_management_struct.end_of_struct = memory_management_struct.end_of_struct + sizeof(struct Slab) + sizeof(s64_t) * 10;
 
         /////////////////// 初始化必要的Slab结构体的成员
         list_init(&kmalloc_cache_size[i].cache_pool->list);
@@ -502,7 +502,7 @@ u64_t slab_init()
 
         // 建立位图, 递增内核边界, 把所有位图置位
         kmalloc_cache_size[i].cache_pool->color_map = (u64_t *)memory_management_struct.end_of_struct;
-        memory_management_struct.end_of_struct = (u64_t)(memory_management_struct.end_of_struct + kmalloc_cache_size[i].cache_pool->color_length + sizeof(long) * 10) & (~(sizeof(long) - 1));
+        memory_management_struct.end_of_struct = (u64_t)(memory_management_struct.end_of_struct + kmalloc_cache_size[i].cache_pool->color_length + sizeof(s64_t) * 10) & (~(sizeof(s64_t) - 1));
         memset(kmalloc_cache_size[i].cache_pool->color_map, 0xff, kmalloc_cache_size[i].cache_pool->color_length);
 
         // 把位图中该恢复的位，恢复, 异或
@@ -565,7 +565,7 @@ struct Slab *kmalloc_create(u64_t size)
     struct Slab *slab = nullptr;
     struct Page *page = nullptr;
     u64_t *vaddress = nullptr;
-    long structsize = 0; // 记录 Slab 和 位图 的大小
+    s64_t structsize = 0; // 记录 Slab 和 位图 的大小
 
     // 申请一个物理页
     page = alloc_pages(ZONE_NORMAL, 1, 0);
@@ -668,7 +668,7 @@ void *kmalloc(u64_t size, u64_t gfp_flags)
     if (size > 1048576)
     {
         // 如果申请的资源超过了1MB, 那么就直接返回
-        color_printk(RED, BLACK, "kmalloc() ERROR: kmalloc size too long:%08d\n", size);
+        color_printk(RED, BLACK, "kmalloc() ERROR: kmalloc size too loog:%08d\n", size);
         return nullptr;
     }
     // 寻找到合适的内存池
@@ -959,7 +959,7 @@ void init_memory()
     // 2MB物理页面数
     memory_management_struct.bits_size = TotalMem >> PAGE_2M_SHIFT;
     // b. 位图长度(单位是字节) --- 此处的 & 符号可以理解为除法
-    memory_management_struct.bits_length = (((u64_t)(TotalMem >> PAGE_2M_SHIFT) + sizeof(long) * 8 - 1) / 8) & (~(sizeof(long) - 1));
+    memory_management_struct.bits_length = (((u64_t)(TotalMem >> PAGE_2M_SHIFT) + sizeof(s64_t) * 8 - 1) / 8) & (~(sizeof(s64_t) - 1));
     // c. 把位图全置位 init bits map memory
     memset(memory_management_struct.bits_map, 0xff, memory_management_struct.bits_length); // init bits map memory
 
@@ -970,7 +970,7 @@ void init_memory()
 
     memory_management_struct.pages_size = TotalMem >> PAGE_2M_SHIFT;
 
-    memory_management_struct.pages_length = ((TotalMem >> PAGE_2M_SHIFT) * sizeof(struct Page) + sizeof(long) - 1) & (~(sizeof(long) - 1));
+    memory_management_struct.pages_length = ((TotalMem >> PAGE_2M_SHIFT) * sizeof(struct Page) + sizeof(s64_t) - 1) & (~(sizeof(s64_t) - 1));
 
     memset(memory_management_struct.pages_struct, 0x00, memory_management_struct.pages_length); // init pages memory
 
@@ -980,7 +980,7 @@ void init_memory()
 
     memory_management_struct.zones_size = 0;
 
-    memory_management_struct.zones_length = (5 * sizeof(struct Zone) + sizeof(long) - 1) & (~(sizeof(long) - 1));
+    memory_management_struct.zones_length = (5 * sizeof(struct Zone) + sizeof(s64_t) - 1) & (~(sizeof(s64_t) - 1));
 
     memset(memory_management_struct.zones_struct, 0x00, memory_management_struct.zones_length);
     // ================ 初始化 Zone 和 Page 结构体
@@ -1047,7 +1047,7 @@ void init_memory()
 
     /////////////
 
-    memory_management_struct.zones_length = (memory_management_struct.zones_size * sizeof(struct Zone) + sizeof(long) - 1) & (~(sizeof(long) - 1));
+    memory_management_struct.zones_length = (memory_management_struct.zones_size * sizeof(struct Zone) + sizeof(s64_t) - 1) & (~(sizeof(s64_t) - 1));
     // 显示三种结构的信息
     color_printk(ORANGE, BLACK, "bits_map:%#018lx,bits_size:%#018lx,bits_length:%#018lx\n", memory_management_struct.bits_map, memory_management_struct.bits_size, memory_management_struct.bits_length);
     color_printk(ORANGE, BLACK, "pages_struct:%#018lx,pages_size:%#018lx,pages_length:%#018lx\n", memory_management_struct.pages_struct, memory_management_struct.pages_size, memory_management_struct.pages_length);
@@ -1070,7 +1070,7 @@ void init_memory()
     // color_printk(ORANGE, BLACK, "ZONE_DMA_INDEX:%d\tZONE_NORMAL_INDEX:%d\tZONE_UNMAPED_INDEX:%d\n", ZONE_DMA_INDEX, ZONE_NORMAL_INDEX, ZONE_UNMAPED_INDEX);
     //  给内存管理结构尾赋值，并且预留的一段内存空间防止越界访问, 字节单位
     ////need a blank to separate memory_management_struct
-    memory_management_struct.end_of_struct = (u64_t)((u64_t)memory_management_struct.zones_struct + memory_management_struct.zones_length + sizeof(long) * 32) & (~(sizeof(long) - 1));
+    memory_management_struct.end_of_struct = (u64_t)((u64_t)memory_management_struct.zones_struct + memory_management_struct.zones_length + sizeof(s64_t) * 32) & (~(sizeof(s64_t) - 1));
 
     // color_printk(ORANGE, BLACK, "start_code:%#018lx,end_code:%#018lx,end_data:%#018lx,start_brk:%#018lx,end_of_struct:%#018lx\n", memory_management_struct.start_code, memory_management_struct.end_code, memory_management_struct.end_data, memory_management_struct.start_brk, memory_management_struct.end_of_struct);
 
@@ -1244,7 +1244,7 @@ u64_t do_wp_page(u64_t virtual_address) {
  *配合exec
  * @param address The address that cause the exception
  */
-extern long krluserspace_accessfailed(adr_t fairvadrs);
+extern s64_t krluserspace_accessfailed(adr_t fairvadrs);
 s64_t do_no_page(u64_t virtual_address)
 {
     return krluserspace_accessfailed(virtual_address);

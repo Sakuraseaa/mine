@@ -5,8 +5,8 @@
 #include "kernelkit.h"
 
 // 鼠标输入缓存区
-struct keyboard_inputbuffer *p_mouse = nullptr;
-static int mouse_count = 0;
+keyboard_inputbuffer_t *p_mouse = nullptr;
+static s32_t mouse_count = 0;
 
 void mouse_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
@@ -55,9 +55,9 @@ void mouse_exit()
 
 void mouse_init()
 {
-    struct IO_APIC_RET_entry entry;
+    io_apic_ret_entry_t entry;
 
-    p_mouse = (struct keyboard_inputbuffer *)knew(sizeof(struct keyboard_inputbuffer), 0);
+    p_mouse = (keyboard_inputbuffer_t *)knew(sizeof(keyboard_inputbuffer_t), 0);
     p_mouse->p_head = p_mouse->buf;
     p_mouse->p_tail = p_mouse->buf;
     p_mouse->count = 0;

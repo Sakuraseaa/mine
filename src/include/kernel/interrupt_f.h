@@ -2,8 +2,8 @@
 #define _INTERRUPT_F_H_
 
 // 中断注册函数，根据中断向量号把中断处理函数，参数以及相关结果和数据赋值到对应irq_desc_T
-int register_irq(u64_t irq, void *arg, void (*handler)(u64_t nr, u64_t parameter, pt_regs_t *regs),
+s32_t register_irq(u64_t irq, void *arg, void (*handler)(u64_t nr, u64_t parameter, pt_regs_t *regs),
                  u64_t parameter, hw_int_controller *controller, char *irq_name);
-int unregister_irq(u64_t irq);
+s32_t unregister_irq(u64_t irq);
 
-#endif // _INTERRUPT_F_H_
+#endif // _s32_tERRUPT_F_H_

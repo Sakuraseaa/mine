@@ -12,14 +12,14 @@ typedef struct super_block
     struct buffer *buf; // 超级块描述符 buffer
     dev_t dev;            // 设备号
     u32_t count;            // 引用计数
-    int type;             // 文件系统类型
+    s32_t type;             // 文件系统类型:
     size_t sector_size;   // 扇区大小
     size_t block_size;    // 块大小
     list_t inode_list;    // 使用中 inode 链表
-    // struct index_node *imount;      // 安装到的 inode
+    // inode_t *imount;      // 安装到的 inode
 
     // 包含操作： superblock结构的读写, inode的写
-    struct super_block_operations *sb_ops;
+    super_block_operations_t *sb_ops;
 
     u64_t s_flags; // mount mark
     // 用于保存各类文件系统的特有数据信息

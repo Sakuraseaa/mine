@@ -131,7 +131,7 @@ static char *path_parse(char *pathname, char *name_store)
  * @param pathname 需要判断深度的路径名
  * @return uint32_t 路径的深度
  */
-static int path_depth_cnt(char *pathname)
+static s32_t path_depth_cnt(char *pathname)
 {
     char *p = pathname;
     char name[MAX_FILE_NAME_LEN];
@@ -181,7 +181,7 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pat
 dir_entry_t *path_walk(char *name, u64_t flags, dir_entry_t **create_file)
 {
     char *tmpname = nullptr;
-    int tmpnamelen = 0, nameDep = 0, Count = 0;
+    s32_t tmpnamelen = 0, nameDep = 0, Count = 0;
     dir_entry_t *parent = current_sb->root; // 父目录项
     dir_entry_t *path = nullptr;      // 子目录项
     char filename[64];
@@ -283,10 +283,10 @@ last_slash:     // 最后的斜杠
 }
 
 // 设置文件指针的位置。这个函数的使用能否提升到VFS层面?
-long FS_lseek(struct file *filp, long offset, long origin)
+s64_t FS_lseek(file_t *filp, s64_t offset, s64_t origin)
 {
 
-    long pos = 0;
+    s64_t pos = 0;
 
     switch (origin)
     {
@@ -340,6 +340,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
         if(DPT.DPTE[i].start_LBA != 0) {
             DEBUGK("DPTE[%d] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", i, DPT.DPTE[i].start_LBA, DPT.DPTE[i].type, DPT.DPTE[i].sectors_limit);
             sprintf(part[i].name, "1_part%d", i);
+            part[i].disk = nullptr;
             part[i].start = DPT.DPTE[i].start_LBA;
             part[i].count = DPT.DPTE[i].sectors_limit;
             part[i].system = DPT.DPTE[i].type;

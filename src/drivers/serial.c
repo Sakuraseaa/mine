@@ -15,7 +15,7 @@ serial_t serials[2];
 
 void recv_data(serial_t *serial)
 {
-    char ch = io_in8(serial->iobase);
+    char_t ch = io_in8(serial->iobase);
     if (ch == '\r') // 特殊处理，回车键直接换行
     {
         ch = '\n';
@@ -44,13 +44,13 @@ void serial_handler(u64_t nr, u64_t parameter, pt_regs_t *regs) {
     // 先不编写串口的相关代码
 }
 
-int serial_read(serial_t *serial, char *buf, u64_t count)
+s32_t serial_read(serial_t *serial, s8_t *buf, u64_t count)
 {
     return 0;
 }
 
-int serial_write(serial_t *serial, char *buf, u64_t count) {
-    int nr = 0;
+s32_t serial_write(serial_t *serial, s8_t *buf, u64_t count) {
+    s32_t nr = 0;
     while (nr < count)
     {
         u8_t state = io_in8(serial->iobase + COM_LINE_STATUS);

@@ -3,10 +3,10 @@
 
 void keyboard_init();
 void keyboard_exit();
-long keyboard_open(struct index_node *inode, struct file *filp);
-long keyboard_close(struct index_node *inode, struct file *filp);
-long keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg);
-long keyboard_read(struct file *flip, char *buf, u64_t count, long *position);
-long keyboard_write(struct file *flip, char *buf, u64_t count, long *position);
+s64_t keyboard_open(inode_t *inode, file_t *filp);
+s64_t keyboard_close(inode_t *inode, file_t *filp);
+s64_t keyboard_ioctl(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg);
+s64_t keyboard_read(file_t *flip, char *buf, u64_t count, s64_t *position);
+s64_t keyboard_write(file_t *flip, char *buf, u64_t count, s64_t *position);
 
 #endif // _KEYBOARD_F_H_

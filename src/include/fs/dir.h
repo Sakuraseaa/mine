@@ -4,19 +4,19 @@
 // 目录文件的句柄
 struct DIR
 {
-    int fd;
-    int buf_pos;
-    int buf_end;
+    s32_t fd;
+    s32_t buf_pos;
+    s32_t buf_end;
     char buf[256];
 };
 
 // direntory，抽象出来的目录文件属性
 struct dirent
 {
-    long nr;
-    long d_offset;
-    long d_namelen;
-    char d_name[];
+    s64_t nr;
+    s64_t d_offset;
+    s64_t d_namelen;
+    s8_t d_name[];
 };
 
 #endif

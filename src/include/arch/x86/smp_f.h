@@ -8,7 +8,7 @@ extern u8_t _APU_boot_end[];
 // spinlock_t SMP_lock;
 
 void SMP_init();
-int SMP_cpu_id();
+s32_t SMP_cpu_id();
 void Start_SMP();
 
 #endif

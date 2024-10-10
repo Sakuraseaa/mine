@@ -74,10 +74,10 @@ enum segment_type
  * @brief open_exec_file(char*)用于搜索文件系统的目标文件，本函数与sys_open函数的指向流程基本相似
  *本函数最重要的作用是为目标文件描述符指派操作方法（filp.f_ops = dentry.dir_inode.f_ops）
  */
-struct file *open_exec_file(char *path)
+file_t *open_exec_file(char *path)
 {
     dir_entry_t *dentry = nullptr;
-	struct file *filp = nullptr;
+	file_t *filp = nullptr;
 
 	dentry = path_walk(path, 0, 0);
 	if (dentry == nullptr)
@@ -86,7 +86,7 @@ struct file *open_exec_file(char *path)
 		color_printk(RED, BLACK, "bash: %s: Is a directory\n", path);
 		return (void *)-ENOTDIR;
 	}
-	filp = (struct file *)knew(sizeof(struct file), 0);
+	filp = (file_t *)knew(sizeof(file_t), 0);
 	if (filp == nullptr)
 		return (void *)-ENOMEM;
 	filp->position = 0;
@@ -158,7 +158,7 @@ static void virtual_map(u64_t user_addr){
  * @return true 加载成功
  * @return false 加载失败
  */
-static bool segment_load(struct file* filp, u64_t offset, u64_t filesz, u64_t vaddr) {
+static bool segment_load(file_t* filp, u64_t offset, u64_t filesz, u64_t vaddr) {
     // 计算段将要加载到的虚拟页
     u64_t vaddr_first_page = vaddr & TASK_SIZE;
     // 表示文件在第一个页框中占用的字节大小
@@ -199,7 +199,7 @@ static u64_t code_start_addr = 0;
  * @param elf_header 
  * @return u64_t 
  */
-static u64_t section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
+static u64_t section_analysis(file_t *filp, Elf64_Ehdr* elf_header) {
     
 	Elf64_Half	s_size = elf_header->e_shentsize;		/* Section header table entry size */  
     Elf64_Half	s_num = elf_header->e_shnum;		    /* Section header table entry count */
@@ -265,7 +265,7 @@ static u64_t section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
  */
 static u64_t load(char *pathname)
 {
-	struct file *filp = nullptr;
+	file_t *filp = nullptr;
 	u64_t end_bss = 0;
 	s64_t ret = -1;
 
@@ -382,7 +382,7 @@ u64_t do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 
 	// 在用户空间，复制进程运行参数, rewriter:: this is argc locked 10. all right.
 	if( argv != nullptr ) {
-		int len = 0, i = 0;
+		s32_t len = 0, i = 0;
 		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
 		pos = (u64_t)dargv;
 

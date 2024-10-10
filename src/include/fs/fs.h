@@ -36,7 +36,7 @@ struct Disk_Partition_Table
 struct file_system_type
 {
     char *name;
-    int fs_flags;
+    s32_t fs_flags;
     // read_superblock 存有解析文件系统引导扇区的方法
     struct super_block *(*read_superblock)(struct Disk_Partition_Table_Entry *DPTE, void *buf);
     // 当挂载文件系统时，操作系统只需沿着文件系统链表搜索文件系统名

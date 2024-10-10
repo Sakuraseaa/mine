@@ -34,7 +34,7 @@ struct IOAPIC_map
 } ioapic_map;
 
 // I/O 中断定向投递寄存器组 - RTE
-struct IO_APIC_RET_entry
+typedef struct IO_APIC_RET_entrya
 {
     u32_t vector : 8, // 0 ~ 7 中断向量号
         deliver_mode : 3,    // 8 ~ 10 选择投递模式
@@ -61,7 +61,7 @@ struct IO_APIC_RET_entry
                 logical_dest : 8;        // 56 ~ 63  投递目标
         } logical;
     } destination;
-} __attribute__((packed));
+} __attribute__((packed)) io_apic_ret_entry_t;
 
 // delivery mode
 #define APIC_ICR_IOAPIC_Fixed 0      // LAPIC	IOAPIC 	ICR

@@ -7,7 +7,7 @@ typedef struct{
     u64_t start_phy, end_phy;
 }map_entry_t;
 
-static void Print_Map(map_entry_t* map, const long i_m) {
+static void Print_Map(map_entry_t* map, const s64_t i_m) {
     size_t i;
     // User
     for(i = 0; i < i_m; i++) {

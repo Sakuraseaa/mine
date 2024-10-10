@@ -129,9 +129,9 @@ struct FAT32_LongDirectory
 typedef struct FAT32_Directory FAT32_directory_t;
 typedef struct FAT32_LongDirectory FAT32_longdirectory_t;
 
-extern struct index_node_operations FAT32_inode_ops;
-extern struct file_operations FAT32_file_ops;
+extern index_node_operations_t FAT32_inode_ops;
+extern file_operations_t FAT32_file_ops;
 extern struct dir_entry_operations FAT32_dentry_ops;
-extern struct super_block_operations FAT32_sb_ops;
+extern super_block_operations_t FAT32_sb_ops;
 
 #endif

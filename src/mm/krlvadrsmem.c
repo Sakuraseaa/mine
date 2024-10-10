@@ -665,7 +665,7 @@ void test_vadr()
 		color_printk(RED, BLACK, "分配虚拟地址空间失败\n");
 	}
 	
-	int* p = (int*)vadr;
+	s32_t* p = (s32_t*)vadr;
 	*p = 20; // 触发缺页中断
 	
 	kmalloc_4k_page(1);

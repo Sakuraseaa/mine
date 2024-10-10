@@ -32,12 +32,12 @@ typedef struct serial_t
 
     u8_t *p_head; // 缓冲区首尾指针
     u8_t *p_tail;
-    int count; // 缓冲数据计数器
+    s32_t count; // 缓冲数据计数器
 
     u8_t rx_buf[SERIAL_BUF_LEN];  // 读 缓冲
 } serial_t;
 
-int serial_read(serial_t *serial, char *buf, u64_t count);
-int serial_write(serial_t *serial, char *buf, u64_t count);
+s32_t serial_read(serial_t *serial, s8_t *buf, u64_t count);
+s32_t serial_write(serial_t *serial, s8_t *buf, u64_t count);
 void serial_init();
 #endif

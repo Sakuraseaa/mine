@@ -59,7 +59,7 @@ void interruptible_sleep_on(wait_queue_t *wait_queue_head)
  * @param wait_queue_head 等待队列头结点
  * @param state 需要被唤醒的线程，现在处于什么状态
  */
-void wakeup(wait_queue_t *wait_queue_head, long state)
+void wakeup(wait_queue_t *wait_queue_head, s64_t state)
 {
     wait_queue_t *node = nullptr;
     if (list_is_empty(&wait_queue_head->wait_list))
@@ -78,7 +78,7 @@ void wakeup(wait_queue_t *wait_queue_head, long state)
 /**
  * @brief 唤醒线程
  */
-void wakeup_pid(wait_queue_t *wait_queue_head, long state, long pid)
+void wakeup_pid(wait_queue_t *wait_queue_head, s64_t state, s64_t pid)
 {
     wait_queue_t *node = wait_queue_head;
     if (list_is_empty(&wait_queue_head->wait_list))

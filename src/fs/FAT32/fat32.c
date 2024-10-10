@@ -45,7 +45,7 @@ u32_t DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, u32_t fat_entry)
 u64_t DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, u32_t fat_entry, u32_t value)
 {
     u32_t buf[128];
-    int i;
+    s32_t i;
     memset(buf, 0, 512);
     // 读fat
     IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (u8_t *)buf);
@@ -65,7 +65,7 @@ u64_t DISK1_FAT32_write_FAT_Entry(struct FAT32_sb_info *fsbi, u32_t fat_entry, u
  */
 u64_t FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
 {
-    int i, j;
+    s32_t i, j;
     u64_t sector_per_fat = fsbi->sector_per_FAT;
     u32_t buf[128];
 
@@ -85,8 +85,8 @@ u64_t FAT32_find_available_cluster(struct FAT32_sb_info *fsbi)
 }
 
 // 负责为访问文件数据提供操作方法
-long FAT32_open(struct index_node *inode, struct file *filp) { return 1; }
-long FAT32_close(struct index_node *inode, struct file *filp) { return 1; }
+s64_t FAT32_open(inode_t *inode, file_t *filp) { return 1; }
+s64_t FAT32_close(inode_t *inode, file_t *filp) { return 1; }
 
 /**
  * @brief 在filp指定的文件中，从文件起始偏移position个字节开始，读取count字节数据，存入buf中
@@ -97,18 +97,18 @@ long FAT32_close(struct index_node *inode, struct file *filp) { return 1; }
  * @param position 相对于文件的偏移位置/目标位置, 该参数会被FAT32_read进行修改
  * @return long 成功返回读取的字节数，失败返回错误码
  */
-long FAT32_read(struct file *filp, char *buf, u64_t count, long *position)
+s64_t FAT32_read(file_t *filp, char *buf, u64_t count, s64_t *position)
 {
     struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
     struct FAT32_sb_info *fsbi = filp->dentry->dir_inode->sb->private_sb_info;
 
     u64_t cluster = finode->first_cluster; // 文件访问位置所在簇号
     u64_t sector = 0;
-    int i, length = 0;
-    long retval = 0;
-    int index = *position / fsbi->bytes_per_cluster;   // 目标位置偏移簇数 / 扇区数
-    long offset = *position % fsbi->bytes_per_cluster; // 目标位置簇内偏移字节 / 扇区内偏移字节
-    char *buffer = (char *)knew(fsbi->bytes_per_cluster, 0);
+    s32_t i, length = 0;
+    s64_t retval = 0;
+    s32_t index = *position / fsbi->bytes_per_cluster;   // 目标位置偏移簇数 / 扇区数
+    s64_t offset = *position % fsbi->bytes_per_cluster; // 目标位置簇内偏移字节 / 扇区内偏移字节
+    s8_t *buffer = (s8_t *)knew(fsbi->bytes_per_cluster, 0);
 
     if (!cluster)
         return -EFAULT;
@@ -176,7 +176,7 @@ long FAT32_read(struct file *filp, char *buf, u64_t count, long *position)
  * @param position 相对于文件的偏移位置/目标位置
  * @return long 成功返回读取的字节数，失败返回错误码
  */
-long FAT32_write(struct file *filp, char *buf, u64_t count, long *position)
+s64_t FAT32_write(file_t *filp, char *buf, u64_t count, s64_t *position)
 {
     // a. 得到FAT32文件系统的元数据
     struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
@@ -185,12 +185,12 @@ long FAT32_write(struct file *filp, char *buf, u64_t count, long *position)
     u64_t cluster = finode->first_cluster; // 要写入文件的第一个簇
     u64_t next_cluster = 0;
     u64_t sector = 0;
-    int i, length = 0;
-    long retval = 0;
-    long flags = 0; // 是否要第一次写空文件
-    int index = *position / fsbi->bytes_per_cluster;
-    long offset = *position % fsbi->bytes_per_cluster;
-    char *buffer = (char *)knew(fsbi->bytes_per_cluster, 0);
+    s32_t i, length = 0;
+    s64_t retval = 0;
+    s64_t flags = 0; // 是否要第一次写空文件
+    s32_t index = *position / fsbi->bytes_per_cluster;
+    s64_t offset = *position % fsbi->bytes_per_cluster;
+    s8_t *buffer = (s8_t *)knew(fsbi->bytes_per_cluster, 0);
 
     if (!cluster) // 要写入的文件没有被分配簇号，那么获得簇号
     {
@@ -296,9 +296,9 @@ long FAT32_write(struct file *filp, char *buf, u64_t count, long *position)
     return retval;
 }
 
-long FAT32_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg) { return 0; }
+s64_t FAT32_ioctl(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg) { return 0; }
 
-int fill_dentry(void* buf, char*name, long namelen, long offset)
+s32_t fill_dentry(void* buf, char*name, s64_t namelen, s64_t offset)
 {
     struct dirent* dent = (struct dirent*)buf;
     if((u64_t) buf < TASK_SIZE && !verify_area(buf, sizeof(struct dirent) + namelen))
@@ -310,7 +310,7 @@ int fill_dentry(void* buf, char*name, long namelen, long offset)
 
 }
 
-long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
+s64_t FAT32_readdir(file_t* filp, void * dirent, filldir_t filler)
 {
     struct FAT32_inode_info* finode = filp->dentry->dir_inode->private_index_info;
     struct FAT32_sb_info* fsbi = filp->dentry->dir_inode->sb->private_sb_info;
@@ -318,9 +318,9 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
     u32_t cluster = 0;
     u64_t sector = 0;
     u8_t * buf = nullptr;
-    char* name = nullptr;
-    int namelen = 0;
-    int i = 0, j = 0, x = 0,y = 0;
+    str_t name = nullptr;
+    s32_t namelen = 0;
+    s32_t i = 0, j = 0, x = 0,y = 0;
     struct FAT32_Directory* tmpdentry = nullptr;
     struct FAT32_LongDirectory* tmpldentry = nullptr;
 
@@ -427,7 +427,7 @@ find_lookup_success:
     filp->position += 32;
     return filler(dirent,name,namelen, 0);
 }
-struct file_operations FAT32_file_ops =
+file_operations_t FAT32_file_ops =
     {
         .open = FAT32_open,
         .close = FAT32_close,
@@ -469,13 +469,13 @@ static u8_t FAT32_ChkSum(u8_t *pFcbName)
  * @param size 传出参数，记录目录项占用字节数
  * @return struct FAT32_LongDirectory*
  */
-static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, dir_entry_t *dentry, int mode, u64_t *size)
+static struct FAT32_LongDirectory *Create_FAT32DEntry(inode_t *inode, dir_entry_t *dentry, s32_t mode, u64_t *size)
 {
     struct FAT32_LongDirectory *fld, *fld0;
     struct FAT32_Directory *fd;
     struct FAT32_sb_info *fsbi = inode->sb->private_sb_info;
-    int i = 0, j = 0, LDir_count = 0, k = 0;
-    long ExpandNameIndex = -1, namelen = dentry->name_length; // 扩展名索引，字符串长度
+    s32_t i = 0, j = 0, LDir_count = 0, k = 0;
+    s64_t ExpandNameIndex = -1, namelen = dentry->name_length; // 扩展名索引，字符串长度
 
     char tmpName[namelen + 1];
     memset(tmpName, 0, namelen + 1);
@@ -518,7 +518,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
     }
 
     // 添加LDIR_NAME的文件名结束标志
-    int last_index = namelen % LDir_NameCount;
+    s32_t last_index = namelen % LDir_NameCount;
     if (last_index >= 11)
     {
         last_index -= 11;
@@ -565,9 +565,9 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
         fd->DIR_Name[j++] = tmpName[i++];
     // ------------------------------------------------------------------
     /*寻找成功后，创建本文件的index_node，通过物理目录项，获得该文件的全部信息*/
-    struct index_node *p;
-    p = (struct index_node *)knew(sizeof(struct index_node), 0);
-    memset(p, 0, sizeof(struct index_node));
+    inode_t *p;
+    p = (inode_t *)knew(sizeof(inode_t), 0);
+    memset(p, 0, sizeof(inode_t));
     // 文件普遍都有的信息
     p->file_size = fd->DIR_FileSize;
     p->blocks = (p->file_size + fsbi->bytes_per_cluster - 1) / fsbi->bytes_per_cluster;
@@ -610,7 +610,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
  * @param mode
  * @return long
  */
-long FAT32_create(struct index_node *inode, dir_entry_t *dentry, int mode)
+s64_t FAT32_create(inode_t *inode, dir_entry_t *dentry, s32_t mode)
 {
     // a. 得到FAT32文件系统的元数据
     struct FAT32_inode_info *Parent_finode = inode->private_index_info, *finode;
@@ -618,7 +618,7 @@ long FAT32_create(struct index_node *inode, dir_entry_t *dentry, int mode)
     u64_t cluster = Parent_finode->first_cluster; // 要写入文件的第一个簇
     u64_t next_cluster = 0;
     u64_t sector = 0;
-    long retval = 0, i = 0;
+    s64_t retval = 0, i = 0;
     u64_t dir_entry_size_total = 0;
     char *buffer = (char *)knew(fsbi->bytes_per_cluster, 0);
 
@@ -627,7 +627,7 @@ long FAT32_create(struct index_node *inode, dir_entry_t *dentry, int mode)
 
     fld = Create_FAT32DEntry(inode, dentry, mode, &dir_entry_size_total);
     finode = dentry->dir_inode->private_index_info;
-    int flag_finish = 1;
+    s32_t flag_finish = 1;
     do
     {
         memset(buffer, 0, fsbi->bytes_per_cluster);
@@ -685,7 +685,7 @@ long FAT32_create(struct index_node *inode, dir_entry_t *dentry, int mode)
  * @param dest_dentry  把找出来的目录项, 记录在dest_dentry结构中(传出参数
  * @return dir_entry_t* 返回dest_dentry结构
  */
-dir_entry_t *FAT32_lookup(struct index_node *parent_inode, dir_entry_t *dest_dentry)
+dir_entry_t *FAT32_lookup(inode_t *parent_inode, dir_entry_t *dest_dentry)
 {
     // 得到FAT32的基础信息结构体
     struct FAT32_inode_info *finode = parent_inode->private_index_info;
@@ -694,10 +694,10 @@ dir_entry_t *FAT32_lookup(struct index_node *parent_inode, dir_entry_t *dest_den
     u32_t cluster = 0;  // 簇号
     u64_t sector = 0;  // 扇区号
     u8_t *buf = nullptr; // 保存硬盘数据的缓冲区
-    int i = 0, j = 0, x = 0;
+    s32_t i = 0, j = 0, x = 0;
     struct FAT32_Directory *tmpdentry = nullptr;
     struct FAT32_LongDirectory *tmpldentry = nullptr;
-    struct index_node *p = nullptr;
+    inode_t *p = nullptr;
 
     buf = knew(fsbi->bytes_per_cluster, 0); // 申请缓冲区
     cluster = finode->first_cluster;           // 根目录的簇号
@@ -895,8 +895,8 @@ next_cluster:
 
 find_lookup_success:
     /*寻找成功后，创建本文件的index_node，通过读取到的物理目录项，获得该文件的全部信息*/
-    p = (struct index_node *)knew(sizeof(struct index_node), 0);
-    memset(p, 0, sizeof(struct index_node));
+    p = (inode_t *)knew(sizeof(inode_t), 0);
+    memset(p, 0, sizeof(inode_t));
     // 文件普遍都有的信息
     p->file_size = tmpdentry->DIR_FileSize;
 
@@ -932,13 +932,13 @@ find_lookup_success:
     kdelete(buf, fsbi->bytes_per_cluster);
     return dest_dentry;
 }
-long FAT32_mkdir(struct index_node *inode, dir_entry_t *dentry, int mode) { return 0; }
-long FAT32_rmdir(struct index_node *inode, dir_entry_t *dentry) { return 0;}
-long FAT32_rename(struct index_node *old_inode, dir_entry_t *old_dentry, struct index_node *new_inode, dir_entry_t *new_dentry) { return 0; }
-long FAT32_getattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
-long FAT32_setattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
+s64_t FAT32_mkdir(inode_t *inode, dir_entry_t *dentry, s32_t mode) { return 0; }
+s64_t FAT32_rmdir(inode_t *inode, dir_entry_t *dentry) { return 0;}
+s64_t FAT32_rename(inode_t *old_inode, dir_entry_t *old_dentry, inode_t *new_inode, dir_entry_t *new_dentry) { return 0; }
+s64_t FAT32_getattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
+s64_t FAT32_setattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
 
-struct index_node_operations FAT32_inode_ops =
+index_node_operations_t FAT32_inode_ops =
     {
         .create = FAT32_create,
         .lookup = FAT32_lookup,
@@ -951,10 +951,10 @@ struct index_node_operations FAT32_inode_ops =
 };
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
-long FAT32_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
-long FAT32_hash(dir_entry_t *dentry, char *filename) { return 0; }
-long FAT32_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
-long FAT32_iput(dir_entry_t *dentry, struct index_node *inode) { return 0; } // 释放inode索引
+s64_t FAT32_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
+s64_t FAT32_hash(dir_entry_t *dentry, char *filename) { return 0; }
+s64_t FAT32_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
+s64_t FAT32_iput(dir_entry_t *dentry, inode_t *inode) { return 0; } // 释放inode索引
 struct dir_entry_operations FAT32_dentry_ops =
     {
         .compare = FAT32_compare,
@@ -978,7 +978,7 @@ void fat32_put_superblock(spblk_t *sb)
 }
 
 // 用于把inode文件对应的目录项写到硬盘中- 缓存目录项
-void fat32_write_inode(struct index_node *inode)
+void fat32_write_inode(inode_t *inode)
 {
     struct FAT32_Directory *fdentry = nullptr;
     struct FAT32_Directory *buf = nullptr;
@@ -1007,7 +1007,7 @@ void fat32_write_inode(struct index_node *inode)
 }
 
 // 提供了操作超级块和写inode结点的方法
-struct super_block_operations FAT32_sb_ops =
+super_block_operations_t FAT32_sb_ops =
     {
         .write_superblock = fat32_write_superblock,
         .put_superblock = fat32_put_superblock,
@@ -1092,8 +1092,8 @@ spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     sbp->root->d_sb = sbp;
 
     // 根目录的 index node
-    sbp->root->dir_inode = (struct index_node *)knew(sizeof(struct index_node), 0);
-    memset(sbp->root->dir_inode, 0, sizeof(struct index_node));
+    sbp->root->dir_inode = (inode_t *)knew(sizeof(inode_t), 0);
+    memset(sbp->root->dir_inode, 0, sizeof(inode_t));
     sbp->root->dir_inode->inode_ops = &FAT32_inode_ops;
     sbp->root->dir_inode->f_ops = &FAT32_file_ops;
     sbp->root->dir_inode->file_size = 0;

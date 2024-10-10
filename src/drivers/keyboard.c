@@ -4,7 +4,7 @@
 #include "arch_x86kit.h"
 #include "mmkit.h"
 #include "kernelkit.h"
-struct keyboard_inputbuffer *p_kb = nullptr;
+keyboard_inputbuffer_t *p_kb = nullptr;
 wait_queue_t keyboard_wait_queue; // 等待队列头
 
 /**
@@ -14,7 +14,7 @@ wait_queue_t keyboard_wait_queue; // 等待队列头
  * @param filp
  * @return long
  */
-s64_t keyboard_open(struct index_node *inode, struct file *filp)
+s64_t keyboard_open(inode_t *inode, file_t *filp)
 {
     // 给文件描述符filp, 关联上硬盘数据缓冲区keyboard_inputbuffer
     filp->private_data = p_kb;
@@ -32,7 +32,7 @@ s64_t keyboard_open(struct index_node *inode, struct file *filp)
  * @param filp
  * @return long
  */
-s64_t keyboard_close(struct index_node *inode, struct file *filp)
+s64_t keyboard_close(inode_t *inode, file_t *filp)
 {
     filp->private_data = nullptr;
 
@@ -53,7 +53,7 @@ s64_t keyboard_close(struct index_node *inode, struct file *filp)
  * @return long
  */
 #define KEY_CMD_RESET_BUFFER 1
-s64_t keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64_t arg)
+s64_t keyboard_ioctl(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg)
 {
     switch (cmd)
     {
@@ -69,7 +69,7 @@ s64_t keyboard_ioctl(struct index_node *inode, struct file *filp, u64_t cmd, u64
     return 1;
 }
 
-s64_t keyboard_read(struct file *flip, char_t *buf, u64_t count, s64_t *position)
+s64_t keyboard_read(file_t *flip, char_t *buf, u64_t count, s64_t *position)
 {
     s64_t counter = 0;      // 本次实际读取的字节数
     s64_t tail_end_gap = 0; // tail 到键盘缓冲区末尾的距离
@@ -102,12 +102,12 @@ s64_t keyboard_read(struct file *flip, char_t *buf, u64_t count, s64_t *position
     return counter;
 }
 
-s64_t keyboard_write(struct file *flip, char *buf, u64_t count, long *position)
+s64_t keyboard_write(file_t *flip, s8_t *buf, u64_t count, s64_t *position)
 {
     return 0;
 }
 
-struct file_operations keyboard_fops = {
+file_operations_t keyboard_fops = {
     .open = keyboard_open,
     .close = keyboard_close,
     .ioctl = keyboard_ioctl,
@@ -142,10 +142,10 @@ void keyboard_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 // 键盘初始化函数(挂载函数)
 void keyboard_init()
 {
-    struct IO_APIC_RET_entry entry;
+    io_apic_ret_entry_t entry;
     u64_t i, j;
 
-    p_kb = (struct keyboard_inputbuffer *)knew(sizeof(struct keyboard_inputbuffer), 0);
+    p_kb = (keyboard_inputbuffer_t *)knew(sizeof(keyboard_inputbuffer_t), 0);
 
     wait_queue_init(&keyboard_wait_queue, nullptr);
 

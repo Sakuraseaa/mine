@@ -12,13 +12,13 @@ u64_t get_softirq_status()
     return softirq_status;
 }
 
-void register_softirq(int nr, void (*action)(void *data), void *data)
+void register_softirq(s32_t nr, void (*action)(void *data), void *data)
 {
     softirq_vector[nr].action = action;
     softirq_vector[nr].data = data;
 }
 
-void unregister_softirq(int nr)
+void unregister_softirq(s32_t nr)
 {
     softirq_vector[nr].data = softirq_vector[nr].action = nullptr;
 }
