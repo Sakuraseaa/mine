@@ -1,6 +1,4 @@
-#include <stdarg.h>
-#include "string.h"
-#include "stdio.h"
+#include "usrinit.h"
 
 
 int skip_atoi(const char **s)

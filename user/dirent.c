@@ -1,11 +1,4 @@
-#include "dirent.h"
-#include "fcntl.h"
-#include "stdlib.h"
-#include "string.h"
-#include "stddef.h"
-#include "unistd.h"
-
-
+#include "usrinit.h"
 /**
  * @brief 打开目录
  * 
@@ -15,13 +8,13 @@
 struct DIR* opendir(const char* path)
 {
     int fd = 0;
-    struct DIR* dir = NULL;
+    struct DIR* dir = nullptr;
     fd = open(path, O_DIRECTORY);
     
     if(fd >= 0)
         dir = (struct DIR*)malloc(sizeof(struct DIR), 0);
     else
-        return NULL;
+        return nullptr;
 
     memset(dir, 0, sizeof(struct DIR));
     
@@ -54,6 +47,6 @@ struct dirent* readdir(struct DIR*dir)
     if(len > 0)
         return (struct dirent*)dir->buf;
     else
-        return NULL;
+        return nullptr;
 }
 

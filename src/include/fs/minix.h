@@ -50,7 +50,7 @@ typedef struct minix_inode_t
 typedef struct minix_dentry_t
 {
     u16_t nr;                    // i 节点
-    char name[MINIX1_NAME_LEN]; // 文件名
+    char_t name[MINIX1_NAME_LEN]; // 文件名
 } minix_dentry_t;
 
 

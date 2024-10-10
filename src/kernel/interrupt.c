@@ -132,7 +132,7 @@ s32_t register_irq(u64_t irq,
                  void (*handler)(u64_t nr, u64_t parameter, pt_regs_t *regs),
                  u64_t parameter,
                  hw_int_controller *controller,
-                 char *irq_name)
+                 str_t irq_name)
 {
     irq_desc_T *p = &interrupt_desc[irq - 32];
 

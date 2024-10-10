@@ -35,7 +35,7 @@ struct Disk_Partition_Table
 // 记录VFS 支持的文件系统类型
 struct file_system_type
 {
-    char *name;
+    str_t name;
     s32_t fs_flags;
     // read_superblock 存有解析文件系统引导扇区的方法
     struct super_block *(*read_superblock)(struct Disk_Partition_Table_Entry *DPTE, void *buf);

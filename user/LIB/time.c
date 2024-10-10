@@ -1,5 +1,5 @@
-#include "basetype.h"
 #include "time.h"
+#include "types.h"
 
 #define MINUTE 60          // 每分钟的秒数
 #define HOUR (60 * MINUTE) // 每小时的秒数

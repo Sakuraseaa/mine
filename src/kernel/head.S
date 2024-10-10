@@ -708,7 +708,7 @@ _PE:
 .globl GDT_Table
 
 GDT_Table:
-	.quad	0x0000000000000000			/*0	NULL descriptor		       	00*/
+	.quad	0x0000000000000000			/*0	nullptr descriptor		       	00*/
 	.quad	0x0020980000000000			/*1	KERNEL	Code	64-bit	Segment	08*/
 	.quad	0x0000920000000000			/*2	KERNEL	Data	64-bit	Segment	10*/
 	.quad	0x0000000000000000			/*3	USER	Code	32-bit	Segment 18*/

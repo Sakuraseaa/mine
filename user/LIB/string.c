@@ -1,5 +1,6 @@
-#include "basetype.h"
 #include "string.h"
+
+#define nullptr ((void *)0);
 /*
 		From => To memory copy Num bytes
 */
@@ -58,14 +59,14 @@ char *strchr(const char *str, const char ch)
         }
         str++;
     }
-    return NULL;
+    return nullptr;
 }
 
 /* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
 char *strrchr(const char *str, const char ch)
 {
 
-    const char *last_char = NULL;
+    const char *last_char = nullptr;
     /* 从头到尾遍历一次,若存在ch字符,last_char总是该字符最后一次出现在串中的地址(不是下标,是地址)*/
     while (*str != 0)
     {

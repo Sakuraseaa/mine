@@ -2,7 +2,6 @@
 
 #define __UNISTD_H__
 
-#include "basetype.h"
 
 int open(const char *path, int oflag);
 int close(int fildes);
@@ -22,6 +21,6 @@ int rmdir(const char* path);
 
 int info(const char order);
 int cleanScreen(void);
-u64 getNow(void);
+unsigned long getNow(void);
 
 #endif

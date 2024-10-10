@@ -102,7 +102,7 @@ s64_t keyboard_read(file_t *flip, char_t *buf, u64_t count, s64_t *position)
     return counter;
 }
 
-s64_t keyboard_write(file_t *flip, s8_t *buf, u64_t count, s64_t *position)
+s64_t keyboard_write(file_t *flip, buf_t buf, u64_t count, s64_t *position)
 {
     return 0;
 }

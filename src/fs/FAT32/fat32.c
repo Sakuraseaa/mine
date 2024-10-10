@@ -97,7 +97,7 @@ s64_t FAT32_close(inode_t *inode, file_t *filp) { return 1; }
  * @param position 相对于文件的偏移位置/目标位置, 该参数会被FAT32_read进行修改
  * @return long 成功返回读取的字节数，失败返回错误码
  */
-s64_t FAT32_read(file_t *filp, char *buf, u64_t count, s64_t *position)
+s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
 {
     struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
     struct FAT32_sb_info *fsbi = filp->dentry->dir_inode->sb->private_sb_info;
@@ -108,7 +108,7 @@ s64_t FAT32_read(file_t *filp, char *buf, u64_t count, s64_t *position)
     s64_t retval = 0;
     s32_t index = *position / fsbi->bytes_per_cluster;   // 目标位置偏移簇数 / 扇区数
     s64_t offset = *position % fsbi->bytes_per_cluster; // 目标位置簇内偏移字节 / 扇区内偏移字节
-    s8_t *buffer = (s8_t *)knew(fsbi->bytes_per_cluster, 0);
+    buf_t buffer = (buf_t)knew(fsbi->bytes_per_cluster, 0);
 
     if (!cluster)
         return -EFAULT;
@@ -176,7 +176,7 @@ s64_t FAT32_read(file_t *filp, char *buf, u64_t count, s64_t *position)
  * @param position 相对于文件的偏移位置/目标位置
  * @return long 成功返回读取的字节数，失败返回错误码
  */
-s64_t FAT32_write(file_t *filp, char *buf, u64_t count, s64_t *position)
+s64_t FAT32_write(file_t *filp, buf_t buf, u64_t count, s64_t *position)
 {
     // a. 得到FAT32文件系统的元数据
     struct FAT32_inode_info *finode = filp->dentry->dir_inode->private_index_info;
@@ -190,7 +190,7 @@ s64_t FAT32_write(file_t *filp, char *buf, u64_t count, s64_t *position)
     s64_t flags = 0; // 是否要第一次写空文件
     s32_t index = *position / fsbi->bytes_per_cluster;
     s64_t offset = *position % fsbi->bytes_per_cluster;
-    s8_t *buffer = (s8_t *)knew(fsbi->bytes_per_cluster, 0);
+    buf_t buffer = (buf_t)knew(fsbi->bytes_per_cluster, 0);
 
     if (!cluster) // 要写入的文件没有被分配簇号，那么获得簇号
     {
@@ -298,7 +298,7 @@ s64_t FAT32_write(file_t *filp, char *buf, u64_t count, s64_t *position)
 
 s64_t FAT32_ioctl(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg) { return 0; }
 
-s32_t fill_dentry(void* buf, char*name, s64_t namelen, s64_t offset)
+s32_t fill_dentry(void* buf, str_t name, s64_t namelen, s64_t offset)
 {
     struct dirent* dent = (struct dirent*)buf;
     if((u64_t) buf < TASK_SIZE && !verify_area(buf, sizeof(struct dirent) + namelen))
@@ -380,13 +380,13 @@ next_cluster:
             {
                 for(y = 0; y < 5; y++)
                     if(tmpldentry->LDIR_Name1[y] != 0xffff && tmpldentry->LDIR_Name1[y] != 0x0000)
-                        name[namelen++] = (char)tmpldentry->LDIR_Name1[y];
+                        name[namelen++] = (char_t)tmpldentry->LDIR_Name1[y];
                 for(y = 0; y < 6; y++)
                     if(tmpldentry->LDIR_Name2[y] != 0xffff && tmpldentry->LDIR_Name2[y] != 0x0000)
-                        name[namelen++] = (char)tmpldentry->LDIR_Name2[y];
+                        name[namelen++] = (char_t)tmpldentry->LDIR_Name2[y];
                 for(y = 0; y < 2; y++)
                     if(tmpldentry->LDIR_Name3[y] != 0xffff && tmpldentry->LDIR_Name3[y] != 0x0000)
-                        name[namelen++] = (char)tmpldentry->LDIR_Name3[y];
+                        name[namelen++] = (char_t)tmpldentry->LDIR_Name3[y];
             }
             goto find_lookup_success;
         }
@@ -477,7 +477,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(inode_t *inode, dir_entry_
     s32_t i = 0, j = 0, LDir_count = 0, k = 0;
     s64_t ExpandNameIndex = -1, namelen = dentry->name_length; // 扩展名索引，字符串长度
 
-    char tmpName[namelen + 1];
+    char_t tmpName[namelen + 1];
     memset(tmpName, 0, namelen + 1);
     if (dentry->name_length > 64)
     {
@@ -620,7 +620,7 @@ s64_t FAT32_create(inode_t *inode, dir_entry_t *dentry, s32_t mode)
     u64_t sector = 0;
     s64_t retval = 0, i = 0;
     u64_t dir_entry_size_total = 0;
-    char *buffer = (char *)knew(fsbi->bytes_per_cluster, 0);
+    buf_t buffer = (buf_t)knew(fsbi->bytes_per_cluster, 0);
 
     struct FAT32_LongDirectory *fld;
     struct FAT32_Directory *entry;
@@ -951,8 +951,8 @@ index_node_operations_t FAT32_inode_ops =
 };
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
-s64_t FAT32_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
-s64_t FAT32_hash(dir_entry_t *dentry, char *filename) { return 0; }
+s64_t FAT32_compare(dir_entry_t *parent_dentry, str_t source_filename, str_t destination_filename) { return 0; }
+s64_t FAT32_hash(dir_entry_t *dentry, str_t filename) { return 0; }
 s64_t FAT32_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
 s64_t FAT32_iput(dir_entry_t *dentry, inode_t *inode) { return 0; } // 释放inode索引
 struct dir_entry_operations FAT32_dentry_ops =
@@ -1086,7 +1086,7 @@ spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
 
     sbp->root->parent = sbp->root; // 根目录的父目录是自己
     sbp->root->dir_ops = &FAT32_dentry_ops;
-    sbp->root->name = (char *)knew(2, 0);
+    sbp->root->name = (str_t)knew(2, 0);
     sbp->root->name[0] = '/';
     sbp->root->name_length = 1;
     sbp->root->d_sb = sbp;

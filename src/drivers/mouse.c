@@ -111,11 +111,11 @@ void analysis_mousecode()
         mouse_count++;
         break;
     case 2:
-        mouse.Byte1 = (char)x;
+        mouse.Byte1 = (char_t)x;
         mouse_count++;
         break;
     case 3:
-        mouse.Byte2 = (char)x;
+        mouse.Byte2 = (char_t)x;
         mouse_count = 1;
         color_printk(RED, GREEN, "(M:%02x, X:%3d, Y:%3d)\n", mouse.Byte0, mouse.Byte1, mouse.Byte2);
         break;

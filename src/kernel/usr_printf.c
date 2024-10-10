@@ -1,4 +1,3 @@
-#include <stdarg.h>
 #include "init.h"
 #include "toolkit.h"
 

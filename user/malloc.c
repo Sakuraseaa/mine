@@ -1,7 +1,4 @@
-#include "stddef.h"
-#include "stdio.h"
-#include "string.h"
-#include "basetype.h"
+#include "usrinit.h"
 
 static unsigned long brk_start_address = 0;
 static unsigned long brk_used_address = 0;
@@ -19,7 +16,7 @@ void * malloc(unsigned long size, int invalid)
 	if(size <= 0)
 	{
 		printf("malloc size <= 0\n");
-		return NULL;
+		return nullptr;
 	}
 
 	if(brk_start_address == 0)

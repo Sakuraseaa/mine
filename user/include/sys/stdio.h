@@ -1,7 +1,11 @@
 #ifndef __STDIO_H__
 
 #define __STDIO_H__
-#include <stdarg.h>
+
+typedef __builtin_va_list va_list;
+#define va_start(ap,np) __builtin_va_start(ap,np)
+#define va_end(ap) __builtin_va_end(ap)
+#define va_arg(ap,ty) __builtin_va_arg(ap,ty)
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */
@@ -10,8 +14,6 @@
 #define LEFT	16		/* left justified */
 #define SPECIAL	32		/* 0x */
 #define SMALL	64		/* use 'abcdef' instead of 'ABCDEF' */
-
-
 
 // printf
 #define WHITE 0x00ffffff  // 白

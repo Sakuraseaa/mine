@@ -77,7 +77,7 @@ u64_t init(u64_t arg)
 // ------------------DEBUG----------------------
 extern s32_t usr_init();
 // 被init调用,加载用户进程体，到用户空间800000
-u64_t shell_execve(pt_regs_t *regs, char *name)
+u64_t shell_execve(pt_regs_t *regs, str_t name)
 {
 	u64_t retval = 0;
 

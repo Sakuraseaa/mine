@@ -61,21 +61,21 @@ struct index_node_operations
 
 struct dir_entry_operations
 {
-    s64_t (*compare)(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename); // 比较两个文件名称
-    s64_t (*hash)(dir_entry_t *dentry, char *filename);                                              // 该函数为目录项生成散列值
+    s64_t (*compare)(dir_entry_t *parent_dentry, str_t source_filename, str_t destination_filename); // 比较两个文件名称
+    s64_t (*hash)(dir_entry_t *dentry, str_t filename);                                              // 该函数为目录项生成散列值
     s64_t (*release)(dir_entry_t *dentry);                                                           // 释放目录项对象
     s64_t (*iput)(dir_entry_t *dentry, inode_t *inode);                                    // 释放inode索引
     s64_t (*d_delete)(dir_entry_t *dentry);
 };
 
 // 文件描述符
-typedef s32_t (*filldir_t)(void *buf,char *name, s64_t namelen,s64_t offset);
+typedef s32_t (*filldir_t)(void *buf, str_t name, s64_t namelen,s64_t offset);
 struct file_operations
 {
     s64_t (*open)(inode_t *inode, file_t *filp);
     s64_t (*close)(inode_t *inode, file_t *filp);
-    s64_t (*read)(file_t *filp, char *buf, u64_t count, s64_t *position);
-    s64_t (*write)(file_t *filp, char *buf, u64_t count, s64_t *position);
+    s64_t (*read)(file_t *filp, buf_t buf, u64_t count, s64_t *position);
+    s64_t (*write)(file_t *filp, buf_t buf, u64_t count, s64_t *position);
     s64_t (*lseek)(file_t *filp, s64_t offset, s64_t origin);
     s64_t (*ioctl)(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg);
     s64_t (*readdir)(file_t* filp, void* dirent, filldir_t filler);

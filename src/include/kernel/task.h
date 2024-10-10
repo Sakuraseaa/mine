@@ -15,15 +15,15 @@
 // stack size 32K
 #define STACK_SIZE 32768
 
-extern char _text;
-extern char _etext;
-extern char _data;
-extern char _edata;
-extern char _rodata;
-extern char _erodata;
-extern char _bss;
-extern char _ebss;
-extern char _end;
+extern char_t _text;
+extern char_t _etext;
+extern char_t _data;
+extern char_t _edata;
+extern char_t _rodata;
+extern char_t _erodata;
+extern char_t _bss;
+extern char_t _ebss;
+extern char_t _end;
 
 extern u64_t _stack_start;
 extern s64_t global_pid;
@@ -33,7 +33,7 @@ extern void ret_system_call();
 extern u64_t kallsyms_addresses[] __attribute__((__weak__));
 extern s64_t kallsyms_syms_num __attribute__((__weak__));
 extern s64_t kallsyms_index[] __attribute__((__weak__));
-extern char* kallsyms_names __attribute((__weak__));
+extern char_t* kallsyms_names __attribute((__weak__));
 
 //// task_t.falgs
 #define PF_KTHREAD (1UL << 0)

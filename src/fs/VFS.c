@@ -68,7 +68,7 @@ u64_t register_filesystem(struct file_system_type *fs)
  * @param buf  FAT32文件系统的引导扇区
  * @return spblk_t* （fat32）文件系统的超级块
  */
-spblk_t *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf)
+spblk_t *mount_fs(str_t name, struct Disk_Partition_Table_Entry *DPTE, void *buf)
 {
     struct file_system_type *p = nullptr;
     spblk_t*  sb = nullptr;
@@ -108,7 +108,7 @@ u64_t unregister_filesystem(struct file_system_type *fs)
  * @param name_store 主调函数提供的缓冲区
  * @return char* 指向除顶层路径之外的子路径字符串的地址
  */
-static char *path_parse(char *pathname, char *name_store)
+static str_t path_parse(str_t pathname, str_t name_store)
 {
     // 根目录不需要解析, 跳过即可
     if (pathname[0] == '/')
@@ -131,10 +131,10 @@ static char *path_parse(char *pathname, char *name_store)
  * @param pathname 需要判断深度的路径名
  * @return uint32_t 路径的深度
  */
-static s32_t path_depth_cnt(char *pathname)
+static s32_t path_depth_cnt(str_t pathname)
 {
-    char *p = pathname;
-    char name[MAX_FILE_NAME_LEN];
+    str_t p = pathname;
+    char_t name[MAX_FILE_NAME_LEN];
     u32_t depth = 0;
     p = path_parse(p, name);
     while (name[0])
@@ -156,7 +156,7 @@ static s32_t path_depth_cnt(char *pathname)
  * @param path 需要查找的文件名称
  * @return dir_entry* 返回path文件的目录项
  */
-static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pathLen) {
+static dir_entry_t* find_dir_childern(dir_entry_t* parent, str_t path, u32_t pathLen) {
     list_t* head = &parent->subdirs_list;
     dir_entry_t* det = nullptr;
     for(list_t* node = head->next; node != head; node = node->next) {
@@ -178,13 +178,13 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pat
  * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
  * @return dir_entry_t* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
-dir_entry_t *path_walk(char *name, u64_t flags, dir_entry_t **create_file)
+dir_entry_t *path_walk(str_t name, u64_t flags, dir_entry_t **create_file)
 {
-    char *tmpname = nullptr;
+    str_t tmpname = nullptr;
     s32_t tmpnamelen = 0, nameDep = 0, Count = 0;
     dir_entry_t *parent = current_sb->root; // 父目录项
     dir_entry_t *path = nullptr;      // 子目录项
-    char filename[64];
+    char_t filename[64];
     // 越过路径前的 '/'
     while (*name == '/')
         name++;

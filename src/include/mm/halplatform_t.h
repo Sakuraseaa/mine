@@ -143,7 +143,7 @@ typedef struct s_fhdsc
     u64_t fhd_intsfend;
     u64_t fhd_frealsz;
     u64_t fhd_fsum;
-    char   fhd_name[FHDSC_NMAX];
+    char_t   fhd_name[FHDSC_NMAX];
 }fhdsc_t;
 
 typedef struct s_mlosrddsc

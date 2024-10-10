@@ -238,8 +238,8 @@ reckon:
 
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
-s64_t minix_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
-s64_t minix_hash(dir_entry_t *dentry, char *filename) { return 0; }
+s64_t minix_compare(dir_entry_t *parent_dentry, buf_t source_filename, buf_t destination_filename) { return 0; }
+s64_t minix_hash(dir_entry_t *dentry, buf_t filename) { return 0; }
 s64_t minix_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
 s64_t minix_iput(dir_entry_t *dentry, inode_t *inode) { return 0; } // 释放inode索引
 s64_t minix_delete(dir_entry_t *dentry) { 
@@ -271,7 +271,7 @@ struct dir_entry_operations minix_dentry_ops =
 s64_t minix_open(inode_t *inode, file_t *filp) { return 1; }
 s64_t minix_close(inode_t *inode, file_t *filp) { return 1; }
 
-s64_t minix_read(file_t *filp, char *buf, u64_t count, s64_t *position) {
+s64_t minix_read(file_t *filp, buf_t buf, u64_t count, s64_t *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
 
@@ -325,7 +325,7 @@ s64_t minix_read(file_t *filp, char *buf, u64_t count, s64_t *position) {
     return ret;
 }
 
-s64_t minix_write(file_t *filp, char *buf, u64_t count, s64_t *position) {
+s64_t minix_write(file_t *filp, buf_t buf, u64_t count, s64_t *position) {
     
     inode_t* inode = filp->dentry->dir_inode;
     minix_inode_t* m_inode = (minix_inode_t*)inode->private_index_info;
@@ -386,7 +386,7 @@ s64_t minix_readdir(file_t* filp, void * dirent, filldir_t filler) {
     minix_dentry_t mentry;
 
     s64_t ret = -1;
-    if((ret = minix_read(filp, (char*)&mentry, sizeof(minix_dentry_t), &filp->position))!= sizeof(minix_dentry_t))
+    if((ret = minix_read(filp, (buf_t)&mentry, sizeof(minix_dentry_t), &filp->position))!= sizeof(minix_dentry_t))
         return -1;
 
     struct dirent* dt = dirent;
@@ -482,7 +482,7 @@ static buffer_t *add_dentry(inode_t *dir, dir_entry_t* dentry) {
  * @param nr  
  * @param name 被删除文件的 文件名
  */
-static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16_t nr, char* name) {
+static void del_dentry(inode_t* dir, minix_inode_t* m_child_inode, u16_t nr, str_t name) {
     assert(dir->attribute == FS_ATTR_DIR)
 
     //遍历目录文件, 寻找目录项
@@ -640,7 +640,7 @@ s64_t minix_mkdir(inode_t *inode, dir_entry_t *dentry, s32_t mode) {
 
     spblk_t* sb = inode->sb;
     u64_t nr = 0;
-    char name[4] = {0};
+    char_t name[4] = {0};
 
     if(dentry->name_length >= MINIX1_NAME_LEN)
         return -1;
@@ -866,7 +866,7 @@ inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
 
     sbp->root->parent = sbp->root;
     sbp->root->name_length = 1;
-    sbp->root->name = (char*)knew(2, 0);
+    sbp->root->name = (str_t)knew(2, 0);
     sbp->root->name[0] = '/';
     sbp->root->dir_ops = &minix_dentry_ops;
     sbp->root->d_sb = sbp;

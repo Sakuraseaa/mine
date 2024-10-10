@@ -31,7 +31,7 @@ enum device_subtype_t
 
 typedef struct device_t
 {
-    s8_t name[NAMELEN];  // 设备名
+    char_t name[NAMELEN];  // 设备名
     s32_t type;            // 设备类型
     s32_t subtype;         // 设备子类型
     dev_t dev;           // 设备号

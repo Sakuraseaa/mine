@@ -1,11 +1,10 @@
 #include "toolkit.h"
 #include "devkit.h"
-#include <stdarg.h>
 
 static char_t debugk_buf[1024];
 extern serial_t serials[2];
 
-void debugk(const s8_t *file, const s8_t* func,s32_t line, const s8_t *fmt, ...)
+void debugk(cstr_t file, cstr_t func,s32_t line, cstr_t fmt, ...)
 {
     s32_t i = sprintf(debugk_buf, "[%s %d:%s] ", strrchr(file,'/') + 1, line,func);
     serial_write(&serials[0], debugk_buf, i);
@@ -18,7 +17,7 @@ void debugk(const s8_t *file, const s8_t* func,s32_t line, const s8_t *fmt, ...)
     serial_write(&serials[0], debugk_buf, i);
 }
 
-void user_spin(s8_t *filename, const s8_t *func, u64_t line, const s8_t *condition)
+void user_spin(str_t filename, cstr_t func, u64_t line, cstr_t condition)
 {
     system_error("[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);
     // color_printk(RED, BLACK,  "[%s %d:%s]: %s", strrchr(filename,'/') + 1, line, func, condition);

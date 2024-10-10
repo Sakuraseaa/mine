@@ -44,12 +44,12 @@ void serial_handler(u64_t nr, u64_t parameter, pt_regs_t *regs) {
     // 先不编写串口的相关代码
 }
 
-s32_t serial_read(serial_t *serial, s8_t *buf, u64_t count)
+s32_t serial_read(serial_t *serial, buf_t buf, u64_t count)
 {
     return 0;
 }
 
-s32_t serial_write(serial_t *serial, s8_t *buf, u64_t count) {
+s32_t serial_write(serial_t *serial, buf_t buf, u64_t count) {
     s32_t nr = 0;
     while (nr < count)
     {

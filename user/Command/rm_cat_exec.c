@@ -1,15 +1,4 @@
-#include "string.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "dirent.h"
-#include "string.h"
-#include "reboot.h"
-#include "basetype.h"
-#include "unistd.h"
-#include "wait.h"
-#include "errno.h"
-#include "command.h"
-#include "fcntl.h"
+#include "usrinit.h"
 
 extern char* current_dir;
 
@@ -30,9 +19,9 @@ char* get_filename_whole(char* buf, char* reletive_path) {
 int cat_command(int argc, char **argv) 
 {
 	int len = 0;
-	char* filename = NULL;
+	char* filename = nullptr;
 	int fd = 0;
-	char* buf = NULL;
+	char* buf = nullptr;
 	int i = 0, j = 0;
 
 	filename = get_filename_whole(filename, argv[1]); 
@@ -62,7 +51,7 @@ int cat_command(int argc, char **argv)
 }
 
 int touch_command(int argc, char **argv) {
-	char* filename = NULL;
+	char* filename = nullptr;
 	int ret = 0;
 
 	filename = get_filename_whole(filename, argv[1]); 
@@ -73,7 +62,7 @@ int touch_command(int argc, char **argv) {
 }
 
 int rm_command(int argc, char **argv) { 
-	char* filename = NULL;
+	char* filename = nullptr;
 	int ret = 0;
 
 	filename = get_filename_whole(filename, argv[1]); 
@@ -84,7 +73,7 @@ int rm_command(int argc, char **argv) {
 }
 
 int mkdir_command(int argc, char **argv) { 
-	char* filename = NULL;
+	char* filename = nullptr;
 	int ret = 0;
 
 	filename = get_filename_whole(filename, argv[1]); 
@@ -95,7 +84,7 @@ int mkdir_command(int argc, char **argv) {
 }
 
 int rmdir_command(int argc, char **argv) { 
-	char* filename = NULL;
+	char* filename = nullptr;
 	int ret = 0;
 
 	filename = get_filename_whole(filename, argv[1]); 
@@ -117,7 +106,7 @@ int exec_command(int argc, char **argv)
 		filename = get_filename_whole(filename, argv[1]);
 		printf("exec_command filename:%s\n", filename);
 		
-		execve(filename, argv, NULL);
+		execve(filename, argv, nullptr);
 
 		exit(0);
 	} else {
@@ -128,5 +117,5 @@ int exec_command(int argc, char **argv)
     return 0;
 }
 
-int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }
+int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, nullptr); }
 

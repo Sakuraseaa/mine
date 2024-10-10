@@ -15,7 +15,7 @@ typedef struct
 {
     hw_int_controller *controller; // 中断的使能，禁止，应答, 卸载操作结构体
 
-    char *irq_name;                                                                   // 中断名
+    str_t irq_name;                                                                   // 中断名
     u64_t parameter;                                                          // 中断处理函数的参数
     void (*handler)(u64_t nr, u64_t parameter, pt_regs_t *regs); // 中断处理函数
     u64_t flags;                                                              // 自定义标志位

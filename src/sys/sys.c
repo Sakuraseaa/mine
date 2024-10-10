@@ -59,7 +59,7 @@ u64_t sys_getpid(void)
     return current->pid;
 }
 
-u64_t sys_putstring(u32_t FRcolor, s8_t *string)
+u64_t sys_putstring(u32_t FRcolor, str_t string)
 {
 
     color_printk(FRcolor, BLACK, string);
@@ -74,7 +74,7 @@ u64_t sys_putstring(u32_t FRcolor, s8_t *string)
  * @param size 若调用者提供buf, 则size为buf的大小
  * @return char* 若成功且buf为NULL, 则操作系统会分配存储工作目录路径的缓冲区, 并返回首地址; 若失败则为NULL
  */
-s8_t *sys_getcwd(str_t buf, u64_t size) {
+str_t sys_getcwd(buf_t buf, u64_t size) {
     assert(buf != nullptr);
     
     dir_entry_t* dir = current->i_pwd;
@@ -87,7 +87,7 @@ s8_t *sys_getcwd(str_t buf, u64_t size) {
     // ERROR! :: 此处的buf是用户数据
     //
     memset(buf, 0, size);
-    char full_path_reverse[64] = {0}; // all right, i think here must use heap-memory and buffer mechanism
+    char_t full_path_reverse[64] = {0}; // all right, i think here must use heap-memory and buffer mechanism
     
     // 从子目录开始逐层向上找, 一直找到根目录为止, 每次查找都会把当前的目录名复制到full_path_reverse中
     // 例如子目录现在是"/fd1/fd1.1/fd1.1.1/fd1.1.1.1",
@@ -102,7 +102,7 @@ s8_t *sys_getcwd(str_t buf, u64_t size) {
     /* 至此full_path_reverse中的路径是反着的,
      * 即子目录在前(左),父目录在后(右) ,
      * 现将full_path_reverse中的路径反置 */
-    s8_t *last_slash = nullptr; // 用于记录字符串中最后一个 / 的地址
+    char_t *last_slash = nullptr; // 用于记录字符串中最后一个 / 的地址
     
     // 把full_path_reverse从后向前遇见 / 就截断一下
     // 添加到buf尾巴后面
@@ -129,7 +129,7 @@ s8_t *sys_getcwd(str_t buf, u64_t size) {
  */
 u64_t sys_open(str_t filename, s32_t flags)
 {
-    s8_t *path = nullptr;
+    str_t path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
     dir_entry_t *Parent_dentry = nullptr, *Child_dentry = nullptr;
@@ -141,7 +141,7 @@ u64_t sys_open(str_t filename, s32_t flags)
     s32_t i = 0;
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)knew(PAGE_4K_SIZE, 0);
+    path = (str_t)knew(PAGE_4K_SIZE, 0);
     if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
@@ -240,14 +240,14 @@ sys_open_over_judge:
 }
 
 u64_t sys_mkdir(str_t filename) {
-    s8_t *path = nullptr;
+    str_t path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
     dir_entry_t *Child_dentry = nullptr;
     dir_entry_t *dentry = nullptr;
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)knew(PAGE_4K_SIZE, 0);
+    path = (str_t)knew(PAGE_4K_SIZE, 0);
     if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
@@ -277,14 +277,14 @@ u64_t sys_mkdir(str_t filename) {
 }
 
 u64_t sys_rmdir(str_t filename) {
-    s8_t *path = nullptr;
+    str_t path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
     dir_entry_t *Child_dentry = nullptr;
     dir_entry_t *dentry = nullptr;
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)knew(PAGE_4K_SIZE, 0);
+    path = (str_t)knew(PAGE_4K_SIZE, 0);
     if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
@@ -323,7 +323,7 @@ u64_t sys_rmdir(str_t filename) {
 }
 
 u64_t sys_unlink(str_t filename) {
-    s8_t *path = nullptr;
+    str_t path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
     dir_entry_t *Child_dentry = nullptr;
@@ -331,7 +331,7 @@ u64_t sys_unlink(str_t filename) {
 
 
     // a. 把目标路径名从应用层复制到内核层
-    path = (char *)knew(PAGE_4K_SIZE, 0);
+    path = (str_t)knew(PAGE_4K_SIZE, 0);
     if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
@@ -538,7 +538,7 @@ u64_t sys_reboot(u64_t cmd, void *arg)
     return EOK;
 }
 
-extern s32_t fill_dentry(void* buf, s8_t*name, s64_t namelen, s64_t offset);
+extern s32_t fill_dentry(void* buf, str_t name, s64_t namelen, s64_t offset);
 u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
 {
     file_t* filp = nullptr;
@@ -555,13 +555,13 @@ u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
     return ret;
 }
 
-u64_t sys_chdir(s8_t* filename)
+u64_t sys_chdir(str_t filename)
 {
     str_t path = nullptr;
     s64_t pathlen = 0;
     dir_entry_t* dentry = nullptr;
 
-    path = (char*) knew(PAGE_4K_SIZE, 0);
+    path = (str_t) knew(PAGE_4K_SIZE, 0);
     if(path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
@@ -604,12 +604,12 @@ u64_t sys_execve()
     
     DEBUGK("sys_execve\n");
 
-    pathname = (char*)knew(PAGE_4K_SIZE, 0);
+    pathname = (str_t)knew(PAGE_4K_SIZE, 0);
     if(pathname == nullptr)
         return -ENOMEM;
     
     memset(pathname, 0, PAGE_4K_SIZE);
-    pathlen = strnlen_user((char*)regs->rdi, PAGE_4K_SIZE);
+    pathlen = strnlen_user((str_t)regs->rdi, PAGE_4K_SIZE);
 
     if(pathlen <= 0)
     {
@@ -622,8 +622,8 @@ u64_t sys_execve()
     }
 
 
-    strncpy_from_user((char*)regs->rdi, pathname, pathlen);
-    error = do_execve(regs, pathname, (char**)regs->rsi, nullptr);
+    strncpy_from_user((str_t)regs->rdi, pathname, pathlen);
+    error = do_execve(regs, pathname, (char_t**)regs->rsi, nullptr);
 
     kdelete(pathname, PAGE_4K_SIZE);
     return error;
@@ -715,8 +715,8 @@ u64_t sys_exit(s32_t exit_code)
     return do_exit(exit_code);
 }
 
-inode_t *namei(s8_t* filename);
-u64_t sys_stat(s8_t* filename, stat_t* statbuf) {
+inode_t *namei(str_t filename);
+u64_t sys_stat(str_t filename, stat_t* statbuf) {
 
     inode_t* inode = namei(filename);
 
@@ -735,7 +735,7 @@ u64_t sys_stat(s8_t* filename, stat_t* statbuf) {
     statbuf->rdev = 0; // 这个虚拟设备时干嘛的？ 虚拟内存 供给内核高速申请的？
     if(inode->sb->type == FS_TYPE_MINIX) {
         
-        char* buf = (char*)inode->private_index_info;
+        buf_t buf = (buf_t)inode->private_index_info;
         statbuf->nlinks = buf[13]; // minix文件系统的inode结构 中 第十三个字节记录着 本inode的目录项链接数
     
     }else
@@ -785,7 +785,7 @@ void dir_Tree(dir_entry_t* cur, s32_t depth) {
     }
 }
 
-u64_t sys_info(s8_t order) {
+u64_t sys_info(char_t order) {
     
     switch (order)
     {

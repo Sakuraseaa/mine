@@ -1,6 +1,5 @@
 #ifndef __DIRENT_H__
 #define __DIRENT_H__
-#include "dirent.h"
 
 // 目录文件的句柄
 struct DIR

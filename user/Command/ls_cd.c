@@ -1,11 +1,4 @@
-#include "stat.h"
-#include "time.h"
-#include "string.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "dirent.h"
-#include "string.h"
-#include "command.h"
+#include "usrinit.h"
 
 #define MAX_FILE_NAME_LEN 64
 #define MAX_PATH_LEN 256
@@ -34,7 +27,7 @@ static char *path_parse(char *pathname, char *name_store)
         *name_store++ = *pathname++;
 
     if (pathname[0] == 0) // pathname为空, 则表示路径已经结束了, 此时返回NULL
-        return NULL;
+        return nullptr;
 
     return pathname;
 }
@@ -124,7 +117,7 @@ void make_clear_abs_path(char *path, char *final_path)
 
 int cd_command(int argc, char **argv) 
 {
-	char* path = NULL;
+	char* path = nullptr;
 	int len = 0;
 	int i = 0;
 	len = strlen(current_dir);
@@ -245,10 +238,10 @@ void reckon_size(int *size, char *qualifer)
 
 int ls_command(int argc, char **argv) 
 {
-	struct DIR* dir = NULL;
-	struct dirent* entry = NULL;
-	char* buf  = NULL;
-	char* path = NULL;
+	struct DIR* dir = nullptr;
+	struct dirent* entry = nullptr;
+	char* buf  = nullptr;
+	char* path = nullptr;
 	stat_t  statbuf;
 	bool isDetail = false, isDirectory = false;
 	for(size_t i = 0; i < argc; i++) {
@@ -277,7 +270,7 @@ int ls_command(int argc, char **argv)
 	while(1)
 	{
 		entry = readdir(dir);// 每次读一条目录项
-		if(entry == NULL)
+		if(entry == nullptr)
 			break;
 		if(entry->d_name[0] == '.') // 跳过隐藏文件
 			continue;

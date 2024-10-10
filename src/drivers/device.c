@@ -85,7 +85,7 @@ void device_init()
     for (size_t i = 0; i < DEVICE_NR; i++)
     {
         device_t *device = &devices[i];
-        strcpy((char *)device->name, "null");
+        strcpy((str_t)device->name, "null");
         device->type = DEV_NULL;
         device->subtype = DEV_NULL;
         device->dev = i;

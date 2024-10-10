@@ -37,7 +37,7 @@ typedef struct serial_t
     u8_t rx_buf[SERIAL_BUF_LEN];  // 读 缓冲
 } serial_t;
 
-s32_t serial_read(serial_t *serial, s8_t *buf, u64_t count);
-s32_t serial_write(serial_t *serial, s8_t *buf, u64_t count);
+s32_t serial_read(serial_t *serial, buf_t buf, u64_t count);
+s32_t serial_write(serial_t *serial, buf_t buf, u64_t count);
 void serial_init();
 #endif

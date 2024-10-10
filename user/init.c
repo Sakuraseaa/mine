@@ -1,13 +1,4 @@
-#include "stddef.h"
-#include "unistd.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "fcntl.h"
-#include "Keyboard.h"
-#include "wait.h"
-#include "string.h"
-#include "signal.h"
-#include "command.h"
+#include "usrinit.h"
 
 int analysis_keycode(int fd);
 int read_line(int fd, char *buf);
@@ -22,7 +13,7 @@ struct buildincmd
 	char *cmd_name;
 	int (*cmd_funcPtr)(int, char **);
 };
-char *current_dir = NULL;
+char *current_dir = nullptr;
 void sig_handler(long sig);
 
 
@@ -48,7 +39,7 @@ int main()
 	while (1)
 	{
 		int argc = 0;
-		char **argv = NULL;
+		char **argv = nullptr;
 		
 		print_prompt();
 		
@@ -183,7 +174,7 @@ int analysis_keycode(int fd)
 
 	if (key == 0)
 	{
-		unsigned int *keyrow = NULL;
+		unsigned int *keyrow = nullptr;
 		int column = 0;
 
 		make = (x & FLAG_BREAK ? 0 : 1);

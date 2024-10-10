@@ -86,7 +86,9 @@
         "cpu.h": "c",
         "kernelkit.h": "c",
         "minix.h": "c",
-        "direntry.h": "c"
+        "direntry.h": "c",
+        "types.h": "c",
+        "usrinit.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

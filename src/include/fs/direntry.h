@@ -8,7 +8,7 @@
 // 用于描述文件/目录在文件系统中的层级关系-目录项
 typedef struct dir_entry
 {
-    char *name;      // 文件名
+    str_t name;      // 文件名
     s32_t name_length; // 文件长度
 
     // 描述目录项之间的层级关系

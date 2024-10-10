@@ -281,9 +281,9 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
                 Slab_cache->total_free--;  // 本内存池空闲的块数
 
                 if (Slab_cache->constructor != nullptr)
-                    return Slab_cache->constructor((char *)tmp_slab->Vaddress + Slab_cache->size * j, arg);
+                    return Slab_cache->constructor((char_t *)tmp_slab->Vaddress + Slab_cache->size * j, arg);
                 else
-                    return (void *)((char *)tmp_slab->Vaddress + Slab_cache->size * j);
+                    return (void *)((char_t *)tmp_slab->Vaddress + Slab_cache->size * j);
             }
         }
     }
@@ -317,9 +317,9 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
                     Slab_cache->total_free--;  // 本内存池空闲的块数
 
                     if (Slab_cache->constructor != nullptr)
-                        return Slab_cache->constructor((char *)slab_p->Vaddress + Slab_cache->size * j, arg);
+                        return Slab_cache->constructor((char_t *)slab_p->Vaddress + Slab_cache->size * j, arg);
                     else
-                        return (void *)((char *)slab_p->Vaddress + Slab_cache->size * j);
+                        return (void *)((char_t *)slab_p->Vaddress + Slab_cache->size * j);
                 }
             }
         } while (slab_p != Slab_cache->cache_pool);
@@ -363,7 +363,7 @@ u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg)
 
             if (slab_cache->destructor)
             {
-                slab_cache->destructor((char *)address, arg);
+                slab_cache->destructor((char_t *)address, arg);
                 // slab_cache->destructor((char *)slab_p->Vaddress + slab_cache->size * index, arg);
             }
 
@@ -725,7 +725,7 @@ void *kmalloc(u64_t size, u64_t gfp_flags)
             kmalloc_cache_size[i].total_free--;
             kmalloc_cache_size[i].total_using++;
 
-            return (void *)((char *)slab->Vaddress + kmalloc_cache_size[i].size * j);
+            return (void *)((char_t *)slab->Vaddress + kmalloc_cache_size[i].size * j);
         }
     }
 

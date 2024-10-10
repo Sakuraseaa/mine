@@ -11,7 +11,7 @@ CC	  = gcc
 
 # 编译选项中我屏蔽了两处警告，等到日后再处理吧
 CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack-protector -Wall \
-		-fno-builtin -fno-pie -fno-pic -nostdlib \
+		-fno-builtin -fno-pie -fno-pic -nostdlib  -nostdinc \
 		-Wno-address-of-packed-member	-Wno-implicit-function-declaration \
 		-c -g -I $(INC_DIR)/ -I $(INC_DIR)/drivers/ -I $(INC_DIR)/lib/ -I $(INC_DIR)/base/ \
 		-I $(INC_DIR)/fs/ -I $(INC_DIR)/kernel/ -I $(INC_DIR)/usr/ -I $(INC_DIR)/sys/	\
@@ -139,8 +139,6 @@ $(BUI_DIR)/waitqueue.o: $(SRC_DIR)/lib/waitqueue.c
 $(BUI_DIR)/execv.o: $(SRC_DIR)/sys/execv.c
 	@$(CC) $(CFLAGS) $< -o $@
 
-
-# =========== try mm =============
 $(BUI_DIR)/msadsc.o: $(SRC_DIR)/mm/msadsc.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/memarea.o: $(SRC_DIR)/mm/memarea.c
@@ -157,7 +155,6 @@ $(BUI_DIR)/krlvadrsmem.o: $(SRC_DIR)/mm/krlvadrsmem.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(BUI_DIR)/halmmu.o: $(SRC_DIR)/mm/halmmu.c
 	@$(CC) $(CFLAGS) $< -o $@
-# ================================
 
 # =============  SCRIPT ============
 $(BUI_DIR)/kallsyms.o: $(SCI_DIR)/kallsyms.c $(BUI_DIR)/kernel.bin

@@ -1,7 +1,5 @@
 #ifndef __STAT_H_USR_
 #define __STAT_H_USR_
-#include "basetype.h"
-
 // 文件类型
 #define IFMT 00170000  // 文件类型（8 进制表示）
 #define IFREG 0100000  // 常规文件
@@ -52,10 +50,10 @@ typedef struct stat_T
 {
     dev_t dev;    // 含有文件的设备号
     idx_t nr;     // 文件 i 节点号
-    u16 mode;     // 文件类型和属性
-    u8 nlinks;    // 指定文件的连接数
-    u16 uid;      // 文件的用户(标识)号
-    u8 gid;       // 文件的组号
+    u16_t mode;     // 文件类型和属性
+    unsigned char nlinks;    // 指定文件的连接数
+    unsigned short uid;      // 文件的用户(标识)号
+    unsigned char gid;       // 文件的组号
     dev_t rdev;   // 设备号(如果文件是特殊的字符文件或块文件)
     size_t size;  // 文件大小（字节数）（如果文件是常规文件）
     time_t atime; // 上次（最后）访问时间

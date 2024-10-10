@@ -6,9 +6,9 @@ INC_DIR = /home/steven/mine/src/include
 ASM   = nasm
 CC	  = gcc
 
-CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib\
-		-fno-builtin -fno-pie -fno-pic -g -I $(USR_INC_DIR)  -I $(INC_DIR)/base \
-		-c -I $(USR_INC_DIR)/base -I $(INC_DIR) \
+CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib -nostdinc\
+		-fno-builtin -fno-pie -fno-pic -g -I $(USR_INC_DIR)/sys -I $(USR_INC_DIR)/  \
+		-c -I $(USR_INC_DIR)/base\
 
 #被链接的文件
 OBJS =  $(USR_BUI_DIR)/init.o $(USR_BUI_DIR)/syscall.o $(USR_BUI_DIR)/errno.o   \

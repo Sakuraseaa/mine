@@ -1,11 +1,4 @@
-#include "basetype.h"
-#include "time.h"
-#include "stdio.h"
-#include "unistd.h"
-#include "fcntl.h"
-#include "string.h"
-#include "command.h"
-#include "stdlib.h"
+#include "usrinit.h"
 
 extern char* current_dir;
 
@@ -30,7 +23,7 @@ static const char *months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", 
 
 int date_command(int argc, char **argv)
 {
-	u64 seconds = getNow();
+	u64_t seconds = getNow();
     tm time;
     localtime(seconds, &time);
     printf("%d-%02d-%02d %s-%s %02d:%02d:%02d \n",
@@ -57,7 +50,7 @@ int pwd_command(int argc, char **argv)
 int echo_command(int argc, char **argv)
 {
     int ret = 0, fd = 0;
-    char* filename = NULL;
+    char* filename = nullptr;
     
     if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
         

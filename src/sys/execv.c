@@ -74,7 +74,7 @@ enum segment_type
  * @brief open_exec_file(char*)用于搜索文件系统的目标文件，本函数与sys_open函数的指向流程基本相似
  *本函数最重要的作用是为目标文件描述符指派操作方法（filp.f_ops = dentry.dir_inode.f_ops）
  */
-file_t *open_exec_file(char *path)
+file_t *open_exec_file(str_t path)
 {
     dir_entry_t *dentry = nullptr;
 	file_t *filp = nullptr;
@@ -214,7 +214,7 @@ static u64_t section_analysis(file_t *filp, Elf64_Ehdr* elf_header) {
 
 	memset(section_header, 0, s_num * s_size);
 	filp->f_ops->lseek(filp, s_off, SEEK_SET);
-	filp->f_ops->read(filp, (char*)section_header, s_num * s_size, &filp->position);
+	filp->f_ops->read(filp, (buf_t)section_header, s_num * s_size, &filp->position);
 
 
 	// read secontion Header string table
@@ -228,7 +228,7 @@ static u64_t section_analysis(file_t *filp, Elf64_Ehdr* elf_header) {
 	struct mm_struct* mm = current->mm;
 	while(sect_idx < s_num) {
 	
-		char* s_name = s_name_table + (section_header[sect_idx].sh_name);
+		str_t s_name = s_name_table + (section_header[sect_idx].sh_name);
 		if(!strcmp(s_name, ".text")) {
 		
 			mm->start_code = section_header[sect_idx].sh_addr;
@@ -263,7 +263,7 @@ static u64_t section_analysis(file_t *filp, Elf64_Ehdr* elf_header) {
  * @param pathname 需要加载的程序文件的名称
  * @return unsiged long 若加载成功, 则返回程序的 bss 段的结束地址; 若加载失败, 则返回-1
  */
-static u64_t load(char *pathname)
+static u64_t load(str_t pathname)
 {
 	file_t *filp = nullptr;
 	u64_t end_bss = 0;
@@ -335,7 +335,7 @@ static u64_t load(char *pathname)
 
 
 // 被init调用,加载用户进程体，到用户空间800000
-u64_t do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
+u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 {
   	// color_printk(RED, BLACK, "do_execve task is running\n");
 	u64_t stack_start_addr = TASK_SIZE + 1;
@@ -383,14 +383,14 @@ u64_t do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 	// 在用户空间，复制进程运行参数, rewriter:: this is argc locked 10. all right.
 	if( argv != nullptr ) {
 		s32_t len = 0, i = 0;
-		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
+		char_t** dargv = (char_t**)(stack_start_addr - 10 * sizeof(char_t*));
 		pos = (u64_t)dargv;
 
 		for(i = 0; i < 10 && argv[i] != nullptr; i++)
 		{
 			len = strnlen_user(argv[i], 1024) + 1;
-			strcpy((char*)(pos - len), argv[i]);
-			dargv[i] = (char*)(pos - len);
+			strcpy((char_t*)(pos - len), argv[i]);
+			dargv[i] = (char_t*)(pos - len);
 			pos -= len;
 		}
 

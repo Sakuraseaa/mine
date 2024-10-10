@@ -4,7 +4,7 @@
 // 安装设备
 dev_t device_install(
     s32_t type, s32_t subtype,
-    void *ptr, char *name, dev_t parent,
+    void *ptr, str_t name, dev_t parent,
     void *ops);
 
 // 根据子类型查找设备
