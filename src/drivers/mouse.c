@@ -5,7 +5,7 @@
 #include "kernelkit.h"
 
 // 鼠标输入缓存区
-struct keyboard_inputbuffer *p_mouse = NULL;
+struct keyboard_inputbuffer *p_mouse = nullptr;
 static int mouse_count = 0;
 
 void mouse_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)

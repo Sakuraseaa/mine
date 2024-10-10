@@ -10,7 +10,6 @@
 
 
 /* order */
-// extern struct task_struct;
 #include "waitqueue.h"
 #include "semaphore.h"
 

@@ -8,7 +8,7 @@ list_t super_list;
 // 获得设备 dev 的超级块
 inode_t *find_inode(dev_t dev, idx_t nr)
 {
-    super_t *super = get_super(dev);
+    spblk_t *super = get_super(dev);
     list_t *list = &super->inode_list;
 
     for (list_t *node = list->next; node != list; node = node->next)
@@ -19,7 +19,7 @@ inode_t *find_inode(dev_t dev, idx_t nr)
             return inode;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -32,16 +32,16 @@ inode_t *namei(char* filename) {
 
     if (!strcmp(filename, "/") || !strcmp(filename, "/.") || !strcmp(filename, "/.."))
     {
-        return NULL;
+        return nullptr;
     }
 
     // 由于filename可能是绝对路径的原因 所以我要拼凑出完整路径
     // 使用 filename 和 getcwd()的方式拼接，但布置到完成路径长度申请多长缓冲合适。 无情的4K
-    char* path = NULL;
+    char* path = nullptr;
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)knew(PAGE_4K_SIZE, 0);
-    if (path == NULL)
-        return NULL;
+    if (path == nullptr)
+        return nullptr;
     
     // path中保存了当前目录
     sys_getcwd(path, PAGE_4K_SIZE);
@@ -49,10 +49,10 @@ inode_t *namei(char* filename) {
     strcat(path, filename);
 
     // 如果是完整路径 我们可以使用path_walk得到该文件的目录项，从而得到 inode;
-    dir_entry_t* dentry  = path_walk(path, 0, NULL);
+    dir_entry_t* dentry  = path_walk(path, 0, nullptr);
     kdelete(path, PAGE_4K_SIZE);
-    if(dentry == NULL)
-        return NULL;
+    if(dentry == nullptr)
+        return nullptr;
     
     return dentry->dir_inode;
 }

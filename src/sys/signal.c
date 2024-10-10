@@ -28,13 +28,13 @@ sighadler_t sys_signal(s64_t signum, sighadler_t  hander, void (*restorer)(void)
     sa->sa_handler = hander;
     sa->sa_restorer = restorer;
 
-    return NULL;
+    return nullptr;
 }
 
 // 发送信号
 s32_t sys_kill(s64_t pid, s32_t signum)
 {
-    task_t *tsk = NULL;
+    task_t *tsk = nullptr;
 
 	for (tsk = init_task_union.task.next; tsk != &init_task_union.task; tsk = tsk->next)
 	{
@@ -42,7 +42,7 @@ s32_t sys_kill(s64_t pid, s32_t signum)
 			break;
 	}
 
-    if(tsk == NULL)
+    if(tsk == nullptr)
         return -1;
 
     tsk->signal |= (1UL << signum); // 设置信号位图-表示接收信号

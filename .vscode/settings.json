@@ -84,7 +84,9 @@
         "arch_x86kit.h": "c",
         "libfunc.h": "c",
         "cpu.h": "c",
-        "kernelkit.h": "c"
+        "kernelkit.h": "c",
+        "minix.h": "c",
+        "direntry.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

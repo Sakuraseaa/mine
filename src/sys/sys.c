@@ -74,8 +74,8 @@ u64_t sys_putstring(u32_t FRcolor, s8_t *string)
  * @param size 若调用者提供buf, 则size为buf的大小
  * @return char* 若成功且buf为NULL, 则操作系统会分配存储工作目录路径的缓冲区, 并返回首地址; 若失败则为NULL
  */
-s8_t *sys_getcwd(s8_t *buf, u64_t size) {
-    assert(buf != NULL);
+s8_t *sys_getcwd(str_t buf, u64_t size) {
+    assert(buf != nullptr);
     
     dir_entry_t* dir = current->i_pwd;
     dir_entry_t* par_dir = dir->parent;
@@ -102,13 +102,13 @@ s8_t *sys_getcwd(s8_t *buf, u64_t size) {
     /* 至此full_path_reverse中的路径是反着的,
      * 即子目录在前(左),父目录在后(右) ,
      * 现将full_path_reverse中的路径反置 */
-    s8_t *last_slash = NULL; // 用于记录字符串中最后一个 / 的地址
+    s8_t *last_slash = nullptr; // 用于记录字符串中最后一个 / 的地址
     
     // 把full_path_reverse从后向前遇见 / 就截断一下
     // 添加到buf尾巴后面
     while ((last_slash = strrchr(full_path_reverse, '/')))
     {
-        int len = strlen(buf);
+        s32_t len = strlen(buf);
 
         strcpy(buf + len, last_slash);
         // 最后一位设置为0, 这样就是下一次strrchr就从这里开始查起
@@ -127,22 +127,22 @@ s8_t *sys_getcwd(s8_t *buf, u64_t size) {
  * @param flags  文件操作标志位，描述文件的访问模式和操作模式,WRITE,READ,TRUNC, APPEND
  * @return u64_t 返回一个最小未使用的正整数来代表这个文件对应的文件描述符，执行失败返回-1
  */
-u64_t sys_open(s8_t *filename, s32_t flags)
+u64_t sys_open(str_t filename, s32_t flags)
 {
-    s8_t *path = NULL;
+    s8_t *path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
-    dir_entry_t *Parent_dentry = NULL, *Child_dentry = NULL;
+    dir_entry_t *Parent_dentry = nullptr, *Child_dentry = nullptr;
     s32_t path_flags = 0;
-    dir_entry_t *dentry = NULL;
-    file_t *filp = NULL;
-    file_t **f = NULL;
+    dir_entry_t *dentry = nullptr;
+    file_t *filp = nullptr;
+    file_t **f = nullptr;
     s32_t fd = -1; // 文件描述符
     s32_t i = 0;
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)knew(PAGE_4K_SIZE, 0);
-    if (path == NULL)
+    if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
@@ -167,7 +167,7 @@ u64_t sys_open(s8_t *filename, s32_t flags)
     dentry = path_walk(path, path_flags, &Child_dentry); // b.2得到目录项
     kdelete(path, PAGE_4K_SIZE);
     
-    if (dentry == NULL)
+    if (dentry == nullptr)
         return -ENOENT;
 
     if (flags & O_CREAT)
@@ -222,7 +222,7 @@ sys_open_over_judge:
     f = current->file_struct;
 
     for (i = 0; i < TASK_FILE_MAX; i++)
-        if (f[i] == NULL)
+        if (f[i] == nullptr)
         {
             fd = i;
             break;
@@ -231,7 +231,7 @@ sys_open_over_judge:
     if (i == TASK_FILE_MAX)
     {
         kdelete(filp, sizeof(struct file));
-        ////reclaim struct index_node & struct dir_entry
+        ////reclaim struct index_node & dir_entry_t
         return -EMFILE;
     }
     f[fd] = filp;
@@ -239,16 +239,16 @@ sys_open_over_judge:
     return fd; // 返回文件描述符数组下标
 }
 
-u64_t sys_mkdir(s8_t* filename) {
-    s8_t *path = NULL;
+u64_t sys_mkdir(str_t filename) {
+    s8_t *path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
-    struct dir_entry *Child_dentry = NULL;
-    struct dir_entry *dentry = NULL;
+    dir_entry_t *Child_dentry = nullptr;
+    dir_entry_t *dentry = nullptr;
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)knew(PAGE_4K_SIZE, 0);
-    if (path == NULL)
+    if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
@@ -266,7 +266,7 @@ u64_t sys_mkdir(s8_t* filename) {
 
     dentry = path_walk(path, 1, &Child_dentry); // b.2得到目录项
     kdelete(path, PAGE_4K_SIZE);
-    if (dentry == NULL)
+    if (dentry == nullptr)
         return -ENOENT;
     
     assert(Child_dentry->parent == dentry);
@@ -276,16 +276,16 @@ u64_t sys_mkdir(s8_t* filename) {
     return error;
 }
 
-u64_t sys_rmdir(s8_t* filename) {
-    s8_t *path = NULL;
+u64_t sys_rmdir(str_t filename) {
+    s8_t *path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
-    struct dir_entry *Child_dentry = NULL;
-    struct dir_entry *dentry = NULL;
+    dir_entry_t *Child_dentry = nullptr;
+    dir_entry_t *dentry = nullptr;
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)knew(PAGE_4K_SIZE, 0);
-    if (path == NULL)
+    if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
@@ -305,7 +305,7 @@ u64_t sys_rmdir(s8_t* filename) {
     dentry = path_walk(path, 2, &Child_dentry); // b.2得到目录项
     kdelete(path, PAGE_4K_SIZE);
     
-    if (dentry == NULL)
+    if (dentry == nullptr)
         return -ENOENT;
     
     assert(ISDIR(Child_dentry->dir_inode->i_mode));
@@ -322,17 +322,17 @@ u64_t sys_rmdir(s8_t* filename) {
     return error;
 }
 
-u64_t sys_unlink(s8_t* filename) {
-    s8_t *path = NULL;
+u64_t sys_unlink(str_t filename) {
+    s8_t *path = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
-    struct dir_entry *Child_dentry = NULL;
-    struct dir_entry *dentry = NULL;
+    dir_entry_t *Child_dentry = nullptr;
+    dir_entry_t *dentry = nullptr;
 
 
     // a. 把目标路径名从应用层复制到内核层
     path = (char *)knew(PAGE_4K_SIZE, 0);
-    if (path == NULL)
+    if (path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
     pathlen = strlen(filename);
@@ -351,7 +351,7 @@ u64_t sys_unlink(s8_t* filename) {
 
     dentry = path_walk(path, 2, &Child_dentry); 
     kdelete(path, PAGE_4K_SIZE);
-    if (dentry == NULL)
+    if (dentry == nullptr)
         return -ENOENT;
     
     assert(Child_dentry->parent == dentry);
@@ -384,15 +384,15 @@ u64_t sys_unlink(s8_t* filename) {
  */
 u64_t sys_close(s32_t fd)
 {
-    struct file *filp = NULL;
+    file_t *filp = nullptr;
     if (fd < 0 || fd >= TASK_FILE_MAX)
         return -EBADF;
 
     filp = current->file_struct[fd];
     if (filp->f_ops && filp->f_ops->close)
         filp->f_ops->close(filp->dentry->dir_inode, filp);
-    kdelete(filp, sizeof(struct file));
-    current->file_struct[fd] = NULL;
+    kdelete(filp, sizeof(file_t));
+    current->file_struct[fd] = nullptr;
 
     return 0;
 }
@@ -407,7 +407,7 @@ u64_t sys_close(s32_t fd)
  */
 u64_t sys_read(s32_t fd, void *buf, s64_t count)
 {
-    file_t *filp = NULL;
+    file_t *filp = nullptr;
     u64_t ret = 0;
 
     if (fd < 0 || fd >= TASK_FILE_MAX)
@@ -429,7 +429,7 @@ u64_t sys_getNow(void) {
 // 写文件函数
 u64_t sys_write(s32_t fd, void *buf, s64_t count)
 {
-    file_t *filp = NULL;
+    file_t *filp = nullptr;
     u64_t ret = 0;
 
     if (fd < 0 || fd >= TASK_FILE_MAX)
@@ -454,7 +454,7 @@ u64_t sys_write(s32_t fd, void *buf, s64_t count)
  */
 u64_t sys_lseek(s32_t filds, s64_t offset, s32_t whence)
 {
-    file_t *filp = NULL;
+    file_t *filp = nullptr;
     u64_t ret = 0;
     // color_printk(GREEN, BLACK, "sys_lseek:%d\n", filds);
     if (filds < 0 || filds >= TASK_FILE_MAX)
@@ -541,7 +541,7 @@ u64_t sys_reboot(u64_t cmd, void *arg)
 extern int fill_dentry(void* buf, s8_t*name, s64_t namelen, s64_t offset);
 u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
 {
-    file_t* filp = NULL;
+    file_t* filp = nullptr;
     u64_t ret = 0;
     // color_printk(GREEN, BLACK, "sys_getdents:%d\n",fd);
     if(fd < 0 || fd > TASK_FILE_MAX)
@@ -557,12 +557,12 @@ u64_t sys_getdents(s32_t fd, void* dirent, s64_t count)
 
 u64_t sys_chdir(s8_t* filename)
 {
-    str_t path = NULL;
+    str_t path = nullptr;
     s64_t pathlen = 0;
-    dir_entry_t* dentry = NULL;
+    dir_entry_t* dentry = nullptr;
 
     path = (char*) knew(PAGE_4K_SIZE, 0);
-    if(path == NULL)
+    if(path == nullptr)
         return -ENOMEM;
     memset(path, 0, PAGE_4K_SIZE);
 
@@ -577,8 +577,8 @@ u64_t sys_chdir(s8_t* filename)
 
     strncpy_from_user(filename, path, pathlen);
     
-    dentry = path_walk(path, 0, NULL);
-    if (dentry == NULL)
+    dentry = path_walk(path, 0, nullptr);
+    if (dentry == nullptr)
         return -ENOENT;
     
     kdelete(path, PAGE_4K_SIZE);
@@ -586,7 +586,7 @@ u64_t sys_chdir(s8_t* filename)
     // 改变当前进程工作目录
     current->i_pwd = dentry;
     
-    if(dentry == NULL)
+    if(dentry == nullptr)
         return -ENOENT;
     if(dentry->dir_inode->attribute != FS_ATTR_DIR)
         return -ENOTDIR;
@@ -597,7 +597,7 @@ u64_t sys_chdir(s8_t* filename)
 
 u64_t sys_execve()
 {
-    str_t pathname = NULL;
+    str_t pathname = nullptr;
     s64_t pathlen = 0;
     s64_t error = 0;
     pt_regs_t* regs = (pt_regs_t*)current->thread->rsp0 - 1;
@@ -605,7 +605,7 @@ u64_t sys_execve()
     DEBUGK("sys_execve\n");
 
     pathname = (char*)knew(PAGE_4K_SIZE, 0);
-    if(pathname == NULL)
+    if(pathname == nullptr)
         return -ENOMEM;
     
     memset(pathname, 0, PAGE_4K_SIZE);
@@ -623,7 +623,7 @@ u64_t sys_execve()
 
 
     strncpy_from_user((char*)regs->rdi, pathname, pathlen);
-    error = do_execve(regs, pathname, (char**)regs->rsi, NULL);
+    error = do_execve(regs, pathname, (char**)regs->rsi, nullptr);
 
     kdelete(pathname, PAGE_4K_SIZE);
     return error;
@@ -634,12 +634,12 @@ u64_t sys_execve()
  * 		exit_mm()与copy_mm()的分配空间分布结构体初始化过程相逆
  * @param tsk
  */
-void exit_mm(struct task_struct *tsk)
+void exit_mm(task_t *tsk)
 {
-	// u64_t *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+	// u64_t *tmp4 = nullptr, *tmp3 = nullptr, *tmp2 = nullptr;
     // u64_t tmp1 = 0; // page address
 	// size_t i = 0, j = 0, k = 0;
-	// struct Page* p = NULL;
+	// struct Page* p = nullptr;
 	// if (tsk->flags & PF_VFORK)
 	// 	return;
 
@@ -674,15 +674,15 @@ void exit_mm(struct task_struct *tsk)
 
 	// kdelete(Phy_To_Virt(tsk->mm->pgd)); // release PMl4's memory
 
-	// if (tsk->mm != NULL)
+	// if (tsk->mm != nullptr)
 	// 	kdelete(tsk->mm);
 }
 
 u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
 {
     s64_t retval = 0;
-    task_t* child = NULL;
-    task_t* tsk = NULL;
+    task_t* child = nullptr;
+    task_t* tsk = nullptr;
 
     // color_printk(GREEN, BLACK,"sys_wait4\n");
     for(tsk =&init_task_union.task; tsk->next != &init_task_union.task; tsk = tsk->next)
@@ -694,7 +694,7 @@ u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
         }
     }
 
-    if( child == NULL )   return -ECHILD;
+    if( child == nullptr )   return -ECHILD;
     if( options != 0 )    return -EINVAL;
     
     // 直到子进程的成为僵尸进程，才会继续进行sys_wait4函数流程
@@ -720,7 +720,7 @@ u64_t sys_stat(s8_t* filename, stat_t* statbuf) {
 
     inode_t* inode = namei(filename);
 
-    if(inode == NULL)
+    if(inode == nullptr)
         return -ENOMEM;
 
     statbuf->size = inode->file_size;
@@ -756,7 +756,7 @@ u64_t sys_cleanScreen(void) {
 void dir_Tree(dir_entry_t* cur, s32_t depth) {
     color_printk(WHITE, BLACK, "|");
     
-    dir_entry_t* child = NULL;
+    dir_entry_t* child = nullptr;
 
     list_t* End = &cur->subdirs_list;
     list_t* node = End->next;
@@ -790,7 +790,7 @@ u64_t sys_info(s8_t order) {
     switch (order)
     {
     case 'A':  // 显示系统目录项树
-        struct dir_entry *parent = current_sb->root; // 父目录项
+        dir_entry_t *parent = current_sb->root; // 父目录项
         dir_Tree(parent, 0);
         break;
     case 'B':// 显示本进程的虚拟内存 到 物理内存的映射

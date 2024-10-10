@@ -140,18 +140,18 @@ long list_is_empty(struct List *entry)
 
 struct List *list_prev(struct List *entry)
 {
-    if (entry->prev != NULL)
+    if (entry->prev != nullptr)
         return entry->prev;
     else
-        return NULL;
+        return nullptr;
 }
 
 struct List *list_next(struct List *entry)
 {
-    if (entry->next != NULL)
+    if (entry->next != nullptr)
         return entry->next;
     else
-        return NULL;
+        return nullptr;
 }
 
 bool_t list_is_empty_careful(const list_h_t *head)
@@ -229,7 +229,7 @@ void *memcpy(void *From, void *To, s64_t Num)
 
 s32_t memcmp(void *FirstPart, void *SecondPart, s64_t Count)
 {
-    register int __res;
+    register s32_t __res;
 
     __asm__ __volatile__("cld	\n\t" // clean direct
                          "repe	\n\t" // repeat if equal
@@ -345,7 +345,7 @@ str_t strcat(str_t Dest, str_t Src)
 
 s32_t strcmp(str_t FirstPart, cstr_t SecondPart)
 {
-    register int __res;
+    register s32_t __res;
     __asm__ __volatile__("cld	\n\t"
                          "1:	\n\t"
                          "lodsb	\n\t"
@@ -375,7 +375,7 @@ s32_t strcmp(str_t FirstPart, cstr_t SecondPart)
 
 s32_t strncmp(str_t FirstPart, str_t SecondPart, s64_t Count)
 {
-    register int __res;
+    register s32_t __res;
     __asm__ __volatile__("cld	\n\t"
                          "1:	\n\t"
                          "decq	%3	\n\t"
@@ -401,7 +401,7 @@ s32_t strncmp(str_t FirstPart, str_t SecondPart, s64_t Count)
 
 s32_t strlen(cstr_t String)
 {
-    register int __res;
+    register s32_t __res;
     __asm__ __volatile__("cld	\n\t"
                          "repne	\n\t"
                          "scasb	\n\t"

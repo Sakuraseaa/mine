@@ -7,8 +7,8 @@ semaphore_t visual_lock;
 void putchar(u32_t *fb, s32_t Xsize, s32_t x, s32_t y, u32_t FRcolor, u32_t BKcolor, u8_t font)
 {
 	u32_t i = 0, j = 0;
-	u32_t *addr = NULL;
-	u8_t *fontp = NULL;
+	u32_t *addr = nullptr;
+	u8_t *fontp = nullptr;
 	s32_t testval = 0;
 	fontp = font_ascii[font];
 	semaphore_down(&visual_lock);
@@ -403,7 +403,7 @@ void frame_buffer_init()
 	u64_t i;
 	u64_t *tmp;
 	u64_t FB_addr = PAGE_OFFSET + VBE_Phy_address;
-	u64_t *virtual = NULL;
+	u64_t *virtual = nullptr;
 
 	Global_CR3 = Get_gdt();
 

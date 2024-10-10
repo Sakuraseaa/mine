@@ -5,7 +5,7 @@ struct schedule task_schedule;
 extern void switch_to(task_t *prev, task_t *next);
 task_t *get_next_task()
 {
-	task_t *tsk = NULL;
+	task_t *tsk = nullptr;
 	// 就绪队列为空，返回内核主线程, 这将会是一个空转的线程
 	if (list_is_empty(&task_schedule.task_queue.list))
 		return &init_task_union.task;
@@ -37,7 +37,7 @@ void insert_task_queue(task_t *tsk)
 }
 
 
-task_t *tsk = NULL;
+task_t *tsk = nullptr;
 // 调度器
 void schedule()
 {

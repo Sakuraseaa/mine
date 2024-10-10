@@ -9,7 +9,6 @@
 
 
 /* order */
-// extern struct task_struct;
 #include "waitqueue_f.h"
 #include "semaphore_f.h"
 

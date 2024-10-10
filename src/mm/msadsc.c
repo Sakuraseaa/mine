@@ -25,7 +25,7 @@ void msadsc_t_init(msadsc_t *initp)
 	initp->md_phyadrs.paf_busy = PAF_NO_BUSY;
 	initp->md_phyadrs.paf_rv2 = PAF_RV2_VAL;    // reserve - 保留
 	initp->md_phyadrs.paf_padrs = PAF_INIT_PADRS; // 页地址
-	initp->md_odlink = NULL; // Adjacent Link / Ordered Link 相邻链接-有序链接
+	initp->md_odlink = nullptr; // Adjacent Link / Ordered Link 相邻链接-有序链接
 	return;
 }
 
@@ -110,7 +110,7 @@ void disp_one_msadsc(msadsc_t *mp)
 void init_msadsc()
 {
     u64_t coremdnr = 0, msadscnr = 0;
-    msadsc_t *msadscvp = NULL;
+    msadsc_t *msadscvp = nullptr;
     
     //计算msadsc_t结构数组的开始地址和数组元素个数
     // return msadsc virtual address and size
@@ -140,7 +140,7 @@ void init_msadsc()
 u64_t search_segment_occupymsadsc(msadsc_t *msastart, u64_t msanr, u64_t ocpystat, u64_t ocpyend)
 {
     u64_t mphyadr = 0, fsmsnr = 0, mnr, tmpadr;
-    msadsc_t *fstatmp = NULL;
+    msadsc_t *fstatmp = nullptr;
     for (mnr = 0; mnr < msanr; mnr++)
     {
         if ((msastart[mnr].md_phyadrs.paf_padrs << PSHRSIZE) == ocpystat)
@@ -152,7 +152,7 @@ u64_t search_segment_occupymsadsc(msadsc_t *msastart, u64_t msanr, u64_t ocpysta
     }
 step1:
     fsmsnr = 0;
-    if (NULL == fstatmp)
+    if (nullptr == fstatmp)
     {
         return 0;
     }
@@ -240,7 +240,7 @@ void init_search_krloccupymm()
 }
 adr_t msadsc_ret_addr(msadsc_t *msa)
 {
-    if (NULL == msa) {
+    if (nullptr == msa) {
         return INVIALID;
     }
     return (msa->md_phyadrs.paf_padrs << PAGPHYADR_SZLSHBIT);
@@ -248,7 +248,7 @@ adr_t msadsc_ret_addr(msadsc_t *msa)
 
 adr_t msadsc_ret_vaddr(msadsc_t *msa)
 {
-    if (NULL == msa) {
+    if (nullptr == msa) {
         return INVIALID;
     }
     return (adr_t)Phy_To_Virt(msadsc_ret_addr(msa));

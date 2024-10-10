@@ -76,18 +76,18 @@ enum segment_type
  */
 struct file *open_exec_file(char *path)
 {
-    struct dir_entry *dentry = NULL;
-	struct file *filp = NULL;
+    dir_entry_t *dentry = nullptr;
+	struct file *filp = nullptr;
 
 	dentry = path_walk(path, 0, 0);
-	if (dentry == NULL)
+	if (dentry == nullptr)
 		return (void *)-ENOENT;
 	if (dentry->dir_inode->attribute == FS_ATTR_DIR) {
 		color_printk(RED, BLACK, "bash: %s: Is a directory\n", path);
 		return (void *)-ENOTDIR;
 	}
 	filp = (struct file *)knew(sizeof(struct file), 0);
-	if (filp == NULL)
+	if (filp == nullptr)
 		return (void *)-ENOMEM;
 	filp->position = 0;
 	filp->mode = 0;
@@ -109,7 +109,7 @@ struct file *open_exec_file(char *path)
 static void virtual_map(u64_t user_addr){
 	
 	u64_t *tmp;
-	u64_t *virtual = NULL;
+	u64_t *virtual = nullptr;
 	
 	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
 	tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
@@ -207,8 +207,8 @@ static u64_t section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
 	
     u32_t sect_idx = 0;
 	Elf64_Shdr *section_header = (Elf64_Shdr*)knew(s_num * s_size, 0);
-	Elf64_Shdr *shstr_entry = NULL;
-	str_t s_name_table = NULL;
+	Elf64_Shdr *shstr_entry = nullptr;
+	str_t s_name_table = nullptr;
 
 	// read Section Header
 
@@ -265,7 +265,7 @@ static u64_t section_analysis(struct file *filp, Elf64_Ehdr* elf_header) {
  */
 static u64_t load(char *pathname)
 {
-	struct file *filp = NULL;
+	struct file *filp = nullptr;
 	u64_t end_bss = 0;
 	s64_t ret = -1;
 
@@ -381,12 +381,12 @@ u64_t do_execve(pt_regs_t *regs, char *name, char* argv[], char *envp[])
 	exit_files(current);
 
 	// 在用户空间，复制进程运行参数, rewriter:: this is argc locked 10. all right.
-	if( argv != NULL ) {
+	if( argv != nullptr ) {
 		int len = 0, i = 0;
 		char** dargv = (char**)(stack_start_addr - 10 * sizeof(char*));
 		pos = (u64_t)dargv;
 
-		for(i = 0; i < 10 && argv[i] != NULL; i++)
+		for(i = 0; i < 10 && argv[i] != nullptr; i++)
 		{
 			len = strnlen_user(argv[i], 1024) + 1;
 			strcpy((char*)(pos - len), argv[i]);

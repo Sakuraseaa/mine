@@ -14,6 +14,7 @@ struct dir_entry_operations;
 struct file_operations;
 struct index_node;
 struct dir_entry;
+typedef struct dir_entry dir_entry_t;
 
 typedef struct ide_part_t
 {
@@ -32,7 +33,7 @@ typedef struct file
     long position;      // 本文件的当前访问位置
     u64_t mode; // mode 保存着文件的访问模式和操作模式
 
-    struct dir_entry *dentry; // 本文件对应的目录项
+    dir_entry_t *dentry; // 本文件对应的目录项
 
     struct file_operations *f_ops; 
 
@@ -49,23 +50,23 @@ struct super_block_operations
 
 struct index_node_operations
 {
-    long (*create)(struct index_node *inode, struct dir_entry *dentry, int mode);                                                           // 为dentry对象建立一个新的索引节点
-    struct dir_entry *(*lookup)(struct index_node *parent_inode, struct dir_entry *dest_dentry);                                            // 在特定目录中寻找索引节点
-    long (*mkdir)(struct index_node *inode, struct dir_entry *dentry, int mode);                                                            // 创建一个新目录
-    long (*rmdir)(struct index_node *inode, struct dir_entry *dentry);                                                                      // 删除inode目录中的dentry目录项代表的文件
-    long (*rename)(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry); // 移动文件
-    long (*getattr)(struct dir_entry *dentry, u64_t *attr);                                                                         // 在通知所有节点需要对磁盘中更新时，VFS会调用该函数
-    long (*setattr)(struct dir_entry *dentry, u64_t *attr);                                                                         // 在修改索引节点后，通知发生了”改变事件“
-    long (*unlink)(struct index_node *dir, struct dir_entry* dentry); // 删除文件
+    long (*create)(struct index_node *inode, dir_entry_t *dentry, int mode);                                                           // 为dentry对象建立一个新的索引节点
+    dir_entry_t *(*lookup)(struct index_node *parent_inode, dir_entry_t *dest_dentry);                                            // 在特定目录中寻找索引节点
+    long (*mkdir)(struct index_node *inode, dir_entry_t *dentry, int mode);                                                            // 创建一个新目录
+    long (*rmdir)(struct index_node *inode, dir_entry_t *dentry);                                                                      // 删除inode目录中的dentry目录项代表的文件
+    long (*rename)(struct index_node *old_inode, dir_entry_t *old_dentry, struct index_node *new_inode, dir_entry_t *new_dentry); // 移动文件
+    long (*getattr)(dir_entry_t *dentry, u64_t *attr);                                                                         // 在通知所有节点需要对磁盘中更新时，VFS会调用该函数
+    long (*setattr)(dir_entry_t *dentry, u64_t *attr);                                                                         // 在修改索引节点后，通知发生了”改变事件“
+    long (*unlink)(struct index_node *dir, dir_entry_t* dentry); // 删除文件
 };
 
 struct dir_entry_operations
 {
-    long (*compare)(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename); // 比较两个文件名称
-    long (*hash)(struct dir_entry *dentry, char *filename);                                              // 该函数为目录项生成散列值
-    long (*release)(struct dir_entry *dentry);                                                           // 释放目录项对象
-    long (*iput)(struct dir_entry *dentry, struct index_node *inode);                                    // 释放inode索引
-    long (*d_delete)(struct dir_entry *dentry);
+    long (*compare)(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename); // 比较两个文件名称
+    long (*hash)(dir_entry_t *dentry, char *filename);                                              // 该函数为目录项生成散列值
+    long (*release)(dir_entry_t *dentry);                                                           // 释放目录项对象
+    long (*iput)(dir_entry_t *dentry, struct index_node *inode);                                    // 释放inode索引
+    long (*d_delete)(dir_entry_t *dentry);
 };
 
 // 文件描述符

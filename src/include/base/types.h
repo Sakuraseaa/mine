@@ -2,7 +2,7 @@
 #define _BASTYPE_T_H
 #define INVIALID 0
 
-#define NULL ((void *)0)
+#define NULL 0
 #define nullptr ((void *)0)
 
 typedef unsigned char u8_t;
@@ -55,7 +55,7 @@ typedef u64_t mmstus_t;
 #define private	static
 #define EXTERN extern
 #define KEXTERN extern
-// #define NULL	0
+// #define nullptr	0
 #define TRUE    1
 #define	FALSE	0
 #define DFCERRSTUS (-1)

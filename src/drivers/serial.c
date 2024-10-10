@@ -71,10 +71,10 @@ void serial_init()
         serial_t *serial = &serials[i];
 
         if (!i) {
-            register_irq(0x24, NULL, serial_handler, 0, &serial_int_controller, "serial_1"); // 注册串口中断
+            register_irq(0x24, nullptr, serial_handler, 0, &serial_int_controller, "serial_1"); // 注册串口中断
             serial->iobase = COM1_IOBASE;
         } else {
-            register_irq(0x23, NULL, serial_handler, 0, &serial_int_controller, "serial_2");
+            register_irq(0x23, nullptr, serial_handler, 0, &serial_int_controller, "serial_2");
             serial->iobase = COM2_IOBASE;
         }
         

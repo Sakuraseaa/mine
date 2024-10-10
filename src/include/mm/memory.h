@@ -10,7 +10,7 @@ struct Memory_E820_Formate
     u32_t length2;  // 内存长度高32位
     u32_t type;     // 本段内存的类型
 };
-u64_t *Global_CR3 = NULL;
+u64_t *Global_CR3 = nullptr;
 // E820 是 Memory_E820_Formate 的简单整合
 struct E820
 {
@@ -116,22 +116,22 @@ int ZONE_UNMAPED_INDEX = 0; // above 1GB RAM,unmapped in pagetable
 */
 struct Slab_cache kmalloc_cache_size[16] =
     {
-        {32, 0, 0, NULL, NULL, NULL, NULL},
-        {64, 0, 0, NULL, NULL, NULL, NULL},
-        {128, 0, 0, NULL, NULL, NULL, NULL},
-        {256, 0, 0, NULL, NULL, NULL, NULL},
-        {512, 0, 0, NULL, NULL, NULL, NULL},
-        {1024, 0, 0, NULL, NULL, NULL, NULL}, // 1KB
-        {2048, 0, 0, NULL, NULL, NULL, NULL},
-        {4096, 0, 0, NULL, NULL, NULL, NULL}, // 4KB
-        {8192, 0, 0, NULL, NULL, NULL, NULL},
-        {16384, 0, 0, NULL, NULL, NULL, NULL},
-        {32768, 0, 0, NULL, NULL, NULL, NULL},
-        {65536, 0, 0, NULL, NULL, NULL, NULL},  // 64KB
-        {131072, 0, 0, NULL, NULL, NULL, NULL}, // 128KB
-        {262144, 0, 0, NULL, NULL, NULL, NULL},
-        {524288, 0, 0, NULL, NULL, NULL, NULL},
-        {1048576, 0, 0, NULL, NULL, NULL, NULL}, // 1MB
+        {32, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {64, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {128, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {256, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {512, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {1024, 0, 0, nullptr, nullptr, nullptr, nullptr}, // 1KB
+        {2048, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {4096, 0, 0, nullptr, nullptr, nullptr, nullptr}, // 4KB
+        {8192, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {16384, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {32768, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {65536, 0, 0, nullptr, nullptr, nullptr, nullptr},  // 64KB
+        {131072, 0, 0, nullptr, nullptr, nullptr, nullptr}, // 128KB
+        {262144, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {524288, 0, 0, nullptr, nullptr, nullptr, nullptr},
+        {1048576, 0, 0, nullptr, nullptr, nullptr, nullptr}, // 1MB
 };
 
 #define MAX_NR_ZONES 10 // max zone

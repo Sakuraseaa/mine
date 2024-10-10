@@ -22,7 +22,7 @@ typedef struct dir_entry
     struct dir_entry *parent;     // 父目录项
 
     struct dir_entry_operations *dir_ops; // 目录项操作方法：
-    super_t*    d_sb; // 文件的超级块
+    spblk_t*    d_sb; // 文件的超级块
 }dir_entry_t;
 
 #endif // _DIRENTRY_H_

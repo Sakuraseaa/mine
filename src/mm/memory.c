@@ -41,7 +41,7 @@ u64_t get_page_attribute(struct Page *page)
 {
     if (!page)
     {
-        color_printk(RED, BLACK, "get_page_sttribute() ERROR: page == NULL\n");
+        color_printk(RED, BLACK, "get_page_sttribute() ERROR: page == nullptr\n");
         return 0;
     }
     else
@@ -51,9 +51,9 @@ u64_t get_page_attribute(struct Page *page)
 // 设置页面属性
 u64_t set_page_attribute(struct Page *page, u64_t flags)
 {
-    if (page == NULL)
+    if (page == nullptr)
     {
-        color_printk(RED, BLACK, "set_page_attribute() ERROR: page == NULL\n");
+        color_printk(RED, BLACK, "set_page_attribute() ERROR: page == nullptr\n");
         return 0;
     }
     else
@@ -73,10 +73,10 @@ static struct Slab *init_Slab(u64_t size)
 {
     // a. 为tmp_slab结构体申请内存
     struct Slab *tmp_slab = (struct Slab *)kmalloc(sizeof(struct Slab), 0);
-    if (tmp_slab == NULL)
+    if (tmp_slab == nullptr)
     {
-        color_printk(RED, BLACK, "init_Slab Fail: tmp_slab == NULL\n");
-        return NULL;
+        color_printk(RED, BLACK, "init_Slab Fail: tmp_slab == nullptr\n");
+        return nullptr;
     }
 
     memset(tmp_slab, 0, sizeof(struct Slab));
@@ -84,11 +84,11 @@ static struct Slab *init_Slab(u64_t size)
 
     // b. 申请出一个2M物理页给Page结构体, 并且初始化page
     tmp_slab->page = alloc_pages(ZONE_NORMAL, 1, 0);
-    if (tmp_slab->page == NULL)
+    if (tmp_slab->page == nullptr)
     {
-        color_printk(RED, BLACK, "init_Slab Fail:tmp_slab->page == NULL\n");
+        color_printk(RED, BLACK, "init_Slab Fail:tmp_slab->page == nullptr\n");
         kfree(tmp_slab);
-        return NULL;
+        return nullptr;
     }
     page_init(tmp_slab->page, PG_Kernel);
 
@@ -104,12 +104,12 @@ static struct Slab *init_Slab(u64_t size)
     tmp_slab->color_length = ((tmp_slab->color_count + sizeof(u64_t) * 8 - 1) >> 6) << 3;
     // 为位图申请内存
     tmp_slab->color_map = (u64_t *)kmalloc(tmp_slab->color_length, 0);
-    if (tmp_slab->color_map == NULL)
+    if (tmp_slab->color_map == nullptr)
     {
-        color_printk(RED, BLACK, "slab_malloc()->kmalloc()=>tmp_slab->color_map == NULL\n");
+        color_printk(RED, BLACK, "slab_malloc()->kmalloc()=>tmp_slab->color_map == nullptr\n");
         free_pages(tmp_slab->page, 1);
         kfree(tmp_slab);
-        return NULL;
+        return nullptr;
     }
 
     memset(tmp_slab->color_map, 0xff, tmp_slab->color_length);
@@ -156,7 +156,7 @@ struct Page *alloc_pages(s32_t zone_select, s32_t number, u64_t page_flags)
         break;
     default:
         color_printk(RED, BLACK, "alloc_pages error zone_select index\n");
-        return NULL;
+        return nullptr;
         break;
     }
 
@@ -210,7 +210,7 @@ struct Page *alloc_pages(s32_t zone_select, s32_t number, u64_t page_flags)
             }
         }
     }
-    return NULL;
+    return nullptr;
 find_free_pages:
     return (struct Page *)(memory_management_struct.pages_struct + page);
 }
@@ -221,7 +221,7 @@ find_free_pages:
 void free_pages(struct Page *page, s32_t number)
 {
     s32_t i = 0;
-    if (page == NULL)
+    if (page == nullptr)
     {
         color_printk(RED, BLACK, "free_pages() ERROR: page is invalid\n");
         return;
@@ -246,21 +246,21 @@ void free_pages(struct Page *page, s32_t number)
 void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
 {
     struct Slab *slab_p = Slab_cache->cache_pool;
-    struct Slab *tmp_slab = NULL;
+    struct Slab *tmp_slab = nullptr;
     s32_t j = 0;
 
 
     // a.内存池中没有Slab可用了, 申请一个物理页，加入内存池
-    if (Slab_cache->total_free == 0 || slab_p == NULL)
+    if (Slab_cache->total_free == 0 || slab_p == nullptr)
     {
         tmp_slab = init_Slab(Slab_cache->size);
-        if (tmp_slab == NULL)
+        if (tmp_slab == nullptr)
         {
             color_printk(RED, BLACK, "slab_malloc::init_Slab ERROR: can't alloc");
-            return NULL;
+            return nullptr;
         }
 
-        if(slab_p == NULL)
+        if(slab_p == nullptr)
             Slab_cache->cache_pool = tmp_slab;
         else
             list_add_to_behind(&Slab_cache->cache_pool->list, &tmp_slab->list);
@@ -280,7 +280,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
                 Slab_cache->total_using++; // 本内存池正在使用的块数
                 Slab_cache->total_free--;  // 本内存池空闲的块数
 
-                if (Slab_cache->constructor != NULL)
+                if (Slab_cache->constructor != nullptr)
                     return Slab_cache->constructor((char *)tmp_slab->Vaddress + Slab_cache->size * j, arg);
                 else
                     return (void *)((char *)tmp_slab->Vaddress + Slab_cache->size * j);
@@ -316,7 +316,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
                     Slab_cache->total_using++; // 本内存池正在使用的块数
                     Slab_cache->total_free--;  // 本内存池空闲的块数
 
-                    if (Slab_cache->constructor != NULL)
+                    if (Slab_cache->constructor != nullptr)
                         return Slab_cache->constructor((char *)slab_p->Vaddress + Slab_cache->size * j, arg);
                     else
                         return (void *)((char *)slab_p->Vaddress + Slab_cache->size * j);
@@ -326,7 +326,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
     }
 
     color_printk(RED, BLACK, "slab_malloc ERROR: can't alloc\n");
-    return NULL;
+    return nullptr;
 }
 
 // 释放具体的SLAB内存池中的对象
@@ -345,7 +345,7 @@ void *slab_malloc(struct Slab_cache *Slab_cache, u64_t arg)
 u64_t slab_free(struct Slab_cache *slab_cache, void *address, u64_t arg)
 {
     struct Slab *slab_p = slab_cache->cache_pool;
-    assert(slab_p != NULL);
+    assert(slab_p != nullptr);
     s32_t index = 0;
     do
     {
@@ -408,23 +408,23 @@ struct Slab_cache *slab_create(u64_t size, void *(*constructor)(void *Vaddress, 
                                void *(*destructor)(void *Vaddress, u64_t arg), u64_t arg)
 {
     // 1. 为Slab_cache申请内存
-    struct Slab_cache *slab_cache = NULL;
+    struct Slab_cache *slab_cache = nullptr;
     slab_cache = (struct Slab_cache *)kmalloc(sizeof(struct Slab_cache), 0);
-    if (slab_cache == NULL)
+    if (slab_cache == nullptr)
     {
-        color_printk(RED, BLACK, "slab_create()->kmalloc()=>slab_cache == NULL \n");
-        return NULL;
+        color_printk(RED, BLACK, "slab_create()->kmalloc()=>slab_cache == nullptr \n");
+        return nullptr;
     }
     memset(slab_cache, 0, sizeof(struct Slab_cache));
 
     // 2. 初始化Slab_cache的成员
     slab_cache->size = SIZEOF_LONG_ALIGN(size);
     slab_cache->total_using = 0;
-    slab_cache->cache_dma_pool = NULL;
+    slab_cache->cache_dma_pool = nullptr;
     slab_cache->constructor = constructor;
     slab_cache->destructor = destructor;
 
-    slab_cache->cache_pool = NULL;
+    slab_cache->cache_pool = nullptr;
 
     return slab_cache;
 }
@@ -433,7 +433,7 @@ struct Slab_cache *slab_create(u64_t size, void *(*constructor)(void *Vaddress, 
 u64_t slab_destroy(struct Slab_cache *slab_cache)
 {
     struct Slab *slab_p = slab_cache->cache_pool;
-    struct Slab *tmp_slab = NULL;
+    struct Slab *tmp_slab = nullptr;
 
     // 确保没有使用的内存块
     if (slab_cache->total_using != 0)
@@ -442,7 +442,7 @@ u64_t slab_destroy(struct Slab_cache *slab_cache)
         return 0;
     }
 
-    if(slab_cache->cache_pool == NULL)
+    if(slab_cache->cache_pool == nullptr)
         goto NO_SLAB_MEM;
     
 
@@ -478,9 +478,9 @@ NO_SLAB_MEM:
 // 此处slab占用的空间是我们静态申请使用的。
 u64_t slab_init()
 {
-    struct Page *page = NULL;
+    struct Page *page = nullptr;
     // get a free page and set to empty page table and return the virtual address
-    u64_t *virtual = NULL;
+    u64_t *virtual = nullptr;
     u64_t i, j;
 
     u64_t tmp_address = memory_management_struct.end_of_struct;
@@ -562,17 +562,17 @@ u64_t slab_init()
 struct Slab *kmalloc_create(u64_t size)
 {
     s32_t i;
-    struct Slab *slab = NULL;
-    struct Page *page = NULL;
-    u64_t *vaddress = NULL;
+    struct Slab *slab = nullptr;
+    struct Page *page = nullptr;
+    u64_t *vaddress = nullptr;
     long structsize = 0; // 记录 Slab 和 位图 的大小
 
     // 申请一个物理页
     page = alloc_pages(ZONE_NORMAL, 1, 0);
-    if (page == NULL)
+    if (page == nullptr)
     {
-        color_printk(RED, BLACK, "kmalloc_create()->alloc_pages()=>page == NULL\n");
-        return NULL;
+        color_printk(RED, BLACK, "kmalloc_create()->alloc_pages()=>page == nullptr\n");
+        return nullptr;
     }
     page_init(page, PG_Kernel);
 
@@ -647,7 +647,7 @@ struct Slab *kmalloc_create(u64_t size)
     default:
         color_printk(RED, BLACK, "kmalloc_create() ERROR: wrong size:%08d\n", size);
         free_pages(page, 1); // 释放 2MB 物理页
-        return NULL;
+        return nullptr;
     }
 
     return slab;
@@ -664,12 +664,12 @@ struct Slab *kmalloc_create(u64_t size)
 void *kmalloc(u64_t size, u64_t gfp_flags)
 {
     s32_t i, j;
-    struct Slab *slab = NULL;
+    struct Slab *slab = nullptr;
     if (size > 1048576)
     {
         // 如果申请的资源超过了1MB, 那么就直接返回
         color_printk(RED, BLACK, "kmalloc() ERROR: kmalloc size too long:%08d\n", size);
-        return NULL;
+        return nullptr;
     }
     // 寻找到合适的内存池
     for (i = 0; i < 16; i++)
@@ -690,10 +690,10 @@ void *kmalloc(u64_t size, u64_t gfp_flags)
     else
     { // false -内存块空没有空的内存块了，申请新的物理页加入内存池
         slab = kmalloc_create(kmalloc_cache_size[i].size);
-        if (slab == NULL)
+        if (slab == nullptr)
         {
-            color_printk(BLUE, BLACK, "kmalloc()->kmalloc_create()=>slab==NULL\n");
-            return NULL;
+            color_printk(BLUE, BLACK, "kmalloc()->kmalloc_create()=>slab==nullptr\n");
+            return nullptr;
         }
 
         kmalloc_cache_size[i].total_free += slab->color_count;
@@ -730,13 +730,13 @@ void *kmalloc(u64_t size, u64_t gfp_flags)
     }
 
     color_printk(BLUE, BLACK, "kmalloc() ERROR: no memory can alloc\n");
-    return NULL;
+    return nullptr;
 }
 #endif
 void *knew(u64_t size, u64_t gfp_flags)
 {
     u64_t rest = (size % PAGE_4K_SIZE) ? 1 : 0;
-    void* addr = NULL;
+    void* addr = nullptr;
     if (size < 2048 && gfp_flags == 0)
     {
         addr = kmsob_new(size);
@@ -775,7 +775,7 @@ u64_t kfree(void *address)
 {
     s32_t i, index;
     void *page_base_address = (void *)((u64_t)address & PAGE_2M_MASK); // 物理页虚拟基地址
-    struct Slab *slab = NULL;
+    struct Slab *slab = nullptr;
     // 这里内存的释放代价是否有点大了？
     // 遍历各种内存池，寻找需要操作的物理页
     for (i = 0; i < 16; i++)
@@ -844,7 +844,7 @@ void pagetable_4K_init()
 {
     u64_t i = 0;
     u64_t toMem = phy_mm_count * PAGE_2M_SIZE; 
-    u64_t *tmp =  NULL;
+    u64_t *tmp =  nullptr;
     u64_t virtual_addr = 0;
     
     for (;(i + PAGE_4K_SIZE -1)< toMem ; i+= PAGE_4K_SIZE)
@@ -897,7 +897,7 @@ void init_memory()
 {
     s32_t i, j;
     u64_t TotalMem = 0;
-    struct E820 *p = NULL;
+    struct E820 *p = nullptr;
 
     // color_printk(BLUE, BLACK, "Display Physics Address MAP,Type(1:RAM,2:ROM or Reserved,3:ACPI Reclaim Memory,4:ACPI NVS Memory,Others:Undefine)\n");
     p = (struct E820 *)0xffff800000007e00;
@@ -1116,8 +1116,8 @@ void init_memory()
  */
 u64_t do_brk(u64_t addr, u64_t len)
 {
-    u64_t *tmp = NULL;
-    u64_t *virtual = NULL;
+    u64_t *tmp = nullptr;
+    u64_t *virtual = nullptr;
     u64_t i = 0;
     /* sktest: 修改kmalloc 为 knew ，用户空间内存*/
     for (i = addr; i < addr + len; i += PAGE_2M_SIZE)
@@ -1215,7 +1215,7 @@ u64_t do_wp_page(u64_t virtual_address) {
     // u64 attr, phy_addr = addr_v2p(virtual_address);
     // u64* tmp = pde_ptr(virtual_address);
     // struct Page* page = (struct Page*)(memory_management_struct.pages_struct + (phy_addr >> PAGE_2M_SHIFT));
-    // struct Page* new_page = NULL;
+    // struct Page* new_page = nullptr;
 
 	// attr = (*tmp & (0xfffUL)); // get parent privilege
 	// attr = (attr | (PAGE_R_W)); // add PW right 

@@ -23,7 +23,7 @@ static bdesc_t *get_desc(size_t sz) {
     
     // Run here. 证明程序出错了
     
-    return NULL;
+    return nullptr;
 }
 
 // 把 缓冲块 放入哈希表
@@ -52,7 +52,7 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
     u64_t idx = hash(dev, block);
     list_t* list = &desc->hash_table[idx];
 
-    buffer_t *buf = NULL;
+    buffer_t *buf = nullptr;
     if(!list_is_empty(list)) {
         for(list_t* node = list->next; node != list; node = node->next) {
             buffer_t* ptr = container_of(node, buffer_t, hnode);
@@ -64,8 +64,8 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
         }
     }
     
-    if(buf == NULL)
-        return NULL;
+    if(buf == nullptr)
+        return nullptr;
 
     // 这种情况出现于: 缓冲块被释放后，缓冲块加入到了idle_list, 但没有从哈希表链中移除.
     // 此时该缓冲块又被命中，所以此处尝试从idle_list中移除 rnode
@@ -80,7 +80,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
     // here allocated memory is too small, i think 16KB for suitable
     u8_t* addr = (u8_t*)knew(PAGE_4K_SIZE, 0); 
     
-    buffer_t* buf = NULL;
+    buffer_t* buf = nullptr;
     for(u8_t* i = addr; i < addr + 4096; i += desc->size) { 
         
         buf = (buffer_t*)knew(sizeof(buffer_t), 0);
@@ -110,7 +110,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
 /* get free buffer_t */
 static buffer_t* get_free_buffer(bdesc_t* desc) {
 
-    list_t* free_node = NULL;
+    list_t* free_node = nullptr;
     /* free_list 只由malloc能生产 */
     if(desc->count < MAX_BUF_COUNT && list_is_empty(&desc->free_list)) {
         buffer_alloc(desc);
@@ -183,7 +183,7 @@ err_t bwrite(buffer_t *buf){
 // 释放缓冲
 err_t brelse(buffer_t *buf) {
     
-    if(buf == NULL) return -1;
+    if(buf == nullptr) return -1;
 
     int ret = bwrite(buf); // 我觉得此处同步有点勉强
 
@@ -211,7 +211,7 @@ buffer_t *bread(u64_t dev, u64_t block, u64_t size) {
 
     buffer_t* buf = getblk(m_desc, dev, block);
 
-    assert(buf != NULL);
+    assert(buf != nullptr);
     if(buf->valid) 
         return buf;
     semaphore_down(&buf->lock);
@@ -235,9 +235,9 @@ buffer_t *bread(u64_t dev, u64_t block, u64_t size) {
  */
 void sync(void) {
     
-    list_t* head = NULL, *element = NULL;
+    list_t* head = nullptr, *element = nullptr;
     size_t i = 0, j = 0;
-    buffer_t* buf = NULL;
+    buffer_t* buf = nullptr;
 
     for(i = 0; i < BUFFER_DESC_NR; i++) { // 遍历缓冲池
         if(bdescs[i].count == 0)
@@ -270,7 +270,7 @@ void buffer_init(void) {
 
         list_init(&desc->free_list);
         list_init(&desc->idle_list);
-        wait_queue_init(&desc->wait_list, NULL);
+        wait_queue_init(&desc->wait_list, nullptr);
 
         for (size_t i = 0; i < HASH_COUNT; i++)
         {

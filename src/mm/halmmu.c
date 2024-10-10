@@ -25,14 +25,14 @@ void write_cr3(uint_t r_val)
 
 void mmudsc_t_init(mmudsc_t* init)
 {
-    if (NULL == init) {
+    if (nullptr == init) {
         return;
     }
 
     spin_init(&init->mud_lock);
 	init->mud_stus = 0;
 	init->mud_flag = 0;
-	init->mud_tdirearr = NULL;
+	init->mud_tdirearr = nullptr;
 	cr3s_t_init(&init->mud_cr3);
 	list_init(&init->mud_tdirhead);	
 	list_init(&init->mud_sdirhead);	
@@ -47,16 +47,16 @@ void mmudsc_t_init(mmudsc_t* init)
 
 msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
 {
-    tdirearr_t* tdirearr = NULL;
+    tdirearr_t* tdirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
-    msadsc_t* msa = NULL;
-    if(NULL == mmulocked) {
-        return NULL;
+    msadsc_t* msa = nullptr;
+    if(nullptr == mmulocked) {
+        return nullptr;
     }
     
 	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
-	if(NULL == msa) {
-		return NULL;
+	if(nullptr == msa) {
+		return nullptr;
 	}
 
 	tdirearr = (tdirearr_t*)msadsc_ret_vaddr(msa);
@@ -75,14 +75,14 @@ bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
 	adr_t tblphyadr;
-	if(NULL == mmulocked || NULL == tdirearr)
+	if(nullptr == mmulocked || nullptr == tdirearr)
 	{
 		return FALSE;
 	}
 
 	tblphyadr = viradr_to_phyadr((adr_t)tdirearr);
 
-	if(NULL != msa)
+	if(nullptr != msa)
 	{
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
@@ -116,18 +116,18 @@ bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa
 
 msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
 {
-    sdirearr_t* sdirearr = NULL;
+    sdirearr_t* sdirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
-    msadsc_t* msa = NULL;
-    if(NULL == mmulocked)
+    msadsc_t* msa = nullptr;
+    if(nullptr == mmulocked)
     {
-        return NULL;
+        return nullptr;
     }
     
 	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
-	if(NULL == msa)
+	if(nullptr == msa)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	sdirearr = (sdirearr_t*)msadsc_ret_vaddr(msa);
@@ -144,14 +144,14 @@ bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
 	adr_t tblphyadr;
-	if(NULL == mmulocked || NULL == sdirearr)
+	if(nullptr == mmulocked || nullptr == sdirearr)
 	{
 		return FALSE;
 	}
 
 	tblphyadr = viradr_to_phyadr((adr_t)sdirearr);
 
-	if(NULL != msa)
+	if(nullptr != msa)
 	{
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
@@ -185,18 +185,18 @@ bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa
 
 msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
 {
-    idirearr_t* idirearr = NULL;
+    idirearr_t* idirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
-    msadsc_t* msa = NULL;
-    if(NULL == mmulocked)
+    msadsc_t* msa = nullptr;
+    if(nullptr == mmulocked)
     {
-        return NULL;
+        return nullptr;
     }
     
 	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
-	if(NULL == msa)
+	if(nullptr == msa)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	idirearr = (idirearr_t*)msadsc_ret_vaddr(msa);
@@ -214,14 +214,14 @@ bool_t mmu_del_idirearr(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
 	adr_t tblphyadr;
-	if(NULL == mmulocked || NULL == idirearr)
+	if(nullptr == mmulocked || nullptr == idirearr)
 	{
 		return FALSE;
 	}
 
 	tblphyadr = viradr_to_phyadr((adr_t)idirearr);
 
-	if(NULL != msa)
+	if(nullptr != msa)
 	{
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
@@ -255,18 +255,18 @@ bool_t mmu_del_idirearr(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa
 
 msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
 {
-    mdirearr_t* mdirearr = NULL;
+    mdirearr_t* mdirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
-    msadsc_t* msa = NULL;
-    if(NULL == mmulocked)
+    msadsc_t* msa = nullptr;
+    if(nullptr == mmulocked)
     {
-        return NULL;
+        return nullptr;
     }
     
 	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
-	if(NULL == msa)
+	if(nullptr == msa)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	mdirearr = (mdirearr_t*)msadsc_ret_vaddr(msa);
@@ -283,14 +283,14 @@ bool_t mmu_del_mdirearr(mmudsc_t* mmulocked, mdirearr_t* mdirearr, msadsc_t* msa
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
 	adr_t tblphyadr;
-	if(NULL == mmulocked || NULL == mdirearr)
+	if(nullptr == mmulocked || nullptr == mdirearr)
 	{
 		return FALSE;
 	}
 
 	tblphyadr = viradr_to_phyadr((adr_t)mdirearr);
 
-	if(NULL != msa)
+	if(nullptr != msa)
 	{
 		if(msadsc_ret_addr(msa) == tblphyadr)
 		{
@@ -327,7 +327,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 	uint_t mindex;
 	mdire_t mdire;
 	adr_t retadr;
-	if(NULL == mmulocked || NULL == mdirearr)
+	if(nullptr == mmulocked || nullptr == mdirearr)
 	{
 		return INVIALID;
 	}
@@ -349,7 +349,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 bool_t mmu_transform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	uint_t mindex;	
-	if(NULL == mmulocked || NULL == mdirearr)
+	if(nullptr == mmulocked || nullptr == mdirearr)
 	{
 		return FALSE;
 	}
@@ -364,8 +364,8 @@ bool_t mmu_untransform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t
 {
 	uint_t iindex;
 	idire_t idire;
-	mdirearr_t* mdirearr = NULL;
-	if(NULL == mmulocked || NULL == idirearr)
+	mdirearr_t* mdirearr = nullptr;
+	if(nullptr == mmulocked || nullptr == idirearr)
 	{
 		return FALSE;
 	}
@@ -399,11 +399,11 @@ mdirearr_t* mmu_transform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, adr_t
 	uint_t iindex;
 	idire_t idire;
 	adr_t dire;
-	msadsc_t* msa = NULL;
-	mdirearr_t* mdirearr = NULL;
-	if(NULL == mmulocked || NULL == idirearr || NULL == outmsa)
+	msadsc_t* msa = nullptr;
+	mdirearr_t* mdirearr = nullptr;
+	if(nullptr == mmulocked || nullptr == idirearr || nullptr == outmsa)
 	{
-		return NULL;
+		return nullptr;
 	}
 	
 	iindex = mmu_idire_index(vadrs);
@@ -412,15 +412,15 @@ mdirearr_t* mmu_transform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, adr_t
 	if(mdire_is_have(&idire) == TRUE)
 	{
 		mdirearr = idire_ret_mdirearr(&idire);
-		*outmsa = NULL;
+		*outmsa = nullptr;
 		return mdirearr;
 	}
 
 	msa = mmu_new_mdirearr(mmulocked);
-	if(NULL == msa)
+	if(nullptr == msa)
 	{
-		*outmsa = NULL;
-		return NULL;
+		*outmsa = nullptr;
+		return nullptr;
 	}
 
 	dire = msadsc_ret_addr(msa);
@@ -436,8 +436,8 @@ bool_t mmu_untransform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t
 {
 	uint_t sindex;
 	sdire_t sdire;
-	idirearr_t* idirearr = NULL;
-	if(NULL == mmulocked || NULL == sdirearr)
+	idirearr_t* idirearr = nullptr;
+	if(nullptr == mmulocked || nullptr == sdirearr)
 	{
 		return FALSE;
 	}
@@ -471,11 +471,11 @@ idirearr_t* mmu_transform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, adr_t
 	uint_t sindex;
 	sdire_t sdire;
 	adr_t dire;	
-	msadsc_t* msa = NULL;	
-	idirearr_t* idirearr = NULL;
-	if(NULL == mmulocked || NULL == sdirearr || NULL == outmsa)
+	msadsc_t* msa = nullptr;	
+	idirearr_t* idirearr = nullptr;
+	if(nullptr == mmulocked || nullptr == sdirearr || nullptr == outmsa)
 	{
-		return NULL;
+		return nullptr;
 	}
 	
 	sindex = mmu_sdire_index(vadrs);
@@ -484,15 +484,15 @@ idirearr_t* mmu_transform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, adr_t
 	if(idire_is_have(&sdire) == TRUE)
 	{
 		idirearr = sdire_ret_idirearr(&sdire);
-		*outmsa = NULL;
+		*outmsa = nullptr;
 		return idirearr;
 	}
 
 	msa = mmu_new_idirearr(mmulocked);
-	if(NULL == msa)
+	if(nullptr == msa)
 	{
-		*outmsa = NULL;
-		return NULL;
+		*outmsa = nullptr;
+		return nullptr;
 	}
 
 	dire = msadsc_ret_addr(msa);
@@ -508,8 +508,8 @@ bool_t mmu_untransform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t
 {
 	uint_t tindex;
 	tdire_t tdire;
-	sdirearr_t* sdirearr = NULL;
-	if(NULL == mmulocked || NULL == tdirearr)
+	sdirearr_t* sdirearr = nullptr;
+	if(nullptr == mmulocked || nullptr == tdirearr)
 	{
 		return FALSE;
 	}
@@ -543,10 +543,10 @@ sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t
 	uint_t tindex;
 	tdire_t tdire;
 	adr_t dire;
-	sdirearr_t* sdirearr = NULL;
-	msadsc_t* msa = NULL;
-	if (NULL == mmulocked || NULL == tdirearr || NULL == outmsa) {
-		return NULL;
+	sdirearr_t* sdirearr = nullptr;
+	msadsc_t* msa = nullptr;
+	if (nullptr == mmulocked || nullptr == tdirearr || nullptr == outmsa) {
+		return nullptr;
 	}
 	
 	tindex = mmu_tdire_index(vadrs);
@@ -554,15 +554,15 @@ sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t
 	tdire = tdirearr->tde_arr[tindex];
 	if (sdire_is_have(&tdire) == TRUE) {
 		sdirearr = tdire_ret_sdirearr(&tdire);
-		*outmsa = NULL;
+		*outmsa = nullptr;
 		return sdirearr;
 	}
 
 	msa = mmu_new_sdirearr(mmulocked);
-	if(NULL == msa)
+	if(nullptr == msa)
 	{
-		*outmsa = NULL;
-		return NULL;
+		*outmsa = nullptr;
+		return nullptr;
 	}
 
 	dire = msadsc_ret_addr(msa);
@@ -577,37 +577,37 @@ sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t
 bool_t hal_mmu_transform_core(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	bool_t rets = FALSE;
-	tdirearr_t* tdirearr = NULL;
-	sdirearr_t* sdirearr = NULL;
-	idirearr_t* idirearr = NULL;
-	mdirearr_t* mdirearr = NULL;
-	msadsc_t* smsa = NULL;
-	msadsc_t* imsa = NULL;
-	msadsc_t* mmsa = NULL;
+	tdirearr_t* tdirearr = nullptr;
+	sdirearr_t* sdirearr = nullptr;
+	idirearr_t* idirearr = nullptr;
+	mdirearr_t* mdirearr = nullptr;
+	msadsc_t* smsa = nullptr;
+	msadsc_t* imsa = nullptr;
+	msadsc_t* mmsa = nullptr;
 
 	// knl_spinlock(&mmu->mud_lock);
 	
 	tdirearr = mmu->mud_tdirearr;
-	if(NULL == tdirearr) {
+	if(nullptr == tdirearr) {
 		rets = FALSE;
 		goto out;
 	}
 
 	sdirearr = mmu_transform_sdire(mmu, tdirearr, vadrs, flags, &smsa);
-	if(NULL == sdirearr) {
+	if(nullptr == sdirearr) {
 		rets = FALSE;
 		goto untf_sdire;		
 	}
 
 	idirearr = mmu_transform_idire(mmu, sdirearr, vadrs, flags, &imsa);
-	if(NULL == idirearr)
+	if(nullptr == idirearr)
 	{
 		rets = FALSE;
 		goto untf_idire;		
 	}
 
 	mdirearr = mmu_transform_mdire(mmu, idirearr, vadrs, flags, &mmsa);
-	if(NULL == mdirearr)
+	if(nullptr == mdirearr)
 	{
 		rets = FALSE;
 		goto untf_mdire;
@@ -637,7 +637,7 @@ out:
 
 bool_t hal_mmu_transform(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t flags)
 {
-	if(NULL == mmu)
+	if(nullptr == mmu)
 	{
 		return FALSE;
 	}
@@ -648,7 +648,7 @@ adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
 {
 	uint_t mindex;
 	mdire_t dire;
-	if (NULL == mdirearr) {
+	if (nullptr == mdirearr) {
 		return INVIALID;
 	}
 
@@ -669,9 +669,9 @@ mdirearr_t* mmu_find_mdirearr(idirearr_t* idirearr, adr_t vadrs)
 {
 	uint_t iindex;
 	idire_t dire;
-	if(NULL == idirearr)
+	if(nullptr == idirearr)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	iindex = mmu_idire_index(vadrs);
@@ -680,7 +680,7 @@ mdirearr_t* mmu_find_mdirearr(idirearr_t* idirearr, adr_t vadrs)
 
 	if(mdire_is_have(&dire) == FALSE)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return idire_ret_mdirearr(&dire);
@@ -691,9 +691,9 @@ idirearr_t* mmu_find_idirearr(sdirearr_t* sdirearr, adr_t vadrs)
 {
 	uint_t sindex;
 	sdire_t dire;
-	if(NULL == sdirearr)
+	if(nullptr == sdirearr)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	sindex = mmu_sdire_index(vadrs);
@@ -702,7 +702,7 @@ idirearr_t* mmu_find_idirearr(sdirearr_t* sdirearr, adr_t vadrs)
 
 	if(idire_is_have(&dire) == FALSE)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return sdire_ret_idirearr(&dire);
@@ -712,9 +712,9 @@ sdirearr_t* mmu_find_sdirearr(tdirearr_t* tdirearr, adr_t vadrs)
 {
 	uint_t tindex;
 	tdire_t dire;
-	if(NULL == tdirearr)
+	if(nullptr == tdirearr)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	tindex = mmu_tdire_index(vadrs);
@@ -723,7 +723,7 @@ sdirearr_t* mmu_find_sdirearr(tdirearr_t* tdirearr, adr_t vadrs)
 
 	if(sdire_is_have(&dire) == FALSE)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return tdire_ret_sdirearr(&dire);
@@ -737,21 +737,21 @@ adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 	mdirearr_t* mdirearr;
 //	knl_spinlock(&mmu->mud_lock);
 	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
-	if(NULL == sdirearr)
+	if(nullptr == sdirearr)
 	{
 		retadr = INVIALID;
 		goto out;
 	}
 
 	idirearr = mmu_find_idirearr(sdirearr, vadrs);
-	if(NULL == idirearr)
+	if(nullptr == idirearr)
 	{
 		retadr = INVIALID;
 		goto untf_sdirearr;
 	}
 
 	mdirearr = mmu_find_mdirearr(idirearr, vadrs);
-	if(NULL == mdirearr)
+	if(nullptr == mdirearr)
 	{
 		retadr = INVIALID;
 		goto untf_idirearr; 
@@ -759,11 +759,11 @@ adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 	
 	retadr = mmu_untransform_msa(mmu, mdirearr, vadrs);
 
-	mmu_untransform_mdire(mmu, idirearr, NULL, vadrs);
+	mmu_untransform_mdire(mmu, idirearr, nullptr, vadrs);
 untf_idirearr:
-	mmu_untransform_idire(mmu, sdirearr, NULL, vadrs);
+	mmu_untransform_idire(mmu, sdirearr, nullptr, vadrs);
 untf_sdirearr:
-	mmu_untransform_sdire(mmu, mmu->mud_tdirearr, NULL, vadrs);
+	mmu_untransform_sdire(mmu, mmu->mud_tdirearr, nullptr, vadrs);
 out:	
 //	knl_spinunlock(&mmu->mud_lock);
 	return retadr;
@@ -771,7 +771,7 @@ out:
 
 adr_t hal_mmu_untransform(mmudsc_t* mmu, adr_t vadrs)
 {
-	if(NULL == mmu)
+	if(nullptr == mmu)
 	{
 		return EPARAM;
 	}
@@ -780,12 +780,12 @@ adr_t hal_mmu_untransform(mmudsc_t* mmu, adr_t vadrs)
 
 void hal_mmu_load(mmudsc_t* mmu)
 {
-	if(NULL == mmu) {
+	if(nullptr == mmu) {
 		return;
 	}
 	
 	// knl_spinlock(&mmu->mud_lock);
-	if(NULL == mmu->mud_tdirearr || 0 != (((u64_t)(mmu->mud_tdirearr)) & 0xfff))
+	if(nullptr == mmu->mud_tdirearr || 0 != (((u64_t)(mmu->mud_tdirearr)) & 0xfff))
 	{
 		goto out;
 	}
@@ -811,13 +811,13 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 	bool_t  rets = FALSE;
 	adr_t pcr3 = INVIALID, vcr3 = INVIALID;
 	cr3s_t cr3;
-	if(NULL == mmu) {
+	if(nullptr == mmu) {
 		return FALSE;
 	}
 
 	// knl_spinlock(&mmu->mud_lock);
 
-	if(mmu_new_tdirearr(mmu) == NULL)
+	if(mmu_new_tdirearr(mmu) == nullptr)
 	{
 		rets = FALSE;
 		goto out;
@@ -842,8 +842,8 @@ out:
 bool_t mmu_clean_mdirearrmsas(mmudsc_t* mmulocked)
 {
 	list_h_t* pos;
-	msadsc_t* msa = NULL;
-	if(NULL == mmulocked)
+	msadsc_t* msa = nullptr;
+	if(nullptr == mmulocked)
 	{
 		return FALSE;
 	}
@@ -864,8 +864,8 @@ bool_t mmu_clean_mdirearrmsas(mmudsc_t* mmulocked)
 bool_t mmu_clean_idirearrmsas(mmudsc_t* mmulocked)
 {
 	list_h_t* pos;
-	msadsc_t* msa = NULL;
-	if(NULL == mmulocked)
+	msadsc_t* msa = nullptr;
+	if(nullptr == mmulocked)
 	{
 		return FALSE;
 	}
@@ -886,8 +886,8 @@ bool_t mmu_clean_idirearrmsas(mmudsc_t* mmulocked)
 bool_t mmu_clean_sdirearrmsas(mmudsc_t* mmulocked)
 {
 	list_h_t* pos;
-	msadsc_t* msa = NULL;
-	if(NULL == mmulocked)
+	msadsc_t* msa = nullptr;
+	if(nullptr == mmulocked)
 	{
 		return FALSE;
 	}
@@ -908,8 +908,8 @@ bool_t mmu_clean_sdirearrmsas(mmudsc_t* mmulocked)
 bool_t mmu_clean_tdirearrmsas(mmudsc_t* mmulocked)
 {
 	list_h_t* pos;
-	msadsc_t* msa = NULL;
-	if(NULL == mmulocked)
+	msadsc_t* msa = nullptr;
+	if(nullptr == mmulocked)
 	{
 		return FALSE;
 	}
@@ -932,7 +932,7 @@ bool_t hal_mmu_clean(mmudsc_t* mmu)
 	bool_t  rets = FALSE;
 	adr_t pcr3 = INVIALID, vcr3 = INVIALID;
 	cr3s_t cr3;
-	if(NULL == mmu)
+	if(nullptr == mmu)
 	{
 		return FALSE;
 	}
@@ -983,7 +983,7 @@ out:
 
 void dump_mmu(mmudsc_t* dump)
 {
-	if(NULL == dump)
+	if(nullptr == dump)
 	{
 		return;
 	}

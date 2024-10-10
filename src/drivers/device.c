@@ -13,7 +13,7 @@ static device_t *get_null_device()
         if (device->type == DEV_NULL)
             return device;
     }
-    return NULL;
+    return nullptr;
 }
 
 int device_ioctl(dev_t dev, int cmd, void *args, int flags)
@@ -90,7 +90,7 @@ void device_init()
         device->subtype = DEV_NULL;
         device->dev = i;
         device->parent = 0;
-        device->device_ops = NULL;
+        device->device_ops = nullptr;
     }
 }
 
@@ -106,7 +106,7 @@ device_t *device_find(s32_t subtype, idx_t idx)
             return device;
         nr++;
     }
-    return NULL;
+    return nullptr;
 }
 
 device_t *device_get(dev_t dev)

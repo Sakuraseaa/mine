@@ -7,7 +7,7 @@
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
 void end_request(struct block_buffer_node *node)
 {
-    if (node == NULL)
+    if (node == nullptr)
         color_printk(RED, BLACK, "end_request error\n");
 
     // 把任务重新加入到进程就绪队列
@@ -19,7 +19,7 @@ void end_request(struct block_buffer_node *node)
 
     // 释放硬盘请求队列节点占用的内存
     kdelete(disk_request.in_using, sizeof(block_buffer_node_t));
-    disk_request.in_using = NULL;
+    disk_request.in_using = nullptr;
 
     if (disk_request.block_request_count) // 硬盘中断请求队列不为空，则继续处理请求包
         cmd_out();
@@ -161,7 +161,7 @@ void add_request(struct block_buffer_node *node)
 void submit(struct block_buffer_node *node)
 {
     add_request(node);
-    if (disk_request.in_using == NULL) // 目前没有硬盘操作, 给硬盘发送命令
+    if (disk_request.in_using == nullptr) // 目前没有硬盘操作, 给硬盘发送命令
     {
         cmd_out();
     }
@@ -199,7 +199,7 @@ s64_t IDE_close()
 s64_t IDE_ioctl(s64_t cmd, s64_t arg)
 {
 
-    struct block_buffer_node *node = NULL;
+    struct block_buffer_node *node = nullptr;
 
     if (cmd == GET_IDENTIFY_DISK_CMD)
     {
@@ -224,7 +224,7 @@ s64_t IDE_ioctl(s64_t cmd, s64_t arg)
  */
 s64_t IDE_transfer(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
-    struct block_buffer_node *node = NULL;
+    struct block_buffer_node *node = nullptr;
     if (cmd == ATA_READ_CMD || cmd == ATA_WRITE_CMD)
     {
         // a. 把 Read / Write 操作封装成请求包, 根据命令的不同指定不同的回调函数
@@ -285,8 +285,8 @@ void disk_init()
     register_irq(entry.vector, &entry, &disk_handler, (u64_t)&disk_request, &disk_int_controller, "disk1");
     io_out8(PORT_DISK1_ALT_STA_CTL, 0);
 
-    wait_queue_init(&disk_request.wait_queue_list, NULL);
-    disk_request.in_using = NULL;
+    wait_queue_init(&disk_request.wait_queue_list, nullptr);
+    disk_request.in_using = nullptr;
     disk_request.block_request_count = 0;
 }
 
@@ -348,7 +348,7 @@ void other_handler(u64_t nr, u64_t parameter)
     
     s32_t i = 0;
     struct Disk_Identify_Info a;
-    u16_t *p = NULL;
+    u16_t *p = nullptr;
     port_insw(PORT_DISK1_DATA, &a, 256);
 
     color_printk(ORANGE, WHITE, "\nSerial Number:"); // 序列号

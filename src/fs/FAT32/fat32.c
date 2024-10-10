@@ -317,12 +317,12 @@ long FAT32_readdir(struct file* filp, void * dirent, filldir_t filler)
 
     u32_t cluster = 0;
     u64_t sector = 0;
-    u8_t * buf = NULL;
-    char* name = NULL;
+    u8_t * buf = nullptr;
+    char* name = nullptr;
     int namelen = 0;
     int i = 0, j = 0, x = 0,y = 0;
-    struct FAT32_Directory* tmpdentry = NULL;
-    struct FAT32_LongDirectory* tmpldentry = NULL;
+    struct FAT32_Directory* tmpdentry = nullptr;
+    struct FAT32_LongDirectory* tmpldentry = nullptr;
 
     buf = knew(fsbi->bytes_per_cluster, 0);
     
@@ -469,7 +469,7 @@ static u8_t FAT32_ChkSum(u8_t *pFcbName)
  * @param size 传出参数，记录目录项占用字节数
  * @return struct FAT32_LongDirectory*
  */
-static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, struct dir_entry *dentry, int mode, u64_t *size)
+static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, dir_entry_t *dentry, int mode, u64_t *size)
 {
     struct FAT32_LongDirectory *fld, *fld0;
     struct FAT32_Directory *fd;
@@ -482,7 +482,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
     if (dentry->name_length > 64)
     {
         color_printk(WHITE, BLACK, "FAT32(Create_FAT32DEntry) ERROR:: Name Length Too Long!");
-        return NULL;
+        return nullptr;
     }
     strncpy(tmpName, dentry->name, namelen);
 
@@ -610,7 +610,7 @@ static struct FAT32_LongDirectory *Create_FAT32DEntry(struct index_node *inode, 
  * @param mode
  * @return long
  */
-long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
+long FAT32_create(struct index_node *inode, dir_entry_t *dentry, int mode)
 {
     // a. 得到FAT32文件系统的元数据
     struct FAT32_inode_info *Parent_finode = inode->private_index_info, *finode;
@@ -683,9 +683,9 @@ long FAT32_create(struct index_node *inode, struct dir_entry *dentry, int mode)
  *
  * @param parent_inode 父目录的inode
  * @param dest_dentry  把找出来的目录项, 记录在dest_dentry结构中(传出参数
- * @return struct dir_entry* 返回dest_dentry结构
+ * @return dir_entry_t* 返回dest_dentry结构
  */
-struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry *dest_dentry)
+dir_entry_t *FAT32_lookup(struct index_node *parent_inode, dir_entry_t *dest_dentry)
 {
     // 得到FAT32的基础信息结构体
     struct FAT32_inode_info *finode = parent_inode->private_index_info;
@@ -693,11 +693,11 @@ struct dir_entry *FAT32_lookup(struct index_node *parent_inode, struct dir_entry
 
     u32_t cluster = 0;  // 簇号
     u64_t sector = 0;  // 扇区号
-    u8_t *buf = NULL; // 保存硬盘数据的缓冲区
+    u8_t *buf = nullptr; // 保存硬盘数据的缓冲区
     int i = 0, j = 0, x = 0;
-    struct FAT32_Directory *tmpdentry = NULL;
-    struct FAT32_LongDirectory *tmpldentry = NULL;
-    struct index_node *p = NULL;
+    struct FAT32_Directory *tmpdentry = nullptr;
+    struct FAT32_LongDirectory *tmpldentry = nullptr;
+    struct index_node *p = nullptr;
 
     buf = knew(fsbi->bytes_per_cluster, 0); // 申请缓冲区
     cluster = finode->first_cluster;           // 根目录的簇号
@@ -708,7 +708,7 @@ next_cluster:
     { // 读目录的数据块
         color_printk(RED, BLACK, "FAT32 FS(lookup) read disk ERROR!!!!!!!\n");
         kdelete(buf, fsbi->bytes_per_cluster);
-        return NULL;
+        return nullptr;
     }
 
     tmpdentry = (struct FAT32_Directory *)buf;
@@ -891,7 +891,7 @@ next_cluster:
         goto next_cluster;
 
     kdelete(buf, fsbi->bytes_per_cluster);
-    return NULL; // 寻找失败返回空
+    return nullptr; // 寻找失败返回空
 
 find_lookup_success:
     /*寻找成功后，创建本文件的index_node，通过读取到的物理目录项，获得该文件的全部信息*/
@@ -932,11 +932,11 @@ find_lookup_success:
     kdelete(buf, fsbi->bytes_per_cluster);
     return dest_dentry;
 }
-long FAT32_mkdir(struct index_node *inode, struct dir_entry *dentry, int mode) { return 0; }
-long FAT32_rmdir(struct index_node *inode, struct dir_entry *dentry) { return 0;}
-long FAT32_rename(struct index_node *old_inode, struct dir_entry *old_dentry, struct index_node *new_inode, struct dir_entry *new_dentry) { return 0; }
-long FAT32_getattr(struct dir_entry *dentry, u64_t *attr) { return 0;}
-long FAT32_setattr(struct dir_entry *dentry, u64_t *attr) { return 0;}
+long FAT32_mkdir(struct index_node *inode, dir_entry_t *dentry, int mode) { return 0; }
+long FAT32_rmdir(struct index_node *inode, dir_entry_t *dentry) { return 0;}
+long FAT32_rename(struct index_node *old_inode, dir_entry_t *old_dentry, struct index_node *new_inode, dir_entry_t *new_dentry) { return 0; }
+long FAT32_getattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
+long FAT32_setattr(dir_entry_t *dentry, u64_t *attr) { return 0;}
 
 struct index_node_operations FAT32_inode_ops =
     {
@@ -947,41 +947,41 @@ struct index_node_operations FAT32_inode_ops =
         .rename = FAT32_rename,
         .getattr = FAT32_getattr,
         .setattr = FAT32_setattr,
-        .unlink = NULL,
+        .unlink = nullptr,
 };
 
 //// these operation need cache and list - 为缓存目录项提供操作方法
-long FAT32_compare(struct dir_entry *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
-long FAT32_hash(struct dir_entry *dentry, char *filename) { return 0; }
-long FAT32_release(struct dir_entry *dentry) { return 0; }                        // 释放目录项
-long FAT32_iput(struct dir_entry *dentry, struct index_node *inode) { return 0; } // 释放inode索引
+long FAT32_compare(dir_entry_t *parent_dentry, char *source_filename, char *destination_filename) { return 0; }
+long FAT32_hash(dir_entry_t *dentry, char *filename) { return 0; }
+long FAT32_release(dir_entry_t *dentry) { return 0; }                        // 释放目录项
+long FAT32_iput(dir_entry_t *dentry, struct index_node *inode) { return 0; } // 释放inode索引
 struct dir_entry_operations FAT32_dentry_ops =
     {
         .compare = FAT32_compare,
         .hash = FAT32_hash,
         .release = FAT32_release,
         .iput = FAT32_iput,
-        .d_delete = NULL,
+        .d_delete = nullptr,
 };
 
 // 修改超级块？
-void fat32_write_superblock(struct super_block *sb) {}
+void fat32_write_superblock(spblk_t *sb) {}
 
 // 用于释放superblock结构，dentry结构，根目录inode结构，文件系统的特有结构
-void fat32_put_superblock(struct super_block *sb)
+void fat32_put_superblock(spblk_t *sb)
 {
     kdelete(sb->private_sb_info, sizeof(FAT32_sb_info_t));
     kdelete(sb->root->dir_inode->private_index_info, sizeof(FAT32_inode_info_t));
     kdelete(sb->root->dir_inode, sizeof(inode_t));
     kdelete(sb->root, sizeof(dir_entry_t));
-    kdelete(sb, sizeof(super_t));
+    kdelete(sb, sizeof(spblk_t));
 }
 
 // 用于把inode文件对应的目录项写到硬盘中- 缓存目录项
 void fat32_write_inode(struct index_node *inode)
 {
-    struct FAT32_Directory *fdentry = NULL;
-    struct FAT32_Directory *buf = NULL;
+    struct FAT32_Directory *fdentry = nullptr;
+    struct FAT32_Directory *buf = nullptr;
     struct FAT32_inode_info *finode = inode->private_index_info;
     struct FAT32_sb_info *fsbi = inode->sb->private_sb_info;
     u64_t sector = 0;
@@ -1020,18 +1020,18 @@ struct super_block_operations FAT32_sb_ops =
  *
  * @param DPTE MBR的分区表
  * @param buf fat32文件系统的引导扇区
- * @return struct super_block* 超级块结构体
+ * @return spblk_t* 超级块结构体
  */
-struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *buf)
+spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *buf)
 {
-    struct super_block *sbp = NULL;
-    struct FAT32_inode_info *finode = NULL;
-    struct FAT32_BootSector *fbs = NULL;
-    struct FAT32_sb_info *fsbi = NULL;
+    spblk_t *sbp = nullptr;
+    struct FAT32_inode_info *finode = nullptr;
+    struct FAT32_BootSector *fbs = nullptr;
+    struct FAT32_sb_info *fsbi = nullptr;
 
     // =============================== 建立 super block =====================================
-    sbp = (struct super_block *)knew(sizeof(struct super_block), 0);
-    memset(sbp, 0, sizeof(struct super_block));
+    sbp = (spblk_t *)knew(sizeof(spblk_t), 0);
+    memset(sbp, 0, sizeof(spblk_t));
     sbp->type = FS_TYPE_FAT32;
     sbp->sb_ops = &FAT32_sb_ops;
     sbp->private_sb_info = (struct FAT32_sb_info *)knew(sizeof(struct FAT32_sb_info), 0);
@@ -1082,7 +1082,7 @@ struct super_block *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPT
 
     // ================================== 创建根目录 =====================================
     // directory entry
-    sbp->root = (struct dir_entry *)knew(sizeof(dir_entry_t), 0);
+    sbp->root = (dir_entry_t *)knew(sizeof(dir_entry_t), 0);
 
     sbp->root->parent = sbp->root; // 根目录的父目录是自己
     sbp->root->dir_ops = &FAT32_dentry_ops;
@@ -1125,7 +1125,7 @@ struct file_system_type FAT32_fs_type =
         .name = "FAT32",
         .fs_flags = 0,
         .read_superblock = fat32_read_superblock,
-        .next = NULL,
+        .next = nullptr,
 };
 
 

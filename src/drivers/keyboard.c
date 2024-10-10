@@ -4,7 +4,7 @@
 #include "arch_x86kit.h"
 #include "mmkit.h"
 #include "kernelkit.h"
-struct keyboard_inputbuffer *p_kb = NULL;
+struct keyboard_inputbuffer *p_kb = nullptr;
 wait_queue_t keyboard_wait_queue; // 等待队列头
 
 /**
@@ -34,7 +34,7 @@ s64_t keyboard_open(struct index_node *inode, struct file *filp)
  */
 s64_t keyboard_close(struct index_node *inode, struct file *filp)
 {
-    filp->private_data = NULL;
+    filp->private_data = nullptr;
 
     p_kb->p_head = p_kb->buf;
     p_kb->p_tail = p_kb->buf;
@@ -73,7 +73,7 @@ s64_t keyboard_read(struct file *flip, char_t *buf, u64_t count, s64_t *position
 {
     s64_t counter = 0;      // 本次实际读取的字节数
     s64_t tail_end_gap = 0; // tail 到键盘缓冲区末尾的距离
-    u8_t *tail = NULL;
+    u8_t *tail = nullptr;
 
     if (p_kb->count == 0)
         sleep_on(&keyboard_wait_queue);
@@ -147,7 +147,7 @@ void keyboard_init()
 
     p_kb = (struct keyboard_inputbuffer *)knew(sizeof(struct keyboard_inputbuffer), 0);
 
-    wait_queue_init(&keyboard_wait_queue, NULL);
+    wait_queue_init(&keyboard_wait_queue, nullptr);
 
     entry.vector = 0x21;
     entry.deliver_mode = APIC_ICR_IOAPIC_Fixed;  // Fixed = LVT寄存器的向量号区域指定中断向量号

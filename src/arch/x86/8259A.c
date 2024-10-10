@@ -75,10 +75,10 @@ void do_IRQ(pt_regs_t *regs, u64_t nr) // regs,nr
 	irq_desc_T *irq = &interrupt_desc[nr - 32];
 	// color_printk(BLUE, WHITE, "rip:%#018lx,  rsp:%#018lx\n", regs->rip, regs->rsp);
 	//  执行中断进程上半部
-	if (irq->handler != NULL)
+	if (irq->handler != nullptr)
 		irq->handler(nr, irq->parameter, regs);
 
 	// 发送EOI
-	if (irq->controller != NULL && irq->controller->ack != NULL)
+	if (irq->controller != nullptr && irq->controller->ack != nullptr)
 		irq->controller->ack(nr);
 }

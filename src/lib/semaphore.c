@@ -5,7 +5,7 @@
 void semaphore_init(semaphore_t *semaphore, u64_t count)
 {
     atomic_set(&semaphore->conter, count);
-    wait_queue_init(&semaphore->wait, NULL);
+    wait_queue_init(&semaphore->wait, nullptr);
 }
 
 void __down(semaphore_t *semaphore)

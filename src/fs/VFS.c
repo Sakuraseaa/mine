@@ -6,11 +6,11 @@
 struct file_system_type filesystem = {"filesystem", 0};
 #define MAX_FILE_NAME_LEN PAGE_4K_SIZE
 
-struct super_block * sb_vec[4];
+spblk_t * sb_vec[4];
 // 当前文件系统的超级块
-struct super_block *current_sb = NULL;
+spblk_t *current_sb = nullptr;
 #if 0
-// Slab_cache_t* Dir_Entry_Pool = NULL;
+// Slab_cache_t* Dir_Entry_Pool = nullptr;
 static void* dir_entry_consturctor(void* Vaddr, u64 arg) { // 目录项构造函数。
 
     dir_entry_t* dir = Vaddr;
@@ -49,7 +49,7 @@ void VFS_init(void) {
  */
 u64_t register_filesystem(struct file_system_type *fs)
 {
-    struct file_system_type *p = NULL;
+    struct file_system_type *p = nullptr;
     // 阻止重复注册相同类型文件系统
     for (p = &filesystem; p; p = p->next)
         if (!strcmp(fs->name, p->name))
@@ -66,12 +66,12 @@ u64_t register_filesystem(struct file_system_type *fs)
  * @param name 文件系统名
  * @param DPTE 描述文件系统的分区表项
  * @param buf  FAT32文件系统的引导扇区
- * @return struct super_block* （fat32）文件系统的超级块
+ * @return spblk_t* （fat32）文件系统的超级块
  */
-struct super_block *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf)
+spblk_t *mount_fs(char *name, struct Disk_Partition_Table_Entry *DPTE, void *buf)
 {
-    struct file_system_type *p = NULL;
-    struct super_block*  sb = NULL;
+    struct file_system_type *p = nullptr;
+    spblk_t*  sb = nullptr;
     for (p = &filesystem; p; p = p->next)
         if (!strcmp(p->name, name)) {
             sb = p->read_superblock(DPTE, buf);
@@ -90,7 +90,7 @@ u64_t unregister_filesystem(struct file_system_type *fs)
         if (p->next == fs)
         {
             p->next = p->next->next;
-            fs->next = NULL;
+            fs->next = nullptr;
             return 1;
         }
         else
@@ -119,7 +119,7 @@ static char *path_parse(char *pathname, char *name_store)
         *name_store++ = *pathname++;
 
     if (pathname[0] == 0) // pathname为空, 则表示路径已经结束了, 此时返回NULL
-        return NULL;
+        return nullptr;
 
     return pathname;
 }
@@ -158,13 +158,13 @@ static int path_depth_cnt(char *pathname)
  */
 static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pathLen) {
     list_t* head = &parent->subdirs_list;
-    dir_entry_t* det = NULL;
+    dir_entry_t* det = nullptr;
     for(list_t* node = head->next; node != head; node = node->next) {
         det = container_of(node, dir_entry_t, child_node);
         if((det->name_length == pathLen) && (strncmp(path, det->name, pathLen) == 0))
             return det;
     }
-    return NULL;
+    return nullptr;
 }
 
 
@@ -176,14 +176,14 @@ static dir_entry_t* find_dir_childern(dir_entry_t* parent, char* path, u32_t pat
  *              当形参flags = 2时, 表示只是获得文件的目录项 和 文件目录的目录项
  *  
  * @param create_file 只有在sys_open中创建文件的时候，该参数才有效。这是传出参数。其中记录新文件的目录项信息
- * @return struct dir_entry* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
+ * @return dir_entry_t* 搜索失败返回NULL, dir_entry和dentry动态申请的内存，由上层调用者释放
  */
-struct dir_entry *path_walk(char *name, u64_t flags, struct dir_entry **create_file)
+dir_entry_t *path_walk(char *name, u64_t flags, dir_entry_t **create_file)
 {
-    char *tmpname = NULL;
+    char *tmpname = nullptr;
     int tmpnamelen = 0, nameDep = 0, Count = 0;
-    struct dir_entry *parent = current_sb->root; // 父目录项
-    struct dir_entry *path = NULL;      // 子目录项
+    dir_entry_t *parent = current_sb->root; // 父目录项
+    dir_entry_t *path = nullptr;      // 子目录项
     char filename[64];
     // 越过路径前的 '/'
     while (*name == '/')
@@ -207,10 +207,10 @@ struct dir_entry *path_walk(char *name, u64_t flags, struct dir_entry **create_f
         // 去缓存中找目录项
         memcpy(tmpname, filename, tmpnamelen);
         path = find_dir_childern(parent, filename, tmpnamelen);
-        if(path != NULL)
+        if(path != nullptr)
             goto next_floder;
         
-        path = (struct dir_entry *)knew(sizeof(dir_entry_t), 0);
+        path = (dir_entry_t *)knew(sizeof(dir_entry_t), 0);
 
         // 准备好要找的文件名
         path->name = knew(tmpnamelen + 1, 0);
@@ -224,7 +224,7 @@ struct dir_entry *path_walk(char *name, u64_t flags, struct dir_entry **create_f
         // 如果匹配成功，那么lookup函数将返回目标名的短目录项，失败返回NULL
         // 注意此处的Path是一个传出参数，如果在parent中，寻找成功。
         // 那么path中记录目标文件的index_node, 通过inode可以获得该文件的所有信息
-        if (parent->dir_inode->inode_ops->lookup(parent->dir_inode, path) == NULL)
+        if (parent->dir_inode->inode_ops->lookup(parent->dir_inode, path) == nullptr)
         { // 查找失败，释放申请的内存资源，返回
             if ((flags & 1) && (Count == nameDep))
             {
@@ -235,7 +235,7 @@ struct dir_entry *path_walk(char *name, u64_t flags, struct dir_entry **create_f
             kdelete(path->name, path->name_length);
             kdelete(path, sizeof(dir_entry_t));
 
-            return NULL;
+            return nullptr;
         }
     continue_for:
         // child_node 来记录我是谁的子文件, 加入到父目录的列表中
@@ -265,7 +265,7 @@ last_slash:     // 最后的斜杠
         if (path->dir_inode)
         {
             DEBUGK("File already exit!!!");
-            return NULL;
+            return nullptr;
         }
         *create_file = path;
         return parent;
@@ -358,8 +358,8 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     
     // 把 minix 系统挂载在 /mnt
     // 这样的挂载方式 我无法判断谁在那里挂载了哎
-    dir_entry_t* catalogue  = path_walk("/mnt" , 0, NULL);
-    assert(catalogue != NULL);
+    dir_entry_t* catalogue  = path_walk("/mnt" , 0, nullptr);
+    assert(catalogue != nullptr);
     
     catalogue->dir_inode = sb_vec[1]->root->dir_inode;
     catalogue->d_sb = sb_vec[1];

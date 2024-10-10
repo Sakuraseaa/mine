@@ -191,20 +191,20 @@ void test_timer(void *data)
 void timer_init()
 {
     // 初始化定时任务队列
-    struct timer_list *tmp = NULL;
+    struct timer_list *tmp = nullptr;
     
 
     jiffies = 0;
     // +++++++++++++++实在不知道放哪里初始化了,就姑且放这里吧+++++++++++++
     startup_time = kernel_mktime(&time);
     // ==============================================
-    init_timer(&timer_list_head, NULL, NULL, -1UL);
+    init_timer(&timer_list_head, nullptr, nullptr, -1UL);
     // 注册0号软中断
-    register_softirq(0, &do_timer, NULL);
+    register_softirq(0, &do_timer, nullptr);
 
     // 给定时队列加入第一个任务
     tmp = (struct timer_list *)knew(sizeof(struct timer_list), 0);
-    init_timer(tmp, &test_timer, NULL, 40);
+    init_timer(tmp, &test_timer, nullptr, 40);
     add_timer(tmp);
 }
 

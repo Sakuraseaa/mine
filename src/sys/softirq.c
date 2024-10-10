@@ -12,7 +12,6 @@ u64_t get_softirq_status()
     return softirq_status;
 }
 
-// register = 登记
 void register_softirq(int nr, void (*action)(void *data), void *data)
 {
     softirq_vector[nr].action = action;
@@ -21,7 +20,7 @@ void register_softirq(int nr, void (*action)(void *data), void *data)
 
 void unregister_softirq(int nr)
 {
-    softirq_vector[nr].data = softirq_vector[nr].action = NULL;
+    softirq_vector[nr].data = softirq_vector[nr].action = nullptr;
 }
 
 void softirq_init()

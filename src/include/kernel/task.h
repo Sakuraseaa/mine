@@ -111,8 +111,8 @@ typedef struct task_struct
 	struct task_struct *next;	// next 用于连接所有进程
 	struct task_struct *parent; // parent 用于记录当前进程的父进程
 
-	struct dir_entry *i_pwd;	 // 进程当前目录 inode program work directory
-	struct dir_entry *i_root; // 进程根目录 inode
+	dir_entry_t *i_pwd;	 // 进程当前目录 inode program work directory
+	dir_entry_t *i_root; // 进程根目录 inode
 	struct index_node *i_exec; // 程序文件 inode
 }task_t;
 
@@ -137,7 +137,7 @@ union task_union
 		.vrun_time = 0,                   \
 		.signal = 0,                      \
 		.blocked = 0,                     \
-		.sigaction = (NULL),              \
+		.sigaction = (nullptr),              \
 		.priority = 2,                    \
 		.file_struct = {0},               \
 		.next = &tsk,                     \
@@ -145,9 +145,9 @@ union task_union
 		.uid = 0,	\
 		.gid = 0,  \
 		.umask = 0022,					\
-		.i_pwd = NULL, \
-		.i_root = NULL, \
-		.i_exec = NULL \
+		.i_pwd = nullptr, \
+		.i_root = nullptr, \
+		.i_exec = nullptr \
 	}
 extern task_t *init_task[NR_CPUS];
 extern union task_union init_task_union;
@@ -198,7 +198,7 @@ extern struct tss_struct init_tss[NR_CPUS];
 extern task_t *my_cur;
 static inline task_t *get_current()
 {
-	task_t *current = NULL;
+	task_t *current = nullptr;
 
 	__asm__ __volatile__("andq %%rsp,%0	\n\t"
 						 : "=r"(current)

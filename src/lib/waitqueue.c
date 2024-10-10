@@ -21,7 +21,7 @@ void wait_queue_init(wait_queue_t *wait_queue, task_t *tsk)
  */
 void sleep_on(wait_queue_t *wait_queue_head)
 {   
-    if(wait_queue_head == NULL)
+    if(wait_queue_head == nullptr)
         return;
 
     // a. 创建等待结点, 将node和当前进程相关联
@@ -61,7 +61,7 @@ void interruptible_sleep_on(wait_queue_t *wait_queue_head)
  */
 void wakeup(wait_queue_t *wait_queue_head, long state)
 {
-    wait_queue_t *node = NULL;
+    wait_queue_t *node = nullptr;
     if (list_is_empty(&wait_queue_head->wait_list))
         return;
 

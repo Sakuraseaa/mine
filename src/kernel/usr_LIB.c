@@ -16,7 +16,7 @@ extern sighadler_t SIGNAL(long signum, sighadler_t  hander, void (*restorer)(voi
 sighadler_t signal(long signum, sighadler_t handler) {
     if(signum < 1 && signum > NSIG) {
         printf("ERROR!!!! invaild signal_value");
-        return NULL;
+        return nullptr;
     }
 
     return SIGNAL(signum, handler, sig_restore);
@@ -46,13 +46,13 @@ int kill(long pid, long signum) {
 struct DIR* opendir(const char* path)
 {
     int fd = 0;
-    struct DIR* dir = NULL;
+    struct DIR* dir = nullptr;
     fd = open(path, O_DIRECTORY);
     
     if(fd >= 0)
         dir = (struct DIR*)knew(sizeof(struct DIR), 0);
     else
-        return NULL;
+        return nullptr;
 
     memset(dir, 0, sizeof(struct DIR));
     
@@ -85,5 +85,5 @@ struct dirent* readdir(struct DIR*dir)
     if(len > 0)
         return (struct dirent*)dir->buf;
     else
-        return NULL;
+        return nullptr;
 }

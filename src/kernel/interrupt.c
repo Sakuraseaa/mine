@@ -156,11 +156,11 @@ s32_t unregister_irq(u64_t irq)
     p->controller->disable(irq);
     p->controller->uninstall(irq);
 
-    p->controller = NULL;
-    p->irq_name = NULL;
+    p->controller = nullptr;
+    p->irq_name = nullptr;
     p->parameter = 0;
     p->flags = 0;
-    p->handler = NULL;
+    p->handler = nullptr;
 
     return 1;
 }

@@ -284,10 +284,10 @@ void do_IRQ(pt_regs_t *regs, u64_t nr) // regs:rsp,nr
 
 	// color_printk(BLUE, WHITE, "rip:%#018lx,  rsp:%#018lx\n", regs->rip, regs->rsp);
 
-	if (irq->handler != NULL)
+	if (irq->handler != nullptr)
 		irq->handler(nr, irq->parameter, regs); // 执行中断上半部处理程序
 
-	if (irq->controller != NULL && irq->controller->ack != NULL)
+	if (irq->controller != nullptr && irq->controller->ack != nullptr)
 		irq->controller->ack(nr); // 向中断控制器发生应答消息,   向Local APIC的EOI寄存器写入数值00, 以通知控制器中断处理过程结束
 }
 

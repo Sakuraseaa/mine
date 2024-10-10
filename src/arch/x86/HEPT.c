@@ -45,7 +45,7 @@ static void ticks_to_sleep(u32_t sleep_ticks)
    // 在次 我加上sleep_on()，经过编译之后，该函数就会主动开辟栈空间了
    
    // 切换进程
-   struct timer_list *tmp = NULL;
+   struct timer_list *tmp = nullptr;
    tmp = (struct timer_list *)knew(sizeof(struct timer_list), 0);
    init_timer(tmp, &weakUp_sleepList, &current->pid, jiffies + sleep_ticks);
    add_timer(tmp);
@@ -56,7 +56,7 @@ static void ticks_to_sleep(u32_t sleep_ticks)
    // // u64_t mid_ticks = sleep_ticks;
    // /* 若间隔的ticks数不够便让出cpu */
    // while (jiffies - Old_ticks < sleep_ticks) // 此处应该去睡眠
-   //    sleep_on(NULL);
+   //    sleep_on(nullptr);
 
 }
 

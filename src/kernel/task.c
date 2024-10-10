@@ -31,7 +31,7 @@ s64_t global_pid;
 
 task_t *get_task(long pid)
 {
-	task_t *tsk = NULL;
+	task_t *tsk = nullptr;
 
 	for (tsk = init_task_union.task.next; tsk != &init_task_union.task; tsk = tsk->next)
 	{
@@ -39,7 +39,7 @@ task_t *get_task(long pid)
 			return tsk;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // 内核线程，该线程会进入特权级3
@@ -69,7 +69,7 @@ u64_t init(u64_t arg)
 					   "pushq %2  \n\t"
 					   "jmp do_execve \n\t" ::"D"(current->thread->rsp),
 					   "m"(current->thread->rsp), "m"(current->thread->rip), 
-					   "S"("/init.bin"),"d"(NULL),"c"(NULL)
+					   "S"("/init.bin"),"d"(nullptr),"c"(nullptr)
 					   : "memory");
 	return 1;
 }
@@ -167,7 +167,7 @@ u64_t copy_files(u64_t clone_flags, task_t *tsk)
 	if (clone_flags & CLONE_FS)
 		goto out;
 	for (; i < TASK_FILE_MAX; i++)
-		if (current->file_struct[i] != NULL)
+		if (current->file_struct[i] != nullptr)
 		{
 			tsk->file_struct[i] = (struct file *)knew(sizeof(struct file), 0);
 			memcpy(current->file_struct[i], tsk->file_struct[i], sizeof(struct file));
@@ -188,7 +188,7 @@ void exit_files(task_t *tsk)
 		;
 	else
 		for (; i < TASK_FILE_MAX; i++)
-			if (tsk->file_struct[i] != NULL)
+			if (tsk->file_struct[i] != nullptr)
 				kdelete(tsk->file_struct[i], sizeof(struct file));
 	memset(tsk->file_struct, 0, sizeof(struct file *) * TASK_FILE_MAX);
 	// clear current->file_struct
@@ -205,13 +205,13 @@ void exit_files(task_t *tsk)
 u64_t copy_mm(u64_t clone_flags, task_t *tsk)
 {
 	int error = 0;
-	struct mm_struct *newmm = NULL;
+	struct mm_struct *newmm = nullptr;
 	u64_t code_start_addr = 0x800000;
 	u64_t stack_start_addr = 0xa00000;
 	u64_t brk_start_addr = 0xc00000;
 	u64_t *tmp;
-	u64_t *virtual = NULL;
-	struct Page *p = NULL;
+	u64_t *virtual = nullptr;
+	struct Page *p = nullptr;
 	if (clone_flags & CLONE_VM)
 	{
 		newmm = current->mm;
@@ -268,9 +268,9 @@ static void copy_pageTables(struct mm_struct* newmm, u64_t addr){
 	
 	// here is only copy Page Table. 
 	// when page_fault occur, allcot memory and copy user data
-	u64_t *tmp = NULL, *virtual = NULL, *parent_tmp;
+	u64_t *tmp = nullptr, *virtual = nullptr, *parent_tmp;
 	u64_t attr = 0;
-	struct Page *p = NULL;
+	struct Page *p = nullptr;
 
 	// alter page directory entry of parent_process(current_process)
 	// here requires atomic execution
@@ -316,7 +316,7 @@ static void copy_pageTables(struct mm_struct* newmm, u64_t addr){
 u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
-	struct mm_struct *newmm = NULL;
+	struct mm_struct *newmm = nullptr;
 	if (clone_flags & CLONE_VM) {
 		newmm = current->mm;
 		goto out;
@@ -361,10 +361,10 @@ out:
 
 void exit_mm_fork(task_t *tsk)
 {
-	u64_t *tmp4 = NULL, *tmp3 = NULL, *tmp2 = NULL;
+	u64_t *tmp4 = nullptr, *tmp3 = nullptr, *tmp2 = nullptr;
 	u64_t tmp1 = 0;
 	size_t i = 0, j = 0, k = 0;
-	struct Page* p = NULL;
+	struct Page* p = nullptr;
 	if (tsk->flags & PF_VFORK)
 		return;
 
@@ -394,7 +394,7 @@ void exit_mm_fork(task_t *tsk)
 	}
 	kdelete(Phy_To_Virt(tsk->mm->pgd), PAGE_4K_SIZE); // release PMl4's memory
 
-	if (tsk->mm != NULL)
+	if (tsk->mm != nullptr)
 		kdelete(tsk->mm, sizeof(struct mm_struct));
 }
 
@@ -402,8 +402,8 @@ void exit_mm_fork(task_t *tsk)
 // 为子进程伪造应用层执行现场
 u64_t copy_thread(u64_t clone_flags, u64_t stack_start, u64_t stack_size, task_t *tsk, pt_regs_t *regs)
 {
-	thread_t *thd = NULL;
-	pt_regs_t *childregs = NULL; // 应用层执行现场结构体
+	thread_t *thd = nullptr;
+	pt_regs_t *childregs = nullptr; // 应用层执行现场结构体
 
 	// 开辟中断栈，
 	thd = (thread_t *)(tsk + 1);
@@ -449,12 +449,12 @@ void exit_thread(task_t *tsk) {}
 u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack_size)
 {
 	s32_t retval = 0;
-	task_t *tsk = NULL;
+	task_t *tsk = nullptr;
 
 	// alloc & copy task struct
 	tsk = (task_t *)knew(STACK_SIZE, 0);
 	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (u64_t)tsk);
-	if (tsk == NULL)
+	if (tsk == nullptr)
 	{
 		retval = -EAGAIN;
 		goto alloc_copy_task_fail;
@@ -598,8 +598,8 @@ void __switch_to(task_t *prev, task_t *next)
 // 任务初始化
 void task_init()
 {
-	u64_t *tmp = NULL;
-	u64_t *vaddr = NULL;
+	u64_t *tmp = nullptr;
+	u64_t *vaddr = nullptr;
 	s32_t i = 0;
 
 	vaddr = Phy_To_Virt((u64_t)Get_gdt() & (~0xfffUL));

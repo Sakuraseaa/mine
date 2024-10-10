@@ -64,7 +64,7 @@ KLINE uint_t mmu_mdire_index(adr_t vadrs)
 
 KLINE void cr3s_t_init(cr3s_t* init)
 {
-    if(NULL == init)
+    if(nullptr == init)
     {
         return;
     }
@@ -233,7 +233,7 @@ KLINE adr_t mmumsa_ret_padr(mdire_t* mdire)
 
 KLINE void tdirearr_t_init(tdirearr_t* init)
 {
-    if(NULL == init)
+    if(nullptr == init)
     {
         return;
     }
@@ -243,7 +243,7 @@ KLINE void tdirearr_t_init(tdirearr_t* init)
 
 KLINE void sdirearr_t_init(sdirearr_t* init)
 {
-    if(NULL == init)
+    if(nullptr == init)
     {
         return;
     }
@@ -253,7 +253,7 @@ KLINE void sdirearr_t_init(sdirearr_t* init)
 
 KLINE void idirearr_t_init(idirearr_t* init)
 {
-    if(NULL == init)
+    if(nullptr == init)
     {
         return;
     }
@@ -263,7 +263,7 @@ KLINE void idirearr_t_init(idirearr_t* init)
 
 KLINE void mdirearr_t_init(mdirearr_t* init)
 {
-    if(NULL == init)
+    if(nullptr == init)
     {
         return;
     }

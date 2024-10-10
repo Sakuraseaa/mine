@@ -32,7 +32,7 @@ struct buildincmd
 	char *cmd_name;
 	int (*cmd_funcPtr)(int, char **);
 };
-char *current_dir = NULL;
+char *current_dir = nullptr;
 static void handler(long sig) {
 	
 	printf("The signal is %d\n", sig);
@@ -81,7 +81,7 @@ int usr_init()
 	while (1)
 	{
 		int argc = 0;
-		char **argv = NULL;
+		char **argv = nullptr;
 		
 		print_prompt();
 		
@@ -200,7 +200,7 @@ int analysis_keycode(int fd)
 
 	if (key == 0)
 	{
-		u32_t *keyrow = NULL;
+		u32_t *keyrow = nullptr;
 		int column = 0;
 
 		make = (x & FLAG_BREAK ? 0 : 1);
@@ -277,7 +277,7 @@ static char *path_parse(char *pathname, char *name_store)
         *name_store++ = *pathname++;
 
     if (pathname[0] == 0) // pathname为空, 则表示路径已经结束了, 此时返回NULL
-        return NULL;
+        return nullptr;
 
     return pathname;
 }
@@ -365,7 +365,7 @@ void make_clear_abs_path(char *path, char *final_path)
 
 int cd_command(int argc, char **argv) 
 {
-	char* path = NULL;
+	char* path = nullptr;
 	int len = 0;
 	int i = 0;
 	len = strlen(current_dir);
@@ -485,10 +485,10 @@ void reckon_size(int *size, char *qualifer)
 }
 int ls_command(int argc, char **argv) 
 {
-	struct DIR* dir = NULL;
-	struct dirent* entry = NULL;
-	char* buf  = NULL;
-	char* path = NULL;
+	struct DIR* dir = nullptr;
+	struct dirent* entry = nullptr;
+	char* buf  = nullptr;
+	char* path = nullptr;
 	stat_t  statbuf;
 	bool isDetail = false, isDirectory = false;
 	for(size_t i = 0; i < argc; i++) {
@@ -503,7 +503,7 @@ int ls_command(int argc, char **argv)
 		}
 	}
 	
-	assert(path != NULL);
+	assert(path != nullptr);
 
 	if(path[0] == '/') 
 		dir = opendir(path);
@@ -518,7 +518,7 @@ int ls_command(int argc, char **argv)
 	while(1)
 	{
 		entry = readdir(dir);// 每次读一条目录项
-		if(entry == NULL)
+		if(entry == nullptr)
 			break;
 		if(entry->d_name[0] == '.') // 跳过隐藏文件
 			continue;
@@ -575,9 +575,9 @@ int pwd_command(int argc, char **argv)
 int cat_command(int argc, char **argv) 
 {
 	int len = 0;
-	char* filename = NULL;
+	char* filename = nullptr;
 	int fd = 0;
-	char* buf = NULL;
+	char* buf = nullptr;
 	int i = 0, j = 0;
 
 	// 拼凑绝对路径
@@ -660,10 +660,10 @@ int exec_command(int argc, char **argv)
 
 	return errno;
 }
-int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, NULL); }
+int reboot_command(int argc, char **argv) { return reboot(SYSTEM_REBOOT, nullptr); }
 int echo_command(int argc, char **argv) {
     int ret = 0, fd = 0;
-    char* filename = NULL;
+    char* filename = nullptr;
     
     if(argc == 4 && (strcmp(argv[2], ">>") == 0)) {
         
