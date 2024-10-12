@@ -54,7 +54,7 @@ void Start_Kernel(void)
 
 	init_memory();
 	
-	init_memmgr();
+	init_phymm();
 	
 	slab_init();
 

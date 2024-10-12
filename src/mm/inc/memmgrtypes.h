@@ -6,6 +6,6 @@
 #include "memarea_t.h"
 #include "memdivmer_t.h"
 #include "kmsob_t.h"
-#include "memmgrob_t.h"
+#include "mmgro_t.h"
 
 #endif // _MEMMGRTYPES_H_

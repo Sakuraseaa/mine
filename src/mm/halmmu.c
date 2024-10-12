@@ -1,5 +1,5 @@
 #include "mmkit.h"
-extern memmgrob_t glomm;
+extern mmgro_t glomm;
 
 uint_t read_cr3()
 {

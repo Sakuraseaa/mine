@@ -1,6 +1,6 @@
 #include "mmkit.h"
 
-extern memmgrob_t glomm;
+extern mmgro_t glomm;
 
 void arclst_t_init(arclst_t *initp)
 {
@@ -36,9 +36,16 @@ void mafuncobjs_t_init(mafuncobjs_t *initp)
 	return;
 }
 
+/**
+ * @brief 初始化内存块分配释放头链表
+ * 
+ * @param initp 
+ * @param stus 
+ * @param oder 物理页数的以2为底的指数
+ * @param oderpnr 一个内存块占用的 内存空间地址描述符的数量 / 占用的物理页数
+ */
 void bafhlst_t_init(bafhlst_t *initp, u32_t stus, uint_t oder, uint_t oderpnr)
 {
-    //初始化bafhlst_t结构体的基本数据
     spin_init(&initp->af_lock);
     initp->af_stus = stus;
     initp->af_oder = oder;
@@ -53,6 +60,11 @@ void bafhlst_t_init(bafhlst_t *initp, u32_t stus, uint_t oder, uint_t oderpnr)
     return;
 }
 
+/**
+ * @brief 初始化内存管理分割合并结构体
+ * 
+ * @param initp 
+ */
 void memdivmer_t_init(memdivmer_t *initp)
 {
     //初始化medivmer_t结构体的基本数据
@@ -74,11 +86,18 @@ void memdivmer_t_init(memdivmer_t *initp)
     return;
 }
 
+/**
+ * @brief 初始化内存区
+ * 
+ * @param initp 
+ */
 void memarea_t_init(memarea_t *initp)
 {
     //初始化memarea_t结构体的基本数据
     list_init(&initp->ma_list);
     spin_init(&initp->ma_lock);
+	//knl_sem_init(&initp->ma_sem,SEM_MUTEX_ONE_LOCK,SEM_FLG_MUTEX);
+	//init_wait_l_head(&initp->ma_waitlst,general_wait_wake_up);
     initp->ma_stus = 0;
     initp->ma_flgs = 0;
     initp->ma_type = MA_TYPE_INIT;
@@ -318,6 +337,14 @@ bool_t merlove_scan_continumsadsc(memarea_t *mareap, msadsc_t *fmstat, uint_t *f
 	return FALSE;
 }
 
+/**
+ * @brief 给内存区memarea_t 所囊括的物理页面结构体赋予内存区标识
+ * 
+ * @param mareap 
+ * @param mstat 
+ * @param msanr 
+ * @return uint_t 
+ */
 uint_t merlove_setallmarflgs_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_t msanr)
 {
 	if (nullptr == mareap || nullptr == mstat || 0 == msanr) {
@@ -650,7 +677,7 @@ bool_t merlove_mem_core()
         #endif
 	}
 
-	// 把 内存区拥有的内存空间描述符 挂载 自己的 bafhlst_t 结构上
+	// 把 物理页 挂载到 内存区 结构上
 	for (uint_t maidx = 0; maidx < (uint_t)glomm.mo_mareanr; maidx++)
 	{
 		#if ENABLE_MM_DEBUG

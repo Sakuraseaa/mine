@@ -1,12 +1,16 @@
 #include "mmkit.h"
 
 
-extern memmgrob_t glomm;
+extern mmgro_t glomm;
 extern struct Global_Memory_Descriptor memory_management_struct;
 #define PMR_T_OSAPUSERRAM 1
 
-
-void msadsc_t_init(msadsc_t *initp)
+/**
+ * @brief 初始化内存空间地址描述符 == linux中的 struct page == memory space address desc
+ * 
+ * @param initp 
+ */
+static void msadsc_t_init(msadsc_t *initp)
 {
 	list_init(&initp->md_list);
 	spin_init(&initp->md_lock);
@@ -29,6 +33,12 @@ void msadsc_t_init(msadsc_t *initp)
 	return;
 }
 
+/**
+ * @brief 初始化内存空间地址描述符
+ * 
+ * @param msap msa指针
+ * @param phyadr 
+ */
 void init_one_msadsc(msadsc_t *msap, u64_t phyadr)
 {
     //对msadsc_t结构做基本的初始化，比如链表、锁、标志位
@@ -40,7 +50,7 @@ void init_one_msadsc(msadsc_t *msap, u64_t phyadr)
     return;
 }
 
-u64_t init_msadsc_core(msadsc_t *msavstart, u64_t msanr)
+u64_t init_msadsc_core(msadsc_t *msastart, u64_t msanr)
 {
     //获取phymmarge_t结构数组开始地址
     u64_t mdindx = 0, i, start, end;
@@ -60,7 +70,7 @@ u64_t init_msadsc_core(msadsc_t *msavstart, u64_t msanr)
             
             if ((start + 4096 - 1) <= end) // 确保 start 到 end 之间任有 4KB 内存
 			{
-				init_one_msadsc(&msavstart[mdindx++], start);
+				init_one_msadsc(&msastart[mdindx++], start);
             }
         }
     }
@@ -109,24 +119,23 @@ void disp_one_msadsc(msadsc_t *mp)
 
 void init_msadsc()
 {
-    u64_t coremdnr = 0, msadscnr = 0;
-    msadsc_t *msadscvp = nullptr;
+    u64_t coremdnr = 0, msanr = 0;
+    msadsc_t *msastart = nullptr;
     
     //计算msadsc_t结构数组的开始地址和数组元素个数
-    // return msadsc virtual address and size
-    ret_msadsc_vadrandsz(&msadscvp, &msadscnr);
+    ret_msadsc_vadrandsz(&msastart, &msanr);
     
     //初始化 msadsc_t 结构数组 的核心逻辑
-    coremdnr = init_msadsc_core(msadscvp, msadscnr);
-    if (coremdnr != msadscnr)
+    coremdnr = init_msadsc_core(msastart, msanr);
+    if (coremdnr != msanr)
     {
         color_printk(RED, BLACK,"init_msadsc init_msadsc_core err\n");
         return;
     }
     
     //将msadsc_t结构数组的开始的物理地址写入kmachbsp结构中 
-    glomm.mo_msadscstat = msadscvp;
-    glomm.mo_msanr = msadscnr;
+    glomm.mo_msadscstat = msastart;
+    glomm.mo_msanr = msanr;
     memory_management_struct.end_of_struct += (sizeof(msadsc_t) * coremdnr + sizeof(u64_t) * 2) & (~(sizeof(u64_t)-1));
     
     // for(int i = 159; i < 165; i++) //1MB

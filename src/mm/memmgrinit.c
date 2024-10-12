@@ -1,8 +1,8 @@
 #include "mmkit.h"
 
-memmgrob_t glomm;
+mmgro_t glomm;
 
-void init_memmgr()
+void init_phymm()
 {	
 	// init 物理页 结构
 	init_msadsc();
@@ -15,11 +15,11 @@ void init_memmgr()
 	init_search_krloccupymm();
 	
     // 合并内存页到内存区中
-    init_merlove_mem();	// Error have a bug
+    init_merlove_mem();
 	
 	init_kmsob();
 
-	#if 1
+	#if ENABLE_MM_DEBUG > 0
 	msadsc_t* msa;
 	uint_t need = 0;
 	// 这里申请了9kb,需要占用3个页面,也就是12kb,得到是16kb, 16 - 12 = 4;

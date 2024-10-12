@@ -1,6 +1,6 @@
 #include "mmkit.h"
 
-extern memmgrob_t glomm;
+extern mmgro_t glomm;
 // 更新整个管理结构的计数
 void mm_update_memmgrob(uint_t realpnr, uint_t flgs)
 {
@@ -58,7 +58,7 @@ KLINE sint_t retn_divoder(uint_t pages)
 }
 
 // C_1 获取释放msadsc_t结构所在的内存区
-memarea_t *onfrmsa_retn_marea(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
+memarea_t *onfrmsa_retn_marea(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
 
 	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink)
@@ -92,7 +92,7 @@ memarea_t *onfrmsa_retn_marea(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t free
  * @param mrtype 
  * @return memarea_t* 
  */
-memarea_t *onmrtype_retn_marea(memmgrob_t *mmobjp, uint_t mrtype)
+memarea_t *onmrtype_retn_marea(mmgro_t *mmobjp, uint_t mrtype)
 {
 	for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
 	{
@@ -778,7 +778,7 @@ ret_step:
 }
 
 // a. 分配内存入口函数
-msadsc_t *mm_divpages_fmwk(memmgrob_t *mmobjp, uint_t pages, uint_t *retrelpnr, uint_t mrtype, uint_t flgs)
+msadsc_t *mm_divpages_fmwk(mmgro_t *mmobjp, uint_t pages, uint_t *retrelpnr, uint_t mrtype, uint_t flgs)
 {
 	// 返回 对应的内存区结构指针
 	memarea_t *marea = onmrtype_retn_marea(mmobjp, mrtype);
@@ -811,7 +811,7 @@ msadsc_t *mm_divpages_fmwk(memmgrob_t *mmobjp, uint_t pages, uint_t *retrelpnr, 
  *  		flgs == 0: 表示获取 pages * 4KB 大小的内存块 
  * @return msadsc_t* 
  */
-msadsc_t *mm_division_pages(memmgrob_t *mmobjp, uint_t pages, uint_t *retrealpnr, uint_t mrtype, uint_t flgs)
+msadsc_t *mm_division_pages(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr, uint_t mrtype, uint_t flgs)
 {
 	if (nullptr == mmobjp || nullptr == retrealpnr || 0 == mrtype) {
 		return nullptr;
@@ -830,7 +830,7 @@ msadsc_t *mm_division_pages(memmgrob_t *mmobjp, uint_t pages, uint_t *retrealpnr
 
 
 
-memarea_t *retn_procmarea(memmgrob_t *mmobjp)
+memarea_t *retn_procmarea(mmgro_t *mmobjp)
 {
 	if (nullptr == mmobjp) {
 		return nullptr;
@@ -845,7 +845,7 @@ memarea_t *retn_procmarea(memmgrob_t *mmobjp)
 	return nullptr;
 }
 
-msadsc_t *divpages_procmarea_core(memmgrob_t *mmobjp, uint_t pages, uint_t *retrealpnr)
+msadsc_t *divpages_procmarea_core(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr)
 {
 	cpuflg_t cpuflg;
 	uint_t retpnr = 0;						  
@@ -880,7 +880,7 @@ ret_step:
 	return retmsap;
 }
 
-msadsc_t *mm_divpages_procmarea(memmgrob_t *mmobjp, uint_t pages, uint_t *retrealpnr)
+msadsc_t *mm_divpages_procmarea(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr)
 {
 	msadsc_t *retmsa = nullptr;
 	uint_t retpnr = 0;
@@ -1374,7 +1374,7 @@ bool_t mm_merpages_core(memarea_t *marea, msadsc_t *freemsa, uint_t freepgs)
 }
 
 //B_释放页内存
-bool_t mm_merpages_fmwk(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
+bool_t mm_merpages_fmwk(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
 	// C_1 获取释放msadsc_t结构所在的内存区
 	memarea_t *marea = onfrmsa_retn_marea(mmobjp, freemsa, freepgs);
@@ -1395,7 +1395,7 @@ bool_t mm_merpages_fmwk(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 //mmobjp->内存管理数据结构指针
 //freemsa->释放内存页面对应的首个msadsc_t结构指针
 //freepgs->请求释放的内存页面数
-bool_t mm_merge_pages(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
+bool_t mm_merge_pages(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
 	if (nullptr == mmobjp || nullptr == freemsa || 1 > freepgs) {
 		return FALSE;
