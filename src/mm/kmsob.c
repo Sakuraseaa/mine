@@ -56,7 +56,7 @@ void kmsob_t_init(kmsob_t *initp)
 	list_init(&initp->so_alclst);
 	list_init(&initp->so_mextlst);
 	initp->so_mextnr = 0;
-	msomdc_t_init(&initp->so_mc);
+	msomdc_t_init(&initp->so_mc); // 初始化管理内存页面的结构体
 	initp->so_privp = nullptr;
 	initp->so_extdp = nullptr;
 	return;
@@ -373,7 +373,8 @@ bool_t kmsob_add_koblst(koblst_t *koblp, kmsob_t *kmsp)
 	if (kmsp->so_objsz > koblp->ol_sz) {
 		return FALSE;
 	}
-    list_add_to_before(&koblp->ol_emplst, &kmsp->so_list);
+    
+	list_add_to_before(&koblp->ol_emplst, &kmsp->so_list);
 	koblp->ol_emnr++;
 	return TRUE;
 }
@@ -404,9 +405,9 @@ kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cva
     list_add_to_before(&kmsp->so_mc.mc_kmobinlst, &msa->md_list);
 	kmsp->so_mc.mc_kmobinpnr = (uint_t)relpnr;
 
+	// ** 开始分割小内存，并且在其上建立管理对象，加入msob_t中 **
     // 标记内存对象的起始位置和结束位置
 	freobjh_t *fohstat = (freobjh_t *)(kmsp + 1), *fohend = (freobjh_t *)cvadre;
-
 	uint_t ap = (uint_t)((uint_t)fohstat);
 	freobjh_t *tmpfoh = (freobjh_t *)((uint_t)ap);
 	for (; tmpfoh < fohend;) // 建立内存对象
@@ -586,7 +587,12 @@ ret_step:
 	return retptr;
 }
 
-// A
+/**
+ * @brief 小块内存申请函数核心
+ * 
+ * @param msz 
+ * @return void* 
+ */
 void *kmsob_new_core(size_t msz)
 {
 	kmsobmgrhed_t *kmobmgrp = &glomm.mo_kmsobmgr;//获取kmsobmgrhed_t结构的地址
@@ -596,7 +602,7 @@ void *kmsob_new_core(size_t msz)
 	cpuflg_t cpuflg;
 	// knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
-	// 根据内存对象大小查找并返回 koblst_t(内存池托管结构) 结构指针
+	// 根据内存对象大小查找并返回 koblst_t(指定小内存为msz的内存池) 结构指针
 	koblp = onmsz_retn_koblst(kmobmgrp, msz); 
 	if (nullptr == koblp) {
 		retptr = nullptr;
@@ -605,10 +611,10 @@ void *kmsob_new_core(size_t msz)
 	
 	// msz = ALIGN_UP8(msz);  // 对齐到8字节
 
-    // 从koblst_t结构(内存池挂载点)中获取 kmsob_t结构(内存池结构)
+    // 从 (内存池) 中获取 kmsob_t结构, kmsot_t是被建立在物理页上，其余空间用于划分成msz尺寸的小内存
 	kmsp = onkoblst_retn_newkmsob(koblp, msz);
 	if (nullptr == kmsp) {
-        // 没有msz大小的内存池，则去建立这样大小的一个内存池，挂载到koblst_t结构中
+        // 没有kmsob_t结构，则建立并挂载到koblst_t结构中
 		kmsp = _create_kmsob(kmobmgrp, koblp, koblp->ol_sz);
 		if (nullptr == kmsp) {
 			retptr = nullptr;

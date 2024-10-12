@@ -41,6 +41,7 @@ typedef struct s_FREOBJH
 	void* oh_stat;	// 对象的开始地址
 }freobjh_t; // free object head
 
+// 在物理页的起始地址存放该结构
 //内存对象容器
 typedef struct s_KMSOB
 {
@@ -84,9 +85,9 @@ typedef struct s_KOBLST
 	kmsob_t* ol_cahe;	// 最近一次查找的kmsob_t结构
 	uint_t ol_emnr; // 挂载kmsob_t结构的数量, 挂载内存池的数量
 	size_t ol_sz;	// 内存池结构中内存对象的大小, 0，32，64，96，128....2048
-}koblst_t;
+}koblst_t; // kmsob_t list
 
-// 管理kmsob_t结构的数据结构
+// 管理所有的kmsob_t结构的数据结构
 typedef struct s_KMSOBMGRHED
 {
 	spinlock_t ks_lock;
@@ -94,7 +95,11 @@ typedef struct s_KMSOBMGRHED
 	uint_t ks_tcnr;
 	uint_t ks_msobnr;	// 总共多少个kmsob_t结构
 	kmsob_t* ks_msobche;	// 最近分配内存对象的kmsob_t结构
-	koblst_t ks_msoblst[KOBLST_MAX];
+    
+    // kmsob_t list 的数组。
+    // 每一个元素代表一个特定的小内存块的内存池，
+    // 内存池由数个页面(kmsob_t)组成,这数个页面挂在于kmsob_t list上
+    koblst_t ks_msoblst[KOBLST_MAX]; 
 }kmsobmgrhed_t; // kernel memory space object manager head
 
 typedef struct s_KOBCKS

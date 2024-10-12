@@ -1,7 +1,12 @@
 #include "mmkit.h"
 
 extern mmgro_t glomm;
-// 更新整个管理结构的计数
+/**
+ * @brief 更新内存管理全局资源对象中有关物理页计数
+ * 
+ * @param realpnr 
+ * @param flgs 
+ */
 void mm_update_memmgrob(uint_t realpnr, uint_t flgs)
 {
 	cpuflg_t cpuflg;
@@ -22,7 +27,13 @@ void mm_update_memmgrob(uint_t realpnr, uint_t flgs)
 	return;
 }
 
-// 更新内存区
+/**
+ * @brief 更新内存区中有关物理页的计数
+ * 
+ * @param malokp 
+ * @param pgnr 
+ * @param flgs 0 表示分割动作, 1表示合并动作
+ */
 void mm_update_memarea(memarea_t *malokp, uint_t pgnr, uint_t flgs)
 {
 	if (nullptr == malokp)
@@ -60,7 +71,6 @@ KLINE sint_t retn_divoder(uint_t pages)
 // C_1 获取释放msadsc_t结构所在的内存区
 memarea_t *onfrmsa_retn_marea(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
-
 	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink)
 	{
 		return nullptr;
@@ -86,8 +96,7 @@ memarea_t *onfrmsa_retn_marea(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs
 }
 
 /**
- * @brief B_1获得 type 类型的内存区指针
- * 
+ * @brief B_1获得 mrtype类型的内存区指针
  * @param mmobjp 
  * @param mrtype 
  * @return memarea_t* 
@@ -246,7 +255,15 @@ bool_t mm_merpages_onmarea(memarea_t *malckp, msadsc_t *freemsa, uint_t freepgs)
 }
 #endif
 
-//E-2 设置msadsc_t结构的信息，完成释放，返回1表示不需要下一步合并操作，返回2表示要进行合并操作
+/**
+ * @brief E-2 设置 freemsa 内存块被释放的信息
+ * 
+ * @param bafh 
+ * @param freemsa 
+ * @param freepgs 
+ * @return sint_t 2: 该内存块被彻底的释放了需要合并
+ * 	0: 不可忍受的错误		1:该内存块仍然有用户在使用，非彻底释放，是计数的递减
+ */
 sint_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
 {
 	if (nullptr == bafh || nullptr == freemsa || 1 > freepgs) {
@@ -297,25 +314,32 @@ sint_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
 	return 2;
 }
 
-// D2: 从内存区域中，得到具体的bhfhlst_t
-// 返回请求分配的bafhlst_t结构指针
-// 返回实际分配的bafhlst_t结构指针
-bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retrelbafh, bafhlst_t **retdivbafh)
+/**
+ * @brief 从内存区得到bhfhlst_t, 
+ * 			retlogbafh 是页面数pages 对应的 逻辑上对应的 块分配释放头链表_t, 但该链表不一定有空闲结点
+ * 			retdivbafh 是 [块大小 >= retlogbafh.块大小] 的一个 块分配释放头链表_t, 它一定有空闲结点, 用于分割
+ * @param malckp 
+ * @param pages 
+ * @param retlogbafh [out] 请求分配的bafhlst_t结构指针 return logical bafhlst_t
+ * @param retdivbafh [out] 实际分配的bafhlst_t结构指针 return physical bafhlst_t
+ * @return bool_t 
+ */
+bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retlogbafh, bafhlst_t **retdivbafh)
 {
-	if (nullptr == malckp || 1 > pages || nullptr == retrelbafh || nullptr == retdivbafh) {
+	if (nullptr == malckp || 1 > pages || nullptr == retlogbafh || nullptr == retdivbafh) {
 		return FALSE;
 	}
 	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
 	sint_t dividx = retn_divoder(pages); // 把页面数向上对齐到2的整数次幂
 	
 	if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
-		*retrelbafh = nullptr;
+		*retlogbafh = nullptr;
 		*retdivbafh = nullptr;
 		return FALSE;
 	}
 
 	if (pages > bafhstat[dividx].af_oderpnr) { 
-		*retrelbafh = nullptr;
+		*retlogbafh = nullptr;
 		*retdivbafh = nullptr;
 		return FALSE;
 	}
@@ -324,34 +348,18 @@ bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retrelba
 	{ // 请求的page页对应的bafhstat的链表不一定有空闲节点，所以向上寻求更大的页链表，然后分割他的大的空闲节点
 		if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fmsanr)
 		{
-			*retrelbafh = &bafhstat[dividx];  // 请求分配的bafhlst_t结构指针
+			*retlogbafh = &bafhstat[dividx];  // 请求分配的bafhlst_t结构指针
 			*retdivbafh = &bafhstat[idx];	 // 实际分配的bafhlst_t结构指针
 			return TRUE;
 		}
 	}
 
-	*retrelbafh = nullptr;
+	*retlogbafh = nullptr;
 	*retdivbafh = nullptr;
 	return FALSE;
 }
 
-
 // E-1 根据freepgs返回请求释放的和最大释放的bafhlst_t结构指针
-#if 0
-bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrelbf, bafhlst_t **retmerbf)
-{    
-	//获取bafhlst_t结构数组的开始地址    
-	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;    
-	//根据分配页面数计算出分配页面在dm_mdmlielst数组中下标    
-	sint_t dividx = retn_divoder(freepgs);    
-	//返回请求释放的bafhlst_t结构指针    
-	*retrelbf = &bafhstat[dividx];    
-	//返回最大释放的bafhlst_t结构指针    
-	*retmerbf = &bafhstat[MDIVMER_ARR_LMAX - 1];    
-	return TRUE;
-}
-#endif
-
 // 	*retrelbf 请求释放的页，位于的bafhlst_t结构指针
 //	*retmerbf 最大的内存的页，位于的bafhlst_t结构指针
 bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrelbf, bafhlst_t **retmerbf)
@@ -378,6 +386,7 @@ bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrel
 		*retmerbf = nullptr;
 		return FALSE;
 	}
+	
 	*retrelbf = &bafhstat[dividx];
 	*retmerbf = &bafhstat[MDIVMER_ARR_LMAX - 1];
 	return TRUE;
@@ -406,7 +415,6 @@ msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
 	bafhp->af_alccnt++;
 	return tmp;
 }
-
 
 // E1, 获得bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
 bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **retmend)
@@ -441,7 +449,13 @@ bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **
 	return TRUE;
 }
 
-// D1 确保内存区malckp 有 pages 个页
+/**
+ * @brief D1 确保内存区malckp 有 pages 个页
+ * 
+ * @param malckp 
+ * @param pages 
+ * @return bool_t 
+ */
 bool_t scan_mapgsalloc_ok(memarea_t *malckp, uint_t pages)
 {
 	if (nullptr == malckp || 1 > pages) {
@@ -544,6 +558,14 @@ uint_t chek_divlenmsa(msadsc_t *msastat, msadsc_t *msaend, uint_t mnr)
 }
 
 // E2 分割动作
+/**
+ * @brief 执行分割一个大内存的动作
+ * 
+ * @param bafhp 
+ * @param msastat 大内存结点的起始物理页
+ * @param msaend 大内存结点的结尾物理页
+ * @return bool_t 
+ */
 bool_t mrdmb_add_msa_bafh(bafhlst_t *bafhp, msadsc_t *msastat, msadsc_t *msaend)
 {
 	if (nullptr == bafhp || nullptr == msastat || nullptr == msaend) {
@@ -556,8 +578,7 @@ bool_t mrdmb_add_msa_bafh(bafhlst_t *bafhp, msadsc_t *msastat, msadsc_t *msaend)
 	if (0 < msastat->md_cntflgs.mf_refcnt || 0 < msaend->md_cntflgs.mf_refcnt) {
 		return FALSE;
 	}
-	if (PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc ||
-		PAF_NO_ALLOC != msaend->md_phyadrs.paf_alloc) {
+	if (PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc || PAF_NO_ALLOC != msaend->md_phyadrs.paf_alloc) {
 		return FALSE;
 	}
 
@@ -585,13 +606,16 @@ msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrel
 	if (nullptr == malckp || 1 > pages || nullptr == retrelpnr || nullptr == relbfl || nullptr == divbfl) {
 		return nullptr;
 	}
+	
+	// 逻辑上错误，但现实可能发生
 	if (relbfl > divbfl) {
 		*retrelpnr = 0;
 		return nullptr;
 	}
+	// 两个块分配释放头链表相等，说明这给链表上有空闲结点且该结点满足内存需求，直接分配
 	if (relbfl == divbfl)
 	{
-		//  获得bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
+		//  卸载bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
 		rets = mm_retnmsaob_onbafhlst(relbfl, &retmstat, &retmend);
 		if (FALSE == rets || nullptr == retmstat || nullptr == retmend) {
 			*retrelpnr = 0;
@@ -602,19 +626,19 @@ msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrel
 			return nullptr;
 		}
 		
-		// 设置实际的分配页数
+		// 执行实际的分配内存块动作(设置该内存块已经被分配
 		retmsa = mm_divpages_opmsadsc(retmstat, relbfl->af_oderpnr);
 		if (nullptr == retmsa) {
 			*retrelpnr = 0;
 			return nullptr;
 		}
 		
-		// 返回实际的分配页数
+		// 传出参数 - 设置实际的分配页数
 		*retrelpnr = relbfl->af_oderpnr;
 		return retmsa;
 	}
 	
-	
+	// 两个块分配释放头链表不相等，但仍然有大的空闲结点，可以把大的空闲结点进行划分成小结点，挂在低端内存链表上
 	// 获得bafh list上的一个空闲节点，用mstat 和 mend记录这个节点的信息
 	rets = mm_retnmsaob_onbafhlst(divbfl, &retmstat, &retmend);
 	if (FALSE == rets || nullptr == retmstat || nullptr == retmend) {
@@ -625,10 +649,16 @@ msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrel
 		*retrelpnr = 0;
 		return nullptr;
 	}
+	
+	// 按照2的次幂划分 页面数为divnr的大节点(从高端向低端划分，核心操作)，把他们挂载到低端合适的块分配释放链表上
+	// 直到划分到用户想要的内存块对应的块分配释放头链表a，按照2倍的方式划分下去，最后会有一个闲置内存块返回给上传使用
+	// 有一个多余的闲置内存块挂在块分配释放头链表a
+
+	// 这个大内存是从高地址对半式的向下划分
 	uint_t divnr = divbfl->af_oderpnr;
-	// 按照2的次幂划分 divnr的大节点(从高端向低端划分，核心操作)，把他们挂载到低端合适的链表上
 	for (bafhlst_t *tmpbfl = divbfl - 1; tmpbfl >= relbfl; tmpbfl--)
 	{
+		// 分割出一块挂在低级块分配释放链表上,留下一块给上层使用
 		if (mrdmb_add_msa_bafh(tmpbfl, &retmstat[tmpbfl->af_oderpnr], (msadsc_t *)retmstat->md_odlink) == FALSE) {
 			color_printk(RED, BLACK, "mrdmb_add_msa_bafh fail\n");
 		}
@@ -636,11 +666,14 @@ msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrel
 		divnr -= tmpbfl->af_oderpnr; // 划分后的，剩余页数
 	}
 
+
+	// 执行实际的分配内存块动作(设置该内存块已经被分配
 	retmsa = mm_divpages_opmsadsc(retmstat, divnr);
 	if (nullptr == retmsa) {
 		*retrelpnr = 0;
 		return nullptr;
 	}
+	
 	*retrelpnr = relbfl->af_oderpnr;
 	return retmsa;
 }
@@ -675,7 +708,7 @@ msadsc_t *mm_reldivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrel
 		return nullptr;
 	}
 
-	//实际在bafhlst_t结构中划分出内存
+	//在bafhlst_t结构中划分出内存块,返回给上层使用
 	uint_t retpnr = 0;
 	msadsc_t *retmsa = mm_reldpgsdivmsa_bafhl(malckp, pages, &retpnr, retrelbhl, retdivbhl);
 	if (nullptr == retmsa) {
@@ -727,18 +760,18 @@ msadsc_t *mm_prcdivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrel
 }
 
 /**
- * @brief B2
+ * @brief B2 内存分配核心函数
  * 
  * @param mareap 内存区指针
  * @param pages 请求分配的内存页面数
- * @param retrealpnr 存放实际分配内存页面数的指针
+ * @param retrealpnr [out] 存放实际分配内存页面数的指针
  * @param flgs 请求分配的内存页面的标志位
  * @return msadsc_t* 
  */
 msadsc_t *mm_divpages_core(memarea_t *mareap, uint_t pages, uint_t *retrealpnr, uint_t flgs)
 {
 	uint_t retpnr = 0;
-	msadsc_t *retmsa = nullptr; //,*tmpmsa=nullptr;
+	msadsc_t *retmsa = nullptr;
 	cpuflg_t cpuflg;
 	if (DMF_RELDIV != flgs && DMF_MAXDIV != flgs) {
 		*retrealpnr = 0;
@@ -751,12 +784,12 @@ msadsc_t *mm_divpages_core(memarea_t *mareap, uint_t pages, uint_t *retrealpnr, 
 	
 	// knl_spinlock_cli(&mareap->ma_lock, &cpuflg); // 上锁
 
-	if (DMF_MAXDIV == flgs)
-	{	// 每次分配页，只给用户分配？
+	if (DMF_MAXDIV == flgs) // 分配尽可能的最大一块内存
+	{	
 		retmsa = mm_maxdivpages_onmarea(mareap, &retpnr);
 		goto ret_step;
 	}
-	if (DMF_RELDIV == flgs)
+	if (DMF_RELDIV == flgs) // 按需分配
 	{
 		retmsa = mm_reldivpages_onmarea(mareap, pages, &retpnr);
 		goto ret_step;
@@ -780,14 +813,12 @@ ret_step:
 // a. 分配内存入口函数
 msadsc_t *mm_divpages_fmwk(mmgro_t *mmobjp, uint_t pages, uint_t *retrelpnr, uint_t mrtype, uint_t flgs)
 {
-	// 返回 对应的内存区结构指针
 	memarea_t *marea = onmrtype_retn_marea(mmobjp, mrtype);
 	if (nullptr == marea) {
 		*retrelpnr = 0;
 		return nullptr;
 	}
 
-	// 内存分配的核心函数
 	uint_t retpnr = 0;
 	msadsc_t *retmsa = mm_divpages_core(marea, pages, &retpnr, flgs);
 	if (nullptr == retmsa) {
@@ -802,7 +833,7 @@ msadsc_t *mm_divpages_fmwk(mmgro_t *mmobjp, uint_t pages, uint_t *retrelpnr, uin
 /**
  * @brief 内存分配页面接口
  * 
- * @param mmobjp 内存管理数据结构指针
+ * @param mmobjp 内存管理全局资源对象
  * @param pages 请求分配的内存页面数
  * @param retrealpnr 存放实际分配内存页面数的指针
  * @param mrtype 请求的分配内存页面的内存区类型
@@ -827,8 +858,6 @@ msadsc_t *mm_division_pages(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr, u
     *retrealpnr = retpnr;
 	return retmsa;
 }
-
-
 
 memarea_t *retn_procmarea(mmgro_t *mmobjp)
 {
@@ -909,6 +938,7 @@ static msadsc_t* phy_to_msadsc(adr_t phyaddr)
 	return &glomm.mo_msadscstat[(phyaddr - 0x100000) >> PAGE_4K_SHIFT];
 }
 
+// 只给用户分配内存
 void* umalloc_4k_page(uint_t pages) 
 {
 	u64_t retpnr = 0;
@@ -919,6 +949,7 @@ void* umalloc_4k_page(uint_t pages)
 	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
 
+// 内核分配
 void* kmalloc_4k_page(uint_t pages) 
 {
 	u64_t retpnr = 0;
@@ -929,6 +960,7 @@ void* kmalloc_4k_page(uint_t pages)
 	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
 
+// 硬件区分配
 void* hmalloc_4k_page(uint_t pages) 
 {
 	u64_t retpnr = 0;
@@ -948,6 +980,7 @@ void kfree_4k_page(void * addr)
 	return;
 }
 
+// 执行一些释放的安全性检测
 bool_t scan_freemsa_isok(msadsc_t *freemsa, uint_t freepgs)
 {
 	if (nullptr == freemsa || 1 > freepgs) {
@@ -964,6 +997,7 @@ bool_t scan_freemsa_isok(msadsc_t *freemsa, uint_t freepgs)
 		1 > end->md_cntflgs.mf_refcnt) {
 		return FALSE;
 	}
+
 	if (((uint_t)((end - freemsa) + 1)) != freepgs) {
 		return FALSE;
 	}
@@ -1040,6 +1074,7 @@ sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 	{
 		return 0;
 	}
+	
 	return 2;
 }
 
@@ -1051,6 +1086,7 @@ sint_t mm_cmsa2blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_
 	}
 	sint_t ret1s = 0, ret2s = 0;
 	
+	// a. 检查两个内存块是否合法
 	ret1s = mm_cmsa1blk_isok(bafh, _1ms, _1me);
 	if (0 == ret1s) {
 		system_error("mm_cmsa1blk_isok ret1s == 0\n");
@@ -1063,6 +1099,7 @@ sint_t mm_cmsa2blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_
 
 	if (2 == ret1s && 2 == ret2s)
 	{
+		// b. 判断两个内存块是否连续的
 		if (_1ms < _2ms && _1me < _2me)
 		{
 			if ((_1me + 1) != _2ms)
@@ -1138,7 +1175,7 @@ bool_t chek_cl2molkflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_t
 	return TRUE;
 }
 
-// 合并物理页面操作，并且对合并的页面初始化
+// 合并物理块操作，并且对合并的页面初始化
 bool_t mm_clear_2msaolflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_t *_2ms, msadsc_t *_2me)
 {
 	if (nullptr == bafh || nullptr == _1ms || nullptr == _1me || nullptr == _2ms || nullptr == _2me) {
@@ -1159,8 +1196,17 @@ bool_t mm_clear_2msaolflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msads
 	return TRUE;
 }
 
-// F1 查看最大地址连续、且空闲msadsc_t结构，如释放的是第0个msadsc_t结构我们就去查找第1个msadsc_t结构是否空闲，且与第0个msadsc_t结构的地址是不是连续的
-// 2: 找到连续页面 1：没找到连续页面 0：不可接收错误
+// 
+/**
+ * @brief F1 查看最大地址连续、且空闲msadsc_t结构，
+ * 如释放的是第0个msadsc_t结构我们就去查找第1个msadsc_t结构是否空闲，
+ * 且与第0个msadsc_t结构的地址是不是连续的
+ * 
+ * @param fbafh 挂在内存块的块分配释放头链表
+ * @param rfnms 其中保存了内存块的开始地址
+ * @param rfnme 其中保存了内存块的结束地址
+ * @return sint_t 
+ */
 sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 {
 	if (nullptr == fbafh || nullptr == rfnms || nullptr == rfnme) {
@@ -1175,9 +1221,10 @@ sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 	list_n_t *tmplst = nullptr;
 	msadsc_t *tmpmsa = nullptr, *blkms = nullptr, *blkme = nullptr;
 	sint_t rets = 0;
-	list_for_each(tmplst, &fbafh->af_frelst)
+	list_for_each(tmplst, &fbafh->af_frelst) // 遍历块分配释放头链表的空闲块
 	{
 		tmpmsa = list_entry(tmplst, msadsc_t, md_list);
+		// 检测这两个内存块是否可以融合 ？
 		rets = mm_cmsa2blk_isok(fbafh, freemstat, freemend, tmpmsa, &tmpmsa[fbafh->af_oderpnr - 1]);
 		if (2 == rets || 4 == rets)
 		{
@@ -1226,7 +1273,14 @@ step1:
 	return 0;
 }
 
-// F2 把合并的msadsc_t结构（从mnxs到mnxe）加入到对应的bafhlst_t结构中
+/**
+ * @brief  把尽可能的合并的msadsc_t结构（从mnxs到mnxe）加入到对应的bafhlst_t结构中
+ *  核心操作，
+ * @param bafhp 
+ * @param freemstat 
+ * @param freemend 
+ * @return bool_t 
+ */
 bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemend)
 {
 	if (nullptr == bafhp || nullptr == freemstat || nullptr == freemend)
@@ -1246,12 +1300,13 @@ bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemen
 		system_error("(~0UL)<=bafhp->af_fmsanr\n");
 		return FALSE;
 	}
+
 	freemstat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 	freemstat->md_odlink = freemend;
 	freemend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	freemend->md_odlink = bafhp;
 	
-	list_add_to_behind(&bafhp->af_frelst, &freemstat->md_list);
+	list_add(&bafhp->af_frelst, &freemstat->md_list);
 	bafhp->af_fmsanr++;
 	bafhp->af_amsanr++;
 	return TRUE;
@@ -1266,8 +1321,8 @@ bool_t mm_merpages_onbafhlst(msadsc_t *freemsa, uint_t freepgs, bafhlst_t *relbf
 	for (; tmpbf < merbf; tmpbf++)
 	{
 		// 查看最大地址连续、且空闲msadsc_t结构(bafhlst_t节点)，
-		// 若是找到会把待释放节点 和空闲节点 向上融合成一个大节点。存储在mnxstart,mnxend中
-		// 不断的向上融合，直到无法融合或者有故障发生。
+		// 若是找到会把待释放节点 和空闲节点 向上融合成一个大节点。
+		// 存储在mnxstart,mnxend中. 不断的向上融合，直到无法融合或者有故障发生。
 		rets = mm_find_cmsa2blk(tmpbf, &mnxs, &mnxe);
 		if (1 == rets) {
 			break;
@@ -1330,7 +1385,8 @@ bool_t mm_merpages_onmarea(memarea_t *malckp, msadsc_t *freemsa, uint_t freepgs)
 	if (nullptr == retrelbf || nullptr == retmerbf) {
 		return FALSE;
 	}
-	//E-2 设置msadsc_t结构的信息，完成释放，返回1表示不需要下一步合并操作，返回2表示要进行合并操作
+	
+	//E-2 设置freemsa释放标志，返回1表示不需要下一步合并操作，返回2表示要进行合并操作
 	sint_t mopms = mm_merpages_opmsadsc(retrelbf, freemsa, freepgs);
 	if (2 == mopms)
 	{
@@ -1360,14 +1416,16 @@ bool_t mm_merpages_core(memarea_t *marea, msadsc_t *freemsa, uint_t freepgs)
 	if (nullptr == marea || nullptr == freemsa || 1 > freepgs) {
 		return FALSE;
 	}
+
+	/* 执行一些释放的安全性检测 */
 	if (scan_freemsa_isok(freemsa, freepgs) == FALSE) {
 		return FALSE;
 	}
 	bool_t rets = FALSE;
 	cpuflg_t cpuflg;
 
-	// knl_spinlock_cli(&marea->ma_lock, &cpuflg);
 	// D_1 针对内存区进行操作
+	// knl_spinlock_cli(&marea->ma_lock, &cpuflg);
 	rets = mm_merpages_onmarea(marea, freemsa, freepgs);
 	// knl_spinunlock_sti(&marea->ma_lock, &cpuflg);
 	return rets;
@@ -1376,7 +1434,7 @@ bool_t mm_merpages_core(memarea_t *marea, msadsc_t *freemsa, uint_t freepgs)
 //B_释放页内存
 bool_t mm_merpages_fmwk(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
-	// C_1 获取释放msadsc_t结构所在的内存区
+	// C_1 需要获取释放msadsc_t结构所在的内存区
 	memarea_t *marea = onfrmsa_retn_marea(mmobjp, freemsa, freepgs);
 	if (nullptr == marea) {
 		return FALSE;
@@ -1390,16 +1448,20 @@ bool_t mm_merpages_fmwk(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 	return rets;
 }
 
-
-// A_释放页内存, 释放内存页面接口
-//mmobjp->内存管理数据结构指针
-//freemsa->释放内存页面对应的首个msadsc_t结构指针
-//freepgs->请求释放的内存页面数
+/**
+ * @brief A_释放页内存, 释放内存页面接口
+ * 
+ * @param mmobjp 内存管理全局资源结构
+ * @param freemsa 释放内存页面对应的首个msadsc_t结构指针
+ * @param freepgs 请求释放的内存页面数
+ * @return bool_t 
+ */
 bool_t mm_merge_pages(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
 	if (nullptr == mmobjp || nullptr == freemsa || 1 > freepgs) {
 		return FALSE;
 	}
+	
 	sint_t dividx = retn_divoder(freepgs); // 把页面数向上对齐到2的整数次幂
 	freepgs = 1 << dividx;
 
