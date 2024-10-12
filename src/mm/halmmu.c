@@ -63,7 +63,7 @@ msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
 
     tdirearr_t_init(tdirearr);
 
-    list_add(&msa->md_list, &mmulocked->mud_tdirhead);     list_add(&mmulocked->mud_tdirhead, &msa->md_list);
+    list_add(&mmulocked->mud_tdirhead, &msa->md_list);
     mmulocked->mud_tdirmsanr++;
 	mmulocked->mud_tdirearr = tdirearr;
 
@@ -134,7 +134,7 @@ msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
 
     sdirearr_t_init(sdirearr);
 
-    list_add(&msa->md_list, &mmulocked->mud_sdirhead);
+    list_add(&mmulocked->mud_sdirhead, &msa->md_list);
     mmulocked->mud_sdirmsanr++;
     return msa;
 }
@@ -203,7 +203,7 @@ msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
 
     idirearr_t_init(idirearr);
 
-    list_add(&msa->md_list, &mmulocked->mud_idirhead);
+    list_add(&mmulocked->mud_idirhead, &msa->md_list);
     mmulocked->mud_idirmsanr++;
     
     return msa;
@@ -272,7 +272,7 @@ msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
 	mdirearr = (mdirearr_t*)msadsc_ret_vaddr(msa);
 	mdirearr_t_init(mdirearr);
     
-	list_add(&msa->md_list, &mmulocked->mud_mdirhead);
+	list_add(&mmulocked->mud_mdirhead, &msa->md_list);
     mmulocked->mud_mdirmsanr++;
 
     return msa;

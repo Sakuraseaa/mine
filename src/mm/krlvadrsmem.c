@@ -2,62 +2,63 @@
 
 extern memmgrob_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
+void knl_count_kvmemcbox(kvmemcbox_t* kmbox);
 kvirmemadrs_t krlvirmemadrs;
 
-// void teststc_t_init(teststc_t *initp)
-// {
-// 	list_init(&initp->tst_list);
-// 	initp->tst_vadr = 0;
-// 	initp->tst_vsiz = 0;
-// 	initp->tst_type = 0;
-// 	initp->tst_lime = 0;
-// 	return;
-// }
+void teststc_t_init(teststc_t *initp)
+{
+	list_init(&initp->tst_list);
+	initp->tst_vadr = 0;
+	initp->tst_vsiz = 0;
+	initp->tst_type = 0;
+	initp->tst_lime = 0;
+	return;
+}
 
-// teststc_t *new_teststc()
-// {
-// 	teststc_t *t = (teststc_t *)kmsob_new(sizeof(teststc_t));
-// 	if (nullptr == t)
-// 	{
-// 		return nullptr;
-// 	}
-// 	teststc_t_init(t);
-// 	return t;
-// }
+teststc_t *new_teststc()
+{
+	teststc_t *t = (teststc_t *)kmsob_new(sizeof(teststc_t));
+	if (nullptr == t)
+	{
+		return nullptr;
+	}
+	teststc_t_init(t);
+	return t;
+}
 
-// void del_teststc(teststc_t *delstc)
-// {
+void del_teststc(teststc_t *delstc)
+{
 
-// 	if ((nullptr != delstc))
-// 	{
-// 		teststc_t_init(delstc);
-// 		if (TRUE == kmsob_delete((void *)delstc, sizeof(teststc_t)))
-// 		{
-// 			return;
-// 		}
-// 	}
-// 	system_error("del_teststc err\n");
-// 	return;
-// }
+	if ((nullptr != delstc))
+	{
+		teststc_t_init(delstc);
+		if (TRUE == kmsob_delete((void *)delstc, sizeof(teststc_t)))
+		{
+			return;
+		}
+	}
+	system_error("del_teststc err\n");
+	return;
+}
 
-// void add_new_teststc(adr_t vadr, size_t vsiz)
-// {
-// 	if (nullptr == vadr || 1 > vsiz)
-// 	{
-// 		system_error("add_new_teststc parm err\n");
-// 	}
-// 	teststc_t *t = nullptr;
-// 	t = new_teststc();
-// 	if (nullptr == t)
-// 	{
-// 		system_error("add_new_teststc new_teststc nullptr\n");
-// 	}
-// 	t->tst_vadr = vadr;
-// 	t->tst_vsiz = vsiz;
-// 	list_add(&t->tst_list, &krlvirmemadrs.kvs_testhead);
-// 	krlvirmemadrs.kvs_tstcnr++;
-// 	return;
-// }
+void add_new_teststc(adr_t vadr, size_t vsiz)
+{
+	if (NULL == vadr || 1 > vsiz)
+	{
+		system_error("add_new_teststc parm err\n");
+	}
+	teststc_t *t = nullptr;
+	t = new_teststc();
+	if (nullptr == t)
+	{
+		system_error("add_new_teststc new_teststc nullptr\n");
+	}
+	t->tst_vadr = vadr;
+	t->tst_vsiz = vsiz;
+	list_add(&krlvirmemadrs.kvs_testhead, &t->tst_list);
+	krlvirmemadrs.kvs_tstcnr++;
+	return;
+}
 
 void vaslknode_t_init(vaslknode_t *initp)
 {
@@ -617,7 +618,7 @@ bool_t vma_del_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize)
 		
 		delkmvd->kva_end = start;
 
-		// knl_count_kvmemcbox(delkmvd->kva_kvmbox);
+		knl_count_kvmemcbox(delkmvd->kva_kvmbox);
 		newkmvd->kva_kvmbox = delkmvd->kva_kvmbox;
 
 		vma_del_unmapping(mm, delkmvd, start, vassize);
@@ -667,8 +668,6 @@ void test_vadr()
 	
 	s32_t* p = (s32_t*)vadr;
 	*p = 20; // 触发缺页中断
-	
-	kmalloc_4k_page(1);
 	
 	return;
 }

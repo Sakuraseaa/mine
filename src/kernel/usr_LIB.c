@@ -49,7 +49,7 @@ struct DIR* opendir(const char* path)
     struct DIR* dir = nullptr;
     fd = open(path, O_DIRECTORY);
     
-    if(fd >= 0)
+    if (fd >= 0)
         dir = (struct DIR*)knew(sizeof(struct DIR), 0);
     else
         return nullptr;

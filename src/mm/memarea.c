@@ -43,10 +43,10 @@ void bafhlst_t_init(bafhlst_t *initp, u32_t stus, uint_t oder, uint_t oderpnr)
     initp->af_stus = stus;
     initp->af_oder = oder;
     initp->af_oderpnr = oderpnr;
-    initp->af_fobjnr = 0;
-    initp->af_mobjnr = 0;
-    initp->af_alcindx = 0;
-    initp->af_freindx = 0;
+    initp->af_fmsanr = 0;
+    initp->af_amsanr = 0;
+    initp->af_alccnt = 0;
+    initp->af_frecnt = 0;
     list_init(&initp->af_frelst);
     list_init(&initp->af_alclst);
     list_init(&initp->af_ovelst);
@@ -57,15 +57,20 @@ void memdivmer_t_init(memdivmer_t *initp)
 {
     //初始化medivmer_t结构体的基本数据
     spin_init(&initp->dm_lock);
+	
+	initp->dm_dmmaxindx = 0;
+	initp->dm_phydmindx = 0;
+	initp->dm_predmindx = 0;
+
     initp->dm_stus = 0;
     initp->dm_divnr = 0;
     initp->dm_mernr = 0;
     //循环初始化memdivmer_t结构体中dm_mdmlielst数组中的每个bafhlst_t结构的基本数据
     for (uint_t li = 0; li < MDIVMER_ARR_LMAX; li++)
     {
-        bafhlst_t_init(&initp->dm_mdmlielst[li], BAFH_STUS_DIVM, li, (1UL << li));
+        bafhlst_t_init(&initp->dm_pools[li], BAFH_STUS_DIVM, li, (1UL << li));
     }
-    bafhlst_t_init(&initp->dm_onemsalst, BAFH_STUS_ONEM, 0, 1UL);
+    bafhlst_t_init(&initp->dm_onepool, BAFH_STUS_ONEM, 0, 1UL);
     return;
 }
 
@@ -160,14 +165,14 @@ uint_t continumsadsc_is_ok(msadsc_t *prevmsa, msadsc_t *nextmsa, msadflgs_t *cmp
 
 	if (nullptr != prevmsa && nullptr != nextmsa)
 	{
-		if (prevmsa->md_indxflgs.mf_marty == cmpmdfp->mf_marty &&
-			0 == prevmsa->md_indxflgs.mf_uindx &&
-			MF_MOCTY_FREE == prevmsa->md_indxflgs.mf_mocty &&
+		if (prevmsa->md_cntflgs.mf_marty == cmpmdfp->mf_marty &&
+			0 == prevmsa->md_cntflgs.mf_refcnt &&
+			MF_MOCTY_FREE == prevmsa->md_cntflgs.mf_mocty &&
 			PAF_NO_ALLOC == prevmsa->md_phyadrs.paf_alloc)
 		{
-			if (nextmsa->md_indxflgs.mf_marty == cmpmdfp->mf_marty &&		// 属性是否相同
-				0 == nextmsa->md_indxflgs.mf_uindx &&
-				MF_MOCTY_FREE == nextmsa->md_indxflgs.mf_mocty &&
+			if (nextmsa->md_cntflgs.mf_marty == cmpmdfp->mf_marty &&		// 属性是否相同
+				0 == nextmsa->md_cntflgs.mf_refcnt &&
+				MF_MOCTY_FREE == nextmsa->md_cntflgs.mf_mocty &&
 				PAF_NO_ALLOC == nextmsa->md_phyadrs.paf_alloc)
 			{
 				if ((nextmsa->md_phyadrs.paf_padrs << PSHRSIZE) - (prevmsa->md_phyadrs.paf_padrs << PSHRSIZE) == PAGESIZE) // 内存释放连续
@@ -224,12 +229,12 @@ bool_t scan_len_msadsc(msadsc_t *mstat, msadflgs_t *cmpmdfp, uint_t mnr, uint_t 
 }
 
 /**
- * @brief 
+ * @brief 获取最多且地址连续的msadsc_t结构体
  * 
  * @param mareap 某个内存区
  * @param fmstat  msadsc数组头
- * @param fntmsanr [out]本轮开始的msadsc地址
- * @param fmsanr 总共的 msadsc 的个数
+ * @param fntmsanr [out]本轮开始的msadsc数组索引
+ * @param fmsanr 总共的 msadsc 的个数，数组长度
  * @param retmsastatp [out] 当前连续地址 msadsc 开始地址
  * @param retmsaendp [out] 当前连续地址 msadsc 结束地址 
  * @param retfmnr [out] 本轮有多少给地址连续的msadsc_t
@@ -247,6 +252,7 @@ bool_t merlove_scan_continumsadsc(memarea_t *mareap, msadsc_t *fmstat, uint_t *f
 	}
 	
     u32_t muindx = 0;
+	/* 获取内存区类型 */
 	msadflgs_t *mdfp = nullptr;
 	switch (mareap->ma_type) {
 		case MA_TYPE_HWAD:
@@ -266,6 +272,7 @@ bool_t merlove_scan_continumsadsc(memarea_t *mareap, msadsc_t *fmstat, uint_t *f
 			mdfp = nullptr;
 			break;
 	}
+	
 	if (0 == muindx || nullptr == mdfp) {
 		return FALSE;
 	}
@@ -276,9 +283,9 @@ bool_t merlove_scan_continumsadsc(memarea_t *mareap, msadsc_t *fmstat, uint_t *f
 	uint_t tmidx = *fntmsanr;
 	for (; tmidx < fmsanr; tmidx++)
 	{
-		if (msastat[tmidx].md_indxflgs.mf_marty == mdfp->mf_marty && // 保证该内存页属于该内存区
-			0 == msastat[tmidx].md_indxflgs.mf_uindx &&				// 索引数为0
-			MF_MOCTY_FREE == msastat[tmidx].md_indxflgs.mf_mocty && // 空闲
+		if (msastat[tmidx].md_cntflgs.mf_marty == mdfp->mf_marty && // 保证该内存页属于该内存区
+			0 == msastat[tmidx].md_cntflgs.mf_refcnt &&				// 索引数为0
+			MF_MOCTY_FREE == msastat[tmidx].md_cntflgs.mf_mocty && // 空闲
 			PAF_NO_ALLOC == msastat[tmidx].md_phyadrs.paf_alloc)	// 没有被分配
         {
 			rets = scan_len_msadsc(&msastat[tmidx], mdfp, fmsanr, &retfindmnr);
@@ -349,7 +356,7 @@ uint_t merlove_setallmarflgs_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_
 	uint_t retnr = 0, mix = 0;
 	for (; mix < msanr; mix++)
 	{
-		if (MF_MARTY_INIT == mstat[mix].md_indxflgs.mf_marty)
+		if (MF_MARTY_INIT == mstat[mix].md_cntflgs.mf_marty)
 		{	
 			//获取msadsc_t结构对应的地址
 			phyadr = mstat[mix].md_phyadrs.paf_padrs << PSHRSIZE;
@@ -357,7 +364,7 @@ uint_t merlove_setallmarflgs_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_
 			if (phyadr >= mareap->ma_logicstart && ((phyadr + PAGESIZE) - 1) <= mareap->ma_logicend)
 			{
 				//设置msadsc_t结构所属内存区
-				mstat[mix].md_indxflgs.mf_marty = mdfp->mf_marty;
+				mstat[mix].md_cntflgs.mf_marty = mdfp->mf_marty;
 				retnr++;
 			}
 		}
@@ -387,18 +394,17 @@ bool_t continumsadsc_add_bafhlst(memarea_t *mareap, bafhlst_t *bafhp, msadsc_t *
 		return FALSE;
 	}
 
-	fstat->md_indxflgs.mf_olkty = MF_OLKTY_ODER; // 首
+	fstat->md_cntflgs.mf_olkty = MF_OLKTY_ODER; // 首
 	//开始的msadsc_t结构指向最后的msadsc_t结构
 	fstat->md_odlink = fend;
 	// fstat==fend
-	fend->md_indxflgs.mf_olkty = MF_OLKTY_BAFH; // 尾
+	fend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH; // 尾
 	//最后的msadsc_t结构指向它属于的bafhlst_t结构
 	fend->md_odlink = bafhp;
 	
 	list_add_to_behind(&bafhp->af_frelst, &fstat->md_list);
-    // list_add(&fstat->md_list, &bafhp->af_frelst); // 挂载物理页到 组织链表
-	bafhp->af_fobjnr++;
-	bafhp->af_mobjnr++;
+	bafhp->af_fmsanr++;
+	bafhp->af_amsanr++;
 	
     mareap->ma_maxpages += fmnr;
 	mareap->ma_freepages += fmnr;
@@ -416,7 +422,7 @@ bafhlst_t *find_continumsa_inbafhlst(memarea_t *mareap, uint_t fmnr)
 	}
 
 	if (MA_TYPE_PROC == mareap->ma_type) {
-		return &mareap->ma_mdmdata.dm_onemsalst;
+		return &mareap->ma_mdmdata.dm_onepool;
 	}
 	if (MA_TYPE_SHAR == mareap->ma_type) {
 		return nullptr;
@@ -426,8 +432,8 @@ bafhlst_t *find_continumsa_inbafhlst(memarea_t *mareap, uint_t fmnr)
 	retbafhp = nullptr;
 	for (uint_t li = 0; li < MDIVMER_ARR_LMAX; li++) // 这里可以用二分算法
 	{
-		if ((mareap->ma_mdmdata.dm_mdmlielst[li].af_oderpnr) <= fmnr) {
-			retbafhp = &mareap->ma_mdmdata.dm_mdmlielst[li];
+		if ((mareap->ma_mdmdata.dm_pools[li].af_oderpnr) <= fmnr) {
+			retbafhp = &mareap->ma_mdmdata.dm_pools[li];
 			in++;
 		}
 	}
@@ -455,12 +461,12 @@ bool_t continumsadsc_add_procmareabafh(memarea_t *mareap, bafhlst_t *bafhp, msad
 	}
 	for (uint_t tmpnr = 0; tmpnr < fmnr; tmpnr++)
 	{
-		fstat[tmpnr].md_indxflgs.mf_olkty = MF_OLKTY_BAFH; // 尾巴 ？
+		fstat[tmpnr].md_cntflgs.mf_olkty = MF_OLKTY_BAFH; // 尾巴 ？
 		fstat[tmpnr].md_odlink = bafhp;
         
         list_add(&bafhp->af_frelst, &fstat[tmpnr].md_list);
-		bafhp->af_fobjnr++;
-		bafhp->af_mobjnr++;
+		bafhp->af_fmsanr++;
+		bafhp->af_amsanr++;
 		mareap->ma_maxpages++;
 		mareap->ma_freepages++;
 		mareap->ma_allmsadscnr++;
@@ -532,7 +538,7 @@ bool_t continumsadsc_mareabafh_core(memarea_t *mareap, msadsc_t **rfstat, msadsc
 		 	return FALSE;
 		}
 		#if ENABLE_MM_DEBUG
-		color_printk(WHITE, BLACK, "User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_mobjnr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
+		color_printk(WHITE, BLACK, "User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_amsanr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
 		#endif
 		*rfmnr = 0;
 		*rfend = nullptr;
@@ -583,9 +589,9 @@ bool_t merlove_mem_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_t msanr)
 	msadsc_t *retstatmsap = nullptr, *retendmsap = nullptr, *fntmsap = mstat; 
 	/*  
         fntsd: first next msadsc page 下一次循环中第一个等待处理的内存页结构体
-		retstatmsap:	当前连续地址page的开始地址
-		retendmsap: 	当前连续地址page的结束地址 
-		retfindmnr: 	当前有多少给连续地址的 page 结构
+		retstatmsap:	当前连续地址page的开始地址 return start msadsc_t point
+		retendmsap: 	当前连续地址page的结束地址 return end msadsc_t posint
+		retfindmnr: 	当前有多少给连续地址的 page 结构 return finded msadsc Number
 		fntmsanr:		本轮开始的page结构页地址
 	*/
 	uint_t retfindmnr = 0;
@@ -623,7 +629,7 @@ bool_t merlove_mem_core()
 	memarea_t *marea = (memarea_t *)glomm.mo_mareastat;
 	uint_t sretf = ~0UL, tretf = ~0UL;
 	
-    // 给每一个 msdsc_t 内存空间描述符, 添加内存区标志
+    // 给每一个 msadsc_t 内存空间地址描述符, 添加内存区标志
 	for (uint_t mi = 0; mi < (uint_t)glomm.mo_mareanr; mi++)
 	{
 		sretf = merlove_setallmarflgs_onmemarea(&marea[mi], mstatp, msanr);
@@ -687,8 +693,8 @@ uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 	{
 		return 0;
 	}
-	if (MF_OLKTY_ODER != mstat->md_indxflgs.mf_olkty &&
-		MF_OLKTY_BAFH != mstat->md_indxflgs.mf_olkty)
+	if (MF_OLKTY_ODER != mstat->md_cntflgs.mf_olkty &&
+		MF_OLKTY_BAFH != mstat->md_cntflgs.mf_olkty)
 	{
 		return 0;
 	}
@@ -698,11 +704,11 @@ uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 	}
 
 	msadsc_t *mend = nullptr;
-	if (MF_OLKTY_ODER == mstat->md_indxflgs.mf_olkty)
+	if (MF_OLKTY_ODER == mstat->md_cntflgs.mf_olkty)
 	{
 		mend = (msadsc_t *)mstat->md_odlink;
 	}
-	if (MF_OLKTY_BAFH == mstat->md_indxflgs.mf_olkty)
+	if (MF_OLKTY_BAFH == mstat->md_cntflgs.mf_olkty)
 	{
 		mend = mstat;
 	}
@@ -715,7 +721,7 @@ uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 	{
 		return 0;
 	}
-	if (MF_OLKTY_BAFH != mend->md_indxflgs.mf_olkty)
+	if (MF_OLKTY_BAFH != mend->md_cntflgs.mf_olkty)
 	{
 		return 0;
 	}
@@ -727,12 +733,12 @@ uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 	u64_t phyadr = (~0UL);
 	if (mnr == 1)
 	{
-		if (mstat->md_indxflgs.mf_marty != (u32_t)mareap->ma_type)
+		if (mstat->md_cntflgs.mf_marty != (u32_t)mareap->ma_type)
 		{
 			return 0;
 		}
 		if (PAF_NO_ALLOC != mstat->md_phyadrs.paf_alloc ||
-			0 != mstat->md_indxflgs.mf_uindx)
+			0 != mstat->md_cntflgs.mf_refcnt)
 		{
 			return 0;
 		}
@@ -746,17 +752,17 @@ uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)
 	uint_t idx = 0;
 	for (uint_t mi = 0; mi < mnr - 1; mi++)
 	{
-		if (mstat[mi].md_indxflgs.mf_marty != (u32_t)mareap->ma_type)
+		if (mstat[mi].md_cntflgs.mf_marty != (u32_t)mareap->ma_type)
 		{
 			return 0;
 		}
 		if (PAF_NO_ALLOC != mstat[mi].md_phyadrs.paf_alloc ||
-			0 != mstat[mi].md_indxflgs.mf_uindx)
+			0 != mstat[mi].md_cntflgs.mf_refcnt)
 		{
 			return 0;
 		}
 		if (PAF_NO_ALLOC != mstat[mi + 1].md_phyadrs.paf_alloc ||
-			0 != mstat[mi + 1].md_indxflgs.mf_uindx)
+			0 != mstat[mi + 1].md_cntflgs.mf_refcnt)
 		{
 			return 0;
 		}
@@ -779,7 +785,7 @@ bool_t check_one_bafhlst(bafhlst_t *bafhp, memarea_t *mareap)
 	if (nullptr == bafhp || nullptr == mareap) {
 		return FALSE;
 	}
-	if (1 > bafhp->af_mobjnr && 1 > bafhp->af_fobjnr) {
+	if (1 > bafhp->af_amsanr && 1 > bafhp->af_fmsanr) {
 		return TRUE;
 	}
 
@@ -797,7 +803,7 @@ bool_t check_one_bafhlst(bafhlst_t *bafhp, memarea_t *mareap)
 		lindx++;
 	}
 
-	if (lindx != bafhp->af_fobjnr || lindx != bafhp->af_mobjnr) {
+	if (lindx != bafhp->af_fmsanr || lindx != bafhp->af_amsanr) {
 		return FALSE;
 	}
 	return TRUE;
@@ -814,13 +820,13 @@ bool_t check_one_memarea(memarea_t *mareap)
 
 	for (uint_t li = 0; li < MDIVMER_ARR_LMAX; li++)
 	{
-		if (check_one_bafhlst(&mareap->ma_mdmdata.dm_mdmlielst[li], mareap) == FALSE)
+		if (check_one_bafhlst(&mareap->ma_mdmdata.dm_pools[li], mareap) == FALSE)
 		{
 			return FALSE;
 		}
 	}
 
-	if (check_one_bafhlst(&mareap->ma_mdmdata.dm_onemsalst, mareap) == FALSE) {
+	if (check_one_bafhlst(&mareap->ma_mdmdata.dm_onepool, mareap) == FALSE) {
 		return FALSE;
 	}
 	return TRUE;

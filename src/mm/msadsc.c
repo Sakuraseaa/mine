@@ -10,11 +10,11 @@ void msadsc_t_init(msadsc_t *initp)
 {
 	list_init(&initp->md_list);
 	spin_init(&initp->md_lock);
-	initp->md_indxflgs.mf_olkty = MF_OLKTY_INIT; // Overlay Link Type 挂入链表类型， 内核 or 用户?
-	initp->md_indxflgs.mf_lstty = MF_LSTTY_LIST; // List type 链表类型，空闲链表，已分配链表
-	initp->md_indxflgs.mf_mocty = MF_MOCTY_FREE; // Memory Occupation Type 内存占用类型, 空闲/被内核使用/被用户使用
-	initp->md_indxflgs.mf_marty = MF_MARTY_INIT; // Memory Area Type 内存区域类型，内核区/用户区/设备区/
-	initp->md_indxflgs.mf_uindx = MF_UINDX_INIT; // Usage index 使用计数
+	initp->md_cntflgs.mf_olkty = MF_OLKTY_INIT; // Overlay Link Type 挂入链表类型， 内核 or 用户?
+	initp->md_cntflgs.mf_lstty = MF_LSTTY_LIST; // List type 链表类型，空闲链表，已分配链表
+	initp->md_cntflgs.mf_mocty = MF_MOCTY_FREE; // Memory Occupation Type 内存占用类型, 空闲/被内核使用/被用户使用
+	initp->md_cntflgs.mf_marty = MF_MARTY_INIT; // Memory Area Type 内存区域类型，内核区/用户区/设备区/
+	initp->md_cntflgs.mf_refcnt = MF_UINDX_INIT; // Usage index 使用计数
 	initp->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
 	initp->md_phyadrs.paf_shared = PAF_NO_SHARED;
 	initp->md_phyadrs.paf_swap = PAF_NO_SWAP;
@@ -101,7 +101,7 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
 void disp_one_msadsc(msadsc_t *mp)
 {
 	color_printk(WHITE,BLACK,"msadsc_t.md_f:_ux[%x],_my[%x],md_phyadrs:_alc[%x],_shd[%x],_swp[%x],_che[%x],_kmp[%x],_lck[%x],_dty[%x],_bsy[%x],_padrs[0x%x]\n",
-		   (uint_t)mp->md_indxflgs.mf_uindx, (uint_t)mp->md_indxflgs.mf_mocty, (uint_t)mp->md_phyadrs.paf_alloc, (uint_t)mp->md_phyadrs.paf_shared, (uint_t)mp->md_phyadrs.paf_swap, (uint_t)mp->md_phyadrs.paf_cache, (uint_t)mp->md_phyadrs.paf_kmap, (uint_t)mp->md_phyadrs.paf_lock,
+		   (uint_t)mp->md_cntflgs.mf_refcnt, (uint_t)mp->md_cntflgs.mf_mocty, (uint_t)mp->md_phyadrs.paf_alloc, (uint_t)mp->md_phyadrs.paf_shared, (uint_t)mp->md_phyadrs.paf_swap, (uint_t)mp->md_phyadrs.paf_cache, (uint_t)mp->md_phyadrs.paf_kmap, (uint_t)mp->md_phyadrs.paf_lock,
 		   (uint_t)mp->md_phyadrs.paf_dirty, (uint_t)mp->md_phyadrs.paf_busy, (uint_t)(mp->md_phyadrs.paf_padrs << 12));
 	return;
 }
@@ -164,15 +164,15 @@ step1:
         {
             return 0;
         }
-        if (MF_MOCTY_FREE != fstatmp[fsmsnr].md_indxflgs.mf_mocty ||
-            0 != fstatmp[fsmsnr].md_indxflgs.mf_uindx ||
+        if (MF_MOCTY_FREE != fstatmp[fsmsnr].md_cntflgs.mf_mocty ||
+            0 != fstatmp[fsmsnr].md_cntflgs.mf_refcnt ||
             PAF_NO_ALLOC != fstatmp[fsmsnr].md_phyadrs.paf_alloc)
         {
             return 0;
         }
         //设置msadsc_t结构为已经分配，已经分配给内核
-        fstatmp[fsmsnr].md_indxflgs.mf_mocty = MF_MOCTY_KRNL;
-        fstatmp[fsmsnr].md_indxflgs.mf_uindx++;
+        fstatmp[fsmsnr].md_cntflgs.mf_mocty = MF_MOCTY_KRNL;
+        fstatmp[fsmsnr].md_cntflgs.mf_refcnt++;
         fstatmp[fsmsnr].md_phyadrs.paf_alloc = PAF_ALLOC;
     }
     //进行一些数据的正确性检查

@@ -61,7 +61,7 @@ KLINE sint_t retn_divoder(uint_t pages)
 memarea_t *onfrmsa_retn_marea(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
 
-	if (MF_OLKTY_ODER != freemsa->md_indxflgs.mf_olkty || nullptr == freemsa->md_odlink)
+	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink)
 	{
 		return nullptr;
 	}
@@ -70,14 +70,14 @@ memarea_t *onfrmsa_retn_marea(memmgrob_t *mmobjp, msadsc_t *freemsa, uint_t free
 	{
 		return nullptr;
 	}
-	if (freemsa->md_indxflgs.mf_marty != fmend->md_indxflgs.mf_marty)
+	if (freemsa->md_cntflgs.mf_marty != fmend->md_cntflgs.mf_marty)
 	{
 		return nullptr;
 	}
 
 	for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
 	{
-		if ((uint_t)(freemsa->md_indxflgs.mf_marty) == mmobjp->mo_mareastat[mi].ma_type)
+		if ((uint_t)(freemsa->md_cntflgs.mf_marty) == mmobjp->mo_mareastat[mi].ma_type)
 		{
 			return &mmobjp->mo_mareastat[mi];
 		}
@@ -108,9 +108,9 @@ bafhlst_t *onma_retn_maxbafhlst(memarea_t *malckp) // 得到一个有空闲结�
 {
 	for (s64_t li = (MDIVMER_ARR_LMAX - 1); li >= 0; li--)
 	{
-		if (malckp->ma_mdmdata.dm_mdmlielst[li].af_fobjnr > 0)
+		if (malckp->ma_mdmdata.dm_pools[li].af_fmsanr > 0)
 		{
-			return &malckp->ma_mdmdata.dm_mdmlielst[li];
+			return &malckp->ma_mdmdata.dm_pools[li];
 		}
 	}
 	return nullptr;
@@ -123,8 +123,8 @@ msadsc_t *mm_divpages_opmsadsc(msadsc_t *msastat, uint_t mnr)
 		return nullptr;
 	}
 
-	if ((MF_OLKTY_ODER != msastat->md_indxflgs.mf_olkty &&
-		MF_OLKTY_BAFH != msastat->md_indxflgs.mf_olkty) ||
+	if ((MF_OLKTY_ODER != msastat->md_cntflgs.mf_olkty &&
+		MF_OLKTY_BAFH != msastat->md_cntflgs.mf_olkty) ||
 		nullptr == msastat->md_odlink ||
 		PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc)
 	{
@@ -132,7 +132,7 @@ msadsc_t *mm_divpages_opmsadsc(msadsc_t *msastat, uint_t mnr)
 	}
 
 	msadsc_t *mend = (msadsc_t *)msastat->md_odlink;
-	if (MF_OLKTY_BAFH == msastat->md_indxflgs.mf_olkty) { // 用户？
+	if (MF_OLKTY_BAFH == msastat->md_cntflgs.mf_olkty) { // 用户？
 		mend = msastat;
 	}
 
@@ -143,28 +143,28 @@ msadsc_t *mm_divpages_opmsadsc(msadsc_t *msastat, uint_t mnr)
 	if ((uint_t)((mend - msastat) + 1) != mnr) {
 		color_printk(RED, BLACK, "mm_divpages_opmsadsc err3\n");
 	}
-	if (msastat->md_indxflgs.mf_uindx > (MF_UINDX_MAX - 1) || mend->md_indxflgs.mf_uindx > (MF_UINDX_MAX - 1) ||
-		msastat->md_indxflgs.mf_uindx != mend->md_indxflgs.mf_uindx)
+	if (msastat->md_cntflgs.mf_refcnt > (MF_UINDX_MAX - 1) || mend->md_cntflgs.mf_refcnt > (MF_UINDX_MAX - 1) ||
+		msastat->md_cntflgs.mf_refcnt != mend->md_cntflgs.mf_refcnt)
 	{
 		color_printk(RED, BLACK, "mm_divpages_opmsadsc err4");
 	}
 	
 	if (mend == msastat)
 	{
-		msastat->md_indxflgs.mf_uindx++;
+		msastat->md_cntflgs.mf_refcnt++;
 		msastat->md_phyadrs.paf_alloc = PAF_ALLOC;
-		msastat->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+		msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 		msastat->md_odlink = mend;
 		return msastat;
 	}
 
-	msastat->md_indxflgs.mf_uindx++;
+	msastat->md_cntflgs.mf_refcnt++;
 	msastat->md_phyadrs.paf_alloc = PAF_ALLOC;
-	mend->md_indxflgs.mf_uindx++;
+	mend->md_cntflgs.mf_refcnt++;
 	mend->md_phyadrs.paf_alloc = PAF_ALLOC;
-	//msastat->md_indxflgs.mf_olkty = MF_OLKTY_ODER; // 是否有错？mend->md_indxflgs.mf_olkty = MF_OLKTY_ODER
+	//msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER; // 是否有错？mend->md_cntflgs.mf_olkty = MF_OLKTY_ODER
 	//msastat->md_odlink = mend; // 是否有错？ mend->md_odlink = msastat;
-	mend->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+	mend->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 	mend->md_odlink = msastat;
 	return msastat;
 }
@@ -177,33 +177,33 @@ int_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
     if (freemsa == fmend)
     {
         //页面的分配计数减1
-        freemsa->md_indxflgs.mf_uindx--;
-        if (0 < freemsa->md_indxflgs.mf_uindx)
+        freemsa->md_cntflgs.mf_refcnt--;
+        if (0 < freemsa->md_cntflgs.mf_refcnt)
         {//如果依然大于0说明它是共享页面 直接返回1指示不需要进行下一步操作
             return 1;
         }
         //设置页未分配的标志
         freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-        freemsa->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+        freemsa->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
         freemsa->md_odlink = bafh;//指向所属的bafhlst_t结构
         //返回2指示需要进行下一步操作
         return 2;
     }
     //多个页面的起始页面和结束页面都要减一
-    freemsa->md_indxflgs.mf_uindx--;
-    fmend->md_indxflgs.mf_uindx--;
+    freemsa->md_cntflgs.mf_refcnt--;
+    fmend->md_cntflgs.mf_refcnt--;
     //如果依然大于0说明它是共享页面 直接返回1指示不需要进行下一步操作
-    if (0 < freemsa->md_indxflgs.mf_uindx)
+    if (0 < freemsa->md_cntflgs.mf_refcnt)
     {
         return 1;
     }
     //设置起始、结束页页未分配的标志
     freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
     fmend->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-    freemsa->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+    freemsa->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
     //起始页面指向结束页面
     freemsa->md_odlink = fmend;
-    fmend->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+    fmend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
     //结束页面指向所属的bafhlst_t结构
     fmend->md_odlink = bafh;
     //返回2指示需要进行下一步操作
@@ -213,7 +213,7 @@ int_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
 bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrelbf, bafhlst_t **retmerbf)
 {
     //获取bafhlst_t结构数组的开始地址
-    bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_mdmlielst;
+    bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
     //根据分配页面数计算出分配页面在dm_mdmlielst数组中下标
     sint_t dividx = retn_divoder(freepgs);
     //返回请求释放的bafhlst_t结构指针
@@ -252,7 +252,7 @@ sint_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
 	if (nullptr == bafh || nullptr == freemsa || 1 > freepgs) {
 		return 0;
 	}
-	if (MF_OLKTY_ODER != freemsa->md_indxflgs.mf_olkty || nullptr == freemsa->md_odlink) {
+	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink) {
 		system_error("mm_merpages_opmsadsc err1\n");
 	}
 	msadsc_t *fmend = (msadsc_t *)freemsa->md_odlink;
@@ -262,37 +262,37 @@ sint_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
 	if (bafh->af_oderpnr != freepgs || ((uint_t)(fmend - freemsa) + 1) != freepgs) {
 		system_error("mm_merpages_opmsadsc err3\n");
 	}
-	if (PAF_NO_ALLOC == freemsa->md_phyadrs.paf_alloc || 1 > freemsa->md_indxflgs.mf_uindx) {
+	if (PAF_NO_ALLOC == freemsa->md_phyadrs.paf_alloc || 1 > freemsa->md_cntflgs.mf_refcnt) {
 		system_error("mm_merpages_opmsadsc err4\n");
 	}
-	if (PAF_NO_ALLOC == fmend->md_phyadrs.paf_alloc || 1 > fmend->md_indxflgs.mf_uindx) {
+	if (PAF_NO_ALLOC == fmend->md_phyadrs.paf_alloc || 1 > fmend->md_cntflgs.mf_refcnt) {
 		system_error("mm_merpages_opmsadsc err5\n");
 	}
-	if (freemsa->md_indxflgs.mf_uindx != fmend->md_indxflgs.mf_uindx) {
+	if (freemsa->md_cntflgs.mf_refcnt != fmend->md_cntflgs.mf_refcnt) {
 		system_error("mm_merpages_opmsadsc err6\n");
 	}
 	if (freemsa == fmend) {
-		freemsa->md_indxflgs.mf_uindx--;
-		if (0 < freemsa->md_indxflgs.mf_uindx) { // 共享返回1
+		freemsa->md_cntflgs.mf_refcnt--;
+		if (0 < freemsa->md_cntflgs.mf_refcnt) { // 共享返回1
 			return 1;
 		}
 		freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-		freemsa->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+		freemsa->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 		freemsa->md_odlink = bafh;
 		return 2;
 	}
 
-	freemsa->md_indxflgs.mf_uindx--;
-	fmend->md_indxflgs.mf_uindx--;
-	if (0 < freemsa->md_indxflgs.mf_uindx) {
+	freemsa->md_cntflgs.mf_refcnt--;
+	fmend->md_cntflgs.mf_refcnt--;
+	if (0 < freemsa->md_cntflgs.mf_refcnt) {
 		return 1;
 	}
 	freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
 	fmend->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
 	
-	freemsa->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+	freemsa->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 	freemsa->md_odlink = fmend;
-	fmend->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+	fmend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	fmend->md_odlink = bafh;
 	return 2;
 }
@@ -305,7 +305,7 @@ bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retrelba
 	if (nullptr == malckp || 1 > pages || nullptr == retrelbafh || nullptr == retdivbafh) {
 		return FALSE;
 	}
-	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_mdmlielst;
+	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
 	sint_t dividx = retn_divoder(pages); // 把页面数向上对齐到2的整数次幂
 	
 	if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
@@ -322,7 +322,7 @@ bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retrelba
 	
 	for (sint_t idx = dividx; idx < MDIVMER_ARR_LMAX; idx++)
 	{ // 请求的page页对应的bafhstat的链表不一定有空闲节点，所以向上寻求更大的页链表，然后分割他的大的空闲节点
-		if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fobjnr)
+		if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fmsanr)
 		{
 			*retrelbafh = &bafhstat[dividx];  // 请求分配的bafhlst_t结构指针
 			*retdivbafh = &bafhstat[idx];	 // 实际分配的bafhlst_t结构指针
@@ -341,7 +341,7 @@ bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retrelba
 bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrelbf, bafhlst_t **retmerbf)
 {    
 	//获取bafhlst_t结构数组的开始地址    
-	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_mdmlielst;    
+	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;    
 	//根据分配页面数计算出分配页面在dm_mdmlielst数组中下标    
 	sint_t dividx = retn_divoder(freepgs);    
 	//返回请求释放的bafhlst_t结构指针    
@@ -359,18 +359,18 @@ bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrel
 	if (nullptr == malckp || 1 > freepgs || nullptr == retrelbf || nullptr == retmerbf) {
 		return FALSE;
 	}
-	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_mdmlielst;
+	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
 	sint_t dividx = retn_divoder(freepgs);
 	if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
 		*retrelbf = nullptr;
 		*retmerbf = nullptr;
 		return FALSE;
 	}
-	if ((~0UL) <= bafhstat[dividx].af_mobjnr) {
-		system_error("onfpgs_retn_bafhlst af_mobjnr max");
+	if ((~0UL) <= bafhstat[dividx].af_amsanr) {
+		system_error("onfpgs_retn_bafhlst af_amsanr max");
 	}
-	if ((~0UL) <= bafhstat[dividx].af_fobjnr) {
-		system_error("onfpgs_retn_bafhlst af_fobjnr max");
+	if ((~0UL) <= bafhstat[dividx].af_fmsanr) {
+		system_error("onfpgs_retn_bafhlst af_fmsanr max");
 	}
 
 	if (freepgs != bafhstat[dividx].af_oderpnr) {
@@ -389,7 +389,7 @@ msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
 	{
 		return nullptr;
 	}
-	if (1 > bafhp->af_fobjnr)
+	if (1 > bafhp->af_fmsanr)
 	{
 		return nullptr;
 	}
@@ -399,11 +399,11 @@ msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
 	}
 	msadsc_t *tmp = list_entry(bafhp->af_frelst.next, msadsc_t, md_list);
 	list_del(&tmp->md_list);
-	tmp->md_indxflgs.mf_uindx++;
+	tmp->md_cntflgs.mf_refcnt++;
 	tmp->md_phyadrs.paf_alloc = PAF_ALLOC;
-	bafhp->af_fobjnr--;
-	bafhp->af_mobjnr--;
-	bafhp->af_alcindx++;
+	bafhp->af_fmsanr--;
+	bafhp->af_amsanr--;
+	bafhp->af_alccnt++;
 	return tmp;
 }
 
@@ -414,7 +414,7 @@ bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **
 	if (nullptr == bafhp || nullptr == retmstat || nullptr == retmend) {
 		return FALSE;
 	}
-	if (1 > bafhp->af_mobjnr || 1 > bafhp->af_fobjnr) {
+	if (1 > bafhp->af_amsanr || 1 > bafhp->af_fmsanr) {
 		*retmstat = nullptr;
 		*retmend = nullptr;
 		return FALSE;
@@ -428,13 +428,13 @@ bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **
 	
 	msadsc_t *tmp = list_entry(bafhp->af_frelst.next, msadsc_t, md_list);
 	list_del(&tmp->md_list);
-	bafhp->af_mobjnr--; // 减少总页面数
-	bafhp->af_fobjnr--; // 减少空闲页面数
-	bafhp->af_freindx++; // 增加释放计数
+	bafhp->af_amsanr--; // 减少总页面数
+	bafhp->af_fmsanr--; // 减少空闲页面数
+	bafhp->af_frecnt++; // 增加释放计数
 	
 	*retmstat = tmp;
 	*retmend = (msadsc_t *)tmp->md_odlink;
-	if (MF_OLKTY_BAFH == tmp->md_indxflgs.mf_olkty) {
+	if (MF_OLKTY_BAFH == tmp->md_cntflgs.mf_olkty) {
 		*retmend = tmp;
 	}
 
@@ -496,7 +496,7 @@ uint_t chek_divlenmsa(msadsc_t *msastat, msadsc_t *msaend, uint_t mnr)
 	}
 	if (1 == mnr)
 	{
-		if (0 < msastat->md_indxflgs.mf_uindx)
+		if (0 < msastat->md_cntflgs.mf_refcnt)
 		{
 			return 0;
 		}
@@ -512,8 +512,8 @@ uint_t chek_divlenmsa(msadsc_t *msastat, msadsc_t *msaend, uint_t mnr)
 	}
 	for (; ms < me; ms++)
 	{
-		if (ms->md_indxflgs.mf_uindx != 0 ||
-			(ms + 1)->md_indxflgs.mf_uindx != 0)
+		if (ms->md_cntflgs.mf_refcnt != 0 ||
+			(ms + 1)->md_cntflgs.mf_refcnt != 0)
 		{
 			return 0;
 		}
@@ -553,7 +553,7 @@ bool_t mrdmb_add_msa_bafh(bafhlst_t *bafhp, msadsc_t *msastat, msadsc_t *msaend)
 	if (mnr != (uint_t)bafhp->af_oderpnr) {
 		return FALSE;
 	}
-	if (0 < msastat->md_indxflgs.mf_uindx || 0 < msaend->md_indxflgs.mf_uindx) {
+	if (0 < msastat->md_cntflgs.mf_refcnt || 0 < msaend->md_cntflgs.mf_refcnt) {
 		return FALSE;
 	}
 	if (PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc ||
@@ -565,14 +565,14 @@ bool_t mrdmb_add_msa_bafh(bafhlst_t *bafhp, msadsc_t *msastat, msadsc_t *msaend)
 		return FALSE;
 	}
 
-	msastat->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+	msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 	msastat->md_odlink = msaend;
 
-	msaend->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+	msaend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	msaend->md_odlink = bafhp;
 	list_add_to_behind(&bafhp->af_frelst, &msastat->md_list);
-	bafhp->af_mobjnr++;
-	bafhp->af_fobjnr++;
+	bafhp->af_amsanr++;
+	bafhp->af_fmsanr++;
 	return TRUE;
 }
 
@@ -702,7 +702,7 @@ msadsc_t *mm_prcdivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrel
 		*retrelpnr = 0;
 		return nullptr;
 	}
-	bafhlst_t *prcbfh = &malckp->ma_mdmdata.dm_onemsalst;
+	bafhlst_t *prcbfh = &malckp->ma_mdmdata.dm_onepool;
 	bool_t rets = FALSE;
 	msadsc_t *retmsa = nullptr, *retmstat = nullptr, *retmend = nullptr;
 	rets = mm_retnmsaob_onbafhlst(prcbfh, &retmstat, &retmend);
@@ -953,15 +953,15 @@ bool_t scan_freemsa_isok(msadsc_t *freemsa, uint_t freepgs)
 	if (nullptr == freemsa || 1 > freepgs) {
 		return FALSE;
 	}
-	if (MF_OLKTY_ODER != freemsa->md_indxflgs.mf_olkty ||
-		nullptr == freemsa->md_odlink || 1 > freemsa->md_indxflgs.mf_uindx) {
+	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty ||
+		nullptr == freemsa->md_odlink || 1 > freemsa->md_cntflgs.mf_refcnt) {
 		return FALSE;
 	}
 	msadsc_t *end = (msadsc_t *)freemsa->md_odlink;
 
 	if (PAF_ALLOC != freemsa->md_phyadrs.paf_alloc ||
 		PAF_ALLOC != end->md_phyadrs.paf_alloc ||
-		1 > end->md_indxflgs.mf_uindx) {
+		1 > end->md_cntflgs.mf_refcnt) {
 		return FALSE;
 	}
 	if (((uint_t)((end - freemsa) + 1)) != freepgs) {
@@ -980,7 +980,7 @@ sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 	}
 	if (_1ms == _1me)
 	{
-		if (MF_OLKTY_BAFH != _1me->md_indxflgs.mf_olkty)
+		if (MF_OLKTY_BAFH != _1me->md_cntflgs.mf_olkty)
 		{
 			return 0;
 		}
@@ -992,7 +992,7 @@ sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 		{
 			return 0;
 		}
-		if (0 != _1me->md_indxflgs.mf_uindx)
+		if (0 != _1me->md_cntflgs.mf_refcnt)
 		{
 			return 0;
 		}
@@ -1003,7 +1003,7 @@ sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 		return 2;
 	}
 
-	if (MF_OLKTY_ODER != _1ms->md_indxflgs.mf_olkty)
+	if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty)
 	{
 		return 0;
 	}
@@ -1015,12 +1015,12 @@ sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 	{
 		return 0;
 	}
-	if (0 != _1ms->md_indxflgs.mf_uindx)
+	if (0 != _1ms->md_cntflgs.mf_refcnt)
 	{
 		return 0;
 	}
 
-	if (MF_OLKTY_BAFH != _1me->md_indxflgs.mf_olkty)
+	if (MF_OLKTY_BAFH != _1me->md_cntflgs.mf_olkty)
 	{
 		return 0;
 	}
@@ -1032,7 +1032,7 @@ sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 	{
 		return 0;
 	}
-	if (0 != _1me->md_indxflgs.mf_uindx)
+	if (0 != _1me->md_cntflgs.mf_refcnt)
 	{
 		return 0;
 	}
@@ -1108,30 +1108,30 @@ bool_t chek_cl2molkflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_t
 	}
 	if (_1ms == _1me && _2ms == _2me)
 	{
-		if (MF_OLKTY_ODER != _1ms->md_indxflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
+		if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
 		{
 			return FALSE;
 		}
-		if (MF_OLKTY_BAFH != _2me->md_indxflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
+		if (MF_OLKTY_BAFH != _2me->md_cntflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
 		{
 			return FALSE;
 		}
 		return TRUE;
 	}
 
-	if (MF_OLKTY_ODER != _1ms->md_indxflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
+	if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
 	{
 		return FALSE;
 	}
-	if (MF_OLKTY_INIT != _1me->md_indxflgs.mf_olkty || nullptr != _1me->md_odlink)
+	if (MF_OLKTY_INIT != _1me->md_cntflgs.mf_olkty || nullptr != _1me->md_odlink)
 	{
 		return FALSE;
 	}
-	if (MF_OLKTY_INIT != _2ms->md_indxflgs.mf_olkty || nullptr != _2ms->md_odlink)
+	if (MF_OLKTY_INIT != _2ms->md_cntflgs.mf_olkty || nullptr != _2ms->md_odlink)
 	{
 		return FALSE;
 	}
-	if (MF_OLKTY_BAFH != _2me->md_indxflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
+	if (MF_OLKTY_BAFH != _2me->md_cntflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
 	{
 		return FALSE;
 	}
@@ -1148,13 +1148,13 @@ bool_t mm_clear_2msaolflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msads
 		return FALSE;
 	}
 
-	_1me->md_indxflgs.mf_olkty = MF_OLKTY_INIT;
+	_1me->md_cntflgs.mf_olkty = MF_OLKTY_INIT;
 	_1me->md_odlink = nullptr;
-	_2ms->md_indxflgs.mf_olkty = MF_OLKTY_INIT;
+	_2ms->md_cntflgs.mf_olkty = MF_OLKTY_INIT;
 	_2ms->md_odlink = nullptr;
-	_1ms->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+	_1ms->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 	_1ms->md_odlink = _2me;
-	_2me->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+	_2me->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	_2me->md_odlink = bafh;
 	return TRUE;
 }
@@ -1168,11 +1168,11 @@ sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 	}
 	msadsc_t *freemstat = *rfnms;
 	msadsc_t *freemend = *rfnme;
-	if (1 > fbafh->af_fobjnr) {
+	if (1 > fbafh->af_fmsanr) {
 		return 1;
 	}
 	
-	list_h_t *tmplst = nullptr;
+	list_n_t *tmplst = nullptr;
 	msadsc_t *tmpmsa = nullptr, *blkms = nullptr, *blkme = nullptr;
 	sint_t rets = 0;
 	list_for_each(tmplst, &fbafh->af_frelst)
@@ -1184,8 +1184,8 @@ sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 			blkms = tmpmsa;
 			blkme = &tmpmsa[fbafh->af_oderpnr - 1];
 			list_del(&tmpmsa->md_list); // ?
-			fbafh->af_fobjnr--;
-			fbafh->af_mobjnr--;
+			fbafh->af_fmsanr--;
+			fbafh->af_amsanr--;
 			goto step1;
 		}
 	}
@@ -1241,19 +1241,19 @@ bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemen
 	{
 		return FALSE;
 	}
-	if ((~0UL) <= bafhp->af_fobjnr || (~0UL) <= bafhp->af_mobjnr)
+	if ((~0UL) <= bafhp->af_fmsanr || (~0UL) <= bafhp->af_amsanr)
 	{
-		system_error("(~0UL)<=bafhp->af_fobjnr\n");
+		system_error("(~0UL)<=bafhp->af_fmsanr\n");
 		return FALSE;
 	}
-	freemstat->md_indxflgs.mf_olkty = MF_OLKTY_ODER;
+	freemstat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
 	freemstat->md_odlink = freemend;
-	freemend->md_indxflgs.mf_olkty = MF_OLKTY_BAFH;
+	freemend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	freemend->md_odlink = bafhp;
 	
 	list_add_to_behind(&bafhp->af_frelst, &freemstat->md_list);
-	bafhp->af_fobjnr++;
-	bafhp->af_mobjnr++;
+	bafhp->af_fmsanr++;
+	bafhp->af_amsanr++;
 	return TRUE;
 }
 
@@ -1296,7 +1296,7 @@ bool_t mm_merpages_onmarea(memarea_t *malckp, msadsc_t *freemsa, uint_t freepgs)
 	sint_t pocs = 0;
 	if (MA_TYPE_PROC == malckp->ma_type) {
 
-		prcbf = &malckp->ma_mdmdata.dm_onemsalst;
+		prcbf = &malckp->ma_mdmdata.dm_onepool;
 		pocs = mm_merpages_opmsadsc(prcbf, freemsa, freepgs);
 		if (2 == pocs)
 		{

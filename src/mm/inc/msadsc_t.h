@@ -27,11 +27,11 @@
 //内存空间地址描述符标志
 typedef struct s_MSADFLGS
 {
-    u32_t mf_olkty:2;    //挂入链表的类型
-    u32_t mf_lstty:1;    //是否挂入链表
-    u32_t mf_mocty:2;    //分配类型，被谁占用了，内核还是应用或者空闲
-    u32_t mf_marty:3;    //属于哪个区
-    u32_t mf_uindx:24;   //分配计数
+    u32_t mf_olkty:2;    //挂入链表的类型 ownership link type?
+    u32_t mf_lstty:1;    //是否挂入链表 list type?
+    u32_t mf_mocty:2;    //分配类型,被谁占用了,内核,应用,空闲 memory allocation type?
+    u32_t mf_marty:3;     // memory area type
+    u32_t mf_refcnt:24;   // reference count
 }__attribute__((packed)) msadflgs_t; 
 
 #define  PAF_NO_ALLOC (0)
@@ -65,7 +65,7 @@ typedef struct s_MSADSC
 {
     list_n_t md_list;           //链表
     spinlock_t md_lock;         //保护自身的自旋锁
-    msadflgs_t md_indxflgs;     //内存空间地址描述符标志
+    msadflgs_t md_cntflgs;     //内存空间地址描述符标志
     phyadrflgs_t md_phyadrs;    //物理地址和标志
     void* md_odlink;            //相邻且相同大小msadsc的指针
 }__attribute__((packed)) msadsc_t;

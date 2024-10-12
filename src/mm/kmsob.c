@@ -374,7 +374,6 @@ bool_t kmsob_add_koblst(koblst_t *koblp, kmsob_t *kmsp)
 		return FALSE;
 	}
     list_add_to_before(&koblp->ol_emplst, &kmsp->so_list);
-	// list_add(&kmsp->so_list, &koblp->ol_emplst);
 	koblp->ol_emnr++;
 	return TRUE;
 }
@@ -403,7 +402,6 @@ kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cva
     
     // 在双向链表中，头节点的前面插入一个节点。相等于在链表尾添加一个节点
     list_add_to_before(&kmsp->so_mc.mc_kmobinlst, &msa->md_list);
-	// list_add(&msa->md_list, &kmsp->so_mc.mc_kmobinlst);
 	kmsp->so_mc.mc_kmobinpnr = (uint_t)relpnr;
 
     // 标记内存对象的起始位置和结束位置
@@ -537,7 +535,6 @@ bool_t kmsob_extn_pages(kmsob_t *kmsp)
 	}
 
     list_add_to_before(&kmsp->so_mc.mc_lst[mscidx].ml_list, &msa->md_list);
-	// list_add(&msa->md_list, &kmsp->so_mc.mc_lst[mscidx].ml_list);
 	kmsp->so_mc.mc_lst[mscidx].ml_msanr++;
 
 	kmbext_t *bextp = (kmbext_t *)vadrs;

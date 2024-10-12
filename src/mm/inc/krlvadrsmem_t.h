@@ -100,7 +100,7 @@ typedef struct KMVARSDSC
 {
 	spinlock_t kva_lock;
 	u32_t  kva_maptype;  // 映射类型
-	list_h_t kva_list;
+	list_n_t kva_list;
 	u64_t  kva_flgs;
 	u64_t  kva_limits;
 	vaslknode_t kva_lknode;

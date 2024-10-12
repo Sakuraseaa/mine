@@ -47,15 +47,14 @@ typedef struct s_BAFHLST
 	u32_t af_stus;
 	uint_t af_oder;		 	// 页面数的位移量 order
 	uint_t af_oderpnr;		// 页面数, 该bafh list每一个节点挂载的页面数, 如果oder为2，那这个数就是 1<<2=4  order-page-number
-	uint_t af_fobjnr;		// 多少个空闲msadsc_t结构，即空闲页面 free-object-number
-	//uint_t af_aobjnr;
-	uint_t af_mobjnr; 		// 此结构的msadsc_t结构总数，即此结构总页面 msadsc_t object number
-	uint_t af_alcindx; 		// 此结构的分配计数 
-	uint_t af_freindx;		// 此结构的释放计数
+	uint_t af_fmsanr;		// 空闲msadsc_t数，未分配内存块数 free msadsc_t number
+	uint_t af_amsanr; 		//  msadsc_t object number 此结构管理的msadsc_t数 all msadsc_t number
+	uint_t af_alccnt; 		// 此结构的分配计数 allocation count
+	uint_t af_frecnt;		// 此结构的释放计数 free count
 	list_h_t af_frelst; 	// 挂载此结构的空闲msadsc_t结构 free-list
 	list_h_t af_alclst; 	// 挂载此结构已经分配的msadsc_t结构 allocated-list
 	list_h_t af_ovelst;
-}bafhlst_t; // block alloc free head list
+}bafhlst_t; // block alloc free head list 内存块分配释放头链表
 
 
 #define MDIVMER_ARR_LMAX 52
@@ -65,16 +64,18 @@ typedef struct s_MEMDIVMER
 {
 	spinlock_t dm_lock;
 	u32_t dm_stus;
-	uint_t dm_dmmaxindx;
+	
+	uint_t dm_dmmaxindx;	/*这里有对三种东西的计数，但我不知道他们计的是什么东西*/
 	uint_t dm_phydmindx;
 	uint_t dm_predmindx;
+
 	uint_t dm_divnr;	 //内存分配次数 - 分配内存
 	uint_t dm_mernr;	 //内存合并次数 - 释放内存
 	//bafhlst_t dm_mdmonelst[MDIVMER_ARR_OMAX];
 	//bafhlst_t dm_mdmblklst[MDIVMER_ARR_BMAX];
-	bafhlst_t dm_mdmlielst[MDIVMER_ARR_LMAX];
-	bafhlst_t dm_onemsalst;
-}memdivmer_t; // 内存分配结构体, 管理内存分配和合并操作的结构体
+	bafhlst_t dm_pools[MDIVMER_ARR_LMAX];
+	bafhlst_t dm_onepool;
+}memdivmer_t; // 内存分割合并结构体, 管理内存分配和合并操作的结构体
 
 
 #define MA_TYPE_INIT 0
