@@ -1,7 +1,7 @@
 #ifndef _KMSOB_T_H_
 #define _KMSOB_T_H_
 
-#define MSCLST_MAX (5)
+#define MSCLST_MAX (5) // 规定的最大拓展内存池数
 #define KOBLST_MAX (64)
 #define KUC_NEWFLG (1)
 #define KUC_DELFLG (2)
@@ -62,7 +62,7 @@ typedef struct s_KMSOB
     msomdc_t so_mc;          //内存对象容器占用内存页面管理结构
     void* so_privp;          //本结构私有数据指针
     void* so_extdp;          //本结构扩展数据指针
-}kmsob_t;
+}kmsob_t; // kernel memory SLAB object == kernel memory Small Memory Allocation Buffer object
 
 // 管理内存对象容器扩展容量
 typedef struct s_KMBEXT

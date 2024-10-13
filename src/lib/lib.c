@@ -1,5 +1,12 @@
 #include "toolkit.h"
 
+/**
+ * @brief 返回val数 最高有效位数
+ *       如果 val = 0x8000000000000000，即最高位为1，函数返回 64（因为最高有效位是第64位）。
+ *       如果 val = 0x000000000000000F，即最低4位为1，函数返回 3 + 1 = 4（因为最高有效位是第4位）。
+ * @param val 
+ * @return s64_t 
+ */
 s64_t search_64rlbits(u64_t val)
 {
     s64_t retbitnr = -1;
@@ -185,14 +192,14 @@ bool_t list_is_first(const list_h_t* list, const list_h_t* head)
 void list_move(list_h_t *list, list_h_t *head)
 {
 	list_del(list);
-	list_add(list, head);
+	list_add_to_behind(list, head);
 	return;
 }
 
 void list_move_tail(list_h_t *list, list_h_t *head)
 {
 	list_del(list);
-	list_add_tail(list, head);
+	list_add_to_before(list, head);
 	return;
 }
 /*

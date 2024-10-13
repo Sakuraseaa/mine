@@ -63,7 +63,7 @@ msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
 
     tdirearr_t_init(tdirearr);
 
-    list_add(&mmulocked->mud_tdirhead, &msa->md_list);
+    list_add_to_behind(&mmulocked->mud_tdirhead, &msa->md_list);
     mmulocked->mud_tdirmsanr++;
 	mmulocked->mud_tdirearr = tdirearr;
 
@@ -134,7 +134,7 @@ msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
 
     sdirearr_t_init(sdirearr);
 
-    list_add(&mmulocked->mud_sdirhead, &msa->md_list);
+    list_add_to_behind(&mmulocked->mud_sdirhead, &msa->md_list);
     mmulocked->mud_sdirmsanr++;
     return msa;
 }
@@ -203,7 +203,7 @@ msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
 
     idirearr_t_init(idirearr);
 
-    list_add(&mmulocked->mud_idirhead, &msa->md_list);
+    list_add_to_behind(&mmulocked->mud_idirhead, &msa->md_list);
     mmulocked->mud_idirmsanr++;
     
     return msa;
@@ -272,7 +272,7 @@ msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
 	mdirearr = (mdirearr_t*)msadsc_ret_vaddr(msa);
 	mdirearr_t_init(mdirearr);
     
-	list_add(&mmulocked->mud_mdirhead, &msa->md_list);
+	list_add_to_behind(&mmulocked->mud_mdirhead, &msa->md_list);
     mmulocked->mud_mdirmsanr++;
 
     return msa;
@@ -329,7 +329,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 	adr_t retadr;
 	if(nullptr == mmulocked || nullptr == mdirearr)
 	{
-		return INVIALID;
+		return NULL;
 	}
 
 	mindex = mmu_mdire_index(vadrs);
@@ -337,7 +337,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 	mdire = mdirearr->mde_arr[mindex];
 	if(mmumsa_is_have(&mdire) == FALSE)
 	{
-		return INVIALID;
+		return NULL;
 	}
 
 	retadr = mmumsa_ret_padr(&mdire);
@@ -649,7 +649,7 @@ adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
 	uint_t mindex;
 	mdire_t dire;
 	if (nullptr == mdirearr) {
-		return INVIALID;
+		return NULL;
 	}
 
 	mindex = mmu_mdire_index(vadrs);
@@ -658,7 +658,7 @@ adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
 
 	if(mmumsa_is_have(&dire) == FALSE)
 	{
-		return INVIALID;
+		return NULL;
 	}
 
 	return mmumsa_ret_padr(&dire);
@@ -739,21 +739,21 @@ adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
 	if(nullptr == sdirearr)
 	{
-		retadr = INVIALID;
+		retadr = NULL;
 		goto out;
 	}
 
 	idirearr = mmu_find_idirearr(sdirearr, vadrs);
 	if(nullptr == idirearr)
 	{
-		retadr = INVIALID;
+		retadr = NULL;
 		goto untf_sdirearr;
 	}
 
 	mdirearr = mmu_find_mdirearr(idirearr, vadrs);
 	if(nullptr == mdirearr)
 	{
-		retadr = INVIALID;
+		retadr = NULL;
 		goto untf_idirearr; 
 	}
 	
@@ -809,7 +809,7 @@ void hal_mmu_refresh()
 bool_t hal_mmu_init(mmudsc_t* mmu)
 {
 	bool_t  rets = FALSE;
-	adr_t pcr3 = INVIALID, vcr3 = INVIALID;
+	adr_t pcr3 = NULL, vcr3 = NULL;
 	cr3s_t cr3;
 	if(nullptr == mmu) {
 		return FALSE;
@@ -930,7 +930,7 @@ bool_t mmu_clean_tdirearrmsas(mmudsc_t* mmulocked)
 bool_t hal_mmu_clean(mmudsc_t* mmu)
 {
 	bool_t  rets = FALSE;
-	adr_t pcr3 = INVIALID, vcr3 = INVIALID;
+	adr_t pcr3 = NULL, vcr3 = NULL;
 	cr3s_t cr3;
 	if(nullptr == mmu)
 	{

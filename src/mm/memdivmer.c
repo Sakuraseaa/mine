@@ -1306,7 +1306,7 @@ bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemen
 	freemend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	freemend->md_odlink = bafhp;
 	
-	list_add(&bafhp->af_frelst, &freemstat->md_list);
+	list_add_to_behind(&bafhp->af_frelst, &freemstat->md_list);
 	bafhp->af_fmsanr++;
 	bafhp->af_amsanr++;
 	return TRUE;

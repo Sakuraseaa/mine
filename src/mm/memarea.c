@@ -491,7 +491,7 @@ bool_t continumsadsc_add_procmareabafh(memarea_t *mareap, bafhlst_t *bafhp, msad
 		fstat[tmpnr].md_cntflgs.mf_olkty = MF_OLKTY_BAFH; // 尾巴 ？
 		fstat[tmpnr].md_odlink = bafhp;
         
-        list_add(&bafhp->af_frelst, &fstat[tmpnr].md_list);
+        list_add_to_behind(&bafhp->af_frelst, &fstat[tmpnr].md_list);
 		bafhp->af_fmsanr++;
 		bafhp->af_amsanr++;
 		mareap->ma_maxpages++;

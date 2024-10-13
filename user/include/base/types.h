@@ -1,6 +1,6 @@
 #ifndef _BASTYPE_T_H
 #define _BASTYPE_T_H
-#define INVIALID 0
+#define NULL 0
 
 #define NULL 0
 #define nullptr ((void *)0)
