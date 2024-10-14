@@ -2,10 +2,8 @@
 #define _LIB_F_H_
 
 void list_init(struct List *list);
-void list_add_to_behind(struct List *entry, struct List *pnew); ////add to entry behind
-void list_add_to_before(struct List *entry, struct List *pnew); ////add to entry before
-#define list_add(x, y) list_add_to_before((x), (y)) 			// 在链表头的前面添加 == 在整条链表后添加一个元素
-#define list_add_tail(x, y) list_add_to_behind((x), (y))		// 在链表头的后面添加 == 在整条链表前插入一个元素
+void list_add_to_behind(struct List *entry, struct List *pnew); //add to entry behind
+void list_add_to_before(struct List *entry, struct List *pnew); //add to entry before
 bool_t list_is_last(const list_h_t* list, const list_h_t* head);
 bool_t list_is_first(const list_h_t* list, const list_h_t* head);
 void list_move(list_h_t *list, list_h_t *head);

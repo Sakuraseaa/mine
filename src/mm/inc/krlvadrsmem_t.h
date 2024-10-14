@@ -51,9 +51,20 @@ typedef struct KVMEMCBOXMGR
 	uint_t kbm_cachemin;	// 最小缓存个数
 	list_h_t kbm_cachehead;	// 缓存kvmemcbox_t结构的链表
 	void* kbm_ext;			// 扩展数据指针
-}kvmemcboxmgr_t;
+}kvmemcboxmgr_t; // 页面盒子管理头
+
+
+
+
 // 页面盒子的头，用于挂载kvmemcbox_t结构, 全局的数据结构, 管理所有的kvmemcbox_t
 
+// 每段虚拟地址区间，在用到的时候都会映射对应的物理页面
+//
+//一般虚拟地址区间是和文件对应的数据相关联的。
+// 比如把一个文件映射到进程的虚拟地址空间中，只需要在内存页面中保留一份共享文件，多个程序就都可以共享它。
+//
+//常规操作就是把同一个物理内存页面映射到不同的虚拟地址区间，由此连接物理页面和虚拟区间的结构体应运而生
+// kvmemcbox_t Kernel Virtual Memory Container Box
 typedef struct KVMEMCBOX 
 {
 	list_n_t kmb_list;
@@ -68,7 +79,7 @@ typedef struct KVMEMCBOX
 	void* kmb_filenode;			// 指向文件节点描述符
 	void* kmb_pager;			// 指向分页器
 	void* kmb_ext;				// 自身扩展数据指针
-}kvmemcbox_t;	// 页面盒子
+}kvmemcbox_t;	// 页面盒子, Kernel Virtual Memory Container Box
 
 typedef struct VASLKNODE
 {
@@ -109,14 +120,14 @@ typedef struct KMVARSDSC
 	adr_t  kva_end;             // 虚拟地址的结束
 	kvmemcbox_t* kva_kvmbox;    // 管理这个结构映射的物理页面
 	void*  kva_kvmcobj;
-}kmvarsdsc_t; // 虚拟地址区间 kernel memory virtual address descriptor
+}kmvarsdsc_t; // 虚拟地址区间 kernel memory virtual address descriptor, 该结构类似与 vm_area_struct virtual memory area struct
 
 typedef struct KVIRMEMADRS
 {
 	spinlock_t kvs_lock;
 	u64_t  kvs_flgs;
 	uint_t kvs_kmvdscnr;
-	kmvarsdsc_t* kvs_startkmvdsc;
+	kmvarsdsc_t* kvs_startkmvdsc; 
 	kmvarsdsc_t* kvs_endkmvdsc;	
 	kmvarsdsc_t* kvs_krlmapdsc;
 	kmvarsdsc_t* kvs_krlhwmdsc;
@@ -139,7 +150,8 @@ typedef struct s_VIRMEMADRS
 {
 	spinlock_t vs_lock;
 	u32_t  vs_resalin;
-	list_h_t vs_list;			// 链接虚拟地址区间
+	list_h_t vs_list;			// 链接虚拟地址区间, 虚拟区间一个一个地挂载这条链表上，区间挂载的前后顺序
+								// 一定是虚拟区间所管理地址从小到大排列的, 这是一条顺序有关列表，维护的时候需要特别注意
 	uint_t vs_flgs;
 	uint_t vs_kmvdscnr;         // 多少个虚拟地址区间
 	mmadrsdsc_t* vs_mm;         // 指向它的上层的数据结构
@@ -175,10 +187,10 @@ typedef struct s_MMADRSDSC
 	adr_t msd_ebss;
 	adr_t msd_sbrk;		// 应用的堆区的开始，结束地址
 	adr_t msd_ebrk;
-}mmadrsdsc_t; // 管理进程的虚拟地址, memory address descriptor
+}mmadrsdsc_t; // 管理进程的虚拟地址, memory address descriptor, 类似与Linux中的 struct mm
 
 
-#define VADSZ_ALIGN(x) ALIGN(x,0x1000)
+#define VADSZ_ALIGN(x) ALIGN(x,0x1000) /* 4Kb 对齐 */
 #define KVMCOBJ_FLG_DELLPAGE (1)
 #define KVMCOBJ_FLG_UDELPAGE (2)
 

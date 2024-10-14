@@ -250,7 +250,7 @@ void init_search_krloccupymm()
 adr_t msadsc_ret_addr(msadsc_t *msa)
 {
     if (nullptr == msa) {
-        return INVIALID;
+        return NULL;
     }
     return (msa->md_phyadrs.paf_padrs << PAGPHYADR_SZLSHBIT);
 }
@@ -258,7 +258,7 @@ adr_t msadsc_ret_addr(msadsc_t *msa)
 adr_t msadsc_ret_vaddr(msadsc_t *msa)
 {
     if (nullptr == msa) {
-        return INVIALID;
+        return NULL;
     }
     return (adr_t)Phy_To_Virt(msadsc_ret_addr(msa));
 }

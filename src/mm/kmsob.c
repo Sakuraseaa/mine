@@ -4,7 +4,7 @@
 KLINE sint_t retn_mscidx(uint_t pages)
 {
 	sint_t pbits = search_64rlbits((uint_t)pages) - 1;
-	if (pages & (pages - 1))
+	if (pages & (pages - 1)) // 检查pages是不是2的整数次幂
 	{
 		pbits++;
 	}
@@ -46,8 +46,8 @@ void kmsob_t_init(kmsob_t *initp)
 	spin_init(&initp->so_lock);
 	initp->so_stus = 0;
 	initp->so_flgs = 0;
-	initp->so_vstat = INVIALID;
-	initp->so_vend = INVIALID;
+	initp->so_vstat = NULL;
+	initp->so_vend = NULL;
 	initp->so_objsz = 0;
 	initp->so_objrelsz = 0;
 	initp->so_mobjnr = 0;
@@ -349,12 +349,19 @@ kmsob_t *onkoblst_retn_delkmsob(koblst_t *koblp, void *fadrs, size_t fsz)
 }
 
 // B1
+
+/**
+ * @brief 根据内存对象大小查找并返回 koblst_t = 挂载 kmsob_t 的链表
+ * (指定小内存为msz的内存池) 结构指针
+ * 
+ */
 koblst_t *onmsz_retn_koblst(kmsobmgrhed_t *kmmgrhlokp, size_t msz)
 {
 	if (nullptr == kmmgrhlokp || 1 > msz)
 	{
 		return nullptr;
 	}
+	
 	for (uint_t kli = 0; kli < KOBLST_MAX; kli++)
 	{
 		if (kmmgrhlokp->ks_msoblst[kli].ol_sz >= msz)
@@ -362,6 +369,7 @@ koblst_t *onmsz_retn_koblst(kmsobmgrhed_t *kmmgrhlokp, size_t msz)
 			return &kmmgrhlokp->ks_msoblst[kli];
 		}
 	}
+
 	return nullptr;
 }
 
@@ -382,7 +390,7 @@ bool_t kmsob_add_koblst(koblst_t *koblp, kmsob_t *kmsp)
 // 创建某个内存对象大小的最初内存池
 kmsob_t *_create_init_kmsob(kmsob_t *kmsp, size_t objsz, adr_t cvadrs, adr_t cvadre, msadsc_t *msa, uint_t relpnr)
 {
-	if (nullptr == kmsp || 1 > objsz || INVIALID == cvadrs || INVIALID == cvadre || nullptr == msa || 1 > relpnr) {
+	if (nullptr == kmsp || 1 > objsz || NULL == cvadrs || NULL == cvadre || nullptr == msa || 1 > relpnr) {
 		return nullptr;
 	}
 	if (objsz < sizeof(freobjh_t)) {
@@ -526,10 +534,10 @@ bool_t kmsob_extn_pages(kmsob_t *kmsp)
 	adr_t vadrs = (adr_t)Phy_To_Virt((adr_t)phyadr);
 	adr_t vadre = (adr_t)Phy_To_Virt((adr_t)phyade);
 	sint_t mscidx = retn_mscidx(relpnr);
-	if (MSCLST_MAX <= mscidx || 0 > mscidx)
+	if (MSCLST_MAX <= mscidx || 0 > mscidx) 
 	{ 
 		if (mm_merge_pages(&glomm, msa, relpnr) == FALSE)
-		{ // 发送错误，回收内存页
+		{
 			system_error("kmsob_extn_pages mm_merge_pages fail\n");
 		}
 		return FALSE;
@@ -541,16 +549,16 @@ bool_t kmsob_extn_pages(kmsob_t *kmsp)
 	kmbext_t *bextp = (kmbext_t *)vadrs;
 	kmbext_t_init(bextp, vadrs, vadre, kmsp);
 
+	// 划分物理块
 	freobjh_t *fohstat = (freobjh_t *)(bextp + 1), *fohend = (freobjh_t *)vadre;
 	uint_t ap = (uint_t)((uint_t)fohstat);
 	freobjh_t *tmpfoh = (freobjh_t *)((uint_t)ap);
 	for (; tmpfoh < fohend;)
 	{
-		//ap+=(uint_t)kmsp->so_objsz;
 		if ((ap + (uint_t)kmsp->so_objsz) <= (uint_t)vadre)
 		{
 			freobjh_t_init(tmpfoh, 0, (void *)tmpfoh);
-			list_add_to_behind(&kmsp->so_frelst, &tmpfoh->oh_list);
+			list_add_to_before(&kmsp->so_frelst, &tmpfoh->oh_list);
 			kmsp->so_mobjnr++;
 			kmsp->so_fobjnr++;
 			bextp->mt_mobjnr++;
@@ -645,7 +653,12 @@ void *kmsob_new(size_t msz)
 	return kmsob_new_core(msz);
 }
 
-
+/**
+ * @brief 检查kmsot_t是否所有内存块空闲
+ * 
+ * @param kmsp 
+ * @return uint_t  0: 不可饶恕的错误 1：非全部空闲 2：全部空闲
+ */
 uint_t scan_freekmsob_isok(kmsob_t *kmsp)
 {
 	if (nullptr == kmsp)
@@ -663,6 +676,7 @@ uint_t scan_freekmsob_isok(kmsob_t *kmsp)
 	return 1;
 }
 
+// 执行回收kmsob_t的动作
 bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *kmsp)
 {
 	if (nullptr == kmobmgrp || nullptr == koblp || nullptr == kmsp) {
@@ -681,7 +695,7 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 
 	kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DSYFLG);
 
-	for (uint_t j = 0; j < MSCLST_MAX; j++)
+	for (uint_t j = 0; j < MSCLST_MAX; j++) // 释放扩展内存池占用的页
 	{
 		if (0 < mscp[j].ml_msanr)
 		{
@@ -697,7 +711,7 @@ bool_t _destroy_kmsob_core(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *km
 		}
 	}
 
-	list_for_each_head_dell(tmplst, &kmsp->so_mc.mc_kmobinlst)
+	list_for_each_head_dell(tmplst, &kmsp->so_mc.mc_kmobinlst) // 释放本内存池占用的页
 	{
 		msa = list_entry(tmplst, msadsc_t, md_list);
 		list_del(&msa->md_list); // 断物理页链
@@ -724,14 +738,16 @@ bool_t _destroy_kmsob(kmsobmgrhed_t *kmobmgrp, koblst_t *koblp, kmsob_t *kmsp)
 			system_error("_destroy_kmsob scan_freekmsob_isok rets 0\n");
 			break;
 		case 1:
-			kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DELFLG);
+			kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_DELFLG); // 更新cache缓存
 			return TRUE;
 		case 2:
-			return _destroy_kmsob_core(kmobmgrp, koblp, kmsp);
+			return _destroy_kmsob_core(kmobmgrp, koblp, kmsp); // 回收 kmsob_t 占用的整个页面
 	}
 
 	return FALSE;
 }
+
+// 执行小内存的删除动作
 bool_t kmsob_del_opkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
 {
 	if (nullptr == kmsp || nullptr == fadrs || 1 > fsz) {
@@ -771,7 +787,6 @@ ret_step:
 	return rets;
 }
 
-// 核心
 bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 {
 	kmsobmgrhed_t *kmobmgrp = &glomm.mo_kmsobmgr;
@@ -782,7 +797,6 @@ bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 	//knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
 	// 根据释放内存对象的大小在kmsobmgrhed_t中查找并返回koblst_t，
-	// 在其中挂载着对应的kmsob_t
 	koblp = onmsz_retn_koblst(kmobmgrp, fsz);
 	if (nullptr == koblp) {
 		rets = FALSE;
@@ -796,6 +810,7 @@ bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 		goto ret_step;
 	}
 
+	// TOGO: 执行删除动作
 	rets = kmsob_delete_onkmsob(kmsp, fadrs, fsz);
 	if (FALSE == rets) {
 		rets = FALSE;
