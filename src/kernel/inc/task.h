@@ -40,7 +40,7 @@ extern char_t* kallsyms_names __attribute((__weak__));
 #define NEED_SCHEDULE (1UL << 1) // 若此标志被置位，则表明当前进程可在适当时机进行调度
 #define PF_VFORK (1UL << 2)		 // 当前进程的资源是否存在共享，区分fork与vfork创建出的进程
 
-// 定义进程状态
+// 定义进程状态, 没有进程新建状态
 #define TASK_RUNNING (1UL << 0)
 #define TASK_INTERRUPTIBLE (1UL << 1)
 #define TASK_UNINTERRUPTIBLE (1UL << 2)
