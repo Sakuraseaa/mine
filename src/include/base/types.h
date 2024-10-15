@@ -19,7 +19,6 @@ typedef u64_t adr_t;
 typedef u64_t size_t;
 typedef char bool;
 typedef sint_t bool_t;
-// typedef u32_t dev_t;
 typedef const char* cstr_t;
 typedef char* str_t;
 typedef char char_t;
@@ -54,7 +53,6 @@ typedef u64_t mmstus_t;
 #define private	static
 #define EXTERN extern
 #define KEXTERN extern
-// #define nullptr	0
 #define TRUE    1
 #define	FALSE	0
 #define DFCERRSTUS (-1)
