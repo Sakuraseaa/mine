@@ -134,7 +134,7 @@ s32_t register_irq(u64_t irq,
                  hw_int_controller *controller,
                  str_t irq_name)
 {
-    irq_desc_T *p = &interrupt_desc[irq - 32];
+    irq_desc_t *p = &interrupt_desc[irq - 32];
 
     p->controller = controller;
     p->irq_name = irq_name;
@@ -151,7 +151,7 @@ s32_t register_irq(u64_t irq,
 // 中断销毁函数
 s32_t unregister_irq(u64_t irq)
 {
-    irq_desc_T *p = &interrupt_desc[irq - 32];
+    irq_desc_t *p = &interrupt_desc[irq - 32];
 
     p->controller->disable(irq);
     p->controller->uninstall(irq);

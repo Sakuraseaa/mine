@@ -3,6 +3,8 @@
 extern mmgro_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
 void knl_count_kvmemcbox(kvmemcbox_t* kmbox);
+bool_t knl_put_kvmemcbox(kvmemcbox_t* kmbox);
+bool_t vma_del_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr);
 kvirmemadrs_t krlvirmemadrs;
 
 void teststc_t_init(teststc_t *initp)
@@ -558,7 +560,7 @@ bool_t vma_del_unmapping_phyadrs(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start
 	for (adr_t vadrs = start; vadrs < end; vadrs += VMAP_MIN_SIZE)
 	{
 		phyadrs = hal_mmu_untransform(mmu, vadrs);
-		if (nullptr != phyadrs && nullptr != kmbox)
+		if (NULL != phyadrs && nullptr != kmbox)
 		{
 			if (vma_del_usermsa(mm, kmbox, nullptr, phyadrs) == FALSE)
 			{

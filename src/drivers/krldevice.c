@@ -5,6 +5,7 @@
 KEXTERN  __attribute__((section(".data"))) vartype varname
 
 KRL_DEFGLOB_VARIABLE(devtable_t,osdevtable);
+KRL_DEFGLOB_VARIABLE(drventyexit_t,osdrvetytabl)[]={NULL};
 
 //在 cosmos/kernel/krldevice.c文件中
 void devtlst_t_init(devtlst_t *initp, uint_t dtype)
@@ -30,16 +31,6 @@ void devtable_t_init(devtable_t *initp)
 void init_krldevice()
 {
     devtable_t_init(&osdevtable);//初始化系统全局设备表
-    return;
-}
-//在 cosmos/kernel/krlinit.c文件中
-void init_krl()
-{
-    init_krlmm();
-    init_krldevice();
-    //记住一定要在初始化调度器之前，初始化设备表
-    init_krlsched();
-    init_krlcpuidle();
     return;
 }
 
@@ -120,17 +111,16 @@ void init_krldevice()
 
 drvstus_t krlrun_driverentry(drventyexit_t drventry)
 {
-    driver_t *drvp = new_driver_dsc();
-    if (drvp == NULL)
-    {
+    driver_t *drvp = new_driver_dsc(); // 建立设备描述符
+    if (drvp == NULL) {
         return DFCERRSTUS;
     }
-    if (drventry(drvp, 0, NULL) == DFCERRSTUS)
-    {
+
+    if (drventry(drvp, 0, NULL) == DFCERRSTUS) { // 运行驱动程序入口函数
         return DFCERRSTUS;
     }
-    if (krldriver_add_system(drvp) == DFCERRSTUS)
-    {
+
+    if (krldriver_add_system(drvp) == DFCERRSTUS) { // 把驱动程序加入系统
         return DFCERRSTUS;
     }
     return DFCOKSTUS;
@@ -142,11 +132,9 @@ void init_krldriver()
     {
         if (krlrun_driverentry(osdrvetytabl[ei]) == DFCERRSTUS)
         {
-            hal_sysdie("init driver err");
+            color_printk(RED, BLACK, "init driver err");
         }
     }
-    kprint("设备驱动初始化成功\n");
-    die(0x400);
     return;
 }
 
@@ -229,7 +217,7 @@ drvstus_t krlnew_devid(devid_t *devid)
         return DFCERRSTUS;
     }
 
-    krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
     if (devmty != dtbp->devt_devclsl[devmty].dtl_type)
     {
         rets = DFCERRSTUS;
@@ -253,43 +241,49 @@ drvstus_t krlnew_devid(devid_t *devid)
     devid->dev_nr = devidnr++;
     rets = DFCOKSTUS;
 return_step:
-    krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
     return rets;
 }
 
+// 驱动加入内核: 将 driver_t 结构的实例变量挂载到设备表中
 drvstus_t krldriver_add_system(driver_t *drvp)
 {
     cpuflg_t cpufg;
     devtable_t *dtbp = &osdevtable;
-    krlspinlock_cli(&dtbp->devt_lock, &cpufg);
-    list_add(&drvp->drv_list, &dtbp->devt_drvlist);
+    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    list_add(&dtbp->devt_drvlist, &drvp->drv_list);
     dtbp->devt_drvnr++;
-    krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
     return DFCOKSTUS;
 }
 
+/* 把设备加入驱动 */
 drvstus_t krldev_add_driver(device_t *devp, driver_t *drvp)
 {
     list_h_t *lst;
     device_t *fdevp;
-    if (devp == NULL || drvp == NULL)
-    {
+    if (devp == NULL || drvp == NULL) {
         return DFCERRSTUS;
     }
+    // 一个驱动程序可以管理多个设备，所以在上述代码中，
+    // 要遍历驱动设备链表中的所有设备，看看有没有设备 ID 冲突。
+    
+    // 遍历这个驱动上所有设备
     list_for_each(lst, &drvp->drv_alldevlist)
-    {
+    { //比较设备ID有相同的则返回错误
         fdevp = list_entry(lst, device_t, dev_indrvlst);
         if (krlcmp_devid(&devp->dev_id, &fdevp->dev_id) == TRUE)
         {
             return DFCERRSTUS;
         }
     }
-
-    list_add(&devp->dev_indrvlst, &drvp->drv_alldevlist);
+    //将设备挂载到驱动上
+    list_add_to_behind(&drvp->drv_alldevlist, &devp->dev_indrvlst);
     devp->dev_drv = drvp;
     return DFCOKSTUS;
 }
 
+/* 向内核注册设备 */
 drvstus_t krlnew_device(device_t *devp)
 {
     device_t *findevp;
@@ -298,42 +292,46 @@ drvstus_t krlnew_device(device_t *devp)
     list_h_t *lstp;
     devtable_t *dtbp = &osdevtable;
     uint_t devmty = devp->dev_id.dev_mtype;
-    if (devp == NULL)
-    {
+    if (devp == NULL) {
         return DFCERRSTUS;
     }
-    if (devp->dev_drv == NULL)
-    {
+    if (devp->dev_drv == NULL) {    // 没有驱动的设备不能向内核注册
         return DFCERRSTUS;
     }
-    if (devmty >= DEVICE_MAX)
-    {
+    if (devmty >= DEVICE_MAX) {
         return DFCERRSTUS;
     }
 
-    krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
     if (devmty != dtbp->devt_devclsl[devmty].dtl_type)
     {
         rets = DFCERRSTUS;
         goto return_step;
     }
+
+    // 遍历设备类型链表上所有设备
     list_for_each(lstp, &dtbp->devt_devclsl[devmty].dtl_list)
     {
         findevp = list_entry(lstp, device_t, dev_intbllst);
         if (krlcmp_devid(&devp->dev_id, &findevp->dev_id) == TRUE)
-        {
+        { // 不能有设有ID相同的设备有，则出错
             rets = DFCERRSTUS;
             goto return_step;
         }
     }
 
-    list_add(&devp->dev_intbllst, &dtbp->devt_devclsl[devmty].dtl_list);
-    list_add(&devp->dev_list, &dtbp->devt_devlist);
-    dtbp->devt_devclsl[devmty].dtl_nr++;
-    dtbp->devt_devnr++;
+    // 把设备加入到对应设备类型的链表
+    list_add_to_behind(&dtbp->devt_devclsl[devmty].dtl_list, &devp->dev_intbllst);
+    
+    // 把设备加入设备表的全局设备链表
+    list_add_to_behind(&dtbp->devt_devlist, &devp->dev_list);
+    
+    dtbp->devt_devclsl[devmty].dtl_nr++; // 设备计数加一
+    dtbp->devt_devnr++; // 总的设备数加一
+    
     rets = DFCOKSTUS;
 return_step:
-    krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
     return rets;
 }
 
@@ -369,10 +367,10 @@ drvstus_t krldev_add_request(device_t *devp, objnode_t *request)
 {
     cpuflg_t cpufg;
     objnode_t *np = (objnode_t *)request;
-    krlspinlock_cli(&devp->dev_lock, &cpufg);
+    // krlspinlock_cli(&devp->dev_lock, &cpufg);
     list_add_tail(&np->on_list, &devp->dev_rqlist);
     devp->dev_rqlnr++;
-    krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -387,10 +385,10 @@ drvstus_t krldev_complete_request(device_t *devp, objnode_t *request)
         hal_sysdie("krldev_complete_request err devp->dev_rqlnr<1");
     }
     cpuflg_t cpufg;
-    krlspinlock_cli(&devp->dev_lock, &cpufg);
+    // krlspinlock_cli(&devp->dev_lock, &cpufg);
     list_del(&request->on_list);
     devp->dev_rqlnr--;
-    krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
     krlsem_up(&request->on_complesem);
     return DFCOKSTUS;
 }
@@ -405,7 +403,7 @@ drvstus_t krldev_retn_request(device_t *devp, uint_t iocode, objnode_t **retreq)
     objnode_t *np;
     list_h_t *list;
     drvstus_t rets = DFCERRSTUS;
-    krlspinlock_cli(&devp->dev_lock, &cpufg);
+    // krlspinlock_cli(&devp->dev_lock, &cpufg);
     list_for_each(list, &devp->dev_rqlist)
     {
         np = list_entry(list, objnode_t, on_list);
@@ -419,7 +417,7 @@ drvstus_t krldev_retn_request(device_t *devp, uint_t iocode, objnode_t **retreq)
     rets = DFCERRSTUS;
     *retreq = NULL;
 return_step:
-    krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
     return rets;
 }
 
@@ -494,7 +492,7 @@ device_t *krlonidfl_retn_device(void *dfname, uint_t flgs)
     {
         return NULL;
     }
-    krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
     if (devmty != dtbp->devt_devclsl[devmty].dtl_type)
     {
         findevp = NULL;
@@ -512,7 +510,7 @@ device_t *krlonidfl_retn_device(void *dfname, uint_t flgs)
 
     findevp = NULL;
 return_step:
-    krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
     return findevp;
 }
 
@@ -525,11 +523,11 @@ drvstus_t krlnew_devhandle(device_t *devp, intflthandle_t handle, uint_t phyilin
         return DFCERRSTUS;
     }
     cpuflg_t cpufg;
-    krlspinlock_cli(&devp->dev_lock, &cpufg);
+    // krlspinlock_cli(&devp->dev_lock, &cpufg);
 
     list_add(&sdp->s_indevlst, &devp->dev_intserlst);
     devp->dev_intlnenr++;
-    krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 

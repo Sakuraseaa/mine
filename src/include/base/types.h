@@ -55,8 +55,8 @@ typedef u64_t mmstus_t;
 #define KEXTERN extern
 #define TRUE    1
 #define	FALSE	0
-#define DFCERRSTUS (-1)
-#define DFCOKSTUS (0)
+#define DFCERRSTUS (-1) // default error status
+#define DFCOKSTUS (0) // default ok status
 #define NO_HAND (-1)
 #define ALIGN(x, a)     (((x) + (a) - 1) & ~((a) - 1))
 

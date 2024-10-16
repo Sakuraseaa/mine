@@ -1,6 +1,12 @@
 #ifndef _KRLDEVICE_T_H
 #define _KRLDEVICE_T_H
 
+/**
+ * @brief 首先 devtable_t 结构中能找到所有的设备和驱动，
+ * 然后从设备能找到对应的驱动，
+ * 从驱动也能找到其管理的所有设备 ，
+ * 最后就能实现一个驱动管理多个设备。
+ */
 #define NOT_DEVICE 0               //不表示任何设备
 #define BRIDGE_DEVICE 4            //总线桥接器设备
 #define CPUCORE_DEVICE 5           //CPU设备，CPU也是设备
@@ -82,9 +88,9 @@ typedef struct s_DEVTABLE
 /* 设备结构体 */
 typedef struct s_DEVICE
 {
-    list_h_t    dev_list;//设备链表
-    list_h_t    dev_indrvlst; //设备在驱动程序数据结构中对应的挂载链表
-    list_h_t    dev_intbllst; //设备在设备表数据结构中对应的挂载链表
+    list_n_t    dev_list;//设备链表
+    list_n_t    dev_indrvlst; //设备在驱动程序数据结构中对应的挂载链表
+    list_n_t    dev_intbllst; //设备在设备表数据结构中对应的挂载链表
     spinlock_t  dev_lock; //设备自旋锁
     uint_t      dev_count; //设备计数
     sem_t       dev_sem; //设备信号量

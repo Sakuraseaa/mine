@@ -3,6 +3,7 @@
 
 /* 设备头文件 */
 #include "krldevice.h"
+#include "krlobjnode_t.h"
 
 /* 字符设备 */
 #include "keyboard.h"

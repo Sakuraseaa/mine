@@ -2,7 +2,7 @@
 #include "mmkit.h"
 #include "kernelkit.h"
 
-extern irq_desc_T interrupt_desc[NR_IRQS];
+extern irq_desc_t interrupt_desc[NR_IRQS];
 // 修改向量号为irq对应I/O中断定向投递寄存器组的屏蔽标志,使其激活
 void IOAPIC_enable(u64_t irq)
 {
@@ -72,7 +72,7 @@ void init_8259A()
  */
 void do_IRQ(pt_regs_t *regs, u64_t nr) // regs,nr
 {
-	irq_desc_T *irq = &interrupt_desc[nr - 32];
+	irq_desc_t *irq = &interrupt_desc[nr - 32];
 	// color_printk(BLUE, WHITE, "rip:%#018lx,  rsp:%#018lx\n", regs->rip, regs->rsp);
 	//  执行中断进程上半部
 	if (irq->handler != nullptr)
