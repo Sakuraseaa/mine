@@ -1,11 +1,7 @@
 #include "devkit.h"
 
-//在 cosmos/kernel/krlglobal.c文件中
-#define KRL_DEFGLOB_VARIABLE(vartype,varname) \
-KEXTERN  __attribute__((section(".data"))) vartype varname
-
-KRL_DEFGLOB_VARIABLE(devtable_t,osdevtable);
-KRL_DEFGLOB_VARIABLE(drventyexit_t,osdrvetytabl)[]={NULL};
+GLOBVAR_DEFINITION(devtable_t, osdevtable);
+GLOBVAR_DEFINITION(drventyexit_t, osdrvetytabl, []={NULL});
 
 //在 cosmos/kernel/krldevice.c文件中
 void devtlst_t_init(devtlst_t *initp, uint_t dtype)
@@ -14,10 +10,11 @@ void devtlst_t_init(devtlst_t *initp, uint_t dtype)
     list_init(&initp->dtl_list);
     return;
 }
+
 void devtable_t_init(devtable_t *initp)
 {
     list_init(&initp->devt_list);
-    krlspinlock_init(&initp->devt_lock);
+    spin_init(&initp->devt_lock);
     list_init(&initp->devt_devlist);
     list_init(&initp->devt_drvlist);
     initp->devt_devnr = 0;
@@ -28,12 +25,14 @@ void devtable_t_init(devtable_t *initp)
     }
     return;
 }
+
 void init_krldevice()
 {
     devtable_t_init(&osdevtable);//初始化系统全局设备表
     return;
 }
 
+/* 初始化设备id */
 void devid_t_init(devid_t *initp, uint_t mty, uint_t sty, uint_t nr)
 {
     initp->dev_mtype = mty;
@@ -42,14 +41,15 @@ void devid_t_init(devid_t *initp, uint_t mty, uint_t sty, uint_t nr)
     return;
 }
 
+/* 初始化设备结构体 */
 void device_t_init(device_t *initp)
 {
     list_init(&initp->dev_list);
     list_init(&initp->dev_indrvlst);
     list_init(&initp->dev_intbllst);
-    krlspinlock_init(&initp->dev_lock);
+    spin_init(&initp->dev_lock);
     initp->dev_count = 0;
-    krlsem_t_init(&initp->dev_sem);
+    // krlsem_t_init(&initp->dev_sem);
     initp->dev_stus = 0;
     initp->dev_flgs = 0;
     devid_t_init(&initp->dev_id, 0, 0, 0);
@@ -57,7 +57,7 @@ void device_t_init(device_t *initp)
     list_init(&initp->dev_intserlst);
     list_init(&initp->dev_rqlist);
     initp->dev_rqlnr = 0;
-    krlsem_t_init(&initp->dev_waitints);
+    // krlsem_t_init(&initp->dev_waitints);
     initp->dev_drv = NULL;
     initp->dev_attrb = NULL;
     initp->dev_privdata = NULL;
@@ -76,13 +76,13 @@ void krlretn_driverid(driver_t *dverp)
 
 void driver_t_init(driver_t *initp)
 {
-    krlspinlock_init(&initp->drv_lock);
+    spin_init(&initp->drv_lock);
     list_init(&initp->drv_list);
     initp->drv_stuts = 0;
     initp->drv_flg = 0;
     krlretn_driverid(initp);
     initp->drv_count = 0;
-    krlsem_t_init(&initp->drv_sem);
+    // krlsem_t_init(&initp->drv_sem);
     initp->drv_safedsc = NULL;
     initp->drv_attrb = NULL;
     initp->drv_privdata = NULL;
@@ -97,14 +97,6 @@ void driver_t_init(driver_t *initp)
     initp->drv_userdata = NULL;
     initp->drv_extdata = NULL;
     initp->drv_name = NULL;
-    return;
-}
-
-void init_krldevice()
-{
-    devtable_t_init(&osdevtable);
-    kprint("设备管理初始化成功\n");
-    die(0x400);
     return;
 }
 
@@ -141,7 +133,7 @@ void init_krldriver()
 
 drvstus_t del_driver_dsc(driver_t *drvp)
 {
-    if (krldelete((adr_t)drvp, sizeof(driver_t)) == FALSE)
+    if (kdelete((adr_t)drvp, sizeof(driver_t)) == FALSE)
     {
         return DFCERRSTUS;
     }
@@ -150,7 +142,7 @@ drvstus_t del_driver_dsc(driver_t *drvp)
 
 driver_t *new_driver_dsc()
 {
-    driver_t *dp = (driver_t *)krlnew(sizeof(driver_t));
+    driver_t *dp = (driver_t *)knew(sizeof(driver_t));
     if (dp == NULL)
     {
         return NULL;
@@ -162,7 +154,7 @@ driver_t *new_driver_dsc()
 
 drvstus_t del_device_dsc(device_t *devp)
 {
-    if (krldelete((adr_t)devp, sizeof(device_t)) == FALSE)
+    if (kdelete((adr_t)devp, sizeof(device_t)) == FALSE)
     {
         return DFCERRSTUS;
     }
@@ -171,7 +163,7 @@ drvstus_t del_device_dsc(device_t *devp)
 
 device_t *new_device_dsc()
 {
-    device_t *dp = (device_t *)krlnew(sizeof(device_t));
+    device_t *dp = (device_t *)knew(sizeof(device_t));
     if (dp == NULL)
     {
         return NULL;
@@ -203,7 +195,7 @@ bool_t krlcmp_devid(devid_t *sdidp, devid_t *cdidp)
     return TRUE;
 }
 
-drvstus_t krlnew_devid(devid_t *devid)
+drvstus_t knew_devid(devid_t *devid)
 {
     device_t *findevp;
     drvstus_t rets = DFCERRSTUS;
@@ -251,7 +243,7 @@ drvstus_t krldriver_add_system(driver_t *drvp)
     cpuflg_t cpufg;
     devtable_t *dtbp = &osdevtable;
     // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
-    list_add(&dtbp->devt_drvlist, &drvp->drv_list);
+    list_add_to_behind(&dtbp->devt_drvlist, &drvp->drv_list);
     dtbp->devt_drvnr++;
     // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
     return DFCOKSTUS;
@@ -284,7 +276,7 @@ drvstus_t krldev_add_driver(device_t *devp, driver_t *drvp)
 }
 
 /* 向内核注册设备 */
-drvstus_t krlnew_device(device_t *devp)
+drvstus_t knew_device(device_t *devp)
 {
     device_t *findevp;
     drvstus_t rets = DFCERRSTUS;
@@ -343,9 +335,9 @@ drvstus_t krldev_inc_devcount(device_t *devp)
         return DFCERRSTUS;
     }
     cpuflg_t cpufg;
-    hal_spinlock_saveflg_cli(&devp->dev_lock, &cpufg);
+    // hal_spinlock_saveflg_cli(&devp->dev_lock, &cpufg);
     devp->dev_count++;
-    hal_spinunlock_restflg_sti(&devp->dev_lock, &cpufg);
+    // hal_spinunlock_restflg_sti(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -357,9 +349,9 @@ drvstus_t krldev_dec_devcount(device_t *devp)
         return DFCERRSTUS;
     }
     cpuflg_t cpufg;
-    hal_spinlock_saveflg_cli(&devp->dev_lock, &cpufg);
+    // hal_spinlock_saveflg_cli(&devp->dev_lock, &cpufg);
     devp->dev_count--;
-    hal_spinunlock_restflg_sti(&devp->dev_lock, &cpufg);
+    // hal_spinunlock_restflg_sti(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -368,7 +360,7 @@ drvstus_t krldev_add_request(device_t *devp, objnode_t *request)
     cpuflg_t cpufg;
     objnode_t *np = (objnode_t *)request;
     // krlspinlock_cli(&devp->dev_lock, &cpufg);
-    list_add_tail(&np->on_list, &devp->dev_rqlist);
+    list_add_to_behind(&devp->dev_rqlist, &np->on_list);
     devp->dev_rqlnr++;
     // krlspinunlock_sti(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
@@ -382,14 +374,14 @@ drvstus_t krldev_complete_request(device_t *devp, objnode_t *request)
     }
     if (devp->dev_rqlnr < 1)
     {
-        hal_sysdie("krldev_complete_request err devp->dev_rqlnr<1");
+        system_error("krldev_complete_request err devp->dev_rqlnr<1");
     }
     cpuflg_t cpufg;
     // krlspinlock_cli(&devp->dev_lock, &cpufg);
     list_del(&request->on_list);
     devp->dev_rqlnr--;
     // krlspinunlock_sti(&devp->dev_lock, &cpufg);
-    krlsem_up(&request->on_complesem);
+    // krlsem_up(&request->on_complesem);
     return DFCOKSTUS;
 }
 
@@ -427,7 +419,7 @@ drvstus_t krldev_wait_request(device_t *devp, objnode_t *request)
     {
         return DFCERRSTUS;
     }
-    krlsem_down(&request->on_complesem);
+    // krlsem_down(&request->on_complesem);
     return DFCOKSTUS;
 }
 
@@ -514,19 +506,19 @@ return_step:
     return findevp;
 }
 
-drvstus_t krlnew_devhandle(device_t *devp, intflthandle_t handle, uint_t phyiline)
+drvstus_t knew_devhandle(device_t *devp, intflthandle_t handle, uint_t phyiline)
 {
-    intserdsc_t *sdp = krladd_irqhandle(devp, handle, phyiline);
-    if (sdp == NULL)
-    {
+    // intserdsc_t *sdp = krladd_irqhandle(devp, handle, phyiline);
+    // if (sdp == NULL)
+    // {
 
-        return DFCERRSTUS;
-    }
-    cpuflg_t cpufg;
-    // krlspinlock_cli(&devp->dev_lock, &cpufg);
+    //     return DFCERRSTUS;
+    // }
+    // cpuflg_t cpufg;
+    // // krlspinlock_cli(&devp->dev_lock, &cpufg);
 
-    list_add(&sdp->s_indevlst, &devp->dev_intserlst);
-    devp->dev_intlnenr++;
+    // list_add_to_behind(&devp->dev_intserlst, &sdp->s_indevlst);
+    // devp->dev_intlnenr++;
     // krlspinunlock_sti(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }

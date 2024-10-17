@@ -121,7 +121,7 @@ typedef struct s_DRIVER
     uint_t drv_flg; //驱动程序的相关标志
     uint_t drv_id; //驱动程序ID
     uint_t drv_count; //驱动程序的计数器
-    // sem_t drv_sem; //驱动程序的信号量
+    sem_t drv_sem; //驱动程序的信号量
     void* drv_safedsc; //驱动程序的安全体
     void* drv_attrb; //LMOSEM内核要求的驱动程序属性体
     void* drv_privdata; //驱动程序私有数据的指针

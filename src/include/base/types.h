@@ -69,4 +69,10 @@ typedef u64_t mmstus_t;
 #define false 0
 #define true 1
 
+#define GLOBVAR_DECLARATION(vartype,varname,...) \
+        KEXTERN vartype varname __VA_ARGS__
+
+#define GLOBVAR_DEFINITION(vartype,varname,...) \
+        __attribute__((section(".data"))) vartype varname  __VA_ARGS__
+
 #endif
