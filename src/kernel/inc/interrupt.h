@@ -19,10 +19,10 @@ typedef struct
     u64_t parameter;                                                          // 中断处理函数的参数
     void (*handler)(u64_t nr, u64_t parameter, pt_regs_t *regs); // 中断处理函数
     u64_t flags;                                                              // 自定义标志位
-} irq_desc_T;
+} irq_desc_t;
 
 #define NR_IRQS 24
-irq_desc_T interrupt_desc[NR_IRQS] = {0};
+irq_desc_t interrupt_desc[NR_IRQS] = {0};
 
 extern void (*interrupt[24])(void);
 extern void do_IRQ(pt_regs_t *regs, u64_t nr);

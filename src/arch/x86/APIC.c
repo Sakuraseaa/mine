@@ -229,7 +229,7 @@ void APIC_IOAPIC_init()
 	u32_t x;
 	u32_t *p;
 
-	memset(interrupt_desc, 0, sizeof(irq_desc_T) * NR_IRQS);
+	memset(interrupt_desc, 0, sizeof(irq_desc_t) * NR_IRQS);
 
 	// 为操作IO_APIC寄存器作铺垫
 	IOAPIC_pagetable_remap();
@@ -280,7 +280,7 @@ void APIC_IOAPIC_init()
 
 void do_IRQ(pt_regs_t *regs, u64_t nr) // regs:rsp,nr
 {
-	irq_desc_T *irq = &interrupt_desc[nr - 32];
+	irq_desc_t *irq = &interrupt_desc[nr - 32];
 
 	// color_printk(BLUE, WHITE, "rip:%#018lx,  rsp:%#018lx\n", regs->rip, regs->rsp);
 

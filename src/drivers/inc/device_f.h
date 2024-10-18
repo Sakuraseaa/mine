@@ -8,10 +8,10 @@ dev_t device_install(
     void *ops);
 
 // 根据子类型查找设备
-device_t *device_find(s32_t type, idx_t idx);
+Device_t *device_find(s32_t type, idx_t idx);
 
 // 根据设备号查找设备
-device_t *device_get(dev_t dev);
+Device_t *device_get(dev_t dev);
 
 // 控制设备
 s32_t device_ioctl(dev_t dev, s32_t cmd, void *args, s32_t flags);

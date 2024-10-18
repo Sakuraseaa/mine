@@ -2,14 +2,14 @@
 #include "devkit.h"
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-static device_t devices[DEVICE_NR]; // 设备数组
+static Device_t devices[DEVICE_NR]; // 设备数组
 
 // 获取空设备
-static device_t *get_null_device()
+static Device_t *get_null_device()
 {
     for (size_t i = 1; i < DEVICE_NR; i++)
     {
-        device_t *device = &devices[i];
+        Device_t *device = &devices[i];
         if (device->type == DEV_NULL)
             return device;
     }
@@ -18,7 +18,7 @@ static device_t *get_null_device()
 
 s32_t device_ioctl(dev_t dev, s32_t cmd, void *args, s32_t flags)
 {
-    device_t *device = device_get(dev);
+    Device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART)
     {
         block_dev_opt_t* bdo = (block_dev_opt_t*)device->device_ops;
@@ -40,7 +40,7 @@ s32_t device_ioctl(dev_t dev, s32_t cmd, void *args, s32_t flags)
  */
 s32_t device_read(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
 {
-    device_t *device = device_get(dev);
+    Device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART) {
         block_dev_opt_t* bdo = (block_dev_opt_t*)device->device_ops;
         ide_part_t* ipt = (ide_part_t*)device->ptr;
@@ -53,7 +53,7 @@ s32_t device_read(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
 
 s32_t device_write(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
 {
-    device_t *device = device_get(dev);
+    Device_t *device = device_get(dev);
     if (device->type == DEV_BLOCK && device->subtype == DEV_IDE_PART) {
         block_dev_opt_t* bdo = (block_dev_opt_t*)device->device_ops;
         ide_part_t* ipt = (ide_part_t*)device->ptr;
@@ -70,7 +70,7 @@ dev_t device_install(
     void *ptr, str_t name, dev_t parent,
     void *ops)
 {
-    device_t *device = get_null_device();
+    Device_t *device = get_null_device();
     device->ptr = ptr;
     device->parent = parent;
     device->type = type;
@@ -84,7 +84,7 @@ void device_init()
 {
     for (size_t i = 0; i < DEVICE_NR; i++)
     {
-        device_t *device = &devices[i];
+        Device_t *device = &devices[i];
         strcpy((str_t)device->name, "null");
         device->type = DEV_NULL;
         device->subtype = DEV_NULL;
@@ -94,12 +94,12 @@ void device_init()
     }
 }
 
-device_t *device_find(s32_t subtype, idx_t idx)
+Device_t *device_find(s32_t subtype, idx_t idx)
 {
     idx_t nr = 0;
     for (size_t i = 0; i < DEVICE_NR; i++)
     {
-        device_t *device = &devices[i];
+        Device_t *device = &devices[i];
         if (device->subtype != subtype)
             continue;
         if (nr == idx)
@@ -109,10 +109,10 @@ device_t *device_find(s32_t subtype, idx_t idx)
     return nullptr;
 }
 
-device_t *device_get(dev_t dev)
+Device_t *device_get(dev_t dev)
 {
     assert(dev < DEVICE_NR);
-    device_t *device = &devices[dev];
+    Device_t *device = &devices[dev];
     assert(device->type != DEV_NULL);
     return device;
 }

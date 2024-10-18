@@ -29,7 +29,7 @@ enum device_subtype_t
     DEV_NETIF,       // 网卡
 };
 
-typedef struct device_t
+typedef struct Device_t
 {
     char_t name[NAMELEN];  // 设备名
     s32_t type;            // 设备类型
@@ -39,6 +39,6 @@ typedef struct device_t
     void *ptr;           // 设备指针
 
     void *device_ops;    // 设备操作指针
-} device_t;
+} Device_t;
 
 #endif

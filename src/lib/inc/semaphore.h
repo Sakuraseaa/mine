@@ -7,4 +7,6 @@ typedef struct SEMAPHORE
     wait_queue_t wait; // 等待队列
 } semaphore_t;
 
+typedef semaphore_t sem_t;
+
 #endif

@@ -1,6 +1,7 @@
 #ifndef _DEVFUNC_H_
 #define _DEVFUNC_H_
-
+/* 设备头文件 */
+#include "krldevice_f.h"
 /* 字符设备 */
 #include "keyboard_f.h"
 #include "mouse_f.h"
