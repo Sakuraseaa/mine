@@ -90,17 +90,17 @@ void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
    {
    case 0:
    case 1:
-      task_schedule.CPU_exec_task_jiffies--;
+      task_schedule_table.CPU_exec_task_jiffies--;
       current->vrun_time += 1;
       break;
    case 2:
    default:
-      task_schedule.CPU_exec_task_jiffies -= 2;
+      task_schedule_table.CPU_exec_task_jiffies -= 2;
       current->vrun_time += 2;
       break;
    }
    // 本进程的时间片耗尽，可调度下一个进程
-   if (task_schedule.CPU_exec_task_jiffies <= 0)
+   if (task_schedule_table.CPU_exec_task_jiffies <= 0)
       current->flags |= NEED_SCHEDULE;
 }
 

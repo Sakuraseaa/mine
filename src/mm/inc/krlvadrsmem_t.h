@@ -120,6 +120,7 @@ typedef struct KMVARSDSC
 	adr_t  kva_end;             // 虚拟地址的结束
 	kvmemcbox_t* kva_kvmbox;    // 管理这个结构映射的物理页面
 	void*  kva_kvmcobj;
+	vma_to_file_t kva_vtft;	// 完成虚拟区间和文件之间的关联
 }kmvarsdsc_t; // 虚拟地址区间 kernel memory virtual address descriptor, 该结构类似与 vm_area_struct virtual memory area struct
 
 typedef struct KVIRMEMADRS
@@ -144,7 +145,7 @@ typedef struct KVIRMEMADRS
 	kvmemcboxmgr_t kvs_kvmemcboxmgr;
 }kvirmemadrs_t; // kernel virtual memory address 管理整个虚拟地址空间的kmvarsdsc_t结构
 
-typedef struct s_MMADRSDSC mmadrsdsc_t;
+typedef struct s_MMADRSDSC mmdsc_t;
 
 typedef struct s_VIRMEMADRS
 {
@@ -154,7 +155,7 @@ typedef struct s_VIRMEMADRS
 								// 一定是虚拟区间所管理地址从小到大排列的, 这是一条顺序有关列表，维护的时候需要特别注意
 	uint_t vs_flgs;
 	uint_t vs_kmvdscnr;         // 多少个虚拟地址区间
-	mmadrsdsc_t* vs_mm;         // 指向它的上层的数据结构
+	mmdsc_t* vs_mm;         // 指向它的上层的数据结构
 	kmvarsdsc_t* vs_startkmvdsc; // 开始的虚拟地址区间
 	kmvarsdsc_t* vs_endkmvdsc;   // 结束的虚拟地址区间
 	kmvarsdsc_t* vs_currkmvdsc;  // 当前的虚拟地址区间
@@ -179,16 +180,19 @@ typedef struct s_MMADRSDSC
 	mmudsc_t msd_mmu;   // 管理 MMU相关信息
 	virmemadrs_t msd_virmemadrs;    // 虚拟地址空间
 
-	adr_t msd_stext;	// 应用的指令区的开始，结束地址
-	adr_t msd_etext;
-	adr_t msd_sdata;	// 应用的数据区的开始，结束地址
-	adr_t msd_edata;
-	adr_t msd_sbss;
-	adr_t msd_ebss;
-	adr_t msd_sbrk;		// 应用的堆区的开始，结束地址
-	adr_t msd_ebrk;
-}mmadrsdsc_t; // 管理进程的虚拟地址, memory address descriptor, 类似与Linux中的 struct mm
+	adr_t start_code;	// 应用的指令区的开始，结束地址
+	adr_t end_code;
+	adr_t start_data;	// 应用的数据区的开始，结束地址
+	adr_t end_data;
+	adr_t start_rodata;	// 应用的数据区的开始，结束地址
+	adr_t end_rodata;
+	adr_t start_bss;
+	adr_t end_bss;
+	adr_t start_brk;		// 应用的堆区的开始，结束地址
+	adr_t end_brk;
+	adr_t start_stack, stack_length; /* 应用栈的开始 和 长度*/
 
+}mmdsc_t; // 管理进程的虚拟地址, memory address descriptor, 类似与Linux中的 struct mm
 
 #define VADSZ_ALIGN(x) ALIGN(x,0x1000) /* 4Kb 对齐 */
 #define KVMCOBJ_FLG_DELLPAGE (1)

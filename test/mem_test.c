@@ -104,8 +104,8 @@ void test_show_vir_phy(task_t *tsk) {
 
 	size_t i_m = 0;
 
-	struct mm_struct *newmm = tsk->mm;
-	u64_t* PML4 = Phy_To_Virt(newmm->pgd);
+	mmdsc_t  *newmm = tsk->mm;
+	u64_t* PML4 = Phy_To_Virt(newmm->msd_mmu.mud_cr3.c3s_entry);
 
     map_entry_t* map = knew(sizeof(map_entry_t) * 15, 0);
 

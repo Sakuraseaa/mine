@@ -5,5 +5,5 @@
 #include "mmtype.h"
 #include "mmfunc.h"
 #include "memory.h"
-
+GLOBVAR_DECLARATION(mmdsc_t, initmm);
 #endif // _MMKIT_H_

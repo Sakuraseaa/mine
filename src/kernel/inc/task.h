@@ -47,19 +47,6 @@ extern char_t* kallsyms_names __attribute((__weak__));
 #define TASK_ZOMBIE (1UL << 3)
 #define TASK_STOPPED (1UL << 4)
 // =================================== 定义关于进程的结构体 =======================
-// 描述进程占用内存的结构体
-struct mm_struct
-{
-	pml4t_t *pgd; // page table point
-
-	u64_t start_code, end_code;		// code segment space
-	u64_t start_data, end_data;		// data segment space
-	u64_t start_rodata, end_rodata; // rodata(read-only-data) segment space
-	u64_t start_bss, end_bss;
-	u64_t start_brk, end_brk; // 堆空间-动态内存分配区
-	u64_t start_stack, stack_length;		  // 应用层栈基地址
-};
-
 typedef struct thread_struct
 {
 	u64_t rsp0; // in tss, 记录着应用程序在内核层使用的栈基地址
@@ -87,7 +74,7 @@ typedef struct task_struct
 	sigaction_t* sigaction;		// 信号将要执行的操作和标志信息, 每一项对应一个信号, 一共三十二项
 
 	
-	struct mm_struct *mm;		  // 内存空间分布结构体，记录内存页表和程序段信息
+	mmdsc_t *mm;		  // 内存空间分布结构体
 	struct thread_struct *thread; // 进程切换时保存的寄存器(上下文)信息
 	struct List list;			  // 双向链表节点
 
@@ -95,7 +82,7 @@ typedef struct task_struct
 	/*	0x0000,0000,0000,0000 - 0x0000,7fff,ffff,ffff user,   对应第255个PML4页表项， 0 ~ 255   */
 	/*	0xffff,8000,0000,0000 - 0xffff,ffff,ffff,ffff kernel, 对应第256个PML4页表项， 256 ~ 511 */
 
-	s64_t pid;
+	u64_t pid;
 
 	u32_t uid;				// 用户 id
 	u32_t gid;				// 用户组 id
@@ -112,7 +99,6 @@ typedef struct task_struct
 
 	dir_entry_t *i_pwd;	 // 进程当前目录 inode program work directory
 	dir_entry_t *i_root; // 进程根目录 inode
-	inode_t *i_exec; // 程序文件 inode
 }task_t;
 
 // 进程PCB和内核栈空间 32kb
@@ -128,10 +114,10 @@ union task_union
 	{                                     \
 		.state = TASK_UNINTERRUPTIBLE,    \
 		.flags = PF_KTHREAD,              \
-		.mm = &init_mm,                   \
+		.mm = &initmm,                   \
 		.thread = &init_thread,           \
 		.addr_limit = 0xffff800000000000, \
-		.pid = 0,                         \
+		.pid = (adr_t)&tsk,                      \
 		.preempt_count = 0,               \
 		.vrun_time = 0,                   \
 		.signal = 0,                      \
@@ -146,11 +132,9 @@ union task_union
 		.umask = 0022,					\
 		.i_pwd = nullptr, \
 		.i_root = nullptr, \
-		.i_exec = nullptr \
 	}
 extern task_t *init_task[NR_CPUS];
 extern union task_union init_task_union;
-extern struct mm_struct init_mm;
 extern struct thread_struct init_thread;
 // ================================ 初始化TSS结构体 ============================
 struct tss_struct

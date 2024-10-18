@@ -8,8 +8,6 @@ union task_union init_task_union
 
 task_t *init_task[NR_CPUS] = {&init_task_union.task, 0};
 
-struct mm_struct init_mm = {0};
-
 struct thread_struct init_thread =
 	{
 		.rsp0 = (u64_t)(init_task_union.stack + STACK_SIZE / sizeof(u64_t)),
@@ -61,7 +59,7 @@ u64_t init(u64_t arg)
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
 
-	//while(1);
+	// while(1);
 
 	// 更换rsp到中断栈, PCB最上部的需要pop返回的位置
 	// 压入了ret_system_call作为返回地址
@@ -122,7 +120,7 @@ u64_t shell_boot(u64_t arg)
 
 void switch_mm(task_t *prev, task_t *next)
 {
-	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(next->mm->pgd)
+	__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(next->mm->msd_mmu.mud_cr3)
 						 : "memory");
 }
 
@@ -205,7 +203,7 @@ void exit_files(task_t *tsk)
 u64_t copy_mm(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
-	struct mm_struct *newmm = nullptr;
+	mmdsc_t  *newmm = nullptr;
 	u64_t code_start_addr = 0x800000;
 	u64_t stack_start_addr = 0xa00000;
 	u64_t brk_start_addr = 0xc00000;
@@ -218,8 +216,8 @@ u64_t copy_mm(u64_t clone_flags, task_t *tsk)
 		goto out;
 	}
 
-	newmm = (struct mm_struct *)knew(sizeof(struct mm_struct), 0);
-	memcpy(current->mm, newmm, sizeof(struct mm_struct));
+	newmm = (mmdsc_t  *)knew(sizeof(mmdsc_t ), 0);
+	memcpy(current->mm, newmm, sizeof(mmdsc_t ));
 
 	// copy kernel space, 创建了PML4页表
 	newmm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
@@ -264,96 +262,95 @@ out:
 } */
 
 
-static void copy_pageTables(struct mm_struct* newmm, u64_t addr){
+static void copy_pageTables(mmdsc_t * newmm, u64_t addr){
 	
-	// here is only copy Page Table. 
-	// when page_fault occur, allcot memory and copy user data
-	u64_t *tmp = nullptr, *virtual = nullptr, *parent_tmp;
-	u64_t attr = 0;
-	struct Page *p = nullptr;
+	// // here is only copy Page Table. 
+	// // when page_fault occur, allcot memory and copy user data
+	// u64_t *tmp = nullptr, *virtual = nullptr, *parent_tmp;
+	// u64_t attr = 0;
+	// struct Page *p = nullptr;
 
-	// alter page directory entry of parent_process(current_process)
-	// here requires atomic execution
-	parent_tmp = pde_ptr(addr);
-	p = (memory_management_struct.pages_struct + (*parent_tmp  >> PAGE_2M_SHIFT));
-	assert(p->PHY_address == (*parent_tmp & PAGE_2M_MASK))
-	if(p->PHY_address == 0)
-		return;
+	// // alter page directory entry of parent_process(current_process)
+	// // here requires atomic execution
+	// parent_tmp = pde_ptr(addr);
+	// p = (memory_management_struct.pages_struct + (*parent_tmp  >> PAGE_2M_SHIFT));
+	// assert(p->PHY_address == (*parent_tmp & PAGE_2M_MASK))
+	// if(p->PHY_address == 0)
+	// 	return;
 
 
-	// 申请PDPT内存，填充PML4页表项 for child_process
-	tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	if(!(*tmp & PAGE_Present)) {
-		virtual = knew(PAGE_4K_SIZE, 0);
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
+	// // 申请PDPT内存，填充PML4页表项 for child_process
+	// tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	// if(!(*tmp & PAGE_Present)) {
+	// 	virtual = knew(PAGE_4K_SIZE, 0);
+	// 	memset(virtual, 0, PAGE_4K_SIZE);
+	// 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	// }
 
-	// 申请PDT内存，填充PDPT页表项 for child_process
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
-	if(!(*tmp & PAGE_Present)) {
-		virtual = knew(PAGE_4K_SIZE, 0);
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
+	// // 申请PDT内存，填充PDPT页表项 for child_process
+	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
+	// if(!(*tmp & PAGE_Present)) {
+	// 	virtual = knew(PAGE_4K_SIZE, 0);
+	// 	memset(virtual, 0, PAGE_4K_SIZE);
+	// 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	// }
 
-	// 填充 PDT 页表项 for child_process
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
-	if(!(*tmp & PAGE_Present)) {
+	// // 填充 PDT 页表项 for child_process
+	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
+	// if(!(*tmp & PAGE_Present)) {
 
-		attr = (*parent_tmp & (0xfffUL)); // get parent privilege
+	// 	attr = (*parent_tmp & (0xfffUL)); // get parent privilege
 		
-		attr = (attr & (~PAGE_R_W)); // delet PW right
-		// set parent and child's Page privilege, parent and child share the Page
-		set_pdt(tmp, mk_pdt(p->PHY_address, attr));
-		set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
-		// add Page_struct count
-		p->reference_count++;
-	}
+	// 	attr = (attr & (~PAGE_R_W)); // delet PW right
+	// 	// set parent and child's Page privilege, parent and child share the Page
+	// 	set_pdt(tmp, mk_pdt(p->PHY_address, attr));
+	// 	set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
+	// 	// add Page_struct count
+	// 	p->reference_count++;
+	// }
 	return;
 }
 
 u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
-	struct mm_struct *newmm = nullptr;
+	mmdsc_t  *newmm = nullptr;
 	if (clone_flags & CLONE_VM) {
 		newmm = current->mm;
 		goto out;
 	}
 
-	newmm = (struct mm_struct *)knew(sizeof(struct mm_struct), 0);
-	memcpy(current->mm, newmm, sizeof(struct mm_struct));
+	// newmm = (mmdsc_t  *)knew(sizeof(mmdsc_t ), 0);
+	// memcpy(current->mm, newmm, sizeof(mmdsc_t ));
 
-	// copy kernel space, 创建了PML4页表
-	newmm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
-	memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
-	memset(Phy_To_Virt(newmm->pgd), 0, PAGE_4K_SIZE / 2); // clear user memory space
+	// // copy kernel space, 创建了PML4页表
 
-	u64_t vaddr = 0;
+	// memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
+
+	// u64_t vaddr = 0;
 	
-	for(vaddr = newmm->start_code; vaddr < newmm->end_code; vaddr += PAGE_2M_SIZE) // 代码段
-		copy_pageTables(newmm, vaddr);
-	for(vaddr = newmm->start_data; vaddr < newmm->end_data; vaddr += PAGE_2M_SIZE) // 数据
-		copy_pageTables(newmm, vaddr);
-	for(vaddr = newmm->start_rodata; vaddr < newmm->end_rodata; vaddr += PAGE_2M_SIZE) // 只读数据
-		copy_pageTables(newmm, vaddr);
-	for(vaddr = newmm->start_bss; vaddr < newmm->end_bss; vaddr += PAGE_2M_SIZE) // bss段
-		copy_pageTables(newmm, vaddr);
-	for(vaddr = newmm->start_brk; vaddr < newmm->end_brk; vaddr += PAGE_2M_SIZE) // brk 段
-		copy_pageTables(newmm, vaddr);
+	// for(vaddr = newmm->start_code; vaddr < newmm->end_code; vaddr += PAGE_2M_SIZE) // 代码段
+	// 	copy_pageTables(newmm, vaddr);
+	// for(vaddr = newmm->start_data; vaddr < newmm->end_data; vaddr += PAGE_2M_SIZE) // 数据
+	// 	copy_pageTables(newmm, vaddr);
+	// for(vaddr = newmm->start_rodata; vaddr < newmm->end_rodata; vaddr += PAGE_2M_SIZE) // 只读数据
+	// 	copy_pageTables(newmm, vaddr);
+	// for(vaddr = newmm->start_bss; vaddr < newmm->end_bss; vaddr += PAGE_2M_SIZE) // bss段
+	// 	copy_pageTables(newmm, vaddr);
+	// for(vaddr = newmm->start_brk; vaddr < newmm->end_brk; vaddr += PAGE_2M_SIZE) // brk 段
+	// 	copy_pageTables(newmm, vaddr);
 	
-	// 栈段, 这里的栈段共享不成。
-	// 父进程返回用户态后，会破坏用户栈，但竟没有触发保护异常。
-	// 没有触发异常，导致子进程运行失败.
-	// 为什么会出现这种情况 ？ 
+	// // 栈段, 这里的栈段共享不成。
+	// // 父进程返回用户态后，会破坏用户栈，但竟没有触发保护异常。
+	// // 没有触发异常，导致子进程运行失败.
+	// // 为什么会出现这种情况 ？ 
 
-	// 24-7-17-10:16: 因为你没有刷新快表
-	for(vaddr = newmm->start_stack; vaddr < (newmm->start_stack + newmm->stack_length); vaddr += PAGE_2M_SIZE)
-		copy_pageTables(newmm, vaddr);
+	// // 24-7-17-10:16: 因为你没有刷新快表
+	// for(vaddr = newmm->start_stack; vaddr < (newmm->start_stack + newmm->stack_length); vaddr += PAGE_2M_SIZE)
+	// 	copy_pageTables(newmm, vaddr);
 
-	// 刷新快表，很多错误发生在快表没有及时刷新
-	flush_tlb();
+	// // 刷新快表，很多错误发生在快表没有及时刷新
+	// flush_tlb();
 out:
 	tsk->mm = newmm;
 	return error;
@@ -361,41 +358,41 @@ out:
 
 void exit_mm_fork(task_t *tsk)
 {
-	u64_t *tmp4 = nullptr, *tmp3 = nullptr, *tmp2 = nullptr;
-	u64_t tmp1 = 0;
-	size_t i = 0, j = 0, k = 0;
-	struct Page* p = nullptr;
-	if (tsk->flags & PF_VFORK)
-		return;
+	// u64_t *tmp4 = nullptr, *tmp3 = nullptr, *tmp2 = nullptr;
+	// u64_t tmp1 = 0;
+	// size_t i = 0, j = 0, k = 0;
+	// struct Page* p = nullptr;
+	// if (tsk->flags & PF_VFORK)
+	// 	return;
 
-	struct mm_struct *newmm = tsk->mm;
-	tmp4 = (u64_t*)newmm->pgd;
+	// mmdsc_t  *newmm = tsk->mm;
+	// tmp4 = (u64_t*)newmm->pgd;
 
-	for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
-		if((*(tmp4 + i)) & PAGE_Present) {
-			tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
+	// for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
+	// 	if((*(tmp4 + i)) & PAGE_Present) {
+	// 		tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
 			
-			for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
-				if((*(tmp3 + j)) & PAGE_Present) {
+	// 		for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
+	// 			if((*(tmp3 + j)) & PAGE_Present) {
 					
-					tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
-					for(k = 0; k < 512; k++) {
-							tmp1 = (*(tmp2 + k));
-							p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
-							assert(p->reference_count > 1);
-							p->PHY_address--;
-							// for parent_process's page_table privilege, give page_fault solve. 
-						}
-					kdelete(Phy_To_Virt(*tmp2), PAGE_4K_SIZE);
-				}
-			}
-			kdelete(Phy_To_Virt(*tmp3), PAGE_4K_SIZE);
-		}
-	}
-	kdelete(Phy_To_Virt(tsk->mm->pgd), PAGE_4K_SIZE); // release PMl4's memory
+	// 				tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
+	// 				for(k = 0; k < 512; k++) {
+	// 						tmp1 = (*(tmp2 + k));
+	// 						p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
+	// 						assert(p->reference_count > 1);
+	// 						p->PHY_address--;
+	// 						// for parent_process's page_table privilege, give page_fault solve. 
+	// 					}
+	// 				kdelete(Phy_To_Virt(*tmp2), PAGE_4K_SIZE);
+	// 			}
+	// 		}
+	// 		kdelete(Phy_To_Virt(*tmp3), PAGE_4K_SIZE);
+	// 	}
+	// }
+	// kdelete(Phy_To_Virt(tsk->mm->pgd), PAGE_4K_SIZE); // release PMl4's memory
 
-	if (tsk->mm != nullptr)
-		kdelete(tsk->mm, sizeof(struct mm_struct));
+	// if (tsk->mm != nullptr)
+	// 	kdelete(tsk->mm, sizeof(mmdsc_t ));
 }
 
 
@@ -466,11 +463,11 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 	
 	tsk->exit_code = 0;
 	tsk->priority = 2;
-	tsk->pid = global_pid++;
+	tsk->pid = (adr_t)&tsk;
 	tsk->preempt_count = 0; // 进程抢占计数值初始化
 	
-	tsk->gid = 64 + tsk->pid;
-	tsk->uid = 64 + tsk->pid;
+	tsk->gid = 0;
+	tsk->uid = 0;
 	tsk->umask = 0002;
 
 	// 拷贝信号
@@ -485,16 +482,12 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 	tsk->parent = current;
 	retval = -ENOMEM;
 
-	// copy flags
 	if (copy_flags(clone_flags, tsk))
 		goto copy_flags_fail;
-	// copy mm struct
 	if (copy_mm_fork(clone_flags, tsk))
 		goto copy_mm_fail;
-	// copy file struct
 	if (copy_files(clone_flags, tsk))
 		goto copy_files_fail;
-	// copy thread struct
 	if (copy_thread(clone_flags, stack_start, tsk->mm->stack_length, tsk, regs))
 		goto copy_thread_fail;
 	retval = tsk->pid;
@@ -604,38 +597,39 @@ void task_init()
 
 	vaddr = Phy_To_Virt((u64_t)Get_gdt() & (~0xfffUL));
 
-	// 内核层空间占用顶层页表的256个页表项
-	for (i = 256; i < 512; i++)
-	{
-		tmp = vaddr + i;
-		if (*tmp == 0)
-		{	
-			u64_t *virtual = knew(PAGE_4K_SIZE, 0);
-			memset(virtual, 0, PAGE_4K_SIZE);
-			set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
-			// set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
-		}
-	}
+	// 内核层空间占用顶层页表的256个页表项, i think 这些代码是多余的
+	// for (i = 256; i < 512; i++)
+	// {
+	// 	tmp = vaddr + i;
+	// 	if (*tmp == 0)
+	// 	{	
+	// 		u64_t *virtual = knew(PAGE_4K_SIZE, 0);
+	// 		memset(virtual, 0, PAGE_4K_SIZE);
+	// 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
+	// 		// set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
+	// 	}
+	// }
 
 	// 初始化内核进程的内存结构
-	init_mm.pgd = (pml4t_t *)Get_gdt();
+	initmm.start_code = memory_management_struct.start_code;
+	initmm.end_code = memory_management_struct.end_code;
 
-	init_mm.start_code = memory_management_struct.start_code;
-	init_mm.end_code = memory_management_struct.end_code;
+	initmm.start_data = (u64_t)&_data;
+	initmm.end_data = memory_management_struct.end_data;
 
-	init_mm.start_data = (u64_t)&_data;
-	init_mm.end_data = memory_management_struct.end_data;
+	initmm.start_rodata = (u64_t)&_rodata;
+	initmm.end_rodata = (u64_t)&_erodata;
 
-	init_mm.start_rodata = (u64_t)&_rodata;
-	init_mm.end_rodata = (u64_t)&_erodata;
+	initmm.start_brk = (u64_t)&_bss;
+	initmm.end_brk = (u64_t)&_ebss;
+	// 内核线程是不用堆的，他不用扩展堆内存目前，4GB一下皆可访问
+	initmm.start_brk = 0;
+	initmm.end_brk = current->addr_limit;
 
-	init_mm.start_brk = (u64_t)&_bss;
-	init_mm.end_brk = (u64_t)&_ebss;
+	initmm.start_bss = initmm.end_rodata;
+	initmm.end_bss = memory_management_struct.end_of_struct;
 
-	init_mm.start_brk = memory_management_struct.start_brk;
-	init_mm.end_brk = current->addr_limit;
-
-	init_mm.start_stack = _stack_start;
+	initmm.start_stack = _stack_start;
 
 	// sysenter指令：从特权级3跳转到特权级0，sysexit指令从0特权级跳转到3特权级
 	// RDX中保存RIP, RCX中保存RSP, 这是sysexit需要的

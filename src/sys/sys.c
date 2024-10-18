@@ -485,7 +485,7 @@ u64_t sys_fork()
 
 /**
  * @brief vfork()创建的子进程与父进程共享地址空间，当vfork函数执行后，子进程无法独立运行
- *  必须与exec类函数联合使用
+ *  应该与exec类函数联合使用
  * @return u64_t
  */
 u64_t sys_vfork()

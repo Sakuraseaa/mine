@@ -96,8 +96,6 @@ file_t *open_exec_file(str_t path)
 	filp->f_ops = dentry->dir_inode->f_ops;
 
 
-	current->i_exec = filp->dentry->dir_inode;
-
 	return filp;
 }
 
@@ -108,42 +106,42 @@ file_t *open_exec_file(str_t path)
  */
 static void virtual_map(u64_t user_addr){
 	
-	u64_t *tmp;
-	u64_t *virtual = nullptr;
+	// u64_t *tmp;
+	// u64_t *virtual = nullptr;
 	
-	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
-	tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	if (*tmp == 0) {
-		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
+	// // 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
+	// tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	// if (*tmp == 0) {
+	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
+	// 	memset(virtual, 0, PAGE_4K_SIZE);
+	// 	set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	// }
 	
-	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	if (*tmp == 0) {
-		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
+	// // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
+	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
+	// if (*tmp == 0) {
+	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
+	// 	memset(virtual, 0, PAGE_4K_SIZE);
+	// 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	// }
 	
-	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
-	// 申请用户占用的内存,填充页表, 填充PDT内存
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
-	if (*tmp == 0) {
-		virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
+	// // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
+	// // 申请用户占用的内存,填充页表, 填充PDT内存
+	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
+	// if (*tmp == 0) {
+	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
+	// 	memset(virtual, 0, PAGE_4K_SIZE);
+	// 	set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	// }
 
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
-	if (*tmp == 0)
-	{
-		virtual = knew(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
-		memset(virtual, 0, PAGE_4K_SIZE);
+	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
+	// if (*tmp == 0)
+	// {
+	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
+	// 	memset(virtual, 0, PAGE_4K_SIZE);
 
-		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Page_4K));
-	}
+	// 	set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Page_4K));
+	// }
 
 }
 
@@ -171,21 +169,22 @@ static bool segment_load(file_t* filp, u64_t offset, u64_t filesz, u64_t vaddr) 
         occupy_pages = (PAGE_4K_ALIGN(left_size) / PAGE_4K_SIZE) + 1;
     }
 
-    u64_t page_idx = 0;
+    // u64_t page_idx = 0;
     u64_t vaddr_page = vaddr_first_page;
-	do
-    { 	
-		if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) 
-			|| !(*pde_ptr(vaddr_page) & 0x01) || !(*pte_ptr(vaddr_page) & 0x01)) 
-		{
-			virtual_map(vaddr_page); // 映射地址，若虚拟地址对应的实际地址为空，则分配物理面
-		}
-        vaddr_page += PAGE_4K_SIZE;
-        page_idx++;
-    } while (page_idx < occupy_pages);
+	vma_new_vadrs(current->mm, vaddr_first_page, vaddr_first_page + occupy_pages * PAGE_4K_SIZE, offset, filesz, 0, 0);
+	// do
+    // { 	
+	// 	if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) 
+	// 		|| !(*pde_ptr(vaddr_page) & 0x01) || !(*pte_ptr(vaddr_page) & 0x01)) 
+	// 	{
+	// 		virtual_map(vaddr_page); // 映射地址，若虚拟地址对应的实际地址为空，则分配物理面
+	// 	}
+    //     vaddr_page += PAGE_4K_SIZE;
+    //     page_idx++;
+    // } while (page_idx < occupy_pages);
 	
-	filp->f_ops->lseek(filp, offset, SEEK_SET);
-	filp->f_ops->read(filp, (void *)vaddr_first_page, filesz, &filp->position);
+	// filp->f_ops->lseek(filp, offset, SEEK_SET);
+	// filp->f_ops->read(filp, (void *)vaddr_first_page, filesz, &filp->position);
 
     return true;
 }
@@ -224,35 +223,35 @@ static u64_t section_analysis(file_t *filp, Elf64_Ehdr* elf_header) {
 	filp->f_ops->lseek(filp, shstr_entry->sh_offset, SEEK_SET);
 	filp->f_ops->read(filp, s_name_table, shstr_entry->sh_size, &filp->position);
 	
-	//  为 mm_struct 文件赋值
-	struct mm_struct* mm = current->mm;
-	while(sect_idx < s_num) {
+	// //  为 mm_struct 文件赋值
+	// mmdsc_t * mm = current->mm;
+	// while(sect_idx < s_num) {
 	
-		str_t s_name = s_name_table + (section_header[sect_idx].sh_name);
-		if(!strcmp(s_name, ".text")) {
+	// 	str_t s_name = s_name_table + (section_header[sect_idx].sh_name);
+	// 	if(!strcmp(s_name, ".text")) {
 		
-			mm->start_code = section_header[sect_idx].sh_addr;
-			mm->end_code = mm->start_code + section_header[sect_idx].sh_size;
+	// 		mm->start_code = section_header[sect_idx].sh_addr;
+	// 		mm->end_code = mm->start_code + section_header[sect_idx].sh_size;
 		
-		} else if (!strcmp(s_name, ".rodata")) {
+	// 	} else if (!strcmp(s_name, ".rodata")) {
 		
-			mm->start_rodata = section_header[sect_idx].sh_addr;
-			mm->end_rodata = mm->start_rodata + section_header[sect_idx].sh_size;
+	// 		mm->start_rodata = section_header[sect_idx].sh_addr;
+	// 		mm->end_rodata = mm->start_rodata + section_header[sect_idx].sh_size;
 
-		} else if(!strcmp(s_name,".data")) {
+	// 	} else if(!strcmp(s_name,".data")) {
 		
-			mm->start_data = section_header[sect_idx].sh_addr;
-			mm->end_data = mm->start_data + section_header[sect_idx].sh_size;
+	// 		mm->start_data = section_header[sect_idx].sh_addr;
+	// 		mm->end_data = mm->start_data + section_header[sect_idx].sh_size;
 		
-		} else if(!strcmp(s_name, ".bss")) {
+	// 	} else if(!strcmp(s_name, ".bss")) {
 			
-			mm->start_bss = section_header[sect_idx].sh_addr;
-			mm->end_bss = mm->start_bss + section_header[sect_idx].sh_size;
+	// 		mm->start_bss = section_header[sect_idx].sh_addr;
+	// 		mm->end_bss = mm->start_bss + section_header[sect_idx].sh_size;
 		
-		}
+	// 	}
 		
-		sect_idx++;
-	}
+	// 	sect_idx++;
+	// }
 
 	return 0;
 }
@@ -337,7 +336,6 @@ static u64_t load(str_t pathname)
 // 被init调用,加载用户进程体，到用户空间800000
 u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 {
-  	// color_printk(RED, BLACK, "do_execve task is running\n");
 	u64_t stack_start_addr = TASK_SIZE + 1;
 	u64_t retval = 0;
 	s64_t pos = 0;
@@ -346,16 +344,17 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 	{
 		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
 		// 而新程序必须拥有独立的地址空间才能正常运行
-		current->mm = (struct mm_struct *)knew(sizeof(struct mm_struct), 0);
-		memset(current->mm, 0, sizeof(struct mm_struct));
-		current->mm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
-		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", current->mm->pgd);
-		memset(Phy_To_Virt(current->mm->pgd), 0, PAGE_4K_SIZE / 2);
-		// copy kernel space
-		memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(current->mm->pgd) + 256, PAGE_4K_SIZE / 2);
+		current->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
+		
+		// 进程相关内存初始化三大步
+		mmadrsdsc_t_init(current->mm);
+		kvma_inituserspace_virmemadrs(&current->mm->msd_virmemadrs);
+		hal_mmu_init(&current->mm->msd_mmu);
+
+		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", current->mm->msd_mmu.mud_cr3);
 
 		current->flags &= ~PF_VFORK;
-		__asm__ __volatile__("movq %0, %%cr3 \n\t" ::"r"(current->mm->pgd): "memory");  
+		hal_mmu_load(&initmm.msd_mmu);
 	}
 
 	if((retval = load(name)) == -1) {
@@ -372,8 +371,8 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 
 	// 映射栈地址, 目前刚启动为栈分配2MB （有点多？）
 	// issue:: 栈空气不够了，如何扩充？ （缺页中断！）
-	virtual_map(stack_start_addr - PAGE_4K_SIZE);
-
+	vma_new_vadrs(current->mm, stack_start_addr - PAGE_4K_SIZE, PAGE_4K_SIZE, 0, 0, 0, 0);
+	
 	// 设置用户栈 起始地址
 	current->mm->start_stack = stack_start_addr - PAGE_4K_SIZE;
 	current->mm->stack_length = PAGE_4K_SIZE;
@@ -413,7 +412,7 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 	regs->r11 = stack_start_addr; // RSP
 	regs->rax = 1;
 	
-	flush_tlb();
+	// flush_tlb();
 
 	// go to ret_system_call
 	return retval;

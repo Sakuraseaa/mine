@@ -47,7 +47,7 @@ void mmudsc_t_init(mmudsc_t* init)
 
 msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
 {
-    tdirearr_t* tdirearr = nullptr;
+    L4_ptarr_t* tdirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
     msadsc_t* msa = nullptr;
     if(nullptr == mmulocked) {
@@ -59,7 +59,7 @@ msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
 		return nullptr;
 	}
 
-	tdirearr = (tdirearr_t*)msadsc_ret_vaddr(msa);
+	tdirearr = (L4_ptarr_t*)msadsc_ret_vaddr(msa);
 
     tdirearr_t_init(tdirearr);
 
@@ -70,7 +70,7 @@ msadsc_t* mmu_new_tdirearr(mmudsc_t* mmulocked)
     return msa;
 }
 
-bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa)
+bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, L4_ptarr_t* tdirearr, msadsc_t* msa)
 {
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
@@ -116,7 +116,7 @@ bool_t mmu_del_tdirearr(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa
 
 msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
 {
-    sdirearr_t* sdirearr = nullptr;
+    L3_ptarr_t* sdirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
     msadsc_t* msa = nullptr;
     if(nullptr == mmulocked)
@@ -130,7 +130,7 @@ msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
 		return nullptr;
 	}
 
-	sdirearr = (sdirearr_t*)msadsc_ret_vaddr(msa);
+	sdirearr = (L3_ptarr_t*)msadsc_ret_vaddr(msa);
 
     sdirearr_t_init(sdirearr);
 
@@ -139,7 +139,7 @@ msadsc_t* mmu_new_sdirearr(mmudsc_t* mmulocked)
     return msa;
 }
 
-bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa)
+bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, L3_ptarr_t* sdirearr, msadsc_t* msa)
 {
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
@@ -185,7 +185,7 @@ bool_t mmu_del_sdirearr(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa
 
 msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
 {
-    idirearr_t* idirearr = nullptr;
+    L2_ptarr_t* idirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
     msadsc_t* msa = nullptr;
     if(nullptr == mmulocked)
@@ -199,7 +199,7 @@ msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
 		return nullptr;
 	}
 
-	idirearr = (idirearr_t*)msadsc_ret_vaddr(msa);
+	idirearr = (L2_ptarr_t*)msadsc_ret_vaddr(msa);
 
     idirearr_t_init(idirearr);
 
@@ -209,7 +209,7 @@ msadsc_t* mmu_new_idirearr(mmudsc_t* mmulocked)
     return msa;
 }
 
-bool_t mmu_del_idirearr(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa)
+bool_t mmu_del_idirearr(mmudsc_t* mmulocked, L2_ptarr_t* idirearr, msadsc_t* msa)
 {
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
@@ -255,7 +255,7 @@ bool_t mmu_del_idirearr(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa
 
 msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
 {
-    mdirearr_t* mdirearr = nullptr;
+    L1_ptarr_t* mdirearr = nullptr;
 	u64_t pages = 1, retpnr = 0;
     msadsc_t* msa = nullptr;
     if(nullptr == mmulocked)
@@ -269,7 +269,7 @@ msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
 		return nullptr;
 	}
 
-	mdirearr = (mdirearr_t*)msadsc_ret_vaddr(msa);
+	mdirearr = (L1_ptarr_t*)msadsc_ret_vaddr(msa);
 	mdirearr_t_init(mdirearr);
     
 	list_add_to_behind(&mmulocked->mud_mdirhead, &msa->md_list);
@@ -278,7 +278,7 @@ msadsc_t* mmu_new_mdirearr(mmudsc_t* mmulocked)
     return msa;
 }
 
-bool_t mmu_del_mdirearr(mmudsc_t* mmulocked, mdirearr_t* mdirearr, msadsc_t* msa)
+bool_t mmu_del_mdirearr(mmudsc_t* mmulocked, L1_ptarr_t* mdirearr, msadsc_t* msa)
 {
 	list_h_t* pos;
 	msadsc_t* tmpmsa;
@@ -322,10 +322,10 @@ bool_t mmu_del_mdirearr(mmudsc_t* mmulocked, mdirearr_t* mdirearr, msadsc_t* msa
 	return FALSE;
 }
 
-adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs)
+adr_t mmu_untransform_msa(mmudsc_t* mmulocked, L1_ptarr_t* mdirearr, adr_t vadrs)
 {
 	uint_t mindex;
-	mdire_t mdire;
+	L1_pte_t mdire;
 	adr_t retadr;
 	if(nullptr == mmulocked || nullptr == mdirearr)
 	{
@@ -346,7 +346,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs
 	return retadr; 
 }
 
-bool_t mmu_transform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs, adr_t padrs, u64_t flags)
+bool_t mmu_transform_msa(mmudsc_t* mmulocked, L1_ptarr_t* mdirearr, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	uint_t mindex;	
 	if(nullptr == mmulocked || nullptr == mdirearr)
@@ -360,11 +360,11 @@ bool_t mmu_transform_msa(mmudsc_t* mmulocked, mdirearr_t* mdirearr, adr_t vadrs,
 	return TRUE;
 }
 
-bool_t mmu_untransform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t* msa, adr_t vadrs)
+bool_t mmu_untransform_mdire(mmudsc_t* mmulocked, L2_ptarr_t* idirearr, msadsc_t* msa, adr_t vadrs)
 {
 	uint_t iindex;
-	idire_t idire;
-	mdirearr_t* mdirearr = nullptr;
+	L2_pte_t idire;
+	L1_ptarr_t* mdirearr = nullptr;
 	if(nullptr == mmulocked || nullptr == idirearr)
 	{
 		return FALSE;
@@ -394,13 +394,13 @@ bool_t mmu_untransform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, msadsc_t
 	return TRUE; 
 }
 
-mdirearr_t* mmu_transform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, adr_t vadrs, u64_t flags, msadsc_t** outmsa)
+L1_ptarr_t* mmu_transform_mdire(mmudsc_t* mmulocked, L2_ptarr_t* idirearr, adr_t vadrs, u64_t flags, msadsc_t** outmsa)
 {
 	uint_t iindex;
-	idire_t idire;
+	L2_pte_t idire;
 	adr_t dire;
 	msadsc_t* msa = nullptr;
-	mdirearr_t* mdirearr = nullptr;
+	L1_ptarr_t* mdirearr = nullptr;
 	if(nullptr == mmulocked || nullptr == idirearr || nullptr == outmsa)
 	{
 		return nullptr;
@@ -424,7 +424,7 @@ mdirearr_t* mmu_transform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, adr_t
 	}
 
 	dire = msadsc_ret_addr(msa);
-	mdirearr = (mdirearr_t*)(phyadr_to_viradr(dire));
+	mdirearr = (L1_ptarr_t*)(phyadr_to_viradr(dire));
 	idirearr->ide_arr[iindex].i_entry = (((u64_t)dire) | flags);
 
 	*outmsa = msa;
@@ -432,11 +432,11 @@ mdirearr_t* mmu_transform_mdire(mmudsc_t* mmulocked, idirearr_t* idirearr, adr_t
 	return mdirearr;
 }
 
-bool_t mmu_untransform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t* msa, adr_t vadrs)
+bool_t mmu_untransform_idire(mmudsc_t* mmulocked, L3_ptarr_t* sdirearr, msadsc_t* msa, adr_t vadrs)
 {
 	uint_t sindex;
-	sdire_t sdire;
-	idirearr_t* idirearr = nullptr;
+	L3_pte_t sdire;
+	L2_ptarr_t* idirearr = nullptr;
 	if(nullptr == mmulocked || nullptr == sdirearr)
 	{
 		return FALSE;
@@ -466,13 +466,13 @@ bool_t mmu_untransform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, msadsc_t
 	return TRUE; 
 }
 
-idirearr_t* mmu_transform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, adr_t vadrs, u64_t flags, msadsc_t** outmsa)
+L2_ptarr_t* mmu_transform_idire(mmudsc_t* mmulocked, L3_ptarr_t* sdirearr, adr_t vadrs, u64_t flags, msadsc_t** outmsa)
 {
 	uint_t sindex;
-	sdire_t sdire;
+	L3_pte_t sdire;
 	adr_t dire;	
 	msadsc_t* msa = nullptr;	
-	idirearr_t* idirearr = nullptr;
+	L2_ptarr_t* idirearr = nullptr;
 	if(nullptr == mmulocked || nullptr == sdirearr || nullptr == outmsa)
 	{
 		return nullptr;
@@ -496,7 +496,7 @@ idirearr_t* mmu_transform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, adr_t
 	}
 
 	dire = msadsc_ret_addr(msa);
-	idirearr = (idirearr_t*)(phyadr_to_viradr(dire));
+	idirearr = (L2_ptarr_t*)(phyadr_to_viradr(dire));
 	sdirearr->sde_arr[sindex].s_entry = (((u64_t)dire) | flags);
 
 	*outmsa = msa;
@@ -504,11 +504,11 @@ idirearr_t* mmu_transform_idire(mmudsc_t* mmulocked, sdirearr_t* sdirearr, adr_t
 	return idirearr;
 }
 
-bool_t mmu_untransform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t* msa, adr_t vadrs)
+bool_t mmu_untransform_sdire(mmudsc_t* mmulocked, L4_ptarr_t* tdirearr, msadsc_t* msa, adr_t vadrs)
 {
 	uint_t tindex;
-	tdire_t tdire;
-	sdirearr_t* sdirearr = nullptr;
+	L4_pte_t tdire;
+	L3_ptarr_t* sdirearr = nullptr;
 	if(nullptr == mmulocked || nullptr == tdirearr)
 	{
 		return FALSE;
@@ -538,12 +538,12 @@ bool_t mmu_untransform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, msadsc_t
 	return TRUE; 
 }
 
-sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t vadrs, u64_t flags, msadsc_t** outmsa)
+L3_ptarr_t* mmu_transform_sdire(mmudsc_t* mmulocked, L4_ptarr_t* tdirearr, adr_t vadrs, u64_t flags, msadsc_t** outmsa)
 {
 	uint_t tindex;
-	tdire_t tdire;
+	L4_pte_t tdire;
 	adr_t dire;
-	sdirearr_t* sdirearr = nullptr;
+	L3_ptarr_t* sdirearr = nullptr;
 	msadsc_t* msa = nullptr;
 	if (nullptr == mmulocked || nullptr == tdirearr || nullptr == outmsa) {
 		return nullptr;
@@ -566,7 +566,7 @@ sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t
 	}
 
 	dire = msadsc_ret_addr(msa);
-	sdirearr = (sdirearr_t*)(phyadr_to_viradr(dire));
+	sdirearr = (L3_ptarr_t*)(phyadr_to_viradr(dire));
 	tdirearr->tde_arr[tindex].t_entry = (((u64_t)dire) | flags);
 
 	*outmsa = msa;
@@ -577,10 +577,10 @@ sdirearr_t* mmu_transform_sdire(mmudsc_t* mmulocked, tdirearr_t* tdirearr, adr_t
 bool_t hal_mmu_transform_core(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	bool_t rets = FALSE;
-	tdirearr_t* tdirearr = nullptr;
-	sdirearr_t* sdirearr = nullptr;
-	idirearr_t* idirearr = nullptr;
-	mdirearr_t* mdirearr = nullptr;
+	L4_ptarr_t* tdirearr = nullptr;
+	L3_ptarr_t* sdirearr = nullptr;
+	L2_ptarr_t* idirearr = nullptr;
+	L1_ptarr_t* mdirearr = nullptr;
 	msadsc_t* smsa = nullptr;
 	msadsc_t* imsa = nullptr;
 	msadsc_t* mmsa = nullptr;
@@ -635,6 +635,7 @@ out:
 	return rets;
 }
 
+/* 在页表mmu中 ，增加物理地址padrs对虚拟地址vadrs转换规则*/
 bool_t hal_mmu_transform(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	if(nullptr == mmu)
@@ -644,10 +645,10 @@ bool_t hal_mmu_transform(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t flags)
 	return hal_mmu_transform_core(mmu, vadrs, padrs, flags);
 }
 
-adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
+adr_t mmu_find_msaadr(L1_ptarr_t* mdirearr, adr_t vadrs)
 {
 	uint_t mindex;
-	mdire_t dire;
+	L1_pte_t dire;
 	if (nullptr == mdirearr) {
 		return NULL;
 	}
@@ -664,11 +665,10 @@ adr_t mmu_find_msaadr(mdirearr_t* mdirearr, adr_t vadrs)
 	return mmumsa_ret_padr(&dire);
 }
 
-
-mdirearr_t* mmu_find_mdirearr(idirearr_t* idirearr, adr_t vadrs)
+L1_ptarr_t* mmu_find_mdirearr(L2_ptarr_t* idirearr, adr_t vadrs)
 {
 	uint_t iindex;
-	idire_t dire;
+	L2_pte_t dire;
 	if(nullptr == idirearr)
 	{
 		return nullptr;
@@ -686,11 +686,10 @@ mdirearr_t* mmu_find_mdirearr(idirearr_t* idirearr, adr_t vadrs)
 	return idire_ret_mdirearr(&dire);
 }
 
-
-idirearr_t* mmu_find_idirearr(sdirearr_t* sdirearr, adr_t vadrs)
+L2_ptarr_t* mmu_find_idirearr(L3_ptarr_t* sdirearr, adr_t vadrs)
 {
 	uint_t sindex;
-	sdire_t dire;
+	L3_pte_t dire;
 	if(nullptr == sdirearr)
 	{
 		return nullptr;
@@ -708,21 +707,19 @@ idirearr_t* mmu_find_idirearr(sdirearr_t* sdirearr, adr_t vadrs)
 	return sdire_ret_idirearr(&dire);
 }
 
-sdirearr_t* mmu_find_sdirearr(tdirearr_t* tdirearr, adr_t vadrs)
+L3_ptarr_t* mmu_find_sdirearr(L4_ptarr_t* tdirearr, adr_t vadrs)
 {
 	uint_t tindex;
-	tdire_t dire;
-	if(nullptr == tdirearr)
-	{
+	L4_pte_t dire;
+	if(nullptr == tdirearr) {
 		return nullptr;
 	}
-
+	
 	tindex = mmu_tdire_index(vadrs);
 
 	dire = tdirearr->tde_arr[tindex];
 
-	if(sdire_is_have(&dire) == FALSE)
-	{
+	if(sdire_is_have(&dire) == FALSE) {
 		return nullptr;
 	}
 
@@ -732,9 +729,9 @@ sdirearr_t* mmu_find_sdirearr(tdirearr_t* tdirearr, adr_t vadrs)
 adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 {
 	adr_t retadr;
-	sdirearr_t* sdirearr;
-	idirearr_t* idirearr;
-	mdirearr_t* mdirearr;
+	L3_ptarr_t* sdirearr;
+	L2_ptarr_t* idirearr;
+	L1_ptarr_t* mdirearr;
 //	knl_spinlock(&mmu->mud_lock);
 	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
 	if(nullptr == sdirearr)
@@ -769,15 +766,16 @@ out:
 	return retadr;
 }
 
+/* 在页表mmu中 ，取消vadrs对应的转换规则*/
 adr_t hal_mmu_untransform(mmudsc_t* mmu, adr_t vadrs)
 {
-	if(nullptr == mmu)
-	{
+	if (nullptr == mmu) {
 		return EPARAM;
 	}
 	return hal_mmu_untransform_core(mmu, vadrs);
 }
 
+/* 加载页表 */
 void hal_mmu_load(mmudsc_t* mmu)
 {
 	if(nullptr == mmu) {
@@ -798,6 +796,7 @@ out:
 	return;
 }
 
+/* 刷新整个页表缓存 */
 void hal_mmu_refresh()
 {
 	cr3s_t cr3;
@@ -828,7 +827,7 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 	pcr3 = (adr_t)(cr3.c3s_c3sflgs.c3s_plm4a << 12);
 	vcr3 = phyadr_to_viradr(pcr3);
 
-	memcpy((void*)vcr3, (void*)mmu->mud_tdirearr, sizeof(tdirearr_t));
+	memcpy((void*)vcr3, (void*)mmu->mud_tdirearr, sizeof(L4_ptarr_t));
 	
 	mmu->mud_cr3.c3s_entry = (u64_t)viradr_to_phyadr((adr_t)mmu->mud_tdirearr);
 	mmu->mud_tdirearr->tde_arr[0].t_entry = 0;
@@ -926,7 +925,7 @@ bool_t mmu_clean_tdirearrmsas(mmudsc_t* mmulocked)
 	}
 	return TRUE;
 }
-
+/* 回收这个页表占用的内存*/
 bool_t hal_mmu_clean(mmudsc_t* mmu)
 {
 	bool_t  rets = FALSE;
@@ -999,4 +998,3 @@ void dump_mmu(mmudsc_t* dump)
 	// kprint("mmudsc_t.mud_mdirhead:%x\n", list_is_empty_careful(&dump->mud_mdirhead));
 	return;
 }
-

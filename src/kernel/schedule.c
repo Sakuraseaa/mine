@@ -1,30 +1,30 @@
 #include "toolkit.h"
 #include "arch_x86kit.h"
 #include "kernelkit.h"
-schedule_t task_schedule;
+schedule_t task_schedule_table;
 extern void switch_to(task_t *prev, task_t *next);
 task_t *get_next_task()
 {
 	task_t *tsk = nullptr;
 	// 就绪队列为空，返回内核主线程, 这将会是一个空转的线程
-	if (list_is_empty(&task_schedule.task_queue.list))
+	if (list_is_empty(&task_schedule_table.task_queue.list))
 		return &init_task_union.task;
 
 	//  从就绪队列中得到一个进程
-	tsk = container_of(list_next(&task_schedule.task_queue.list), task_t, list);
+	tsk = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
 	list_del(&tsk->list);
-	task_schedule.running_task_count -= 1;
+	task_schedule_table.running_task_count -= 1;
 	return tsk;
 }
 
 // 加入一个任务到就绪队列, 该队列按照虚拟运行时间由小到大进行排序
 void insert_task_queue(task_t *tsk)
 {
-	task_t *tmp = container_of(list_next(&task_schedule.task_queue.list), task_t, list);
+	task_t *tmp = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
 	if (tsk == &init_task_union.task)
 		return;
 
-	if (list_is_empty(&task_schedule.task_queue.list))
+	if (list_is_empty(&task_schedule_table.task_queue.list))
 	{
 	}
 	else
@@ -33,7 +33,7 @@ void insert_task_queue(task_t *tsk)
 			tmp = container_of(list_next(&tmp->list), task_t, list);
 	}
 	list_add_to_before(&tmp->list, &tsk->list);
-	task_schedule.running_task_count += 1;
+	task_schedule_table.running_task_count += 1;
 }
 
 
@@ -58,20 +58,21 @@ void schedule()
 		//	color_printk(WHITE, BLACK, "%d\n", tsk->gid);
 
 		// 按照进程优先级，给即将执行的进程计算PCB
-		if (!task_schedule.CPU_exec_task_jiffies)
+		if (!task_schedule_table.CPU_exec_task_jiffies)
 			switch (tsk->priority)
 			{
 			case 0:
 			case 1:
-				task_schedule.CPU_exec_task_jiffies = 4 / task_schedule.running_task_count;
+				task_schedule_table.CPU_exec_task_jiffies = 4 / task_schedule_table.running_task_count;
 				break;
 			case 2:
 			default:
-				task_schedule.CPU_exec_task_jiffies = 4 / task_schedule.running_task_count * 3;
+				task_schedule_table.CPU_exec_task_jiffies = 4 / task_schedule_table.running_task_count * 3;
 				break;
 			}
 		// color_printk(YELLOW, BLACK, "#schedule:%ld, pid:%ld(%ld)=>>pid:%ld(%ld)#\n",
 		// 			 jiffies, current->pid, current->vrun_time, tsk->pid, tsk->vrun_time);
+		task_schedule_table.is_running = tsk;
 		switch_mm(current, tsk);
 		switch_to(current, tsk); // 进程切换
 	}
@@ -79,16 +80,16 @@ void schedule()
 	{ // 当前进程的虚拟运行时间小于待执行进程，不切换继续运行本进程
 		insert_task_queue(tsk);
 		// 根据进程的优先级填充处理器时间片
-		if (!task_schedule.CPU_exec_task_jiffies)
+		if (!task_schedule_table.CPU_exec_task_jiffies)
 			switch (current->priority)
 			{
 			case 0:
 			case 1:
-				task_schedule.CPU_exec_task_jiffies = 4 / task_schedule.running_task_count;
+				task_schedule_table.CPU_exec_task_jiffies = 4 / task_schedule_table.running_task_count;
 				break;
 			case 2:
 			default:
-				task_schedule.CPU_exec_task_jiffies = 4 / task_schedule.running_task_count * 3;
+				task_schedule_table.CPU_exec_task_jiffies = 4 / task_schedule_table.running_task_count * 3;
 				break;
 			}
 	}
@@ -97,16 +98,17 @@ void schedule()
 
 void schedule_init()
 {
-	memset(&task_schedule, 0, sizeof(schedule_t));
-	list_init(&task_schedule.task_queue.list);
+	memset(&task_schedule_table, 0, sizeof(schedule_t));
+	list_init(&task_schedule_table.task_queue.list);
 
 	// 给内核主程序赋值最大值, 主程序无法被动的 被schedule调度
-	task_schedule.task_queue.vrun_time = 0x7fffffffffffffff;
+	task_schedule_table.task_queue.vrun_time = 0x7fffffffffffffff;
 
 	// 这是把内核主程序作为一个特殊进程囊括进入就绪队列的缘故。当内核主程序为操作系统创建出第一个进程后
 	// 他将变为一个空闲进程，其作用是循环执行一个特殊的指令让系统保存低功耗待机，待到进程准备就绪队列
 	// 为空时，处理器便会去执行空闲进程
-	task_schedule.running_task_count = 1;
+	task_schedule_table.running_task_count = 1;
 
-	task_schedule.CPU_exec_task_jiffies = 4;
+	task_schedule_table.CPU_exec_task_jiffies = 4;
+	task_schedule_table.is_running = (task_t*)&init_task_union;
 }

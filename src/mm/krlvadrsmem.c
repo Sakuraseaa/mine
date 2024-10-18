@@ -1,10 +1,10 @@
 #include "mmkit.h"
-
+#include "kernelkit.h"
 extern mmgro_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
 void knl_count_kvmemcbox(kvmemcbox_t* kmbox);
 bool_t knl_put_kvmemcbox(kvmemcbox_t* kmbox);
-bool_t vma_del_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr);
+bool_t vma_del_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr);
 kvirmemadrs_t krlvirmemadrs;
 
 void teststc_t_init(teststc_t *initp)
@@ -126,6 +126,8 @@ void kmvarsdsc_t_init(kmvarsdsc_t *initp)
 	initp->kva_end = 0;
 	initp->kva_kvmbox = nullptr;
 	initp->kva_kvmcobj = nullptr;
+	initp->kva_fileposition = 0;
+	initp->kva_filesize = 0;
 	return;
 }
 void kvmcobjmgr_t_init(kvmcobjmgr_t* initp)
@@ -282,7 +284,7 @@ bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 	return TRUE;
 }
 
-void mmadrsdsc_t_init(mmadrsdsc_t* initp)
+void mmadrsdsc_t_init(mmdsc_t* initp)
 {
 	if (nullptr == initp) {
 		return;
@@ -296,30 +298,27 @@ void mmadrsdsc_t_init(mmadrsdsc_t* initp)
 	// krlsem_set_sem(&initp->msd_sem, SEM_FLG_MUTEX, SEM_MUTEX_ONE_LOCK);
 	mmudsc_t_init(&initp->msd_mmu); // 初始化相关页表
 	virmemadrs_t_init(&initp->msd_virmemadrs); // 初始化虚拟地址空间结构体
-	initp->msd_stext = 0;
-	initp->msd_etext = 0;
-	initp->msd_sdata = 0;
-	initp->msd_edata = 0;
-	initp->msd_sbss = 0;
-	initp->msd_ebss = 0;
-	initp->msd_sbrk = 0;
-	initp->msd_ebrk = 0;
+	initp->start_code = initp->end_code = 0;
+	initp->start_data = initp->end_data = 0;
+	initp->start_rodata = initp->end_rodata = 0;
+	initp->start_bss = initp->end_bss = 0;
+	initp->start_brk = initp->end_brk = 0;
+	initp->stack_length = initp->start_stack = 0;
 	return; 
 }
 
-mmadrsdsc_t initmmadrsdsc; // 类似与 mm_struct结构体
 void init_kvirmemadrs()
 {
-	mmadrsdsc_t_init(&initmmadrsdsc);
+	mmadrsdsc_t_init(&initmm);
 	
 	kvirmemadrs_t_init(&krlvirmemadrs);
 	kvma_seting_kvirmemadrs(&krlvirmemadrs);
 	
 	// 初始化整虚拟地址空间管理结构体
-	kvma_inituserspace_virmemadrs(&initmmadrsdsc.msd_virmemadrs);
+	kvma_inituserspace_virmemadrs(&initmm.msd_virmemadrs);
 	
-	hal_mmu_init(&initmmadrsdsc.msd_mmu);
-	hal_mmu_load(&initmmadrsdsc.msd_mmu);
+	hal_mmu_init(&initmm.msd_mmu);
+	hal_mmu_load(&initmm.msd_mmu);
 	return;
 }
 
@@ -418,7 +417,7 @@ kmvarsdsc_t *vma_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vas
 }
 
 // B 分配虚拟地址区间核心逻辑
-adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vaslimits, u32_t vastype)
+adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize,  u64_t file_position, u64_t file_size, u64_t vaslimits, u32_t vastype)
 {
 	adr_t retadrs = NULL;
 	kmvarsdsc_t *newkmvd = nullptr, *currkmvd = nullptr;
@@ -434,10 +433,12 @@ adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vas
 
 	/* 进行虚拟地址区间进行检查看能否复用在这个结构之后直接划分虚拟内存，而不用申请新的虚拟区间结构体 */
 	if (((NULL == start) || (start == currkmvd->kva_end)) && 
-		(vaslimits == currkmvd->kva_limits) && (vastype == currkmvd->kva_maptype))
+		(vaslimits == currkmvd->kva_limits) && (vastype == currkmvd->kva_maptype)
+		&& (file_position == currkmvd->kva_fileposition + currkmvd->kva_filesize))
 	{
 		retadrs = currkmvd->kva_end;		// 能复用的话，当前虚拟地址区间的结束地址返回
 		currkmvd->kva_end += vassize;		// 扩展当前虚拟地址区间的结束地址为分配虚拟地址区间的大小
+		currkmvd->kva_filesize += file_size;
 		vma->vs_currkmvdsc = currkmvd;
 		goto out;
 	}
@@ -460,6 +461,8 @@ adr_t vma_new_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vas
 	newkmvd->kva_limits = vaslimits;
 	newkmvd->kva_maptype = vastype;
 	newkmvd->kva_mcstruct = vma;
+	newkmvd->kva_fileposition = file_position;
+	newkmvd->kva_filesize = file_size;
 	vma->vs_currkmvdsc = newkmvd;
 	
 	/* 将新的虚拟地址区间加入到virmemadrs_t结构中 */
@@ -478,7 +481,19 @@ out:
 }
 
 // A 分配虚拟地址区间的接口
-adr_t vma_new_vadrs(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vaslimits, u32_t vastype)
+/**
+ * @brief 申请一段虚拟区间
+ * 
+ * @param mm 进程的空间管理结构体
+ * @param start 虚拟区间起始地址
+ * @param vassize 虚拟区间长度
+ * @param file_position 虚拟区间对应的在文件中的位置
+ * @param file_size 虚拟区间对应在文件的长度
+ * @param vaslimits 
+ * @param vastype 
+ * @return adr_t 
+ */
+adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, u64_t file_position, u64_t file_size, u64_t vaslimits, u32_t vastype)
 {
 	if (nullptr == mm || 1 > vassize) {
 		return NULL;
@@ -493,7 +508,7 @@ adr_t vma_new_vadrs(mmadrsdsc_t *mm, adr_t start, size_t vassize, u64_t vaslimit
 		}
 	}
 
-	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vaslimits, vastype);
+	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), file_position, file_size, vaslimits, vastype);
 }
 
 kmvarsdsc_t *vma_del_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize)
@@ -550,7 +565,7 @@ void vma_del_set_endcurrkmvd(virmemadrs_t *vmalocked, kmvarsdsc_t *del)
 	return;
 }
 
-bool_t vma_del_unmapping_phyadrs(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start, adr_t end)
+bool_t vma_del_unmapping_phyadrs(mmdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start, adr_t end)
 {
 	adr_t phyadrs;
 	bool_t rets = TRUE;
@@ -572,7 +587,7 @@ bool_t vma_del_unmapping_phyadrs(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start
 	return rets;
 }
 
-bool_t vma_del_unmapping(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start, size_t vassize)
+bool_t vma_del_unmapping(mmdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start, size_t vassize)
 {
 	adr_t end;
 
@@ -586,7 +601,7 @@ bool_t vma_del_unmapping(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t start, size_t
 	return vma_del_unmapping_phyadrs(mm, kmvd, start, end);
 }
 
-bool_t vma_del_vadrs_core(mmadrsdsc_t *mm, adr_t start, size_t vassize)
+bool_t vma_del_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize)
 {
 	bool_t rets = FALSE;
 	kmvarsdsc_t *newkmvd = nullptr, *delkmvd = nullptr;
@@ -682,7 +697,7 @@ out:
 
 
 // 释放虚拟地址空间的接口
-bool_t vma_del_vadrs(mmadrsdsc_t *mm, adr_t start, size_t vassize)
+bool_t vma_del_vadrs(mmdsc_t *mm, adr_t start, size_t vassize)
 {	
 	// 对参数进行检查
 	if (nullptr == mm || 1 > vassize || nullptr == (void*)start)
@@ -696,7 +711,7 @@ bool_t vma_del_vadrs(mmadrsdsc_t *mm, adr_t start, size_t vassize)
 
 void test_vadr()
 {
-	adr_t vadr = vma_new_vadrs(&initmmadrsdsc, 0, 0x1000, 0, 0);
+	adr_t vadr = vma_new_vadrs(&initmm, 0, 0x1000, 0, 0, 0, 0);
 	if (nullptr == (void*)vadr) {
 		color_printk(RED, BLACK, "分配虚拟地址空间失败\n");
 	}
@@ -870,7 +885,7 @@ out:
 	return rets;
 } 
 
-bool_t vma_del_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr)
+bool_t vma_del_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr)
 {
 	bool_t rets = FALSE;
 	msadsc_t *tmpmsa = nullptr, *delmsa = nullptr;
@@ -925,7 +940,7 @@ out:
 	return rets;
 }
 
-msadsc_t *vma_new_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox)
+msadsc_t *vma_new_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox)
 {
 	u64_t pages = 1, retpnr = 0;
 	msadsc_t *msa = nullptr;
@@ -948,7 +963,7 @@ msadsc_t *vma_new_usermsa(mmadrsdsc_t *mm, kvmemcbox_t *kmbox)
 	return msa;
 }
 
-adr_t vma_map_msa_fault(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t flags)
+adr_t vma_map_msa_fault(mmdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t flags)
 {
     msadsc_t *usermsa;
     adr_t phyadrs = NULL;
@@ -974,7 +989,7 @@ adr_t vma_map_msa_fault(mmadrsdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t 
 }
 
 //接口函数
-adr_t vma_map_phyadrs(mmadrsdsc_t *mm, kmvarsdsc_t *kmvd, adr_t vadrs, u64_t flags)
+adr_t vma_map_phyadrs(mmdsc_t *mm, kmvarsdsc_t *kmvd, adr_t vadrs, u64_t flags)
 {
     kvmemcbox_t *kmbox = kmvd->kva_kvmbox;
     if (nullptr == kmbox) {
@@ -1026,60 +1041,4 @@ kvmemcbox_t *vma_map_retn_kvmemcbox(kmvarsdsc_t *kmvd)
     //指向这个新建的kvmemcbox_t结构
     kmvd->kva_kvmbox = kmbox;
     return kmvd->kva_kvmbox;
-}
-
-sint_t vma_map_fairvadrs_core(mmadrsdsc_t *mm, adr_t vadrs)
-{
-    sint_t rets = FALSE;
-    adr_t phyadrs = NULL;
-    virmemadrs_t *vma = &mm->msd_virmemadrs;
-    kmvarsdsc_t *kmvd = nullptr;
-    kvmemcbox_t *kmbox = nullptr;
-    // knl_spinlock(&vma->vs_lock);
-    //查找对应的kmvarsdsc_t结构, 没有找到. 说明虚拟地址不存在，直接返回
-    kmvd = vma_map_find_kmvarsdsc(vma, vadrs);
-    if (nullptr == kmvd) {
-        rets = -EFAULT;
-        goto out;
-    }
-    //返回kmvarsdsc_t结构下对应kvmemcbox_t结构
-    kmbox = vma_map_retn_kvmemcbox(kmvd);
-    if (nullptr == kmbox) {
-        rets = -ENOMEM;
-        goto out;
-    }
-    //分配物理内存页面并建立MMU页表
-    phyadrs = vma_map_phyadrs(mm, kmvd, vadrs, (0 | PML4E_US | PML4E_RW | PML4E_P));
-    if (NULL == phyadrs) {
-        rets = -ENOMEM;
-        goto out;
-    }
-    rets = EOK;
-	// 需要一个文件与虚拟区间的结构体，监测到该结构体已经被分配在execv中，这里去加载相应的文件内容
-out:
- //   knl_spinunlock(&vma->vs_lock);
-    return rets;
-}
-
-//缺页异常处理接口
-sint_t vma_map_fairvadrs(mmadrsdsc_t *mm, adr_t vadrs)
-{//对参数进行检查
-    if ((0x1000 > vadrs) || (USER_VIRTUAL_ADDRESS_END < vadrs) || (nullptr == mm))
-    {
-        return -EPARAM;
-    }
-    //进行缺页异常的核心处理
-    return vma_map_fairvadrs_core(mm, vadrs);
-}
-
-//由异常分发器调用的接口
-sint_t krluserspace_accessfailed(adr_t fairvadrs)
-{//这里应该获取当前进程的mm，但是现在我们没有进程，才initmmadrsdsc代替
-    mmadrsdsc_t* mm = &initmmadrsdsc;
-    //应用程序的虚拟地址不可能大于USER_VIRTUAL_ADDRESS_END
-    if(USER_VIRTUAL_ADDRESS_END < fairvadrs)
-    {
-        return -EACCES;
-    }
-    return vma_map_fairvadrs(mm, fairvadrs);
 }

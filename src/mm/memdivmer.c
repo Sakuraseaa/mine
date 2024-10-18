@@ -975,7 +975,7 @@ void kfree_4k_page(void * addr)
 {
 	msadsc_t* msa = phy_to_msadsc(Virt_To_Phy(addr));
 
-	mm_merge_pages(&glomm, msa, ((msadsc_t*)msa->md_odlink - msa) + 1);
+	mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa));
 	
 	return;
 }
@@ -1474,14 +1474,13 @@ bool_t mm_merge_pages(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 
 u64_t onfrmsa_retn_fpagenr(msadsc_t* freemsa)
 {
-	if(nullptr==freemsa||nullptr==freemsa->md_odlink)
-	{
+	if( nullptr==freemsa || nullptr==freemsa->md_odlink ) {
 		return 0;
 	}
 	msadsc_t* fmend=(msadsc_t*)freemsa->md_odlink;
-	if(fmend<freemsa)
-	{
+	if(fmend < freemsa) {
 		return 0;
 	}
+
 	return ((u64_t)(fmend-freemsa)+1);
 }

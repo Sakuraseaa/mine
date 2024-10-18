@@ -69,17 +69,17 @@ typedef struct MDIREFLAGS
         u64_t m_msa : 40; //12
         u64_t m_ig2 : 11; //52
         u64_t m_xd : 1;   //63
-} __attribute__((packed)) mdireflags_t;
+} __attribute__((packed)) L1_pte_flags_t;
 
 typedef struct MDIRE
 {
         union
         {
-                mdireflags_t m_flags;
+                L1_pte_flags_t m_flags;
                 u64_t m_entry;
         } __attribute__((packed));
 
-} __attribute__((packed)) mdire_t;
+} __attribute__((packed)) L1_pte_t;
 
 typedef struct IDIREFLAGS
 {
@@ -95,17 +95,17 @@ typedef struct IDIREFLAGS
         u64_t i_mdir : 40; //12
         u64_t i_ig3 : 11;  //52
         u64_t i_xd : 1;    //63
-} __attribute__((packed)) idireflags_t;
+} __attribute__((packed)) L2_pte_flags_t;
 
 typedef struct IDIRE
 {
         union
         {
-                idireflags_t i_flags;
+                L2_pte_flags_t i_flags;
                 u64_t i_entry;
         } __attribute__((packed));
 
-} __attribute__((packed)) idire_t;
+} __attribute__((packed)) L2_pte_t;
 
 typedef struct SDIREFLAGS
 {
@@ -121,17 +121,17 @@ typedef struct SDIREFLAGS
         u64_t s_idir : 40; //12
         u64_t s_ig3 : 11;  //52
         u64_t s_xd : 1;    //63
-} __attribute__((packed)) sdireflags_t;
+} __attribute__((packed)) L3_pte_flags_t;
 
 typedef struct SDIRE
 {
         union
         {
-                sdireflags_t s_flags;
+                L3_pte_flags_t s_flags;
                 u64_t s_entry;
         } __attribute__((packed));
 
-} __attribute__((packed)) sdire_t;
+} __attribute__((packed)) L3_pte_t;
 
 typedef struct TDIREFLAGS
 {
@@ -147,37 +147,37 @@ typedef struct TDIREFLAGS
         u64_t t_sdir : 40; //12
         u64_t t_ig3 : 11;  //52
         u64_t t_xd : 1;    //63
-} __attribute__((packed)) tdireflags_t;
+} __attribute__((packed)) L4_pte_flags_t;
 
 typedef struct TDIRE
 {
         union
         {
-                tdireflags_t t_flags;
+                L4_pte_flags_t t_flags;
                 u64_t t_entry;
         } __attribute__((packed));
 
-} __attribute__((packed)) tdire_t;
+} __attribute__((packed)) L4_pte_t;
 
 typedef struct MDIREARR
 {
-        mdire_t mde_arr[MDIRE_MAX];
-} __attribute__((packed)) mdirearr_t;
+        L1_pte_t mde_arr[MDIRE_MAX];
+} __attribute__((packed)) L1_ptarr_t;
 
 typedef struct IDIREARR
 {
-        idire_t ide_arr[IDIRE_MAX];
-} __attribute__((packed)) idirearr_t;
+        L2_pte_t ide_arr[IDIRE_MAX];
+} __attribute__((packed)) L2_ptarr_t;
 
 typedef struct SDIREARR
 {
-        sdire_t sde_arr[SDIRE_MAX];
-} __attribute__((packed)) sdirearr_t;
+        L3_pte_t sde_arr[SDIRE_MAX];
+} __attribute__((packed)) L3_ptarr_t;
 
 typedef struct TDIREARR
 {
-        tdire_t tde_arr[TDIRE_MAX];
-} __attribute__((packed)) tdirearr_t;
+        L4_pte_t tde_arr[TDIRE_MAX];
+} __attribute__((packed)) L4_ptarr_t;
 
 typedef struct CR3SFLGS
 {
@@ -202,8 +202,8 @@ typedef struct MMUDSC
         spinlock_t mud_lock;
         u64_t mud_stus;
         u64_t mud_flag;
-        tdirearr_t *mud_tdirearr;
-        cr3s_t mud_cr3;
+        L4_ptarr_t *mud_tdirearr; // 存储顶层页表的虚拟地址, 页表实体
+        cr3s_t mud_cr3; // 存储顶层页表的物理地址, 放入页表寄存器的值
         list_h_t mud_tdirhead;
         list_h_t mud_sdirhead;
         list_h_t mud_idirhead;
