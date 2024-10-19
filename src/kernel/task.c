@@ -463,7 +463,7 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 	
 	tsk->exit_code = 0;
 	tsk->priority = 2;
-	tsk->pid = (adr_t)&tsk;
+	tsk->pid = (global_pid++);
 	tsk->preempt_count = 0; // 进程抢占计数值初始化
 	
 	tsk->gid = 0;

@@ -33,6 +33,7 @@ inline static u64_t *Get_gdt()
 
 #define PAGE_OFFSET ((u64_t)0xffff800000000000)
 #define TASK_SIZE ((u64_t)0x00007fffffffffff)
+#define STASK_USR_START ((u64_t)0x00007ffffffff000)
 
 #define PAGE_GDT_SHIFT 39
 #define PAGE_1G_SHIFT 30 // 2的30次方是1GB

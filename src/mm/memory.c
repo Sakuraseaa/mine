@@ -1117,46 +1117,53 @@ void init_memory()
  */
 u64_t do_brk(u64_t addr, u64_t len)
 {
-    // u64_t *tmp = nullptr;
-    // u64_t *virtual = nullptr;
-    u64_t i = 0;
-    // /* sktest: 修改kmalloc 为 knew ，用户空间内存*/
-    // for (i = addr; i < addr + len; i += PAGE_2M_SIZE)
-    // {
-    //     tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((i >> PAGE_GDT_SHIFT) & 0x1ff));
-    //     if (*tmp == 0) // 这样比较可读性不好
-    //     {
-    //         virtual = umalloc_4k_page(1); 
-    //         memset(virtual, 0, PAGE_4K_SIZE);
-    //         set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
-    //     }
-    //     tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_1G_SHIFT) & 0x1ff));
-    //     if (*tmp == 0)
-    //     {
-    //         virtual =  umalloc_4k_page(1); 
-    //         memset(virtual, 0, PAGE_4K_SIZE);
-    //         set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-    //     }
-    //     tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
-    //     if (*tmp == 0)
-    //     {
-	// 	    virtual = umalloc_4k_page(1); // 申请page_table 内存，填充page_dirctory页表项
-    //         memset(virtual, 0, PAGE_4K_SIZE);
-    //         set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-    //     }
-
-    // 	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_4K_SHIFT) & 0x1ff));
-    //     if (*tmp == 0)
-    //     {
-	// 	    virtual = umalloc_4k_page(1); // 申请页表内存，填充页表项
-    //         memset(virtual, 0, PAGE_4K_SIZE);
-    //         set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-    //     }
-    // }
-    // current->mm->end_brk = i;
-    flush_tlb();
-    return i;
+    u64_t *tmp = nullptr;
+    vma_new_vadrs(current->mm, addr, len, nullptr, 0, 0);
+    current->mm->end_brk = addr + len;
+    return (addr + len);
 }
+// u64_t do_brk(u64_t addr, u64_t len)
+// {
+//     u64_t *tmp = nullptr;
+//     u64_t *virtual = nullptr;
+//     u64_t i = 0;
+//     /* sktest: 修改kmalloc 为 knew ，用户空间内存*/
+//     for (i = addr; i < addr + len; i += PAGE_2M_SIZE)
+//     {
+//         tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->msd_mmu.mud_cr3.c3s_entry & (~0xfffUL)) + ((i >> PAGE_GDT_SHIFT) & 0x1ff));
+//         if (*tmp == 0) // 这样比较可读性不好
+//         {
+//             virtual = umalloc_4k_page(1); 
+//             memset(virtual, 0, PAGE_4K_SIZE);
+//             set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
+//         }
+//         tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_1G_SHIFT) & 0x1ff));
+//         if (*tmp == 0)
+//         {
+//             virtual =  umalloc_4k_page(1); 
+//             memset(virtual, 0, PAGE_4K_SIZE);
+//             set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+//         }
+//         tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_2M_SHIFT) & 0x1ff));
+//         if (*tmp == 0)
+//         {
+// 		    virtual = umalloc_4k_page(1); // 申请page_table 内存，填充page_dirctory页表项
+//             memset(virtual, 0, PAGE_4K_SIZE);
+//             set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+//         }
+
+//     	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_4K_SHIFT) & 0x1ff));
+//         if (*tmp == 0)
+//         {
+// 		    virtual = umalloc_4k_page(1); // 申请页表内存，填充页表项
+//             memset(virtual, 0, PAGE_4K_SIZE);
+//             set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+//         }
+//     }
+//     current->mm->end_brk = i;
+//     flush_tlb();
+//     return i;
+// }
 
 /**
  * @brief pmle_addr用于获得虚拟地址vaddr对应的4级页表项指针，pte中有vaddr保存的物理页地址
@@ -1248,6 +1255,23 @@ u64_t do_wp_page(u64_t virtual_address) {
  */
 extern s64_t krluserspace_accessfailed(adr_t fairvadrs);
 
+static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_start_vadr)
+{
+    if (vtft == nullptr) {
+        return;
+    }
+
+    file_t* task_file = vtft->vtf_file;
+    fault_vadrs = (fault_vadrs & PAGE_4K_MASK);
+    u64_t gap = fault_vadrs - vma_start_vadr;
+
+    u64_t cur_start_load_size = (vtft->vtf_size - gap) > PAGE_4K_SIZE ? PAGE_4K_SIZE : (vtft->vtf_size - gap);
+    vtft->vtf_alread_load_size += cur_start_load_size;
+
+    task_file->f_ops->lseek(task_file, vtft->vtf_position + gap, SEEK_SET);
+    task_file->f_ops->read(task_file, (buf_t)fault_vadrs, cur_start_load_size, &task_file->position);
+}
+
 sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
 {
     sint_t rets = FALSE;
@@ -1256,12 +1280,17 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
     kmvarsdsc_t *kmvd = nullptr;
     kvmemcbox_t *kmbox = nullptr;
     // knl_spinlock(&vma->vs_lock);
+
     //查找对应的kmvarsdsc_t结构, 没有找到. 说明虚拟地址不存在，直接返回
     kmvd = vma_map_find_kmvarsdsc(vma, vadrs);
     if (nullptr == kmvd) {
         rets = -EFAULT;
         goto out;
     }
+
+    if (kmvd->kva_flgs == 1)
+        vadrs = PAGE_4K_ALIGN(vadrs) - 0x1000;
+
     //返回kmvarsdsc_t结构下对应kvmemcbox_t结构
     kmbox = vma_map_retn_kvmemcbox(kmvd);
     if (nullptr == kmbox) {
@@ -1274,18 +1303,12 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
         rets = -ENOMEM;
         goto out;
     }
+
+    vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start);
     rets = EOK;
-    
-	// 需要一个文件与虚拟区间的结构体，监测到该结构体已经被分配在execv中，这里去加载相应的文件内容
-    // sktest 也许应该添加一个状态，来记录是否已经映射完成参数
-    if (task_file != NULL) {
-        task_file->f_ops->lseek(task_file, kmvd->kva_fileposition, SEEK_SET);
-        task_file->f_ops->read(task_file, (buf_t)vadrs, PAGE_4K_SIZE, &task_file->position);
-        kmvd->kva_fileposition += PAGE_4K_SIZE;
-        kmvd->kva_filesize -= PAGE_4K_SIZE;
-    }
+
 out:
- //   knl_spinunlock(&vma->vs_lock);
+    //   knl_spinunlock(&vma->vs_lock);
     return rets;
 }
 

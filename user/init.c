@@ -19,7 +19,6 @@ void sig_handler(long sig);
 
 int main()
 {
-	while(1);
 	signal(4 , sig_handler);
 
 	long pid = getpid();

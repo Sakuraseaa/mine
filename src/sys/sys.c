@@ -505,7 +505,7 @@ u64_t sys_vfork()
  */
 u64_t sys_brk(u64_t brk)
 {
-    u64_t new_brk = PAGE_2M_ALIGN(brk);
+    u64_t new_brk = PAGE_4K_ALIGN(brk);
     // color_printk(GREEN, BLACK, "sys_brk:%018lx\n", brk);
     // color_printk(RED, BLACK, "brk:%#0x18lx, new_brk:%#018lx,current->mm->end_brk:%#018lx", brk, new_brk, current->mm->end_brk);
     if (new_brk == 0) // return brk base address

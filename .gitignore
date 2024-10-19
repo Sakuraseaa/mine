@@ -7,6 +7,7 @@
 *.S~
 *.c~
 *.h~
+*.log
 boot.img
 kallsyms.S
 system

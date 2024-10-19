@@ -51,7 +51,7 @@ typedef struct KVMEMCBOXMGR
 	uint_t kbm_cachemin;	// 最小缓存个数
 	list_h_t kbm_cachehead;	// 缓存kvmemcbox_t结构的链表
 	void* kbm_ext;			// 扩展数据指针
-}kvmemcboxmgr_t; // 页面盒子管理头
+}kvmemcboxmgr_t; // 页面盒子管理头, 管理所有的页面盒子
 
 
 
@@ -107,12 +107,38 @@ typedef struct PGTABPAGE
 	uint_t     ptp_msanr;
 }pgtabpage_t; // page table page
 
+// 段权限
+typedef struct VMA_TO_FILE_FLAGS_CORE
+{
+		u64_t read:1;
+		u64_t write:1;
+		u64_t execute:1;
+		u64_t rsv:61;
+} __attribute__((packed)) vtfflags_core_t;
+
+typedef struct VMA_TO_FILE_FLAGS
+{
+    union
+    {
+        vtfflags_core_t flags;
+        u64_t entry;
+    } __attribute__((packed));
+} __attribute__((packed)) vtfflags_t;
+
+typedef struct VMA_TO_FILE{
+    u64_t vtf_position; // 要加载的数据在文件中的起始地址
+    u64_t vtf_size;	// 要加载的数据尺寸
+	u64_t vtf_alread_load_size; // 本段已经有多少个字节被加载到了正确位置？
+    void* vtf_file;	//file_t指针
+    vtfflags_t vtf_flag;
+} vma_to_file_t;
+
 typedef struct KMVARSDSC
 {
 	spinlock_t kva_lock;
 	u32_t  kva_maptype;  // 映射类型
 	list_n_t kva_list;
-	u64_t  kva_flgs;
+	u64_t  kva_flgs;	// 0普通内存, 1栈内存，默认普通内存
 	u64_t  kva_limits;
 	vaslknode_t kva_lknode;
 	void*  kva_mcstruct;        // 指向它的上层结构
@@ -120,7 +146,7 @@ typedef struct KMVARSDSC
 	adr_t  kva_end;             // 虚拟地址的结束
 	kvmemcbox_t* kva_kvmbox;    // 管理这个结构映射的物理页面
 	void*  kva_kvmcobj;
-	vma_to_file_t kva_vtft;	// 完成虚拟区间和文件之间的关联
+	vma_to_file_t* kva_vir2file;	// 完成虚拟区间和文件之间的关联
 }kmvarsdsc_t; // 虚拟地址区间 kernel memory virtual address descriptor, 该结构类似与 vm_area_struct virtual memory area struct
 
 typedef struct KVIRMEMADRS

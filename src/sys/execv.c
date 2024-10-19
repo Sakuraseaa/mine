@@ -70,6 +70,10 @@ enum segment_type
     PT_PHDR     // 程序头表
 };
 
+#define PF_X            (1 << 0)        /* Segment is executable */
+#define PF_W            (1 << 1)        /* Segment is writable */
+#define PF_R            (1 << 2)        /* Segment is readable */
+static task_t* cur = nullptr;
 /**
  * @brief open_exec_file(char*)用于搜索文件系统的目标文件，本函数与sys_open函数的指向流程基本相似
  *本函数最重要的作用是为目标文件描述符指派操作方法（filp.f_ops = dentry.dir_inode.f_ops）
@@ -95,56 +99,64 @@ file_t *open_exec_file(str_t path)
 	filp->mode = O_RDONLY;
 	filp->f_ops = dentry->dir_inode->f_ops;
 
-
 	return filp;
 }
 
 /**
  * @brief 进行虚拟地址的映射
- * 
+ * 自信的说，这个映射代码是过时的，outdated。现在的exec已经不需要该子函数😏了
  * @param user_addr 
  */
+#if 0
 static void virtual_map(u64_t user_addr){
 	
-	// u64_t *tmp;
-	// u64_t *virtual = nullptr;
+	u64_t *tmp;
+	u64_t *virtual = nullptr;
 	
-	// // 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
-	// tmp = Phy_To_Virt((u64_t *)((u64_t)current->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	// if (*tmp == 0) {
-	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
-	// 	memset(virtual, 0, PAGE_4K_SIZE);
-	// 	set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	// }
+	// 为其分配独立的应用层地址空间,PML(page map level 4, 4级页表)中的页表项指针
+	tmp = Phy_To_Virt((u64_t *)((u64_t)cur->mm->pgd & (~0xfffUL)) + ((user_addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	if (*tmp == 0) {
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDPT内存，填充PML4页表项
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
 	
-	// // 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
-	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	// if (*tmp == 0) {
-	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
-	// 	memset(virtual, 0, PAGE_4K_SIZE);
-	// 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	// }
+	// 获取该虚拟地址对应的PDPT(page directory point table)中的页表项指针
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_1G_SHIFT) & 0x1ff));
+	if (*tmp == 0) {
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请PDT内存，填充PDPT页表项
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
 	
-	// // 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
-	// // 申请用户占用的内存,填充页表, 填充PDT内存
-	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
-	// if (*tmp == 0) {
-	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
-	// 	memset(virtual, 0, PAGE_4K_SIZE);
-	// 	set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	// }
+	// 获取该虚拟地址对应的PDT(page directory table)中的页表项指针
+	// 申请用户占用的内存,填充页表, 填充PDT内存
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_2M_SHIFT) & 0x1ff));
+	if (*tmp == 0) {
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请page_table 内存，填充page_dirctory页表项
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
 
-	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
-	// if (*tmp == 0)
-	// {
-	// 	virtual = knew(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
-	// 	memset(virtual, 0, PAGE_4K_SIZE);
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((user_addr >> PAGE_4K_SHIFT) & 0x1ff));
+	if (*tmp == 0)
+	{
+		virtual = knew(PAGE_4K_SIZE, 0); // 申请页表内存，填充页表项
+		memset(virtual, 0, PAGE_4K_SIZE);
 
-	// 	set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Page_4K));
-	// }
+		set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Page_4K));
+	}
 
 }
+#endif
 
+static void set_vmatofile_flag(vtfflags_t* flags, u32_t power)
+{
+	flags->entry = 0;
+	flags->flags.read = (power & PF_R) == PF_R;
+	flags->flags.write = (power & PF_W) == PF_W;
+	flags->flags.execute = (power & PF_X) == PF_X;
+}
 /**
  * @brief segment_load用于将filp指向的文件中偏移为offset, 大小为filesz的段加载到虚拟地址为
  *        vaddr所对应的物理内存处. 该函数会自动为分配用户空间内存并完成与vaddr表示的虚拟页的映射
@@ -156,36 +168,19 @@ static void virtual_map(u64_t user_addr){
  * @return true 加载成功
  * @return false 加载失败
  */
-static bool segment_load(file_t* filp, u64_t offset, u64_t filesz, u64_t vaddr) {
+static bool segment_load(file_t* filp, u64_t offset, u64_t filesz, u64_t vaddr, u32_t power)
+{
     // 计算段将要加载到的虚拟页
     u64_t vaddr_first_page = vaddr & TASK_SIZE;
-    // 表示文件在第一个页框中占用的字节大小
-    s64_t size_in_first_page = PAGE_4K_SIZE - (vaddr & (PAGE_4K_SIZE - 1));
 
-    // 如果虚拟页内装不下, 则计算额外需要的页数
-    u64_t occupy_pages = 1; // 计算本次加载要占用的物理页数
-    if (filesz > size_in_first_page) {
-        u64_t left_size = filesz - size_in_first_page;
-        occupy_pages = (PAGE_4K_ALIGN(left_size) / PAGE_4K_SIZE) + 1;
-    }
-
-    // u64_t page_idx = 0;
-    u64_t vaddr_page = vaddr_first_page;
-	vma_new_vadrs(current->mm, vaddr_first_page, vaddr_first_page + occupy_pages * PAGE_4K_SIZE, offset, filesz, 0, 0);
-	// do
-    // { 	
-	// 	if( !(*pml4e_ptr(vaddr_page) & 0x01) || !(*pdpe_ptr(vaddr_page) & 0x01) 
-	// 		|| !(*pde_ptr(vaddr_page) & 0x01) || !(*pte_ptr(vaddr_page) & 0x01)) 
-	// 	{
-	// 		virtual_map(vaddr_page); // 映射地址，若虚拟地址对应的实际地址为空，则分配物理面
-	// 	}
-    //     vaddr_page += PAGE_4K_SIZE;
-    //     page_idx++;
-    // } while (page_idx < occupy_pages);
+	vma_to_file_t* vtft = knew(sizeof(vma_to_file_t), 0);
+	vtft->vtf_file = filp;
+	vtft->vtf_position = offset;
+	vtft->vtf_size = filesz;
+	vtft->vtf_alread_load_size = 0;
+	set_vmatofile_flag(&vtft->vtf_flag, power);
+	vma_new_vadrs(cur->mm, vaddr_first_page, filesz, vtft, 0, 0);
 	
-	// filp->f_ops->lseek(filp, offset, SEEK_SET);
-	// filp->f_ops->read(filp, (void *)vaddr_first_page, filesz, &filp->position);
-
     return true;
 }
 
@@ -223,35 +218,35 @@ static u64_t section_analysis(file_t *filp, Elf64_Ehdr* elf_header) {
 	filp->f_ops->lseek(filp, shstr_entry->sh_offset, SEEK_SET);
 	filp->f_ops->read(filp, s_name_table, shstr_entry->sh_size, &filp->position);
 	
-	// //  为 mm_struct 文件赋值
-	// mmdsc_t * mm = current->mm;
-	// while(sect_idx < s_num) {
+	//  为 mm_struct 文件赋值
+	mmdsc_t * mm = cur->mm;
+	while(sect_idx < s_num) {
 	
-	// 	str_t s_name = s_name_table + (section_header[sect_idx].sh_name);
-	// 	if(!strcmp(s_name, ".text")) {
+		str_t s_name = s_name_table + (section_header[sect_idx].sh_name);
+		if(!strcmp(s_name, ".text")) {
 		
-	// 		mm->start_code = section_header[sect_idx].sh_addr;
-	// 		mm->end_code = mm->start_code + section_header[sect_idx].sh_size;
+			mm->start_code = section_header[sect_idx].sh_addr;
+			mm->end_code = mm->start_code + section_header[sect_idx].sh_size;
 		
-	// 	} else if (!strcmp(s_name, ".rodata")) {
+		} else if (!strcmp(s_name, ".rodata")) {
 		
-	// 		mm->start_rodata = section_header[sect_idx].sh_addr;
-	// 		mm->end_rodata = mm->start_rodata + section_header[sect_idx].sh_size;
+			mm->start_rodata = section_header[sect_idx].sh_addr;
+			mm->end_rodata = mm->start_rodata + section_header[sect_idx].sh_size;
 
-	// 	} else if(!strcmp(s_name,".data")) {
+		} else if(!strcmp(s_name,".data")) {
 		
-	// 		mm->start_data = section_header[sect_idx].sh_addr;
-	// 		mm->end_data = mm->start_data + section_header[sect_idx].sh_size;
+			mm->start_data = section_header[sect_idx].sh_addr;
+			mm->end_data = mm->start_data + section_header[sect_idx].sh_size;
 		
-	// 	} else if(!strcmp(s_name, ".bss")) {
+		} else if(!strcmp(s_name, ".bss")) {
 			
-	// 		mm->start_bss = section_header[sect_idx].sh_addr;
-	// 		mm->end_bss = mm->start_bss + section_header[sect_idx].sh_size;
+			mm->start_bss = section_header[sect_idx].sh_addr;
+			mm->end_bss = mm->start_bss + section_header[sect_idx].sh_size;
 		
-	// 	}
+		}
 		
-	// 	sect_idx++;
-	// }
+		sect_idx++;
+	}
 
 	return 0;
 }
@@ -284,7 +279,7 @@ static u64_t load(str_t pathname)
 	// 校验elf头, check elf header
     if (
         // octal 177 = 0x7f, 0x7f + ELF is elf magic number.
-        // \1\1\1 means 64-bit elf file, LSB(Least Significant Bit), current version separately
+        // \1\1\1 means 64-bit elf file, LSB(Least Significant Bit), Current version separately
         memcmp(elf_header.e_ident, "\177ELF\2\1\1", 7)
         // e_type == 2, executable file
         || elf_header.e_type != 2
@@ -315,15 +310,14 @@ static u64_t load(str_t pathname)
 		memset(&prog_header, 0, prog_header_size);
 		// 读取程序头表项
 		filp->f_ops->lseek(filp, prog_header_offset + (prog_idx * prog_header_size), SEEK_SET);	
-		if(filp->f_ops->read(filp, (void *)&prog_header, sizeof(Elf64_Phdr), &filp->position) != prog_header_size) {
+		if (filp->f_ops->read(filp, (void *)&prog_header, sizeof(Elf64_Phdr), &filp->position) != prog_header_size) {
 			color_printk(RED, BLACK,"EXECVE -> read file ERROR!\n");
 			return ret;
 		}
 		
 		// 加载可加载段，到内存
 		if(PT_LOAD == prog_header.p_type) {
-			
-			segment_load(filp, prog_header.p_offset, prog_header.p_filesz, prog_header.p_vaddr);
+			segment_load(filp, prog_header.p_offset, prog_header.p_filesz, prog_header.p_vaddr, prog_header.p_flags);
 			end_bss = prog_header.p_vaddr + prog_header.p_filesz; // 计算end_bss
 		}
 		prog_idx++;
@@ -336,24 +330,24 @@ static u64_t load(str_t pathname)
 // 被init调用,加载用户进程体，到用户空间800000
 u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 {
-	u64_t stack_start_addr = TASK_SIZE + 1;
+	u64_t stack_start_addr = USER_VIRTUAL_ADDRESS_END & PAGE_4K_MASK;
 	u64_t retval = 0;
 	s64_t pos = 0;
-	
-	if (current->flags & PF_VFORK)
+	cur = current;
+	if (cur->flags & PF_VFORK)
 	{
 		// 若当前进程使用PF_VFORK标志，说明它正与父进程共享地址空间
 		// 而新程序必须拥有独立的地址空间才能正常运行
-		current->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
+		cur->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
 		
 		// 进程相关内存初始化三大步
-		mmadrsdsc_t_init(current->mm);
-		kvma_inituserspace_virmemadrs(&current->mm->msd_virmemadrs);
-		hal_mmu_init(&current->mm->msd_mmu);
+		mmadrsdsc_t_init(cur->mm);
+		kvma_inituserspace_virmemadrs(&cur->mm->msd_virmemadrs);
+		hal_mmu_init(&cur->mm->msd_mmu);
 
-		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", current->mm->msd_mmu.mud_cr3);
+		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", cur->mm->msd_mmu.mud_cr3);
 
-		current->flags &= ~PF_VFORK;
+		cur->flags &= ~PF_VFORK;
 		hal_mmu_load(&initmm.msd_mmu);
 	}
 
@@ -361,24 +355,20 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 		// ERROR!!!!!
 	}
 
-	if (!(current->flags & PF_KTHREAD))
-		current->addr_limit = TASK_SIZE;
+	if (!(cur->flags & PF_KTHREAD))
+		cur->addr_limit = TASK_SIZE;
 
-	current->mm->end_bss = retval;
+	cur->mm->end_bss = retval;
 
 	// 设置用户堆 起始地址
-	current->mm->start_brk = current->mm->end_brk = PAGE_2M_ALIGN(current->mm->end_bss); 
+	cur->mm->start_brk = cur->mm->end_brk = PAGE_4K_ALIGN(cur->mm->end_bss); 
 
-	// 映射栈地址, 目前刚启动为栈分配2MB （有点多？）
-	// issue:: 栈空气不够了，如何扩充？ （缺页中断！）
-	vma_new_vadrs(current->mm, stack_start_addr - PAGE_4K_SIZE, PAGE_4K_SIZE, 0, 0, 0, 0);
-	
 	// 设置用户栈 起始地址
-	current->mm->start_stack = stack_start_addr - PAGE_4K_SIZE;
-	current->mm->stack_length = PAGE_4K_SIZE;
+	cur->mm->start_stack = stack_start_addr;
+	cur->mm->stack_length = PAGE_4K_SIZE;
 
-	exit_files(current);
-
+	exit_files(cur);
+	// 这感觉有点不对
 	// 在用户空间，复制进程运行参数, rewriter:: this is argc locked 10. all right.
 	if( argv != nullptr ) {
 		s32_t len = 0, i = 0;
@@ -411,12 +401,7 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 	regs->r10 = code_start_addr; // RIP
 	regs->r11 = stack_start_addr; // RSP
 	regs->rax = 1;
-	
-	// flush_tlb();
 
 	// go to ret_system_call
 	return retval;
 }
-
-
-

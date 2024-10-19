@@ -126,8 +126,7 @@ void kmvarsdsc_t_init(kmvarsdsc_t *initp)
 	initp->kva_end = 0;
 	initp->kva_kvmbox = nullptr;
 	initp->kva_kvmcobj = nullptr;
-	initp->kva_fileposition = 0;
-	initp->kva_filesize = 0;
+	initp->kva_vir2file = nullptr;
 	return;
 }
 void kvmcobjmgr_t_init(kvmcobjmgr_t* initp)
@@ -271,6 +270,7 @@ bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 	stackkmvdc->kva_start = PAGE_4K_ALIGN(USER_VIRTUAL_ADDRESS_END - 0x40000000);
 	stackkmvdc->kva_end = USER_VIRTUAL_ADDRESS_END;
 	stackkmvdc->kva_mcstruct = vma;
+	stackkmvdc->kva_flgs = 1; // 标记栈内存
 
 	// knl_spinlock(&vma->vs_lock);
 	vma->vs_isalcstart = USER_VIRTUAL_ADDRESS_START;
@@ -278,7 +278,7 @@ bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 	vma->vs_startkmvdsc = kmvdc;		// 设置虚拟地址空间的开始区间为kmvdc
 	vma->vs_endkmvdsc = stackkmvdc; // 设置虚拟空间结束地址为栈区
 	list_add_to_behind(&vma->vs_list, &kmvdc->kva_list);
-	list_add_to_behind(&vma->vs_list, &stackkmvdc->kva_list);
+	list_add_to_behind(&kmvdc->kva_list, &stackkmvdc->kva_list);
 	vma->vs_kmvdscnr += 2;
 	// knl_spinunlock(&vma->vs_lock);
 	return TRUE;
@@ -416,8 +416,9 @@ kmvarsdsc_t *vma_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vas
 	return nullptr;
 }
 
+
 // B 分配虚拟地址区间核心逻辑
-adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize,  u64_t file_position, u64_t file_size, u64_t vaslimits, u32_t vastype)
+adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype)
 {
 	adr_t retadrs = NULL;
 	kmvarsdsc_t *newkmvd = nullptr, *currkmvd = nullptr;
@@ -432,13 +433,13 @@ adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize,  u64_t file_p
 	}
 
 	/* 进行虚拟地址区间进行检查看能否复用在这个结构之后直接划分虚拟内存，而不用申请新的虚拟区间结构体 */
-	if (((NULL == start) || (start == currkmvd->kva_end)) && 
-		(vaslimits == currkmvd->kva_limits) && (vastype == currkmvd->kva_maptype)
-		&& (file_position == currkmvd->kva_fileposition + currkmvd->kva_filesize))
+	if (	((NULL == start) || (start == currkmvd->kva_end)) 
+		&&  (vaslimits == currkmvd->kva_limits) 
+		&&  (vastype == currkmvd->kva_maptype)
+		&&  (vtft == nullptr))
 	{
 		retadrs = currkmvd->kva_end;		// 能复用的话，当前虚拟地址区间的结束地址返回
 		currkmvd->kva_end += vassize;		// 扩展当前虚拟地址区间的结束地址为分配虚拟地址区间的大小
-		currkmvd->kva_filesize += file_size;
 		vma->vs_currkmvdsc = currkmvd;
 		goto out;
 	}
@@ -461,8 +462,8 @@ adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize,  u64_t file_p
 	newkmvd->kva_limits = vaslimits;
 	newkmvd->kva_maptype = vastype;
 	newkmvd->kva_mcstruct = vma;
-	newkmvd->kva_fileposition = file_position;
-	newkmvd->kva_filesize = file_size;
+	newkmvd->kva_vir2file = vtft;
+
 	vma->vs_currkmvdsc = newkmvd;
 	
 	/* 将新的虚拟地址区间加入到virmemadrs_t结构中 */
@@ -493,7 +494,7 @@ out:
  * @param vastype 
  * @return adr_t 
  */
-adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, u64_t file_position, u64_t file_size, u64_t vaslimits, u32_t vastype)
+adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype)
 {
 	if (nullptr == mm || 1 > vassize) {
 		return NULL;
@@ -508,7 +509,7 @@ adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, u64_t file_positio
 		}
 	}
 
-	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), file_position, file_size, vaslimits, vastype);
+	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vtft, vaslimits, vastype);
 }
 
 kmvarsdsc_t *vma_del_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize)
@@ -711,7 +712,7 @@ bool_t vma_del_vadrs(mmdsc_t *mm, adr_t start, size_t vassize)
 
 void test_vadr()
 {
-	adr_t vadr = vma_new_vadrs(&initmm, 0, 0x1000, 0, 0, 0, 0);
+	adr_t vadr = vma_new_vadrs(&initmm, 0, 0x1000, nullptr, 0, 0);
 	if (nullptr == (void*)vadr) {
 		color_printk(RED, BLACK, "分配虚拟地址空间失败\n");
 	}
