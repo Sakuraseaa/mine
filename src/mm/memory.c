@@ -1118,7 +1118,7 @@ void init_memory()
 u64_t do_brk(u64_t addr, u64_t len)
 {
     u64_t *tmp = nullptr;
-    vma_new_vadrs(current->mm, addr, len, nullptr, 0, 0);
+    vma_new_vadrs(current->mm, addr, len, nullptr, 0, 0, 2);
     current->mm->end_brk = addr + len;
     return (addr + len);
 }
@@ -1305,6 +1305,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
     }
 
     vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start);
+    kmbox->kmb_filenode = kmvd->kva_vir2file->vtf_file;
     rets = EOK;
 
 out:

@@ -138,7 +138,7 @@ typedef struct KMVARSDSC
 	spinlock_t kva_lock;
 	u32_t  kva_maptype;  // 映射类型
 	list_n_t kva_list;
-	u64_t  kva_flgs;	// 0普通内存, 1栈内存，默认普通内存
+	u64_t  kva_flgs;	// 0普通内存, 1栈内存，2堆内存，默认普通内存
 	u64_t  kva_limits;
 	vaslknode_t kva_lknode;
 	void*  kva_mcstruct;        // 指向它的上层结构

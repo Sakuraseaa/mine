@@ -200,26 +200,26 @@ bool_t del_kmvarsdsc(kmvarsdsc_t *delkmvd)
 	return kmsob_delete((void *)delkmvd, sizeof(kmvarsdsc_t));
 }
 
-// virmemadrs_t *new_virmemadrs()
-// {
-// 	virmemadrs_t *vmdsc = nullptr;
-// 	vmdsc = (virmemadrs_t *)kmsob_new(sizeof(virmemadrs_t));
-// 	if (nullptr == vmdsc)
-// 	{
-// 		return nullptr;
-// 	}
-// 	virmemadrs_t_init(vmdsc);
-// 	return vmdsc;
-// }
+virmemadrs_t *new_virmemadrs()
+{
+	virmemadrs_t *vmdsc = nullptr;
+	vmdsc = (virmemadrs_t *)kmsob_new(sizeof(virmemadrs_t));
+	if (nullptr == vmdsc)
+	{
+		return nullptr;
+	}
+	virmemadrs_t_init(vmdsc);
+	return vmdsc;
+}
 
-// bool_t del_virmemadrs(virmemadrs_t *vmdsc)
-// {
-// 	if (nullptr == vmdsc)
-// 	{
-// 		return FALSE;
-// 	}
-// 	return kmsob_delete((void *)vmdsc, sizeof(virmemadrs_t));
-// }
+bool_t del_virmemadrs(virmemadrs_t *vmdsc)
+{
+	if (nullptr == vmdsc)
+	{
+		return FALSE;
+	}
+	return kmsob_delete((void *)vmdsc, sizeof(virmemadrs_t));
+}
 
 void kvma_seting_kvirmemadrs(kvirmemadrs_t *kvma)
 {
@@ -418,7 +418,7 @@ kmvarsdsc_t *vma_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vas
 
 
 // B 分配虚拟地址区间核心逻辑
-adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype)
+adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype, uint_t flags)
 {
 	adr_t retadrs = NULL;
 	kmvarsdsc_t *newkmvd = nullptr, *currkmvd = nullptr;
@@ -463,6 +463,7 @@ adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t
 	newkmvd->kva_maptype = vastype;
 	newkmvd->kva_mcstruct = vma;
 	newkmvd->kva_vir2file = vtft;
+	newkmvd->kva_flgs = flags;
 
 	vma->vs_currkmvdsc = newkmvd;
 	
@@ -494,7 +495,7 @@ out:
  * @param vastype 
  * @return adr_t 
  */
-adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype)
+adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype, uint_t flags)
 {
 	if (nullptr == mm || 1 > vassize) {
 		return NULL;
@@ -509,7 +510,7 @@ adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtf
 		}
 	}
 
-	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vtft, vaslimits, vastype);
+	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vtft, vaslimits, vastype, flags);
 }
 
 kmvarsdsc_t *vma_del_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize)
@@ -712,7 +713,7 @@ bool_t vma_del_vadrs(mmdsc_t *mm, adr_t start, size_t vassize)
 
 void test_vadr()
 {
-	adr_t vadr = vma_new_vadrs(&initmm, 0, 0x1000, nullptr, 0, 0);
+	adr_t vadr = vma_new_vadrs(&initmm, 0, 0x1000, nullptr, 0, 0, 0);
 	if (nullptr == (void*)vadr) {
 		color_printk(RED, BLACK, "分配虚拟地址空间失败\n");
 	}
@@ -1042,4 +1043,23 @@ kvmemcbox_t *vma_map_retn_kvmemcbox(kmvarsdsc_t *kmvd)
     //指向这个新建的kvmemcbox_t结构
     kmvd->kva_kvmbox = kmbox;
     return kmvd->kva_kvmbox;
+}
+
+void kvmemcobj_t_init(kvmemcobj_t* initp)
+{
+	if(NULL==initp)
+	{
+		system_error("kvmemcobj_t_init parm NULL\n");
+	}
+	list_init(&initp->kco_list);
+	knl_spinlock_init(&initp->kco_lock);
+	initp->kco_cont=0;
+	initp->kco_flgs=0;
+	initp->kco_type=0;
+	initp->kco_msadnr=0;
+	list_init(&initp->kco_msadlst);
+	initp->kco_filenode=NULL;
+	initp->kco_pager=NULL;
+	initp->kco_extp=NULL;
+	return;
 }

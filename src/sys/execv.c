@@ -179,7 +179,7 @@ static bool segment_load(file_t* filp, u64_t offset, u64_t filesz, u64_t vaddr, 
 	vtft->vtf_size = filesz;
 	vtft->vtf_alread_load_size = 0;
 	set_vmatofile_flag(&vtft->vtf_flag, power);
-	vma_new_vadrs(cur->mm, vaddr_first_page, filesz, vtft, 0, 0);
+	vma_new_vadrs(cur->mm, vaddr_first_page, filesz, vtft, 0, 0, 0);
 	
     return true;
 }
@@ -358,7 +358,6 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 	if (!(cur->flags & PF_KTHREAD))
 		cur->addr_limit = TASK_SIZE;
 
-	cur->mm->end_bss = retval;
 
 	// 设置用户堆 起始地址
 	cur->mm->start_brk = cur->mm->end_brk = PAGE_4K_ALIGN(cur->mm->end_bss); 

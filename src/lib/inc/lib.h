@@ -33,7 +33,7 @@ typedef list_t list_n_t;
 #define SEEK_MAX 3
 
 #define list_for_each(pos, head) for (pos = (head)->next; pos != (head); pos = pos->next)
-/* 	一直for，直到到达head 
+/* 	一直for，直到到达head, 不遍历head
 	keep doing for loop until head is reached */
 
 #define list_for_each_head_dell(pos, head) for (pos = (head)->next; pos != (head); pos = (head)->next)

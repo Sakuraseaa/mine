@@ -314,43 +314,43 @@ static void copy_pageTables(mmdsc_t * newmm, u64_t addr){
 u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
-	mmdsc_t  *newmm = nullptr;
+	mmdsc_t *newmm = nullptr;
+	list_n_t *vma_entry = nullptr;
+	kmvarsdsc_t *vma = nullptr;
+	adr_t  vma_start = 0;           // 虚拟地址的开始
+	adr_t  vma_end = 0;             // 虚拟地址的结束
+	adr_t  vma_phy = 0;
 	if (clone_flags & CLONE_VM) {
 		newmm = current->mm;
 		goto out;
 	}
 
-	// newmm = (mmdsc_t  *)knew(sizeof(mmdsc_t ), 0);
-	// memcpy(current->mm, newmm, sizeof(mmdsc_t ));
+	// 2. 拷贝所有的虚拟地址区间, 为虚拟空间内已经映射了的虚拟地址，进行重新映射，
+	// 3. 在halmm中添加修改页表属性的函数
+	// 1. 拷贝4级页表，修改初始化函数为只拷贝后256项
+	//
+	tsk->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
+	// 进程相关内存初始化三大步
+	mmadrsdsc_t_init(tsk->mm);
+	kvma_inituserspace_virmemadrs(&tsk->mm->msd_virmemadrs);
+	hal_mmu_init(&tsk->mm->msd_mmu);
 
-	// // copy kernel space, 创建了PML4页表
+	// 扫描所有的虚拟区间, 为子进程创建
+    list_for_each(vma_entry, &current->mm->msd_virmemadrs.vs_list)
+    {
+        vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
+		vma_new_vadrs(&tsk->mm->msd_mmu, vma->kva_start, vma->kva_end, vma->kva_limits, vma->kva_maptype, vma->kva_flgs);
+		
+		vma_start = vma->kva_start;
+		vma_end = vma->kva_end;
+		while (vma_start < vma_end) {
+			hal_mmu_virtophy(&tsk->mm->msd_mmu, vma_start);
 
-	// memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
+			vma_start += PAGE_4K_SIZE;
+		}
+    }
 
-	// u64_t vaddr = 0;
-	
-	// for(vaddr = newmm->start_code; vaddr < newmm->end_code; vaddr += PAGE_2M_SIZE) // 代码段
-	// 	copy_pageTables(newmm, vaddr);
-	// for(vaddr = newmm->start_data; vaddr < newmm->end_data; vaddr += PAGE_2M_SIZE) // 数据
-	// 	copy_pageTables(newmm, vaddr);
-	// for(vaddr = newmm->start_rodata; vaddr < newmm->end_rodata; vaddr += PAGE_2M_SIZE) // 只读数据
-	// 	copy_pageTables(newmm, vaddr);
-	// for(vaddr = newmm->start_bss; vaddr < newmm->end_bss; vaddr += PAGE_2M_SIZE) // bss段
-	// 	copy_pageTables(newmm, vaddr);
-	// for(vaddr = newmm->start_brk; vaddr < newmm->end_brk; vaddr += PAGE_2M_SIZE) // brk 段
-	// 	copy_pageTables(newmm, vaddr);
-	
-	// // 栈段, 这里的栈段共享不成。
-	// // 父进程返回用户态后，会破坏用户栈，但竟没有触发保护异常。
-	// // 没有触发异常，导致子进程运行失败.
-	// // 为什么会出现这种情况 ？ 
-
-	// // 24-7-17-10:16: 因为你没有刷新快表
-	// for(vaddr = newmm->start_stack; vaddr < (newmm->start_stack + newmm->stack_length); vaddr += PAGE_2M_SIZE)
-	// 	copy_pageTables(newmm, vaddr);
-
-	// // 刷新快表，很多错误发生在快表没有及时刷新
-	// flush_tlb();
+	tsk->flags &= ~PF_VFORK;
 out:
 	tsk->mm = newmm;
 	return error;

@@ -349,7 +349,7 @@ adr_t mmu_untransform_msa(mmudsc_t* mmulocked, L1_ptarr_t* mdirearr, adr_t vadrs
 bool_t mmu_transform_msa(mmudsc_t* mmulocked, L1_ptarr_t* mdirearr, adr_t vadrs, adr_t padrs, u64_t flags)
 {
 	uint_t mindex;	
-	if(nullptr == mmulocked || nullptr == mdirearr)
+	if (nullptr == mmulocked || nullptr == mdirearr)
 	{
 		return FALSE;
 	}
@@ -554,6 +554,7 @@ L3_ptarr_t* mmu_transform_sdire(mmudsc_t* mmulocked, L4_ptarr_t* tdirearr, adr_t
 	tdire = tdirearr->tde_arr[tindex];
 	if (sdire_is_have(&tdire) == TRUE) {
 		sdirearr = tdire_ret_sdirearr(&tdire);
+		
 		*outmsa = nullptr;
 		return sdirearr;
 	}
@@ -617,7 +618,7 @@ bool_t hal_mmu_transform_core(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t fla
 	if(TRUE == rets)
 	{
 		rets = TRUE;
-		hal_mmu_refresh();
+		hal_mmu_refresh_one(vadrs);
 		goto out;
 	}
 
@@ -726,6 +727,48 @@ L3_ptarr_t* mmu_find_sdirearr(L4_ptarr_t* tdirearr, adr_t vadrs)
 	return tdire_ret_sdirearr(&dire);
 }
 
+/**
+ * @brief 检查虚拟vadrs在 页表mmu中是否被映射
+ * 
+ * @param mmu 
+ * @param vadrs 
+ * @return adr_t 0错误, 否则返回物理地址
+ */
+adr_t hal_mmu_virtophy(mmudsc_t* mmu, adr_t vadrs)
+{
+	adr_t address;
+	L3_ptarr_t* sdirearr;
+	L2_ptarr_t* idirearr;
+	L1_ptarr_t* mdirearr;
+//	knl_spinlock(&mmu->mud_lock);
+	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
+	if(nullptr == sdirearr)
+	{
+		return NULL;
+	}
+
+	idirearr = mmu_find_idirearr(sdirearr, vadrs);
+	if(nullptr == idirearr)
+	{
+		return NULL;
+	}
+
+	mdirearr = mmu_find_mdirearr(idirearr, vadrs);
+	if(nullptr == mdirearr)
+	{
+		return NULL;
+	}
+	
+	address = mmu_find_msaadr(mdirearr, vadrs);
+	if (address == NULL)
+	{
+		return NULL;
+	}
+
+//	knl_spinunlock(&mmu->mud_lock);
+	return address;
+}
+
 adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 {
 	adr_t retadr;
@@ -805,6 +848,12 @@ void hal_mmu_refresh()
 	return;
 }
 
+void hal_mmu_refresh_one(adr_t addr)
+{
+	flush_tlb_one(addr);
+	return;
+}
+
 bool_t hal_mmu_init(mmudsc_t* mmu)
 {
 	bool_t  rets = FALSE;
@@ -827,10 +876,9 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 	pcr3 = (adr_t)(cr3.c3s_c3sflgs.c3s_plm4a << 12);
 	vcr3 = phyadr_to_viradr(pcr3);
 
-	memcpy((void*)vcr3, (void*)mmu->mud_tdirearr, sizeof(L4_ptarr_t));
+	memcpy((char*)vcr3 + 256, (void*)mmu->mud_tdirearr + 256, sizeof(L4_ptarr_t) / 2);
 	
 	mmu->mud_cr3.c3s_entry = (u64_t)viradr_to_phyadr((adr_t)mmu->mud_tdirearr);
-	mmu->mud_tdirearr->tde_arr[0].t_entry = 0;
 	rets = TRUE;
 
 out:	

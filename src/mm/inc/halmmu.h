@@ -25,6 +25,8 @@ adr_t mmu_find_msaadr(L1_ptarr_t* mdirearr, adr_t vadrs);
 L1_ptarr_t* mmu_find_mdirearr(L2_ptarr_t* idirearr, adr_t vadrs);
 L2_ptarr_t* mmu_find_idirearr(L3_ptarr_t* sdirearr, adr_t vadrs);
 L3_ptarr_t* mmu_find_sdirearr(L4_ptarr_t* tdirearr, adr_t vadrs);
+adr_t hal_mmu_virtophy(mmudsc_t* mmu, adr_t vadrs);
+void hal_mmu_refresh_one(adr_t addr);
 adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs);
 adr_t hal_mmu_untransform(mmudsc_t* mmu, adr_t vadrs);
 void hal_mmu_load(mmudsc_t* mmu);
