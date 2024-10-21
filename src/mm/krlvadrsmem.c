@@ -887,6 +887,30 @@ out:
 	return rets;
 } 
 
+msadsc_t* find_msa_from_pagebox(kvmemcbox_t* kbox, adr_t phyadr)
+{
+	bool_t rets = FALSE;
+	msadsc_t *tmpmsa = nullptr;
+	list_n_t *pos;
+
+	if (nullptr == kbox || NULL == phyadr) {
+		return nullptr;
+	}
+
+	// knl_spinlock(&kmbox->kmb_lock);
+
+	list_for_each(pos, &kbox->kmb_msalist)
+	{
+		tmpmsa = list_entry(pos, msadsc_t, md_list);
+		if (msadsc_ret_addr(tmpmsa) == phyadr)
+		{
+			return tmpmsa;
+		}
+	}
+	
+	return nullptr;
+}
+
 bool_t vma_del_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr)
 {
 	bool_t rets = FALSE;
@@ -1052,7 +1076,7 @@ void kvmemcobj_t_init(kvmemcobj_t* initp)
 		system_error("kvmemcobj_t_init parm NULL\n");
 	}
 	list_init(&initp->kco_list);
-	knl_spinlock_init(&initp->kco_lock);
+	// knl_spinlock_init(&initp->kco_lock);
 	initp->kco_cont=0;
 	initp->kco_flgs=0;
 	initp->kco_type=0;

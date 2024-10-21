@@ -144,7 +144,7 @@ typedef struct KMVARSDSC
 	void*  kva_mcstruct;        // 指向它的上层结构
 	adr_t  kva_start;           // 虚拟地址的开始
 	adr_t  kva_end;             // 虚拟地址的结束
-	kvmemcbox_t* kva_kvmbox;    // 管理这个结构映射的物理页面
+	kvmemcbox_t* kva_kvmbox;    // 管理这段 虚拟区间 已经被映射的物理页面 
 	void*  kva_kvmcobj;
 	vma_to_file_t* kva_vir2file;	// 完成虚拟区间和文件之间的关联
 }kmvarsdsc_t; // 虚拟地址区间 kernel memory virtual address descriptor, 该结构类似与 vm_area_struct virtual memory area struct
@@ -203,7 +203,7 @@ typedef struct s_MMADRSDSC
 	uint_t msd_stus;
 	uint_t msd_scount;  // 计数，该结构可能被共享
 	// sem_t  msd_sem;     // 信号量
-	mmudsc_t msd_mmu;   // 管理 MMU相关信息
+	mmudsc_t msd_mmu;   // 管理 MMU相关信息, 其中记载了页表，已经页表占用的内存。
 	virmemadrs_t msd_virmemadrs;    // 虚拟地址空间
 
 	adr_t start_code;	// 应用的指令区的开始，结束地址

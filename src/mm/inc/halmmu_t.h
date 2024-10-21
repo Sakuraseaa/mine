@@ -21,7 +21,7 @@
 
 #define PML4E_P (1 << 0)
 #define PML4E_RW (1 << 1)
-#define PML4E_US (1 << 2)
+#define PML4E_US (1 << 2) // 用户级页表权限
 #define PML4E_PWT (1 << 3)
 #define PML4E_PCD (1 << 4)
 

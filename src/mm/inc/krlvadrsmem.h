@@ -45,6 +45,7 @@ void kmap_fulshcurrcpu_mmutable();
 void mmadrsdsc_t_init(mmdsc_t* initp);
 kmvarsdsc_t *vma_map_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t vadrs);
 kvmemcbox_t *vma_map_retn_kvmemcbox(kmvarsdsc_t *kmvd);
+msadsc_t* find_msa_from_pagebox(kvmemcbox_t* kbox, adr_t phyadr);
 bool_t vma_del_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phyadr);
 msadsc_t *vma_new_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox);
 adr_t vma_map_msa_fault(mmdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t flags);

@@ -1151,7 +1151,6 @@ u64_t do_brk(u64_t addr, u64_t len)
 //             memset(virtual, 0, PAGE_4K_SIZE);
 //             set_pdt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
 //         }
-
 //     	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((i >> PAGE_4K_SHIFT) & 0x1ff));
 //         if (*tmp == 0)
 //         {
@@ -1219,30 +1218,46 @@ u64_t addr_v2p(u64_t vaddr) {
  * @param virtual_address The addresss that caused the exception
  * @return u64_t 
  */
+static u64_t do_wp_page_core(mmdsc_t *mm, adr_t vadrs) {
+    sint_t rets = FALSE;
+    adr_t phyadrs = NULL;
+    virmemadrs_t *vma = &mm->msd_virmemadrs;
+    kmvarsdsc_t *kmvd = nullptr;
+    kvmemcbox_t *kmbox = nullptr;
+    msadsc_t* msa = nullptr;
+    // knl_spinlock(&vma->vs_lock);
+
+    //查找对应的kmvarsdsc_t结构, 没有找到. 说明虚拟地址不存在，直接返回
+    kmvd = vma_map_find_kmvarsdsc(vma, vadrs);
+    if (nullptr == kmvd) {
+        rets = -EFAULT;
+        goto out;
+    }
+
+    //返回kmvarsdsc_t结构下对应kvmemcbox_t结构
+    kmbox = vma_map_retn_kvmemcbox(kmvd);
+    if (nullptr == kmbox) {
+        rets = -ENOMEM;
+        goto out;
+    }
+    //分配物理内存页面并建立MMU页表
+    // msa = find_msa_from_pagebox(kmbox, (vadrs));
+    if(msa->md_phyadrs.paf_shared = PAF_SHARED && msa->md_cntflgs.mf_refcnt > 1)
+    {
+        // 新建立一个页，拷贝数据修改权限 和 必要变量， 直接返回
+    }
+    
+    hal_mmu_transform(mm, vadrs,  msadsc_ret_addr(msa),  (0 | PML4E_US | PML4E_RW | PML4E_P));
+
+out:
+    return rets;   
+}
 u64_t do_wp_page(u64_t virtual_address) {
 
-    // u64 attr, phy_addr = addr_v2p(virtual_address);
-    // u64* tmp = pde_ptr(virtual_address);
-    // struct Page* page = (struct Page*)(memory_management_struct.pages_struct + (phy_addr >> PAGE_2M_SHIFT));
-    // struct Page* new_page = nullptr;
-
-	// attr = (*tmp & (0xfffUL)); // get parent privilege
-	// attr = (attr | (PAGE_R_W)); // add PW right 
-
-    // if(page->reference_count == 1) {
-    //     // 物理页独享 - 修改页面权限返回
-	// 	set_pdt(tmp, mk_pdt(page->PHY_address, attr));
-        
-    // }else {
-    //     // 分配新页面给进程，在进程用的时候给进程分配页面,给子进程分配新的页面 :happy
-    //     new_page = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-    //     memcpy(Phy_To_Virt(page->PHY_address), Phy_To_Virt(new_page->PHY_address), PAGE_2M_SIZE);
-    //     set_pdt(tmp, mk_pdt(new_page->PHY_address, attr));
-    //     page->reference_count--;
-    // }
+    do_wp_page_core(&current->mm->msd_mmu, virtual_address);
 
     flush_tlb_one(virtual_address);
-
+    
     return 0;
 }
 

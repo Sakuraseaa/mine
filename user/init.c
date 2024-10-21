@@ -21,7 +21,19 @@ int main()
 {
 	signal(4 , sig_handler);
 
-	long pid = getpid();
+	// long pid = getpid();
+	long pid = fork();
+	if (pid == 0) {
+		printf(" i am child -> %d\n", getpid());
+	} else {
+		printf(" i am parent -> %d\n", getpid());
+	}
+
+	while (1)
+	{
+		/* code */
+	}
+	
 	kill(pid, 4);
 	printf("Pid: %d\n", pid);
 	

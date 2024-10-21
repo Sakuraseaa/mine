@@ -320,6 +320,8 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	adr_t  vma_start = 0;           // 虚拟地址的开始
 	adr_t  vma_end = 0;             // 虚拟地址的结束
 	adr_t  vma_phy = 0;
+	msadsc_t *tmpmsa = nullptr;
+	
 	if (clone_flags & CLONE_VM) {
 		newmm = current->mm;
 		goto out;
@@ -328,7 +330,6 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	// 2. 拷贝所有的虚拟地址区间, 为虚拟空间内已经映射了的虚拟地址，进行重新映射，
 	// 3. 在halmm中添加修改页表属性的函数
 	// 1. 拷贝4级页表，修改初始化函数为只拷贝后256项
-	//
 	tsk->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
 	// 进程相关内存初始化三大步
 	mmadrsdsc_t_init(tsk->mm);
@@ -339,16 +340,31 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
     list_for_each(vma_entry, &current->mm->msd_virmemadrs.vs_list)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
-		vma_new_vadrs(&tsk->mm->msd_mmu, vma->kva_start, vma->kva_end, vma->kva_limits, vma->kva_maptype, vma->kva_flgs);
+		vma_new_vadrs(&tsk->mm->msd_mmu, vma->kva_start, (vma->kva_end - vma->kva_start), vma->kva_vir2file, vma->kva_limits, vma->kva_maptype, vma->kva_flgs);
 		
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
-		while (vma_start < vma_end) {
-			hal_mmu_virtophy(&tsk->mm->msd_mmu, vma_start);
-
+		while (vma_start < vma_end)
+		{
+			vma_phy = hal_mmu_virtophy(&tsk->mm->msd_mmu, vma_start);
+			if (vma_phy != NULL)
+			{
+				tmpmsa = find_msa_from_pagebox(vma->kva_kvmbox, vma_phy);
+				if (tmpmsa == nullptr)
+				{
+					color_printk(RED, BLACK, "This is a import error!\n");
+				}
+				// 给父,子进程修改权限，物理页面重新映射
+				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
+				hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
+				tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
+				tmpmsa->md_cntflgs.mf_refcnt++;
+			}
 			vma_start += PAGE_4K_SIZE;
 		}
     }
+	
+	flush_tlb();
 
 	tsk->flags &= ~PF_VFORK;
 out:

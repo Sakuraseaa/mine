@@ -37,6 +37,7 @@ typedef struct s_MSADFLGS
 #define  PAF_NO_ALLOC (0)
 #define  PAF_ALLOC (1)
 #define  PAF_NO_SHARED (0)
+#define  PAF_SHARED (1)
 #define  PAF_NO_SWAP (0)
 #define  PAF_NO_CACHE (0)
 #define  PAF_NO_KMAP (0)
