@@ -1,6 +1,6 @@
 #include "mmkit.h"
 
-mmgro_t glomm;
+GLOBVAR_DEFINITION(mmgro_t, glomm);
 
 void init_phymm()
 {	

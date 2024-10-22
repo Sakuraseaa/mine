@@ -267,7 +267,7 @@ bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma)
 	kmvdc->kva_mcstruct = vma;
 
 	// 设置栈虚拟区间
-	stackkmvdc->kva_start = PAGE_4K_ALIGN(USER_VIRTUAL_ADDRESS_END - 0x40000000);
+	stackkmvdc->kva_start = PAGE_4K_ALIGN(USER_VIRTUAL_ADDRESS_END - 0x8000);
 	stackkmvdc->kva_end = USER_VIRTUAL_ADDRESS_END;
 	stackkmvdc->kva_mcstruct = vma;
 	stackkmvdc->kva_flgs = 1; // 标记栈内存
@@ -418,7 +418,7 @@ kmvarsdsc_t *vma_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vas
 
 
 // B 分配虚拟地址区间核心逻辑
-adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype, uint_t flags)
+static adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype, uint_t flags)
 {
 	adr_t retadrs = NULL;
 	kmvarsdsc_t *newkmvd = nullptr, *currkmvd = nullptr;
@@ -512,7 +512,29 @@ adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtf
 
 	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vtft, vaslimits, vastype, flags);
 }
-
+// 复制一个虚拟内存空间
+adr_t nvma_vfork_vadrs(mmdsc_t* mm, const kmvarsdsc_t* nvma)
+{
+	if(nvma == nullptr)
+	{
+		return NULL;
+	}
+	adr_t ret = NULL;
+	virmemadrs_t *vma_family = &mm->msd_virmemadrs;
+	
+	ret = vma_new_vadrs_core(mm, nvma->kva_start, (nvma->kva_end - nvma->kva_start), nvma->kva_vir2file, nvma->kva_limits, nvma->kva_maptype, nvma->kva_flgs);
+	
+	kmvarsdsc_t* ovma = vma_family->vs_currkmvdsc;
+	// 共享页面盒子结构在两个进程之间共享，何时才能取消共享？
+	// 自己独立创建内存，并且当所有管理的物理页面没有被共享的时候。可以取消共享，但好像没有这种必要?
+	if (nvma->kva_kvmbox != nullptr && ovma->kva_kvmbox == nullptr) // 共享页面盒子
+	{
+		// 增加共享计数
+		knl_count_kvmemcbox(nvma->kva_kvmbox);
+		ovma->kva_kvmbox = nvma->kva_kvmbox;
+	}
+	return ret;
+}
 kmvarsdsc_t *vma_del_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize)
 {
 	kmvarsdsc_t *curr = vmalocked->vs_currkmvdsc;
@@ -710,21 +732,6 @@ bool_t vma_del_vadrs(mmdsc_t *mm, adr_t start, size_t vassize)
 	return vma_del_vadrs_core(mm, start, VADSZ_ALIGN(vassize));
 }
 
-
-void test_vadr()
-{
-	adr_t vadr = vma_new_vadrs(&initmm, 0, 0x1000, nullptr, 0, 0, 0);
-	if (nullptr == (void*)vadr) {
-		color_printk(RED, BLACK, "分配虚拟地址空间失败\n");
-	}
-	
-	s32_t* p = (s32_t*)vadr;
-	*p = 20; // 触发缺页中断
-	
-	return;
-}
-
-#include "errno.h"
 void kvmemcbox_t_init(kvmemcbox_t* init)
 {
 	if (nullptr == init) {
@@ -780,10 +787,16 @@ kvmemcbox_t* new_kvmemcbox()
 
 bool_t del_kvmemcbox(kvmemcbox_t* del)
 {
-	if(nullptr == del)
+	if (nullptr == del)
 	{
 		return FALSE;
 	}
+	
+	if (del->kmb_cont.value > 1) {
+		knl_decount_kvmemcbox(del);
+		return TRUE;
+	}
+
 	return kmsob_delete((void*)del, sizeof(kvmemcbox_t));
 }
 
@@ -889,9 +902,8 @@ out:
 
 msadsc_t* find_msa_from_pagebox(kvmemcbox_t* kbox, adr_t phyadr)
 {
-	bool_t rets = FALSE;
 	msadsc_t *tmpmsa = nullptr;
-	list_n_t *pos;
+	list_n_t *pos = nullptr;
 
 	if (nullptr == kbox || NULL == phyadr) {
 		return nullptr;

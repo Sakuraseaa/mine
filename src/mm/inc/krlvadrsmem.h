@@ -16,7 +16,6 @@ bool_t del_virmemadrs(virmemadrs_t *vmdsc);
 void init_kvirmemadrs();
 kmvarsdsc_t *vma_find_kmvarsdsc_is_ok(virmemadrs_t *vmalocked, kmvarsdsc_t *curr, adr_t start, size_t vassize);
 kmvarsdsc_t *vma_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize);
-adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize,  vma_to_file_t* vtft, u64_t vaslimits, u32_t vastype, uint_t flags);
 adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize,  vma_to_file_t* vtft ,u64_t vaslimits, u32_t vastype, uint_t flags);
 kmvarsdsc_t *vma_del_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize);
 void vma_del_set_endcurrkmvd(virmemadrs_t *vmalocked, kmvarsdsc_t *del);
@@ -68,4 +67,5 @@ kvmemcbox_t *knl_get_kvmemcbox();
 bool_t knl_put_kvmemcbox(kvmemcbox_t *kmbox);
 void dump_kvmemcboxmgr(kvmemcboxmgr_t *dump);
 bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma);
+adr_t nvma_vfork_vadrs(mmdsc_t* mm, const kmvarsdsc_t* nvma);
 #endif

@@ -1,5 +1,6 @@
-#include "devkit.h"
 
+#include "mmkit.h"
+#include "devkit.h"
 GLOBVAR_DEFINITION(devtable_t, osdevtable);
 GLOBVAR_DEFINITION(drventyexit_t, osdrvetytabl, []={NULL});
 
@@ -133,16 +134,16 @@ void init_krldriver()
 
 drvstus_t del_driver_dsc(driver_t *drvp)
 {
-    if (kdelete((adr_t)drvp, sizeof(driver_t)) == FALSE)
-    {
-        return DFCERRSTUS;
-    }
+    // if (kdelete((adr_t)drvp, sizeof(driver_t)) == FALSE)
+    // {
+    //     return DFCERRSTUS;
+    // }
     return DFCOKSTUS;
 }
 
 driver_t *new_driver_dsc()
 {
-    driver_t *dp = (driver_t *)knew(sizeof(driver_t));
+    driver_t *dp = (driver_t *)knew(sizeof(driver_t), 0);
     if (dp == NULL)
     {
         return NULL;
@@ -154,16 +155,16 @@ driver_t *new_driver_dsc()
 
 drvstus_t del_device_dsc(device_t *devp)
 {
-    if (kdelete((adr_t)devp, sizeof(device_t)) == FALSE)
-    {
-        return DFCERRSTUS;
-    }
+    // if (kdelete(devp, sizeof(device_t)) == FALSE)
+    // {
+    //     return DFCERRSTUS;
+    // }
     return DFCOKSTUS;
 }
 
 device_t *new_device_dsc()
 {
-    device_t *dp = (device_t *)knew(sizeof(device_t));
+    device_t *dp = (device_t *)knew(sizeof(device_t), 0);
     if (dp == NULL)
     {
         return NULL;

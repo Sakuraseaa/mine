@@ -25,7 +25,7 @@ extern void kernel_thread_func(void); // 进入用户进程，在执行完用户
 extern void system_call(void);
 
 u64_t shell_boot(u64_t arg);
-s64_t global_pid;
+s64_t global_pid = 2;
 
 task_t *get_task(s64_t pid)
 {
@@ -310,7 +310,6 @@ static void copy_pageTables(mmdsc_t * newmm, u64_t addr){
 	// }
 	return;
 }
-
 u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
@@ -330,7 +329,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	// 2. 拷贝所有的虚拟地址区间, 为虚拟空间内已经映射了的虚拟地址，进行重新映射，
 	// 3. 在halmm中添加修改页表属性的函数
 	// 1. 拷贝4级页表，修改初始化函数为只拷贝后256项
-	tsk->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
+	newmm = tsk->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
 	// 进程相关内存初始化三大步
 	mmadrsdsc_t_init(tsk->mm);
 	kvma_inituserspace_virmemadrs(&tsk->mm->msd_virmemadrs);
@@ -340,13 +339,14 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
     list_for_each(vma_entry, &current->mm->msd_virmemadrs.vs_list)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
-		vma_new_vadrs(&tsk->mm->msd_mmu, vma->kva_start, (vma->kva_end - vma->kva_start), vma->kva_vir2file, vma->kva_limits, vma->kva_maptype, vma->kva_flgs);
-		
+
+		nvma_vfork_vadrs(newmm, vma);
+
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
 		while (vma_start < vma_end)
 		{
-			vma_phy = hal_mmu_virtophy(&tsk->mm->msd_mmu, vma_start);
+			vma_phy = hal_mmu_virtophy(&current->mm->msd_mmu, vma_start);
 			if (vma_phy != NULL)
 			{
 				tmpmsa = find_msa_from_pagebox(vma->kva_kvmbox, vma_phy);
@@ -486,7 +486,7 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 	tsk->uid = 0;
 	tsk->umask = 0002;
 
-	// 拷贝信号
+	// 拷贝信号, 这里有错误
 	tsk->sigaction = (sigaction_t*)knew(sizeof(sigaction_t) * (NSIG + 1), 0);
 	memcpy(current->sigaction, tsk->sigaction, sizeof(sigaction_t) * (NSIG + 1));
 
@@ -608,10 +608,10 @@ void __switch_to(task_t *prev, task_t *next)
 void task_init()
 {
 	u64_t *tmp = nullptr;
-	u64_t *vaddr = nullptr;
-	s32_t i = 0;
+	// s32_t i = 0;
 
-	vaddr = Phy_To_Virt((u64_t)Get_gdt() & (~0xfffUL));
+	// u64_t *vaddr = nullptr;
+	// vaddr = Phy_To_Virt((u64_t)Get_gdt() & (~0xfffUL));
 
 	// 内核层空间占用顶层页表的256个页表项, i think 这些代码是多余的
 	// for (i = 256; i < 512; i++)

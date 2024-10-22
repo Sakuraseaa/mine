@@ -52,11 +52,11 @@ $(USR_BUI_DIR)/time.o: $(USR_SRC_DIR)/LIB/time.c
 	@$(CC) $(CFLAGS) $< -o $@
 $(USR_BUI_DIR)/sig_restore.o: $(USR_SRC_DIR)/LIB/sig_restore.S
 	@$(CC) $(CFLAGS) $< -o $@
-$(USR_BUI_DIR)/ls_cd.o: $(USR_SRC_DIR)/Command/ls_cd.c
+$(USR_BUI_DIR)/ls_cd.o: $(USR_SRC_DIR)/command/ls_cd.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(USR_BUI_DIR)/rm_cat_exec.o: $(USR_SRC_DIR)/Command/rm_cat_exec.c
+$(USR_BUI_DIR)/rm_cat_exec.o: $(USR_SRC_DIR)/command/rm_cat_exec.c
 	@$(CC) $(CFLAGS) $< -o $@
-$(USR_BUI_DIR)/echo_tree_date.o: $(USR_SRC_DIR)/Command/echo_tree_date.c
+$(USR_BUI_DIR)/echo_tree_date.o: $(USR_SRC_DIR)/command/echo_tree_date.c
 	@$(CC) $(CFLAGS) $< -o $@
 
 Hd_Path=/home/steven/mine/bochs/hd.img

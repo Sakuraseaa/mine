@@ -6,7 +6,5 @@ GLOBVAR_DEFINITION(mmdsc_t, initmm);
 void init_krlmm()
 {
     init_kvirmemadrs();
-
-    test_vadr();
     return;
 }

@@ -25,8 +25,10 @@ int main()
 	long pid = fork();
 	if (pid == 0) {
 		printf(" i am child -> %d\n", getpid());
+		info('B');
 	} else {
 		printf(" i am parent -> %d\n", getpid());
+		info('B');
 	}
 
 	while (1)

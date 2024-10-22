@@ -840,11 +840,10 @@ u64_t kfree(void *address)
 }
 #endif
 
-static u64_t phy_mm_count = 0;
 void pagetable_4K_init()
 {
     u64_t i = 0;
-    u64_t toMem = phy_mm_count * PAGE_2M_SIZE; 
+    u64_t toMem = glomm.mo_maxpages * PAGE_4K_SIZE; 
     u64_t *tmp =  nullptr;
     u64_t virtual_addr = 0;
     
@@ -947,7 +946,6 @@ void init_memory()
 
     color_printk(ORANGE, BLACK, "OS Can Used Total 2M PAGEs:%#018lx=%018ld\n", TotalMem, TotalMem);
     
-    phy_mm_count = TotalMem;
     
     // 这里计算出的TotalMem是4GB, 最大的寻址范围(此处使用4GB开始计算对系统安全吗？)
     TotalMem = memory_management_struct.e820[memory_management_struct.e820_length].address +
@@ -1117,7 +1115,6 @@ void init_memory()
  */
 u64_t do_brk(u64_t addr, u64_t len)
 {
-    u64_t *tmp = nullptr;
     vma_new_vadrs(current->mm, addr, len, nullptr, 0, 0, 2);
     current->mm->end_brk = addr + len;
     return (addr + len);
@@ -1219,16 +1216,19 @@ u64_t addr_v2p(u64_t vaddr) {
  * @return u64_t 
  */
 static u64_t do_wp_page_core(mmdsc_t *mm, adr_t vadrs) {
-    sint_t rets = FALSE;
+    u64_t rets = EOK;
     adr_t phyadrs = NULL;
-    virmemadrs_t *vma = &mm->msd_virmemadrs;
+    virmemadrs_t *vma_list = &mm->msd_virmemadrs;
     kmvarsdsc_t *kmvd = nullptr;
     kvmemcbox_t *kmbox = nullptr;
     msadsc_t* msa = nullptr;
+    void* swap;
     // knl_spinlock(&vma->vs_lock);
 
+    vadrs = (PAGE_4K_MASK & vadrs);
+
     //查找对应的kmvarsdsc_t结构, 没有找到. 说明虚拟地址不存在，直接返回
-    kmvd = vma_map_find_kmvarsdsc(vma, vadrs);
+    kmvd = vma_map_find_kmvarsdsc(vma_list, vadrs);
     if (nullptr == kmvd) {
         rets = -EFAULT;
         goto out;
@@ -1241,20 +1241,36 @@ static u64_t do_wp_page_core(mmdsc_t *mm, adr_t vadrs) {
         goto out;
     }
     //分配物理内存页面并建立MMU页表
-    // msa = find_msa_from_pagebox(kmbox, (vadrs));
-    if(msa->md_phyadrs.paf_shared = PAF_SHARED && msa->md_cntflgs.mf_refcnt > 1)
+    phyadrs = hal_mmu_virtophy(&mm->msd_mmu, vadrs);
+    
+    msa = find_msa_from_pagebox(kmbox, phyadrs);
+    
+    if(msa->md_phyadrs.paf_shared == PAF_SHARED && msa->md_cntflgs.mf_refcnt > 1) //todo 交换动作
     {
-        // 新建立一个页，拷贝数据修改权限 和 必要变量， 直接返回
+        swap = knew(PAGE_4K_SIZE, 0);
+        
+        memcpy((void*)vadrs, swap, PAGE_4K_SIZE);
+
+        vma_map_phyadrs(mm, kmvd, vadrs, (0 | PML4E_US | PML4E_RW | PML4E_P));
+        
+        memcpy(swap, (void*)vadrs, PAGE_4K_SIZE);
+        
+        msa->md_phyadrs.paf_shared = PAF_NO_SHARED;
+        msa->md_cntflgs.mf_refcnt --;
+    }
+    else
+    {
+        hal_mmu_transform(&mm->msd_mmu, vadrs, msadsc_ret_addr(msa), (0 | PML4E_US | PML4E_RW | PML4E_P));
     }
     
-    hal_mmu_transform(mm, vadrs,  msadsc_ret_addr(msa),  (0 | PML4E_US | PML4E_RW | PML4E_P));
 
 out:
-    return rets;   
+    return rets;
 }
+
 u64_t do_wp_page(u64_t virtual_address) {
 
-    do_wp_page_core(&current->mm->msd_mmu, virtual_address);
+    do_wp_page_core(current->mm, virtual_address);
 
     flush_tlb_one(virtual_address);
     
@@ -1270,7 +1286,7 @@ u64_t do_wp_page(u64_t virtual_address) {
  */
 extern s64_t krluserspace_accessfailed(adr_t fairvadrs);
 
-static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_start_vadr)
+static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_start_vadr, kvmemcbox_t * kbox)
 {
     if (vtft == nullptr) {
         return;
@@ -1285,6 +1301,9 @@ static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_
 
     task_file->f_ops->lseek(task_file, vtft->vtf_position + gap, SEEK_SET);
     task_file->f_ops->read(task_file, (buf_t)fault_vadrs, cur_start_load_size, &task_file->position);
+
+    kbox->kmb_filenode = task_file; // 给页面盒子设置他所管理的文件描述符
+    return;
 }
 
 sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
@@ -1319,8 +1338,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
         goto out;
     }
 
-    vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start);
-    kmbox->kmb_filenode = kmvd->kva_vir2file->vtf_file;
+    vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start, kmbox);
     rets = EOK;
 
 out:
