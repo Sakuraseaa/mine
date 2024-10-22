@@ -335,6 +335,8 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	kvma_inituserspace_virmemadrs(&tsk->mm->msd_virmemadrs);
 	hal_mmu_init(&tsk->mm->msd_mmu);
 
+	tsk->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox;
+	tsk->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox;
 	// 扫描所有的虚拟区间, 为子进程创建
     list_for_each(vma_entry, &current->mm->msd_virmemadrs.vs_list)
     {

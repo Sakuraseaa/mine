@@ -1263,7 +1263,6 @@ static u64_t do_wp_page_core(mmdsc_t *mm, adr_t vadrs) {
         hal_mmu_transform(&mm->msd_mmu, vadrs, msadsc_ret_addr(msa), (0 | PML4E_US | PML4E_RW | PML4E_P));
     }
     
-
 out:
     return rets;
 }
