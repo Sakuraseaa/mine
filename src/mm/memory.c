@@ -12,6 +12,7 @@
 #include "mmkit.h"
 #include "fskit.h"
 #include "kernelkit.h"
+#include "assert.h"
 // 给page结构体的属性成员赋值, 增加引用
 u64_t page_init(struct Page *page, u64_t flags)
 {
@@ -1257,6 +1258,8 @@ static u64_t do_wp_page_core(mmdsc_t *mm, adr_t vadrs) {
         
         msa->md_phyadrs.paf_shared = PAF_NO_SHARED;
         msa->md_cntflgs.mf_refcnt --;
+
+        kdelete(swap, PAGE_4K_SIZE);
     }
     else
     {
@@ -1268,11 +1271,12 @@ out:
 }
 
 u64_t do_wp_page(u64_t virtual_address) {
-
+    
+    color_printk(GREEN, BLACK,"  proc:%d, wp page  %#0lx", current->pid, virtual_address);
     do_wp_page_core(current->mm, virtual_address);
 
-    flush_tlb_one(virtual_address);
-    
+    // flush_tlb_one(virtual_address);
+    flush_tlb();
     return 0;
 }
 
@@ -1293,12 +1297,14 @@ static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_
 
     file_t* task_file = vtft->vtf_file;
     fault_vadrs = (fault_vadrs & PAGE_4K_MASK);
-    u64_t gap = fault_vadrs - vma_start_vadr;
+    u64_t cur_load_position = fault_vadrs - vma_start_vadr;
 
-    u64_t cur_start_load_size = (vtft->vtf_size - gap) > PAGE_4K_SIZE ? PAGE_4K_SIZE : (vtft->vtf_size - gap);
+    s64_t cur_start_load_size = (vma_start_vadr + vtft->vtf_size - fault_vadrs) > PAGE_4K_SIZE ? PAGE_4K_SIZE : (vma_start_vadr + vtft->vtf_size - fault_vadrs);
+    assert(cur_start_load_size > 0);
+
     vtft->vtf_alread_load_size += cur_start_load_size;
 
-    task_file->f_ops->lseek(task_file, vtft->vtf_position + gap, SEEK_SET);
+    task_file->f_ops->lseek(task_file, vtft->vtf_position + cur_load_position, SEEK_SET);
     task_file->f_ops->read(task_file, (buf_t)fault_vadrs, cur_start_load_size, &task_file->position);
 
     kbox->kmb_filenode = task_file; // 给页面盒子设置他所管理的文件描述符
@@ -1370,6 +1376,7 @@ sint_t krluserspace_accessfailed(adr_t fairvadrs)
 
 s64_t do_no_page(u64_t virtual_address)
 {
+    color_printk(GREEN, BLACK,"  proc:%d, no page %#0lx", current->pid, virtual_address);
     return krluserspace_accessfailed(virtual_address);
 }
 

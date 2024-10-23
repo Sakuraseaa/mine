@@ -185,8 +185,9 @@ n ?= 0
 .PHONY: clean a2l hex
 clean:
 	@rm -rf $(BUI_DIR)/*
-a2l:
+
+a2l: # 返回出错的原代码文件和行号
 	addr2line -e $(BUI_DIR)/Kernel.bin $(a)
 
 hex:
-	@python3 $(TET_DIR)/hex.py $(n)
+	@python3 $(SCI_DIR)/hex.py $(n)

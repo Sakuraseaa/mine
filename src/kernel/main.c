@@ -24,7 +24,7 @@ void Start_Kernel(void)
 	global_pid = 1;
 
 	Pos.XResolution = 1440;
-	Pos.YResolution = 850;
+	Pos.YResolution = 750;
 	Pos.XPosition = 0;
 	Pos.YPosition = 0;
 
@@ -100,7 +100,7 @@ void Start_Kernel(void)
 	// 此处的while用于线程同步
 	while (!shell_up)
 		;
-	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 	
 	while (1)
 	{

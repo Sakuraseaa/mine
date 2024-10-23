@@ -521,10 +521,23 @@ adr_t nvma_vfork_vadrs(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 	}
 	adr_t ret = NULL;
 	virmemadrs_t *vma_family = &mm->msd_virmemadrs;
-	
-	ret = vma_new_vadrs_core(mm, nvma->kva_start, (nvma->kva_end - nvma->kva_start), nvma->kva_vir2file, nvma->kva_limits, nvma->kva_maptype, nvma->kva_flgs);
+	vma_to_file_t* vtft = nvma->kva_vir2file;
+
+	if (nvma->kva_vir2file != nullptr)
+	{
+		vtft = (vma_to_file_t*)knew(sizeof(vma_to_file_t), 0);
+		
+		vtft->vtf_file = nvma->kva_vir2file->vtf_file;
+		vtft->vtf_flag = nvma->kva_vir2file->vtf_flag;
+		vtft->vtf_position = nvma->kva_vir2file->vtf_position;
+		vtft->vtf_size = nvma->kva_vir2file->vtf_size;
+		vtft->vtf_alread_load_size = nvma->kva_vir2file->vtf_alread_load_size;
+	}
+
+	ret = vma_new_vadrs_core(mm, nvma->kva_start, (nvma->kva_end - nvma->kva_start), vtft, nvma->kva_limits, nvma->kva_maptype, nvma->kva_flgs);
 	
 	kmvarsdsc_t* ovma = vma_family->vs_currkmvdsc;
+	
 	// 共享页面盒子结构在两个进程之间共享，何时才能取消共享？
 	// 自己独立创建内存，并且当所有管理的物理页面没有被共享的时候。可以取消共享，但好像没有这种必要?
 	if (nvma->kva_kvmbox != nullptr && ovma->kva_kvmbox == nullptr) // 共享页面盒子

@@ -365,7 +365,15 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 			vma_start += PAGE_4K_SIZE;
 		}
     }
-	
+	// // 扫描所有的虚拟区间, 为子进程创建
+    // list_for_each(vma_entry, &tsk->mm->msd_virmemadrs.vs_list)
+    // {
+    //     vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
+
+	// 	vma_start = vma->kva_start;
+	// 	vma_end = vma->kva_end;
+	// 	color_printk(RED, BLACK,"start:%x end:%x \n", vma_start, vma_end);
+    // }
 	flush_tlb();
 
 	tsk->flags &= ~PF_VFORK;

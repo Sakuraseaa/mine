@@ -99,7 +99,7 @@ void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
       current->vrun_time += 2;
       break;
    }
-   // 本进程的时间片耗尽，可调度下一个进程
+   // 本进程的时间片耗尽，立马调度其他进程
    if (task_schedule_table.CPU_exec_task_jiffies <= 0)
       current->flags |= NEED_SCHEDULE;
 }

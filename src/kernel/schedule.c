@@ -58,7 +58,7 @@ void schedule()
 		//	color_printk(WHITE, BLACK, "%d\n", tsk->gid);
 
 		// 按照进程优先级，给即将执行的进程计算PCB
-		if (!task_schedule_table.CPU_exec_task_jiffies)
+		if (task_schedule_table.CPU_exec_task_jiffies <= 0)
 			switch (tsk->priority)
 			{
 			case 0:
@@ -80,7 +80,7 @@ void schedule()
 	{ // 当前进程的虚拟运行时间小于待执行进程，不切换继续运行本进程
 		insert_task_queue(tsk);
 		// 根据进程的优先级填充处理器时间片
-		if (!task_schedule_table.CPU_exec_task_jiffies)
+		if (task_schedule_table.CPU_exec_task_jiffies <= 0)
 			switch (current->priority)
 			{
 			case 0:
