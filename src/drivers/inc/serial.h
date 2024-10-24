@@ -34,6 +34,8 @@ typedef struct serial_t
     u8_t *p_tail;
     s32_t count; // 缓冲数据计数器
 
+    spinlock_t lock;
+
     u8_t rx_buf[SERIAL_BUF_LEN];  // 读 缓冲
 } serial_t;
 

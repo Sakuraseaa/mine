@@ -258,8 +258,8 @@ sint_t krluserspace_accessfailed(adr_t fairvadrs)
 }
 
 s64_t do_no_page(u64_t virtual_address)
-{
-    color_printk(GREEN, BLACK,"  proc:%d, no page %#0lx", current->pid, virtual_address);
+{   
+    DEBUGK(" proc:%d, no page %#0lx \n", current->pid, virtual_address);
     return krluserspace_accessfailed(virtual_address);
 }
 
@@ -327,7 +327,7 @@ out:
 
 u64_t do_wp_page(u64_t virtual_address) {
     
-    color_printk(GREEN, BLACK,"  proc:%d, wp page  %#0lx", current->pid, virtual_address);
+    DEBUGK(" proc:%d, wp page  %#0lx \n", current->pid, virtual_address);  
     do_wp_page_core(current->mm, virtual_address);
 
     // flush_tlb_one(virtual_address);

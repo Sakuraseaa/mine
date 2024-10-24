@@ -51,6 +51,10 @@ s32_t serial_read(serial_t *serial, buf_t buf, u64_t count)
 
 s32_t serial_write(serial_t *serial, buf_t buf, u64_t count) {
     s32_t nr = 0;
+    cpuflg_t flg;
+    
+    spinlock_storeflg_cli(&serial->lock, &flg);
+
     while (nr < count)
     {
         u8_t state = io_in8(serial->iobase + COM_LINE_STATUS);
@@ -60,6 +64,8 @@ s32_t serial_write(serial_t *serial, buf_t buf, u64_t count) {
             continue;
         }
     }
+
+    spinunlock_restoreflg(&serial->lock, &flg);
     return nr;
 }
 
@@ -69,6 +75,8 @@ void serial_init()
     for (; i < 2; i++)
     {
         serial_t *serial = &serials[i];
+
+        spin_init(&serial->lock);
 
         if (!i) {
             register_irq(0x24, nullptr, serial_handler, 0, &serial_int_controller, "serial_1"); // 注册串口中断

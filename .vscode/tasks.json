@@ -6,6 +6,7 @@
             "args": [
                 "-f",
                 "/home/steven/mine/makefile",
+                "-j8",
             ],
         },
         // {
