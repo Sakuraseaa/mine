@@ -480,21 +480,37 @@ u64_t sys_fork()
     pt_regs_t *regs = (pt_regs_t *)current->thread->rsp0 - 1;
     // color_printk(GREEN, BLACK, "sys_fork\n");
     // regs.rsp 是指向哪里呢？
+
     return do_fork(regs, 0, regs->rsp, 0);
 }
 
+// 线程如何创建? 线程是需要自己的用户栈的，其余资源共享进程的
+// 我觉得应该有这个一个api,参数是路径，直接调用vfork 和 execv的核心函数以此产生一个进程
 /**
- * @brief vfork()创建的子进程与父进程共享地址空间，当vfork函数执行后，子进程无法独立运行
- *  应该与exec类函数联合使用
+ * @brief vfork()创建的子进程与父进程共享地址空间，他的作用在于他不会去建立虚拟地址和物理地址的虚拟空间映射了,节省时间空间
+ * 当vfork函数执行后，子进程无法独立运行, 必须与exec类函数联合使用
  * @return u64_t
  */
 u64_t sys_vfork()
 {
-    pt_regs_t *regs = (pt_regs_t *)current->thread->rsp0 - 1; // 这个是什么东西 ？
-    color_printk(GREEN, BLACK, "sys_vfork\n");
+    pt_regs_t *regs = (pt_regs_t *)current->thread->rsp0 - 1;
+
     return do_fork(regs, CLONE_VM | CLONE_FS | CLONE_SIGNAL, regs->rsp, 0);
 }
 
+/**
+ * @brief 堆函数
+ *
+ * @param addr 堆的当前位置
+ * @param len 要扩展的堆的长度
+ * @return u64_t
+ */
+u64_t do_brk(u64_t addr, u64_t len)
+{
+    vma_new_vadrs(current->mm, addr, len, nullptr, 0, 0, 2);
+    current->mm->end_brk = addr + len;
+    return (addr + len);
+}
 /**
  * @brief 进行堆的管理
  *        if(brk == 0) ->说明进程希望获取堆的起始地址

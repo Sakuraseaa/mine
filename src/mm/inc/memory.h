@@ -165,8 +165,7 @@ u64_t* pde_ptr(u64_t vaddr);
 u64_t* pml4e_ptr(u64_t vaddr);
 u64_t* pdpe_ptr(u64_t vaddr);
 u64_t* pte_ptr(u64_t vaddr);
-u64_t do_wp_page(u64_t virtual_address);
-s64_t do_no_page(u64_t virtual_address);
+
 void pagetable_4K_init();
 
 void kdelete(void* address, u64_t size);
