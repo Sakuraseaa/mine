@@ -1,6 +1,7 @@
 #ifndef _spinlock_h_
 #define _spinlock_h_
 
+// 这个锁也有问题😓, 调度系统有问题，我裂开来, - >>>> 锁没问题,hh
 // 本文件定义自旋锁，自旋锁用来防止多核侵略存储区
 typedef struct
 {
@@ -34,5 +35,7 @@ void fair_spin_init(fair_spinlock_t* lock);
 void fair_spin_lock(fair_spinlock_t* lock);
 void fair_spin_unlock(fair_spinlock_t* lock);
 
+void spinlock_storeflg_cli(spinlock_t *lock, cpuflg_t *cpuflg);
+void spinunlock_restoreflg(spinlock_t *lock, cpuflg_t *cpuflg);
 
 #endif

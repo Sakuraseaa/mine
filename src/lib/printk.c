@@ -309,18 +309,16 @@ s32_t sprintf(str_t buf, cstr_t fmt, ...)
 
 s32_t color_printk(u32_t FRcolor, u32_t BKcolor, cstr_t fmt, ...)
 {
-
 	s32_t i = 0;
 	s32_t count = 0;
 	s32_t line = 0;
+	cpuflg_t flg;
 	va_list args;
 	va_start(args, fmt);
 
 	// 通过IF位，来判断是否是中断处理程序，中断处理程序的IF位是0
 	// 不是中断处理程序，那么我们就进行自旋锁
-	if (get_rflags() & 0x200UL)
-		fair_spin_lock(&Pos.printk_lock);
-
+	spinlock_storeflg_cli(&Pos.printk_lock, &flg);
 	i = vsprintf(buf, fmt, args);
 
 	va_end(args);
@@ -383,8 +381,7 @@ s32_t color_printk(u32_t FRcolor, u32_t BKcolor, cstr_t fmt, ...)
 	// 显示光标
 	putchar(Pos.FB_addr, Pos.XResolution, Pos.XPosition * Pos.XCharSize, Pos.YPosition * Pos.YCharSize, WHITE, BLACK, 255);
 	
-	if (get_rflags() & 0x200UL)
-		fair_spin_unlock(&Pos.printk_lock);
+	spinunlock_restoreflg(&Pos.printk_lock, &flg);
 	
 	return i;
 }

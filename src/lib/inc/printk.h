@@ -49,7 +49,7 @@ struct position
 	u32_t *FB_addr;
 	u64_t FB_length;
 
-	fair_spinlock_t printk_lock;
+	spinlock_t printk_lock;
 } Pos;
 
 #define do_div(n, base) ({ \
