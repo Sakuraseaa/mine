@@ -78,14 +78,14 @@ static buffer_t *get_from_hash_table(bdesc_t *desc, dev_t dev, idx_t block) {
 
 static err_t buffer_alloc(bdesc_t *desc) {
     // here allocated memory is too small, i think 16KB for suitable
-    u8_t* addr = (u8_t*)knew(PAGE_4K_SIZE, 0); 
+    adr_t addr = (adr_t)knew(PAGE_4K_SIZE * 4, 0); 
     
     buffer_t* buf = nullptr;
-    for(u8_t* i = addr; i < addr + 4096; i += desc->size) { 
+    for(adr_t i = addr; i < (addr + PAGE_4K_SIZE * 4); i += desc->size) { 
         
         buf = (buffer_t*)knew(sizeof(buffer_t), 0);
         
-        buf->data = i;
+        buf->data = (u8_t*)i;
         buf->block = 0;
         buf->desc = desc;
         buf->dirty = false;
@@ -101,6 +101,7 @@ static err_t buffer_alloc(bdesc_t *desc) {
         list_add_to_behind(&desc->free_list, &buf->rnode);
 
         desc->count++; // 增加空闲块计数
+        LOGK("buffer block:: buf_addr %#0x data_addr %#0x\n", buf, buf->data);
     }
 
     LOGK("buffer desciptor update:: size %d count %d\n", desc->size, desc->count);
