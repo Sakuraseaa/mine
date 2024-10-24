@@ -19,6 +19,7 @@ extern s32_t kernel_thread(u64_t (*fn)(u64_t), u64_t arg, u64_t flags);
 extern s32_t shell_up;
 
 #include "test.h"
+static u64_t SKOFLOVE = 0;
 void Start_Kernel(void)
 {
 	global_pid = 1;
@@ -35,8 +36,8 @@ void Start_Kernel(void)
 	Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
 
 	semaphore_init(&visual_lock, 1);
-	fair_spin_init(&Pos.printk_lock);
-
+	spin_init(&Pos.printk_lock);
+	
 	load_TR(10);
 
 	set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00);
@@ -92,18 +93,20 @@ void Start_Kernel(void)
 
 	VFS_init();
 
-	DEBUGK("task init \n");
 	task_init();
 	sti();
 
 
 	// 此处的while用于线程同步
 	while (!shell_up)
-		;
-	kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+		SKOFLOVE++; 
+	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
 	
 	while (1)
 	{
+
+		SKOFLOVE++; // 检查内核进程初始化完成在运行之后，是否还会再运行
+		
 		// 这里可以遍历所有进程，寻找僵尸进程。释放他。
 		// 但是这种做法有点笨，来点消息通知就好了
 	}

@@ -197,7 +197,6 @@ ENTRY(kernel_thread_func)
 		addq	$0x38,	%rsp	
 	/////////////////////////////////
 		movq	%rdx,	%rdi
-		// sti
 		callq	*%rbx		
 		movq	%rax,	%rdi	
 		callq	do_exit		
