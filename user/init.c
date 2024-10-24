@@ -19,62 +19,62 @@ void sig_handler(long sig);
 
 int main()
 {
-	// signal(4 , sig_handler);
 
-	// long pid = getpid();
-	// pid = fork();
-	// if (pid == 0) {
-	// 	printf(" i am child -> %d\n", getpid());
-	// 	// info('B');
-	// } else {
-	// 	printf(" i am parent -> %d\n", getpid());
-	// 	// info('B');
-	// }
+	long pid = getpid();
+	pid = fork();
+	if (pid == 0) {
+		printf(" i am child -> [%d, %d] \n", getpid(), pid);
+		// info('B');
+	} else {
+		printf(" i am parent -> [%d, %d] \n", getpid(), pid);
+		// info('B');
+	}
 
 	while(1)
 	{
-		// printf("Pid: %d\n", pid);
+		// printf("Pid: %d\n", pid++);
 	}
 	
-	// kill(pid, 4);
+	signal(4 , sig_handler);
+	kill(pid, 4);
 	
-	// int fd = 0;
-	// char buf[256] = {0};
-	// char path[] = "/KEYBOARD.DEV";
-	// int index = -1;
-	// current_dir = (char*)malloc(2, 0);
-	// current_dir[0] = '/';
-	// current_dir[1] = 0;
+	int fd = 0;
+	char buf[256] = {0};
+	char path[] = "/KEYBOARD.DEV";
+	int index = -1;
+	current_dir = (char*)malloc(2, 0);
+	current_dir[0] = '/';
+	current_dir[1] = 0;
 
-	// fd = open(path, 0);
+	fd = open(path, 0);
 
-	// while (1)
-	// {
-	// 	int argc = 0;
-	// 	char **argv = nullptr;
+	while (1)
+	{
+		int argc = 0;
+		char **argv = nullptr;
 		
-	// 	print_prompt();
+		print_prompt();
 		
-	// 	memset(buf, 0, 256);
-	// 	// 命令读取
-	// 	read_line(fd, buf);
-	// 	// 命令解析
-	// 	index = parse_command(buf, &argc, &argv);
-	// 	if (index < 0)
-	// 		printf("No Command Found!\n");
-	// 	else
-	// 		run_command(index, argc, argv); // 命令执行
-	// }
+		memset(buf, 0, 256);
+		// 命令读取
+		read_line(fd, buf);
+		// 命令解析
+		index = parse_command(buf, &argc, &argv);
+		if (index < 0)
+			printf("No Command Found!\n");
+		else
+			run_command(index, argc, argv); // 命令执行
+	}
 
-	// free(current_dir);
-	// close(fd);
+	free(current_dir);
+	close(fd);
 
-	// while (1)
-	// {
-	// 	/* code */
-	// }
-	// // issue:: init进程有能力执行exit函数吗？ 有的需要编写一定的代码
-	// exit(0);
+	while (1)
+	{
+		/* code */
+	}
+	// issue:: init进程有能力执行exit函数吗？ 有的需要编写一定的代码
+	exit(0);
 }
 
 void sig_handler(long sig) {
