@@ -67,5 +67,5 @@ kvmemcbox_t *knl_get_kvmemcbox();
 bool_t knl_put_kvmemcbox(kvmemcbox_t *kmbox);
 void dump_kvmemcboxmgr(kvmemcboxmgr_t *dump);
 bool_t kvma_inituserspace_virmemadrs(virmemadrs_t *vma);
-adr_t nvma_vfork_vadrs(mmdsc_t* mm, const kmvarsdsc_t* nvma);
+adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma);
 #endif

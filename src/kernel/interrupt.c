@@ -231,6 +231,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
 
 out:
     //   knl_spinunlock(&vma->vs_lock);
+    flush_tlb();
     return rets;
 }
 

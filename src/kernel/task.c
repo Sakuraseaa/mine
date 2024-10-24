@@ -195,118 +195,6 @@ void exit_files(task_t *tsk)
  * @param tsk 子进程PCB
  * @return u64_t
  */
-#if 0
-/*
-u64_t copy_mm(u64_t clone_flags, task_t *tsk)
-{
-	s32_t error = 0;
-	mmdsc_t  *newmm = nullptr;
-	u64_t code_start_addr = 0x800000;
-	u64_t stack_start_addr = 0xa00000;
-	u64_t brk_start_addr = 0xc00000;
-	u64_t *tmp;
-	u64_t *virtual = nullptr;
-	struct Page *p = nullptr;
-	if (clone_flags & CLONE_VM)
-	{
-		newmm = current->mm;
-		goto out;
-	}
-
-	newmm = (mmdsc_t  *)knew(sizeof(mmdsc_t ), 0);
-	memcpy(current->mm, newmm, sizeof(mmdsc_t ));
-
-	// copy kernel space, 创建了PML4页表
-	newmm->pgd = (pml4t_t *)Virt_To_Phy(knew(PAGE_4K_SIZE, 0));
-	memcpy(Phy_To_Virt(init_task[0]->mm->pgd) + 256, Phy_To_Virt(newmm->pgd) + 256, PAGE_4K_SIZE / 2);
-	memset(Phy_To_Virt(newmm->pgd), 0, PAGE_4K_SIZE / 2); // clear user memory space
-
-	// copy user code / data / bss / space
-	// 申请PDPT内存，填充PML4页表项
-	tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((code_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	virtual = knew(PAGE_4K_SIZE, 0);
-	memset(virtual, 0, PAGE_4K_SIZE);
-	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-
-	// 申请PDT内存，填充PDPT页表项
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
-	virtual = knew(PAGE_4K_SIZE, 0);
-	memset(virtual, 0, PAGE_4K_SIZE);
-	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-
-	// 申请用户占用的内存,填充页表, 填充PDT内存
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((code_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
-	p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-	set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
-
-	// 拷贝代码、数据
-	memcpy((void *)code_start_addr, Phy_To_Virt(p->PHY_address), stack_start_addr - code_start_addr);
-
-	// copy user brk space 拷贝用户空间的堆内存
-	if (current->mm->end_brk - current->mm->start_brk != 0)
-	{
-		tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((brk_start_addr >> PAGE_GDT_SHIFT) & 0x1ff));
-		tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((brk_start_addr >> PAGE_1G_SHIFT) & 0x1ff));
-		tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((brk_start_addr >> PAGE_2M_SHIFT) & 0x1ff));
-		p = alloc_pages(ZONE_NORMAL, 1, PG_PTable_Maped);
-		set_pdt(tmp, mk_pdt(p->PHY_address, PAGE_USER_Page));
-
-		memcpy((void *)brk_start_addr, Phy_To_Virt(p->PHY_address), PAGE_2M_SIZE);
-	}
-out:
-	tsk->mm = newmm;
-	return error;
-} */
-static void copy_pageTables(mmdsc_t * newmm, u64_t addr){
-	
-	// here is only copy Page Table. 
-	// when page_fault occur, allcot memory and copy user data
-	u64_t *tmp = nullptr, *virtual = nullptr, *parent_tmp;
-	u64_t attr = 0;
-	struct Page *p = nullptr;
-
-	// alter page directory entry of parent_process(current_process)
-	// here requires atomic execution
-	parent_tmp = pde_ptr(addr);
-	p = (memory_management_struct.pages_struct + (*parent_tmp  >> PAGE_2M_SHIFT));
-	assert(p->PHY_address == (*parent_tmp & PAGE_2M_MASK))
-	if(p->PHY_address == 0)
-		return;
-
-
-	// 申请PDPT内存，填充PML4页表项 for child_process
-	tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	if(!(*tmp & PAGE_Present)) {
-		virtual = knew(PAGE_4K_SIZE, 0);
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
-
-	// 申请PDT内存，填充PDPT页表项 for child_process
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
-	if(!(*tmp & PAGE_Present)) {
-		virtual = knew(PAGE_4K_SIZE, 0);
-		memset(virtual, 0, PAGE_4K_SIZE);
-		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	}
-
-	// 填充 PDT 页表项 for child_process
-	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
-	if(!(*tmp & PAGE_Present)) {
-
-		attr = (*parent_tmp & (0xfffUL)); // get parent privilege
-		
-		attr = (attr & (~PAGE_R_W)); // delet PW right
-		// set parent and child's Page privilege, parent and child share the Page
-		set_pdt(tmp, mk_pdt(p->PHY_address, attr));
-		set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
-		// add Page_struct count
-		p->reference_count++;
-	}
-	return;
-}
-#endif
-
 u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
@@ -332,14 +220,14 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	kvma_inituserspace_virmemadrs(&tsk->mm->msd_virmemadrs);
 	hal_mmu_init(&tsk->mm->msd_mmu);
 
-	tsk->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox;
-	tsk->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox;
+	// tsk->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox;
+	// tsk->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox;
 	// 扫描所有的虚拟区间, 为子进程创建
     list_for_each(vma_entry, &current->mm->msd_virmemadrs.vs_list)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
 
-		nvma_vfork_vadrs(newmm, vma);
+		copy_one_vma(newmm, vma);
 
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
@@ -349,28 +237,32 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 			if (vma_phy != NULL)
 			{
 				tmpmsa = find_msa_from_pagebox(vma->kva_kvmbox, vma_phy);
+				char* buf = knew(PAGE_4K_SIZE, 0);
 				if (tmpmsa == nullptr)
 				{
 					color_printk(RED, BLACK, "This is a import error!\n");
 				}
+				memcpy(vma_start, buf, PAGE_4K_SIZE);
 				// 给父,子进程修改权限，物理页面重新映射
-				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
-				hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
-				tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
-				tmpmsa->md_cntflgs.mf_refcnt++;
+				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
+				// hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
+				// hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
+				// tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
+				// tmpmsa->md_cntflgs.mf_refcnt++;
 			}
 			vma_start += PAGE_4K_SIZE;
 		}
     }
-	// // 扫描所有的虚拟区间, 为子进程创建
-    // list_for_each(vma_entry, &tsk->mm->msd_virmemadrs.vs_list)
-    // {
-    //     vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
+	// 扫描所有的虚拟区间, 为子进程创建
+    list_for_each(vma_entry, &tsk->mm->msd_virmemadrs.vs_list)
+    {
+        vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
 
-	// 	vma_start = vma->kva_start;
-	// 	vma_end = vma->kva_end;
-	// 	color_printk(RED, BLACK,"start:%x end:%x \n", vma_start, vma_end);
-    // }
+		vma_start = vma->kva_start;
+		vma_end = vma->kva_end;
+		DEBUGK("start:%x end:%x file:%x boxpage:%x\n", vma_start, vma_end, vma->kva_vir2file, vma->kva_kvmbox);
+		// DEBUGK("start:%x end:%x boxpage:%x\n", vma_start, vma_end, vma->kva_kvmbox);
+    }
 	flush_tlb();
 
 	tsk->flags &= ~PF_VFORK;

@@ -513,7 +513,7 @@ adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtf
 	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vtft, vaslimits, vastype, flags);
 }
 // 复制一个虚拟内存空间
-adr_t nvma_vfork_vadrs(mmdsc_t* mm, const kmvarsdsc_t* nvma)
+adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 {
 	if(nvma == nullptr)
 	{
@@ -543,8 +543,8 @@ adr_t nvma_vfork_vadrs(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 	if (nvma->kva_kvmbox != nullptr && ovma->kva_kvmbox == nullptr) // 共享页面盒子
 	{
 		// 增加共享计数
-		knl_count_kvmemcbox(nvma->kva_kvmbox);
-		ovma->kva_kvmbox = nvma->kva_kvmbox;
+		// knl_count_kvmemcbox(nvma->kva_kvmbox);
+		// ovma->kva_kvmbox = nvma->kva_kvmbox;
 	}
 	return ret;
 }
