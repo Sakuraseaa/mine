@@ -46,10 +46,8 @@ task_t *get_task(s64_t pid)
 // 新的程序位于文件系统根目录下，名为init.bin
 u64_t init(u64_t arg)
 {
-	// pt_regs_t *regs; // 这里破坏了中断栈
 	DISK1_FAT32_FS_init();
  	DEBUGK("init task is running, arg:%#018lx\n", arg);
-	// color_printk(RED, BLACK, "init task is running, arg:%#018lx\n", arg);
 
 	// sys_open("/The quick brown.fox", O_CREAT);
 
@@ -58,8 +56,6 @@ u64_t init(u64_t arg)
 	current->thread->gs = USER_DS;
 	current->thread->fs = USER_DS;
 	current->flags &= ~PF_KTHREAD;
-
-	// while(1);
 
 	// 更换rsp到中断栈, PCB最上部的需要pop返回的位置
 	// 压入了ret_system_call作为返回地址
@@ -199,6 +195,7 @@ void exit_files(task_t *tsk)
  * @param tsk 子进程PCB
  * @return u64_t
  */
+#if 0
 /*
 u64_t copy_mm(u64_t clone_flags, task_t *tsk)
 {
@@ -260,56 +257,56 @@ out:
 	tsk->mm = newmm;
 	return error;
 } */
-
-
 static void copy_pageTables(mmdsc_t * newmm, u64_t addr){
 	
-	// // here is only copy Page Table. 
-	// // when page_fault occur, allcot memory and copy user data
-	// u64_t *tmp = nullptr, *virtual = nullptr, *parent_tmp;
-	// u64_t attr = 0;
-	// struct Page *p = nullptr;
+	// here is only copy Page Table. 
+	// when page_fault occur, allcot memory and copy user data
+	u64_t *tmp = nullptr, *virtual = nullptr, *parent_tmp;
+	u64_t attr = 0;
+	struct Page *p = nullptr;
 
-	// // alter page directory entry of parent_process(current_process)
-	// // here requires atomic execution
-	// parent_tmp = pde_ptr(addr);
-	// p = (memory_management_struct.pages_struct + (*parent_tmp  >> PAGE_2M_SHIFT));
-	// assert(p->PHY_address == (*parent_tmp & PAGE_2M_MASK))
-	// if(p->PHY_address == 0)
-	// 	return;
+	// alter page directory entry of parent_process(current_process)
+	// here requires atomic execution
+	parent_tmp = pde_ptr(addr);
+	p = (memory_management_struct.pages_struct + (*parent_tmp  >> PAGE_2M_SHIFT));
+	assert(p->PHY_address == (*parent_tmp & PAGE_2M_MASK))
+	if(p->PHY_address == 0)
+		return;
 
 
-	// // 申请PDPT内存，填充PML4页表项 for child_process
-	// tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
-	// if(!(*tmp & PAGE_Present)) {
-	// 	virtual = knew(PAGE_4K_SIZE, 0);
-	// 	memset(virtual, 0, PAGE_4K_SIZE);
-	// 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	// }
+	// 申请PDPT内存，填充PML4页表项 for child_process
+	tmp = Phy_To_Virt((u64_t *)((u64_t)newmm->pgd & (~0xfffUL)) + ((addr >> PAGE_GDT_SHIFT) & 0x1ff));
+	if(!(*tmp & PAGE_Present)) {
+		virtual = knew(PAGE_4K_SIZE, 0);
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
 
-	// // 申请PDT内存，填充PDPT页表项 for child_process
-	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
-	// if(!(*tmp & PAGE_Present)) {
-	// 	virtual = knew(PAGE_4K_SIZE, 0);
-	// 	memset(virtual, 0, PAGE_4K_SIZE);
-	// 	set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
-	// }
+	// 申请PDT内存，填充PDPT页表项 for child_process
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_1G_SHIFT) & 0x1ff));
+	if(!(*tmp & PAGE_Present)) {
+		virtual = knew(PAGE_4K_SIZE, 0);
+		memset(virtual, 0, PAGE_4K_SIZE);
+		set_pdpt(tmp, mk_pdpt(Virt_To_Phy(virtual), PAGE_USER_Dir));
+	}
 
-	// // 填充 PDT 页表项 for child_process
-	// tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
-	// if(!(*tmp & PAGE_Present)) {
+	// 填充 PDT 页表项 for child_process
+	tmp = Phy_To_Virt((u64_t *)(*tmp & (~0xfffUL)) + ((addr >> PAGE_2M_SHIFT) & 0x1ff));
+	if(!(*tmp & PAGE_Present)) {
 
-	// 	attr = (*parent_tmp & (0xfffUL)); // get parent privilege
+		attr = (*parent_tmp & (0xfffUL)); // get parent privilege
 		
-	// 	attr = (attr & (~PAGE_R_W)); // delet PW right
-	// 	// set parent and child's Page privilege, parent and child share the Page
-	// 	set_pdt(tmp, mk_pdt(p->PHY_address, attr));
-	// 	set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
-	// 	// add Page_struct count
-	// 	p->reference_count++;
-	// }
+		attr = (attr & (~PAGE_R_W)); // delet PW right
+		// set parent and child's Page privilege, parent and child share the Page
+		set_pdt(tmp, mk_pdt(p->PHY_address, attr));
+		set_pdt(parent_tmp, mk_pdt(p->PHY_address, attr));
+		// add Page_struct count
+		p->reference_count++;
+	}
 	return;
 }
+#endif
+
 u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 {
 	s32_t error = 0;
@@ -473,7 +470,6 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 {
 	s32_t retval = 0;
 	task_t *tsk = nullptr;
-
 	// alloc & copy task struct
 	tsk = (task_t *)knew(STACK_SIZE, 0);
 	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (u64_t)tsk);
@@ -482,7 +478,7 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 		retval = -EAGAIN;
 		goto alloc_copy_task_fail;
 	}
-	memset(tsk, 0, sizeof(*tsk));
+	memset(tsk, 0, sizeof(task_t));
 	memcpy(current, tsk, sizeof(task_t));
 	list_init(&tsk->list);
 	wait_queue_init(&tsk->wait_childexit, current);
@@ -519,7 +515,7 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 	retval = tsk->pid;
 	wakeup_process(tsk);
 
-// fork_ok:
+fork_ok:
 	return retval;
 
 copy_thread_fail:
@@ -617,25 +613,6 @@ void __switch_to(task_t *prev, task_t *next)
 // 任务初始化
 void task_init()
 {
-	u64_t *tmp = nullptr;
-	// s32_t i = 0;
-
-	// u64_t *vaddr = nullptr;
-	// vaddr = Phy_To_Virt((u64_t)Get_gdt() & (~0xfffUL));
-
-	// 内核层空间占用顶层页表的256个页表项, i think 这些代码是多余的
-	// for (i = 256; i < 512; i++)
-	// {
-	// 	tmp = vaddr + i;
-	// 	if (*tmp == 0)
-	// 	{	
-	// 		u64_t *virtual = knew(PAGE_4K_SIZE, 0);
-	// 		memset(virtual, 0, PAGE_4K_SIZE);
-	// 		set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_KERNEL_GDT));
-	// 		// set_mpl4t(tmp, mk_mpl4t(Virt_To_Phy(virtual), PAGE_USER_GDT));
-	// 	}
-	// }
-
 	// 初始化内核进程的内存结构
 	initmm.start_code = memory_management_struct.start_code;
 	initmm.end_code = memory_management_struct.end_code;
@@ -680,6 +657,10 @@ void task_init()
 
 	init_task_union.task.state = TASK_RUNNING;
 	init_task_union.task.preempt_count = 0;
+	
+	// 内核初始化完毕，该进程不需要再被执行
+	// 给内核主程序赋值拥有虚拟时间的较大值, 依次降低他的允许优先级
+	init_task_union.task.vrun_time = 0x202410241517;
 }
 
 
