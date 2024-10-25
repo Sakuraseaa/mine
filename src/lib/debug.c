@@ -6,11 +6,12 @@ extern serial_t serials[2];
 
 void debugk(cstr_t file, cstr_t func,s32_t line, cstr_t fmt, ...)
 {
+    va_list args;
     s32_t i = sprintf(debugk_buf, "[%s %d:%s] ", strrchr(file,'/') + 1, line,func);
     serial_write(&serials[0], debugk_buf, i);
 
 
-    va_list args;
+
     va_start(args, fmt);
     i = vsprintf(debugk_buf, fmt, args);
     va_end(args);

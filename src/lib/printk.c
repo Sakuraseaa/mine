@@ -44,6 +44,8 @@ static str_t number(str_t str, s64_t num, s32_t base, s32_t size, s32_t precisio
 	char_t c, sign, tmp[50];
 	cstr_t digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	s32_t i;
+	
+	memset(tmp, 0, sizeof(tmp)); // 清零 tmp 数组
 
 	if (type & SMALL)
 		digits = "0123456789abcdefghijklmnopqrstuvwxyz";

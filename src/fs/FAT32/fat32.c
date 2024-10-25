@@ -95,7 +95,7 @@ s64_t FAT32_close(inode_t *inode, file_t *filp) { return 1; }
  * @param buf 存储读出数据的缓存区
  * @param count 要读取的字节数
  * @param position 相对于文件的偏移位置/目标位置, 该参数会被FAT32_read进行修改
- * @return long 成功返回读取的字节数，失败返回错误码
+ * @return long 成功返回读取的字节数，失败返回错误码, FAT32好像有错误
  */
 s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
 {
@@ -109,7 +109,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     s32_t index = *position / fsbi->bytes_per_cluster;   // 目标位置偏移簇数 / 扇区数
     s64_t offset = *position % fsbi->bytes_per_cluster; // 目标位置簇内偏移字节 / 扇区内偏移字节
     buf_t buffer = (buf_t)knew(fsbi->bytes_per_cluster, 0);
-
+    s64_t copy_position = *position;
     if (!cluster)
         return -EFAULT;
     // A.得到要读的簇号
@@ -123,7 +123,6 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         index = count;
 
     // preempt:先占，先取，current->preempt_count是当前进程持有自旋锁数量
-    // color_printk(GREEN, BLACK, "FAT32_read- first_cluster:%d, size:%d, preempt_count:%d\n", finode->first_cluster, filp->dentry->dir_inode->file_size, current->preempt_count);
 
     // C. 循环体实现数据读取过程
     do
@@ -144,6 +143,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         // c.3. 计算本次从buffer缓冲区中复制给用户的数据长度
         length = index <= (fsbi->bytes_per_cluster - offset) ? index : fsbi->bytes_per_cluster - offset;
 
+
         // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
         if ((u64_t)buf < TASK_SIZE)
             copy_to_user(buffer + offset, buf, length);
@@ -155,8 +155,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         buf += length;
         offset -= offset; // 第二次循环后，offset = 0
         *position += length;
-
-    } while (index && (cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster)));
+    } while ((index != 0) && (cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster)));
 
     kdelete(buffer, fsbi->bytes_per_cluster);
 
@@ -164,6 +163,8 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     // 否则说明数据读取错误，进而返回错误码
     if (!index)
         retval = count;
+    
+    DEBUGK("read bytes:%#x form file-area(%#x-%#x) | Disk-file-name: %s\n",  retval, copy_position, *position, filp->dentry->name);
     return retval;
 }
 

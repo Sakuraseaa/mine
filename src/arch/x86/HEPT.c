@@ -132,7 +132,7 @@ void HEPT_init()
    list_init(&sleep_queue_head.wait_list);
    
    get_cmos_time(&time);
-   color_printk(RED, BLACK, "year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d\n",
+   DEBUGK("year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d\n",
    time.year, time.month, time.day, time.week_day, time.hour, time.minute, time.second);
    // color_printk(RED, BLACK, "year:%#010x, month:%#010x, day:%#010x,  week:%#010x, hour:%#010x, mintue:%#010x, second:%#010x\n",
    //  Time.year, Time.month, Time.day, Time.week_day, Time.hour, Time.minute, Time.second);

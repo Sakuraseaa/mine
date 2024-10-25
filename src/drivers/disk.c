@@ -4,6 +4,7 @@
 #include "mmkit.h"
 #include "kernelkit.h"
 
+static request_queue_t disk_request;
 // 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
 void end_request(block_buffer_node_t *node)
 {

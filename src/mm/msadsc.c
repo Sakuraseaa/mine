@@ -103,7 +103,7 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
     *msar = TotalMem;
     *msavstart = (msadsc_t*)(memory_management_struct.end_of_struct);
     
-    color_printk(BLUE, BLACK,"OS having %d 4k pagesize  = %d MB\n", TotalMem, (TotalMem * PAGE_4K_SIZE) / 1024 / 1024);
+    DEBUGK("OS having %d 4k pagesize  = %d MB\n", TotalMem, (TotalMem * PAGE_4K_SIZE) / 1024 / 1024);
     glomm.mo_maxpages = TotalMem; // 内存总共划分成4kb，总共4kB页数
     return;
 }

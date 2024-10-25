@@ -258,13 +258,6 @@ sint_t krluserspace_accessfailed(adr_t fairvadrs)
     return vma_map_fairvadrs(mm, fairvadrs);
 }
 
-s64_t do_no_page(u64_t virtual_address)
-{   
-    DEBUGK(" proc:%d, no page %#0lx \n", current->pid, virtual_address);
-    return krluserspace_accessfailed(virtual_address);
-}
-
-
 /**
  * @brief 写保护页面处理
  *    配合fork()
@@ -336,3 +329,8 @@ u64_t do_wp_page(u64_t virtual_address) {
     return 0;
 }
 
+s64_t do_no_page(u64_t virtual_address)
+{   
+    DEBUGK(" proc:%d, no page %#0lx \n", current->pid, virtual_address);
+    return krluserspace_accessfailed(virtual_address);
+}

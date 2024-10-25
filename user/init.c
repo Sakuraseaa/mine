@@ -23,12 +23,12 @@ int main()
 	long pid = getpid();
 	pid = fork();
 	if (pid == 0) {
-		// printf(" i am child -> [%d, %d] \n", getpid(), pid);
-		printf(" i am child -> [%d] \n",  pid);
+		printf(" i am child -> [%d, %d] \n", getpid(), pid);
+		// printf(" i am child -> [%d] \n",  pid);
 		// info('B');
 	} else {
-		// printf(" i am parent -> [%d, %d] \n", getpid(), pid);
-		printf(" i am parent -> [%d] \n",  pid);
+		printf(" i am parent -> [%d, %d] \n", getpid(), pid);
+		// printf(" i am parent -> [%d] \n",  pid);
 		// info('B');
 	}
 

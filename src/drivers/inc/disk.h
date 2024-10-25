@@ -355,7 +355,6 @@ typedef struct request_queue
 	s64_t block_request_count;			// 剩余请求数
 }request_queue_t;
 
-request_queue_t disk_request;
 extern block_dev_opt_t IDE_device_operation;
 
 #endif
