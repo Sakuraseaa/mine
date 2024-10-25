@@ -242,9 +242,10 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 				{
 					color_printk(RED, BLACK, "This is a import error!\n");
 				}
-				memcpy(vma_start, buf, PAGE_4K_SIZE);
+				memcpy((void*)vma_start, buf, PAGE_4K_SIZE);
 				// 给父,子进程修改权限，物理页面重新映射
-				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
+				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
+				DEBUGK("direct copy to %#lx form %#lx \n", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
 				// hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
 				// hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
 				// tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
@@ -260,7 +261,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
-		DEBUGK("start:%x end:%x file:%x boxpage:%x\n", vma_start, vma_end, vma->kva_vir2file, vma->kva_kvmbox);
+		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx\n", vma_start, vma_end, vma->kva_vir2file, vma->kva_kvmbox);
 		// DEBUGK("start:%x end:%x boxpage:%x\n", vma_start, vma_end, vma->kva_kvmbox);
     }
 	flush_tlb();
@@ -273,41 +274,6 @@ out:
 
 void exit_mm_fork(task_t *tsk)
 {
-	// u64_t *tmp4 = nullptr, *tmp3 = nullptr, *tmp2 = nullptr;
-	// u64_t tmp1 = 0;
-	// size_t i = 0, j = 0, k = 0;
-	// struct Page* p = nullptr;
-	// if (tsk->flags & PF_VFORK)
-	// 	return;
-
-	// mmdsc_t  *newmm = tsk->mm;
-	// tmp4 = (u64_t*)newmm->pgd;
-
-	// for(i = 0; i < 256; i++) {	// 遍历 PML4 页表
-	// 	if((*(tmp4 + i)) & PAGE_Present) {
-	// 		tmp3 = Phy_To_Virt(*(tmp4 + i) & ~(0xfffUL)); // 屏蔽目录项标志位，获取PDPT页表地址
-			
-	// 		for (j = 0; j < 512; j++) { // 遍历 PDPT 页表
-	// 			if((*(tmp3 + j)) & PAGE_Present) {
-					
-	// 				tmp2 = Phy_To_Virt(*(tmp3 + j) & ~(0xfffUL)) ; //遍历 PDT 页表项
-	// 				for(k = 0; k < 512; k++) {
-	// 						tmp1 = (*(tmp2 + k));
-	// 						p = (memory_management_struct.pages_struct + (tmp1  >> PAGE_2M_SHIFT));
-	// 						assert(p->reference_count > 1);
-	// 						p->PHY_address--;
-	// 						// for parent_process's page_table privilege, give page_fault solve. 
-	// 					}
-	// 				kdelete(Phy_To_Virt(*tmp2), PAGE_4K_SIZE);
-	// 			}
-	// 		}
-	// 		kdelete(Phy_To_Virt(*tmp3), PAGE_4K_SIZE);
-	// 	}
-	// }
-	// kdelete(Phy_To_Virt(tsk->mm->pgd), PAGE_4K_SIZE); // release PMl4's memory
-
-	// if (tsk->mm != nullptr)
-	// 	kdelete(tsk->mm, sizeof(mmdsc_t ));
 }
 
 
