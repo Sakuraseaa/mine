@@ -12,14 +12,7 @@ task_t *get_next_task(task_t* curt)
 	// 否则 就绪队列为空，继续执行当前进程
 	if (list_is_empty(&task_schedule_table.task_queue.list))
 	{
-		if(curt->state == TASK_RUNNING)
-		{
-			return curt;
-		}
-		else
-		{
-			return &init_task_union.task;
-		}
+		return &init_task_union.task;
 	}
 
 	//  从就绪队列中得到一个进程
@@ -32,10 +25,11 @@ task_t *get_next_task(task_t* curt)
 // 加入一个任务到就绪队列, 该队列按照虚拟运行时间由小到大进行排序
 void insert_task_queue(task_t *tsk)
 {
-	task_t *tmp = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
 	if (tsk == &init_task_union.task)
 		return;
-
+	
+	task_t *tmp = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
+	
 	if (list_is_empty(&task_schedule_table.task_queue.list))
 	{
 	}
