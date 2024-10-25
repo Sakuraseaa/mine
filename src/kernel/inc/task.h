@@ -125,7 +125,7 @@ union task_union
 		.sigaction = (nullptr),              \
 		.priority = 2,                    \
 		.file_struct = {0},               \
-		.next = &tsk,                     \
+		.next = nullptr,                     \
 		.parent = &tsk,                   \
 		.uid = 0,	\
 		.gid = 0,  \

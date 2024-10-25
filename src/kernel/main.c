@@ -45,7 +45,8 @@ void Start_Kernel(void)
 	// 初始化异常函数表 IDT
 	sys_vector_init();
 	
-	// init_cpu();
+	serial_init();
+	init_cpu();
 
 	memory_management_struct.start_code = (u64_t)&_text;
 	memory_management_struct.end_code = (u64_t)&_etext;
@@ -77,7 +78,6 @@ void Start_Kernel(void)
 	init_8259A();
 #endif
 
-	serial_init();
 
 	keyboard_init();
 
@@ -101,7 +101,7 @@ void Start_Kernel(void)
 	while (!shell_up)
 		SKOFLOVE++; 
 	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
-	
+	task_t* tsk = nullptr;
 	while (1)
 	{
 
@@ -109,5 +109,16 @@ void Start_Kernel(void)
 		
 		// 这里可以遍历所有进程，寻找僵尸进程。释放他。
 		// 但是这种做法有点笨，来点消息通知就好了
+		__asm__ __volatile__( "pause \n\t":::"memory");
+		/*
+			TASK_RUNNING (1UL << 0)
+			TASK_INTERRUPTIBLE (1UL << 1)
+			TASK_UNINTERRUPTIBLE (1UL << 2)
+			TASK_ZOMBIE (1UL << 3)
+			TASK_STOPPED (1UL << 4)
+		*/
+		task_t* tsk = &init_task_union.task;
+		for(; tsk != nullptr ; tsk = tsk->next)
+			DEBUGK("[pid:%d state:%d] ->", tsk->pid, tsk->state);
 	}
 }
