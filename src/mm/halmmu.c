@@ -876,8 +876,7 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 	pcr3 = (adr_t)(cr3.c3s_c3sflgs.c3s_plm4a << 12);
 	vcr3 = phyadr_to_viradr(pcr3);
 
-	memcpy((char*)vcr3 + 256, (void*)mmu->mud_tdirearr + 256, sizeof(L4_ptarr_t) / 2);
-	
+	memcpy((void*)(vcr3 + 2048), (void*)(mmu->mud_tdirearr->tde_arr + 256), sizeof(L4_ptarr_t) / 2);
 	mmu->mud_cr3.c3s_entry = (u64_t)viradr_to_phyadr((adr_t)mmu->mud_tdirearr);
 	rets = TRUE;
 
