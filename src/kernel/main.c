@@ -117,8 +117,12 @@ void Start_Kernel(void)
 			TASK_ZOMBIE (1UL << 3)
 			TASK_STOPPED (1UL << 4)
 		*/
-		task_t* tsk = &init_task_union.task;
-		for(; tsk != nullptr ; tsk = tsk->next)
-			DEBUGK("[pid:%d state:%d] ->", tsk->pid, tsk->state);
+		// task_t* tsk = &init_task_union.task;
+		// for(; tsk != nullptr ; tsk = tsk->next)
+		// {
+			__asm__ __volatile__( "pause \n\t":::"memory");
+			// DEBUGK("[pid:%d state:%d] ->", tsk->pid, tsk->state);
+			__asm__ __volatile__( "pause \n\t":::"memory");
+		// }
 	}
 }
