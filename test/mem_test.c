@@ -11,13 +11,14 @@ static void Print_Map(map_entry_t* map, const s64_t i_m) {
     size_t i;
     // User
     for(i = 0; i < i_m; i++) {
-        if(map[i].start_vir >= PAGE_OFFSET)     break;
-        
-        color_printk(WHITE, BLACK, "%#018lx ~ %#018lx",map[i].start_vir, map[i].end_vir);
+        if(map[i].start_vir >= PAGE_OFFSET)
+        {
+            break;
+        }
+
+        color_printk(WHITE, BLACK, "%#lx - %#lx",map[i].start_vir, map[i].end_vir);
         color_printk(YELLOW, BLACK, " <----> ");
-        color_printk(WHITE, BLACK, "%#18lx ~ %#18lx", map[i].start_phy, map[i].end_phy);
-        color_printk(BLUE, BLACK, " == ");
-        color_printk(WHITE, BLACK, "[%d, %d)KB\n", 4 * (map[i].start_phy >> PAGE_4K_SHIFT), 4 * (map[i].end_phy >> PAGE_4K_SHIFT));
+        color_printk(WHITE, BLACK, "%#lx - %#lx\n", map[i].start_phy, map[i].end_phy);
     }
 
     color_printk(RED, WHITE, "                                         Below is Kernel Map!                                           \n");
@@ -31,14 +32,8 @@ static void Print_Map(map_entry_t* map, const s64_t i_m) {
     }   
 }
 
-// 行有不得，反求诸己。😤 <-😣 
-// 在解析内核的时候会有很多条内核映射目录，倒数第二层的目录是有问题的 如何修改 ？😢 
-// 2024-8-6::终于完美解决 
-/**
- * @brief  打印 tsk任务的 虚拟内存到物理内存的映射情况。
- * 
- * @param tsk 
- */
+
+#if 0
 void User_Map(u64_t* PML4, map_entry_t* map, size_t* i_m) {
     u64_t *PTDPE = 0, *PTDE = 0, *PTE = 0;
 	size_t i = 0, j = 0, k = 0, z = 0;
@@ -99,19 +94,54 @@ void User_Map(u64_t* PML4, map_entry_t* map, size_t* i_m) {
 
     }
 }
+#endif
+// 行有不得，反求诸己。😤 <-😣 
+// 在解析内核的时候会有很多条内核映射目录，倒数第二层的目录是有问题的 如何修改 ？😢 
+// 2024-8-6::终于完美解决 
 
+/**
+ * @brief  打印 tsk任务的 虚拟内存到物理内存的映射情况。
+ * 
+ * @param tsk 
+ */
+static size_t User_Map(mmdsc_t* mm, map_entry_t* map) 
+{
+
+	adr_t  viraddr = 0, phyaddr = 0;
+    size_t i = 0;
+	msadsc_t *tmpmsa = nullptr;
+    list_n_t *vma_entry = nullptr;
+    kmvarsdsc_t *vma = nullptr;
+    
+    list_for_each(vma_entry, &mm->msd_virmemadrs.vs_list)
+    {
+        vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
+        
+    //     for (viraddr = vma->kva_start; viraddr < vma->kva_end; viraddr += PAGE_4K_SIZE)
+    //     {
+    //         // phyaddr = hal_mmu_virtophy(&mm->msd_mmu, viraddr);
+    //         // if (phyaddr == NULL) {
+    //         //     continue;
+    //         // }
+    //         // map[i].start_vir = viraddr;
+    //         // map[i].end_vir = viraddr + PAGE_4K_SIZE;
+    //         // map[i].start_phy = phyaddr;
+    //         // map[i].end_phy = phyaddr + PAGE_4K_SIZE;
+    //         // i++;
+    //     }
+    }
+    return i;
+}
 void test_show_vir_phy(task_t *tsk) {
 
 	size_t i_m = 0;
 
-	mmdsc_t  *newmm = tsk->mm;
-	u64_t* PML4 = newmm->msd_mmu.mud_tdirearr;
+    // map_entry_t* map = knew(sizeof(map_entry_t) * 56, 0);
 
-    map_entry_t* map = knew(sizeof(map_entry_t) * 15, 0);
+    // i_m = User_Map(tsk->mm, map);
 
-    User_Map(PML4, map, &i_m);
-
-    Print_Map(map, i_m);
-    kdelete(map, sizeof(map_entry_t));
+    // Print_Map(map, i_m);
+    
+    // kdelete(map, sizeof(map_entry_t) * 56);
 }
 
