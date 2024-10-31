@@ -300,20 +300,24 @@ void read_handler(u64_t nr, u64_t parameter)
 {
     block_buffer_node_t *node = ((request_queue_t *)parameter)->in_using;
 
-    if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR) // 检测硬盘控制器，是否发生了错误
-        color_printk(RED, BLACK, "read_handler:%#010x\n", io_in8(PORT_DISK1_ERR_FEATURE));
+    if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR)
+    {    // 检测硬盘控制器，是否发生了错误
+        color_printk(RED, BLACK, "read_handler:%#010x LAB: %d sectors: %d\n", io_in8(PORT_DISK1_ERR_FEATURE), node->LBA, node->count);
+        while(1);
+    }
     else
+    {
         port_insw(PORT_DISK1_DATA, node->buffer, 256); // 硬盘操作成功，读取数据到缓存区
 
-    // 在PIO模式下, 当使用控制命令一次性访问多个连续的扇区时，
-    // 硬盘会在每个扇区操作结束后向处理器发送一个中断信号，以通知处理器为操作下一个扇区做准备
-    // 每次中断递减操作的扇区数count, 递增缓冲区基址
-
-    node->count--; // 要读的扇区数减少
-    if (node->count)
-    {
-        node->buffer += 512;
-        return;
+        // 在PIO模式下, 当使用控制命令一次性访问多个连续的扇区时，
+        // 硬盘会在每个扇区操作结束后向处理器发送一个中断信号，以通知处理器为操作下一个扇区做准备
+        // 每次中断递减操作的扇区数count, 递增缓冲区基址
+        node->count--; // 要读的扇区数减少
+        if (node->count)
+        {
+            node->buffer += 512;
+            return;
+        }
     }
 
     end_request(node);
