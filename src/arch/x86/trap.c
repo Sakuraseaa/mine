@@ -261,7 +261,7 @@ void do_page_fault(pt_regs_t * regs,u64_t error_code)
 		if(do_no_page(cr2) == EOK)	// 处理缺页成功则返回
 			return;
 		
-		color_printk(RED,BLACK,"Page Not-Present! address: %#x\t", cr2);
+		color_printk(RED,BLACK,"(%d)Page Not-Present! address: %#x\t", current->pid, cr2);
 	}
 	if(error_code & 0x02) {
 		do_wp_page(cr2);

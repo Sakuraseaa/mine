@@ -132,14 +132,14 @@ block_buffer_node_t *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *bu
     {
     case ATA_READ_CMD:
         node->cmd = ATA_READ_CMD;
-        node->end_handler = read_handler;
+        node->handler = read_handler;
         break;
     case ATA_WRITE_CMD:
         node->cmd = ATA_WRITE_CMD;
-        node->end_handler = write_handler;
+        node->handler = write_handler;
         break;
     default:
-        node->end_handler = other_handler;
+        node->handler = other_handler;
         node->cmd = cmd;
         break;
     }
@@ -252,7 +252,7 @@ block_dev_opt_t IDE_device_operation = {
 void disk_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
     block_buffer_node_t *node = ((request_queue_t *)parameter)->in_using;
-    node->end_handler(nr, parameter);
+    node->handler(nr, parameter);
 }
 
 void disk_init()
