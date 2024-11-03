@@ -210,7 +210,7 @@ drvstus_t knew_devid(devid_t *devid)
         return DFCERRSTUS;
     }
 
-    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    spinlock_storeflg_cli(&dtbp->devt_lock, &cpufg);
     if (devmty != dtbp->devt_devclsl[devmty].dtl_type)
     {
         rets = DFCERRSTUS;
@@ -234,7 +234,7 @@ drvstus_t knew_devid(devid_t *devid)
     devid->dev_nr = devidnr++;
     rets = DFCOKSTUS;
 return_step:
-    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    spinunlock_restoreflg(&dtbp->devt_lock, &cpufg);
     return rets;
 }
 
@@ -243,10 +243,10 @@ drvstus_t krldriver_add_system(driver_t *drvp)
 {
     cpuflg_t cpufg;
     devtable_t *dtbp = &osdevtable;
-    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    spinlock_storeflg_cli(&dtbp->devt_lock, &cpufg);
     list_add_to_behind(&dtbp->devt_drvlist, &drvp->drv_list);
     dtbp->devt_drvnr++;
-    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    spinunlock_restoreflg(&dtbp->devt_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -295,7 +295,7 @@ drvstus_t knew_device(device_t *devp)
         return DFCERRSTUS;
     }
 
-    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    spinlock_storeflg_cli(&dtbp->devt_lock, &cpufg);
     if (devmty != dtbp->devt_devclsl[devmty].dtl_type)
     {
         rets = DFCERRSTUS;
@@ -324,7 +324,7 @@ drvstus_t knew_device(device_t *devp)
     
     rets = DFCOKSTUS;
 return_step:
-    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    spinunlock_restoreflg(&dtbp->devt_lock, &cpufg);
     return rets;
 }
 
@@ -336,9 +336,9 @@ drvstus_t krldev_inc_devcount(device_t *devp)
         return DFCERRSTUS;
     }
     cpuflg_t cpufg;
-    // hal_spinlock_saveflg_cli(&devp->dev_lock, &cpufg);
+    spinlock_storeflg_cli(&devp->dev_lock, &cpufg);
     devp->dev_count++;
-    // hal_spinunlock_restflg_sti(&devp->dev_lock, &cpufg);
+    spinunlock_restoreflg(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -350,9 +350,9 @@ drvstus_t krldev_dec_devcount(device_t *devp)
         return DFCERRSTUS;
     }
     cpuflg_t cpufg;
-    // hal_spinlock_saveflg_cli(&devp->dev_lock, &cpufg);
+    spinlock_storeflg_cli(&devp->dev_lock, &cpufg);
     devp->dev_count--;
-    // hal_spinunlock_restflg_sti(&devp->dev_lock, &cpufg);
+    spinunlock_restoreflg(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -360,10 +360,10 @@ drvstus_t krldev_add_request(device_t *devp, objnode_t *request)
 {
     cpuflg_t cpufg;
     objnode_t *np = (objnode_t *)request;
-    // krlspinlock_cli(&devp->dev_lock, &cpufg);
+    spinlock_storeflg_cli(&devp->dev_lock, &cpufg);
     list_add_to_behind(&devp->dev_rqlist, &np->on_list);
     devp->dev_rqlnr++;
-    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    spinunlock_restoreflg(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 
@@ -378,10 +378,10 @@ drvstus_t krldev_complete_request(device_t *devp, objnode_t *request)
         system_error("krldev_complete_request err devp->dev_rqlnr<1");
     }
     cpuflg_t cpufg;
-    // krlspinlock_cli(&devp->dev_lock, &cpufg);
+    spinlock_storeflg_cli(&devp->dev_lock, &cpufg);
     list_del(&request->on_list);
     devp->dev_rqlnr--;
-    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    spinunlock_restoreflg(&devp->dev_lock, &cpufg);
     // krlsem_up(&request->on_complesem);
     return DFCOKSTUS;
 }
@@ -396,7 +396,7 @@ drvstus_t krldev_retn_request(device_t *devp, uint_t iocode, objnode_t **retreq)
     objnode_t *np;
     list_h_t *list;
     drvstus_t rets = DFCERRSTUS;
-    // krlspinlock_cli(&devp->dev_lock, &cpufg);
+    spinlock_storeflg_cli(&devp->dev_lock, &cpufg);
     list_for_each(list, &devp->dev_rqlist)
     {
         np = list_entry(list, objnode_t, on_list);
@@ -410,7 +410,7 @@ drvstus_t krldev_retn_request(device_t *devp, uint_t iocode, objnode_t **retreq)
     rets = DFCERRSTUS;
     *retreq = NULL;
 return_step:
-    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    spinunlock_restoreflg(&devp->dev_lock, &cpufg);
     return rets;
 }
 
@@ -485,7 +485,7 @@ device_t *krlonidfl_retn_device(void *dfname, uint_t flgs)
     {
         return NULL;
     }
-    // krlspinlock_cli(&dtbp->devt_lock, &cpufg);
+    spinlock_storeflg_cli(&dtbp->devt_lock, &cpufg);
     if (devmty != dtbp->devt_devclsl[devmty].dtl_type)
     {
         findevp = NULL;
@@ -503,7 +503,7 @@ device_t *krlonidfl_retn_device(void *dfname, uint_t flgs)
 
     findevp = NULL;
 return_step:
-    // krlspinunlock_sti(&dtbp->devt_lock, &cpufg);
+    spinunlock_restoreflg(&dtbp->devt_lock, &cpufg);
     return findevp;
 }
 
@@ -516,11 +516,11 @@ drvstus_t knew_devhandle(device_t *devp, intflthandle_t handle, uint_t phyiline)
     //     return DFCERRSTUS;
     // }
     // cpuflg_t cpufg;
-    // // krlspinlock_cli(&devp->dev_lock, &cpufg);
+    // // spinlock_storeflg_cli(&devp->dev_lock, &cpufg);
 
     // list_add_to_behind(&devp->dev_intserlst, &sdp->s_indevlst);
     // devp->dev_intlnenr++;
-    // krlspinunlock_sti(&devp->dev_lock, &cpufg);
+    // spinunlock_restoreflg(&devp->dev_lock, &cpufg);
     return DFCOKSTUS;
 }
 

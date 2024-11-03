@@ -1079,7 +1079,7 @@ spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     fsbi->fat_fsinfo = (struct FAT32_FSInfo *)knew(sizeof(struct FAT32_FSInfo), 0);
     memset(fsbi->fat_fsinfo, 0, sizeof(struct FAT32_FSInfo));
     IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (u8_t *)fsbi->fat_fsinfo);
-    color_printk(ORANGE, BLACK, "FAT32 FSInfo\nFSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx\n", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
+    DEBUGK("FAT32 FSInfo\nFSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx\n", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
 
     // ================================== 创建根目录 =====================================
     // directory entry

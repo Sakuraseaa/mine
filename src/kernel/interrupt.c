@@ -201,7 +201,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
     virmemadrs_t *vma = &mm->msd_virmemadrs;
     kmvarsdsc_t *kmvd = nullptr;
     kvmemcbox_t *kmbox = nullptr;
-    // knl_spinlock(&vma->vs_lock);
+    spin_lock(&vma->vs_lock);
 
     //查找对应的kmvarsdsc_t结构, 没有找到. 说明虚拟地址不存在，直接返回
     kmvd = vma_map_find_kmvarsdsc(vma, vadrs);
@@ -225,19 +225,20 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
         rets = -ENOMEM;
         goto out;
     }
-
+    
     vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start, kmbox);
+    DEBUGK(" proc:%d, page is mapped --> %#0lx\n", current->pid ,phyadrs);
     rets = EOK;
 
 out:
-    //   knl_spinunlock(&vma->vs_lock);
+    spin_unlock(&vma->vs_lock);
     flush_tlb();
     return rets;
 }
 
 //缺页异常处理接口
 sint_t vma_map_fairvadrs(mmdsc_t *mm, adr_t vadrs)
-{//对参数进行检查
+{
     if ((0x1000 > vadrs) || (USER_VIRTUAL_ADDRESS_END < vadrs) || (nullptr == mm))
     {
         return -EPARAM;
@@ -248,7 +249,7 @@ sint_t vma_map_fairvadrs(mmdsc_t *mm, adr_t vadrs)
 
 //由异常分发器调用的接口
 sint_t krluserspace_accessfailed(adr_t fairvadrs)
-{//这里应该获取当前进程的mm，但是现在我们没有进程，才initmmadrsdsc代替
+{
     mmdsc_t* mm = current->mm;
     //应用程序的虚拟地址不可能大于USER_VIRTUAL_ADDRESS_END
     if(USER_VIRTUAL_ADDRESS_END < fairvadrs)
@@ -321,16 +322,18 @@ out:
 
 u64_t do_wp_page(u64_t virtual_address) {
     
-    DEBUGK(" proc:%d, wp page  %#0lx \n", current->pid, virtual_address);  
-    do_wp_page_core(current->mm, virtual_address);
-
-    // flush_tlb_one(virtual_address);
-    flush_tlb();
-    return 0;
+    u64_t rets = EOK;
+    DEBUGK(" proc:%d, wp page  %#0lx ", current->pid, virtual_address);
+    
+    rets = do_wp_page_core(current->mm, virtual_address);
+    flush_tlb_one(virtual_address);
+    // flush_tlb();
+    return rets;
 }
 
 s64_t do_no_page(u64_t virtual_address)
-{   
+{
     DEBUGK(" proc:%d, no page %#0lx \n", current->pid, virtual_address);
+
     return krluserspace_accessfailed(virtual_address);
 }

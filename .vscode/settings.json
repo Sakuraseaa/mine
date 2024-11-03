@@ -93,7 +93,9 @@
         "devtype.h": "c",
         "basekit.h": "c",
         "krlvadrsmem.h": "c",
-        "kerneltype.h": "c"
+        "kerneltype.h": "c",
+        "kernelfunc.h": "c",
+        "schedule_f.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

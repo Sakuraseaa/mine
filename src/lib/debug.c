@@ -16,6 +16,7 @@ void debugk(cstr_t file, cstr_t func,s32_t line, cstr_t fmt, ...)
     i = vsprintf(debugk_buf, fmt, args);
     va_end(args);
     serial_write(&serials[0], debugk_buf, i);
+    
 }
 
 void user_spin(str_t filename, cstr_t func, u64_t line, cstr_t condition)

@@ -1,8 +1,6 @@
 #ifndef _spinlock_h_
 #define _spinlock_h_
 
-// 这个锁也有问题😓, 调度系统有问题，我裂开来, - >>>> 锁没问题,hh
-// 本文件定义自旋锁，自旋锁用来防止多核侵略存储区
 typedef struct
 {
     __volatile__ u64_t lock;
