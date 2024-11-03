@@ -12,17 +12,26 @@ void end_request(block_buffer_node_t *node)
         color_printk(RED, BLACK, "end_request error\n");
 
     // 把任务重新加入到进程就绪队列
+    cpuflg_t flags;
+    
+    spinlock_storeflg_cli(&disk_request.rqt_lock, &flags);
     node->wait_queue.tsk->state = TASK_RUNNING;
-    insert_task_queue(node->wait_queue.tsk);
+    spinunlock_restoreflg(&disk_request.rqt_lock, &flags);
+    
+    if (current == node->wait_queue.tsk)
+    {
 
-    // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
-    current->flags |= NEED_SCHEDULE;
-
+    }
+    else
+    {
+        insert_task_queue(node->wait_queue.tsk);
+        // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
+        current->flags |= NEED_SCHEDULE;
+    }
     // 释放硬盘请求队列节点占用的内存
-    kdelete(disk_request.in_using, sizeof(block_buffer_node_t));
+    disk_request.in_using->flags = ATA_FINISHED;
     disk_request.in_using = nullptr;
-
-    if (disk_request.block_request_count) // 硬盘中断请求队列不为空，则继续处理请求包
+    if (disk_request.block_request_count > 0) // 硬盘中断请求队列不为空，则继续处理请求包
         cmd_out();
 }
 
@@ -143,7 +152,7 @@ block_buffer_node_t *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *bu
         node->cmd = cmd;
         break;
     }
-
+    node->flags = ATA_NO_FINISHED;
     node->LBA = blocks;
     node->count = count; // 扇区数
     node->buffer = buffer;
@@ -169,10 +178,19 @@ void submit(block_buffer_node_t *node)
 }
 
 // 参见IDE_transfer- 本函数属于子函数
-void wait_for_finish()
+void wait_for_finish(block_buffer_node_t *node)
 {
-    current->state = TASK_UNINTERRUPTIBLE;
-    schedule();
+    cpuflg_t flags;
+    
+    spinlock_storeflg_cli(&disk_request.rqt_lock, &flags);
+    task_t* cur =  runing_task();
+    cur->state = TASK_UNINTERRUPTIBLE;
+    spinunlock_restoreflg(&disk_request.rqt_lock, &flags);
+    
+    while (node->flags != ATA_FINISHED)
+        schedule();
+
+    kdelete(node, sizeof(block_buffer_node_t));
 }
 
 hw_int_controller disk_int_controller =
@@ -207,7 +225,7 @@ s64_t IDE_ioctl(s64_t cmd, s64_t arg)
         node = make_request(cmd, 0, 0, (u8_t *)arg);
 
         submit(node);
-        wait_for_finish();
+        wait_for_finish(node);
         return 1;
     }
 
@@ -233,7 +251,7 @@ s64_t IDE_transfer(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
         // b. 把操作请求项加入硬盘操作请求队列, 发送请求信息给硬盘控制器
         submit(node);
         // c. 挂起IO线程，等到硬盘操作完成，恢复进程调度
-        wait_for_finish();
+        wait_for_finish(node);
     }
     else
         return 0;
@@ -288,6 +306,7 @@ void disk_init()
 
     wait_queue_init(&disk_request.wait_queue_list, nullptr);
     disk_request.in_using = nullptr;
+    spin_init(&disk_request.rqt_lock);
     disk_request.block_request_count = 0;
 }
 

@@ -337,13 +337,15 @@ struct Disk_Identify_Info
 #define ATA_READ_CMD 0x24		   // 读命令
 #define ATA_WRITE_CMD 0x34		   // 写命令
 #define GET_IDENTIFY_DISK_CMD 0xec // 查询参数命令
-
+#define ATA_NO_FINISHED 0
+#define ATA_FINISHED 1
 typedef struct block_buffer_node
 {
 	u32_t count;												// 请求的扇区数
 	u8_t cmd;												// 命令
 	u64_t LBA;												// 索引硬盘地址
 	u8_t *buffer;											// 指向的缓冲区
+	u64_t flags; // 完成标志
 	void (*handler)(u64_t nr, u64_t parameter); // 命令对应的中断处理程序
 	wait_queue_t wait_queue;
 }block_buffer_node_t;
@@ -353,6 +355,7 @@ typedef struct request_queue
 	wait_queue_t wait_queue_list;		// 请求硬盘操作的等待队列
 	block_buffer_node_t *in_using; // 正在处理的硬盘操作请求
 	s64_t block_request_count;			// 剩余请求数
+	spinlock_t rqt_lock;
 }request_queue_t;
 
 extern block_dev_opt_t IDE_device_operation;

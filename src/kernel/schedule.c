@@ -4,6 +4,11 @@
 schedule_t task_schedule_table;
 extern void switch_to(task_t *prev, task_t *next);
 
+task_t *runing_task()
+{
+	return task_schedule_table.is_running;
+}
+
 /* 传入参数是当前允许任务 */
 task_t *get_next_task(task_t* curt)
 {
@@ -28,17 +33,41 @@ void insert_task_queue(task_t *tsk)
 	if (tsk == &init_task_union.task)
 		return;
 	
-	task_t *tmp = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
+	task_t *tmp = nullptr;
+	list_n_t* node = nullptr;
+	list_h_t* head = &task_schedule_table.task_queue.list;
 	
+	list_for_each(node, head)
+	{
+		tmp = container_of(node, task_t, list);
+		if (tmp == tsk)
+		{
+			return;
+		}
+	}
+
 	if (list_is_empty(&task_schedule_table.task_queue.list))
 	{
+		list_add_to_behind(head, &tsk->list);
 	}
 	else
 	{
-		while (tmp->vrun_time < tsk->vrun_time)
-			tmp = container_of(list_next(&tmp->list), task_t, list);
+		// while (tmp->vrun_time < tsk->vrun_time)
+		// 	tmp = container_of(list_next(&tmp->list), task_t, list);
+		list_for_each(node, head)
+		{
+			tmp = container_of(node, task_t, list);
+			if (tmp->vrun_time > tsk->vrun_time) // 把当前进程时间，插入到有序队列中第一个比[tsk]大的元素之前
+			{
+				list_add_to_before(&tmp->list, &tsk->list);
+				break;
+			}
+		}
+		if (node == head) // 队列中没有比新加入元素更大虚拟运行时间的元素
+		{
+			list_add_to_before(head, &tsk->list); //插入到头结点的前面
+		}
 	}
-	list_add_to_before(&tmp->list, &tsk->list);
 	task_schedule_table.running_task_count += 1;
 }
 
@@ -64,7 +93,7 @@ task_t *tsk = nullptr;
 // 调度器
 void schedule()
 {
-	cli();							  // 关闭外中断·
+	cli();							  // 关闭外中断
 	task_schedule_table.is_running->flags &= ~NEED_SCHEDULE; // 复位调度标志
 	tsk = get_next_task(task_schedule_table.is_running);	// 从准备就绪队列中取出下一个待执行的进程
 
@@ -76,7 +105,7 @@ void schedule()
 
 		// 只有当前进程是正在运行状态，才能进入就绪队列
 		if (task_schedule_table.is_running->state == TASK_RUNNING)
-			insert_task_queue(current);
+			insert_task_queue(task_schedule_table.is_running);
 
 		// 按照进程优先级，给即将执行的进程计算PCB
 		supplement_process_time_slice();
