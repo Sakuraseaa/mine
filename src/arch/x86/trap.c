@@ -264,8 +264,9 @@ void do_page_fault(pt_regs_t * regs,u64_t error_code)
 		color_printk(RED,BLACK,"(%d)Page Not-Present! address: %#x\t", current->pid, cr2);
 	}
 	if(error_code & 0x02) {
-		do_wp_page(cr2);
-		return;
+		if(do_wp_page(cr2) == EOK)
+			return;
+		
 		color_printk(RED,BLACK,"Write Cause Fault,\t");
 	}
 	else
@@ -353,7 +354,8 @@ void sys_vector_init()
 	set_trap_gate(11,0,segment_not_present);
 	set_trap_gate(12,0,stack_segment_fault);
 	set_trap_gate(13,0,general_protection);
-	set_trap_gate(14,0,page_fault);
+	// set_trap_gate(14,0,page_fault); // 陷阱门的中断处理函数可重入
+	set_intr_gate(14,0,page_fault); // 中断门的中断处理函数不可重入，寄存器会自动
 	//15 Intel reserved. Do not use.
 	set_trap_gate(16,0,x87_FPU_error);
 	set_trap_gate(17,0,alignment_check);
