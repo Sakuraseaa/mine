@@ -531,7 +531,7 @@ adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 		vtft->vtf_flag = nvma->kva_vir2file->vtf_flag;
 		vtft->vtf_position = nvma->kva_vir2file->vtf_position;
 		vtft->vtf_size = nvma->kva_vir2file->vtf_size;
-		vtft->vtf_alread_load_size = nvma->kva_vir2file->vtf_alread_load_size;
+		vtft->vtf_alread_load_size = 0;
 	}
 
 	ret = vma_new_vadrs_core(mm, nvma->kva_start, (nvma->kva_end - nvma->kva_start), vtft, nvma->kva_limits, nvma->kva_maptype, nvma->kva_flgs);

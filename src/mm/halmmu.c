@@ -586,7 +586,7 @@ bool_t hal_mmu_transform_core(mmudsc_t* mmu, adr_t vadrs, adr_t padrs, u64_t fla
 	msadsc_t* imsa = nullptr;
 	msadsc_t* mmsa = nullptr;
 
-	// knl_spinlock(&mmu->mud_lock);
+	spin_lock(&mmu->mud_lock);
 	
 	tdirearr = mmu->mud_tdirearr;
 	if(nullptr == tdirearr) {
@@ -632,7 +632,7 @@ untf_idire:
 untf_sdire:
 	mmu_untransform_sdire(mmu, tdirearr, smsa, vadrs);	
 out:
-	// knl_spinunlock(&mmu->mud_lock);
+	spin_unlock(&mmu->mud_lock);
 	return rets;
 }
 
@@ -736,36 +736,33 @@ L3_ptarr_t* mmu_find_sdirearr(L4_ptarr_t* tdirearr, adr_t vadrs)
  */
 adr_t hal_mmu_virtophy(mmudsc_t* mmu, adr_t vadrs)
 {
-	adr_t address;
+	adr_t address = NULL;
 	L3_ptarr_t* sdirearr;
 	L2_ptarr_t* idirearr;
 	L1_ptarr_t* mdirearr;
-//	knl_spinlock(&mmu->mud_lock);
+	spin_lock(&mmu->mud_lock);
 	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
 	if(nullptr == sdirearr)
 	{
-		return NULL;
+		goto exit;
 	}
 
 	idirearr = mmu_find_idirearr(sdirearr, vadrs);
 	if(nullptr == idirearr)
 	{
-		return NULL;
+		goto exit;
 	}
 
 	mdirearr = mmu_find_mdirearr(idirearr, vadrs);
 	if(nullptr == mdirearr)
 	{
-		return NULL;
+		goto exit;
 	}
 	
 	address = mmu_find_msaadr(mdirearr, vadrs);
-	if (address == NULL)
-	{
-		return NULL;
-	}
-
-//	knl_spinunlock(&mmu->mud_lock);
+	
+exit:
+	spin_unlock(&mmu->mud_lock);
 	return address;
 }
 
@@ -775,7 +772,7 @@ adr_t hal_mmu_untransform_core(mmudsc_t* mmu, adr_t vadrs)
 	L3_ptarr_t* sdirearr;
 	L2_ptarr_t* idirearr;
 	L1_ptarr_t* mdirearr;
-//	knl_spinlock(&mmu->mud_lock);
+	spin_lock(&mmu->mud_lock);
 	sdirearr = mmu_find_sdirearr(mmu->mud_tdirearr, vadrs);
 	if(nullptr == sdirearr)
 	{
@@ -805,7 +802,7 @@ untf_idirearr:
 untf_sdirearr:
 	mmu_untransform_sdire(mmu, mmu->mud_tdirearr, nullptr, vadrs);
 out:	
-//	knl_spinunlock(&mmu->mud_lock);
+	spin_unlock(&mmu->mud_lock);
 	return retadr;
 }
 
@@ -825,7 +822,7 @@ void hal_mmu_load(mmudsc_t* mmu)
 		return;
 	}
 	
-	// knl_spinlock(&mmu->mud_lock);
+	spin_lock(&mmu->mud_lock);
 	if(nullptr == mmu->mud_tdirearr || 0 != (((u64_t)(mmu->mud_tdirearr)) & 0xfff))
 	{
 		goto out;
@@ -835,7 +832,7 @@ void hal_mmu_load(mmudsc_t* mmu)
 	write_cr3((uint_t)(mmu->mud_cr3.c3s_entry));
 
 out:
-	// knl_spinunlock(&mmu->mud_lock);	
+	spin_unlock(&mmu->mud_lock);	
 	return;
 }
 
@@ -863,7 +860,7 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 		return FALSE;
 	}
 
-	// knl_spinlock(&mmu->mud_lock);
+	spin_lock(&mmu->mud_lock);
 
 	if(mmu_new_tdirearr(mmu) == nullptr)
 	{
@@ -881,7 +878,7 @@ bool_t hal_mmu_init(mmudsc_t* mmu)
 	rets = TRUE;
 
 out:	
-	// knl_spinunlock(&mmu->mud_lock);
+	spin_unlock(&mmu->mud_lock);
 	return rets;
 }
 
@@ -983,7 +980,7 @@ bool_t hal_mmu_clean(mmudsc_t* mmu)
 		return FALSE;
 	}
 
-	// knl_spinlock(&mmu->mud_lock);
+	spin_lock(&mmu->mud_lock);
 
 	cr3.c3s_entry = (u64_t)read_cr3();
 
@@ -1023,7 +1020,7 @@ bool_t hal_mmu_clean(mmudsc_t* mmu)
 	rets = TRUE;
 
 out:	
-	//knl_spinunlock(&mmu->mud_lock);
+	spin_unlock(&mmu->mud_lock);
 	return rets;
 }
 
@@ -1033,15 +1030,16 @@ void dump_mmu(mmudsc_t* dump)
 	{
 		return;
 	}
-	// kprint("mmudsc_t.mud_tdirearr:%x\n", dump->mud_tdirearr);
-	// kprint("mmudsc_t.mud_cr3:%x\n", dump->mud_cr3.c3s_entry);
-	// kprint("mmudsc_t.mud_tdirmsanr:%x\n", dump->mud_tdirmsanr);
-	// kprint("mmudsc_t.mud_sdirmsanr:%x\n", dump->mud_sdirmsanr);
-	// kprint("mmudsc_t.mud_idirmsanr:%x\n", dump->mud_idirmsanr);
-	// kprint("mmudsc_t.mud_mdirmsanr:%x\n", dump->mud_mdirmsanr);
-	// kprint("mmudsc_t.mud_tdirhead:%x\n", list_is_empty_careful(&dump->mud_tdirhead));
-	// kprint("mmudsc_t.mud_sdirhead:%x\n", list_is_empty_careful(&dump->mud_sdirhead));
-	// kprint("mmudsc_t.mud_idirhead:%x\n", list_is_empty_careful(&dump->mud_idirhead));
-	// kprint("mmudsc_t.mud_mdirhead:%x\n", list_is_empty_careful(&dump->mud_mdirhead));
+	DEBUGK("mmudsc_t.mud_tdirearr:%x\n", dump->mud_tdirearr);
+	DEBUGK("mmudsc_t.mud_cr3:%x\n", dump->mud_cr3.c3s_entry);
+	DEBUGK("mmudsc_t.mud_tdirmsanr:%x\n", dump->mud_tdirmsanr);
+	DEBUGK("mmudsc_t.mud_sdirmsanr:%x\n", dump->mud_sdirmsanr);
+	DEBUGK("mmudsc_t.mud_idirmsanr:%x\n", dump->mud_idirmsanr);
+	DEBUGK("mmudsc_t.mud_mdirmsanr:%x\n", dump->mud_mdirmsanr);
+	DEBUGK("mmudsc_t.mud_tdirhead:%x\n", list_is_empty_careful(&dump->mud_tdirhead));
+	DEBUGK("mmudsc_t.mud_sdirhead:%x\n", list_is_empty_careful(&dump->mud_sdirhead));
+	DEBUGK("mmudsc_t.mud_idirhead:%x\n", list_is_empty_careful(&dump->mud_idirhead));
+	DEBUGK("mmudsc_t.mud_mdirhead:%x\n", list_is_empty_careful(&dump->mud_mdirhead));
+
 	return;
 }

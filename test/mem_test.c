@@ -106,7 +106,6 @@ void User_Map(u64_t* PML4, map_entry_t* map, size_t* i_m) {
  */
 static size_t User_Map(mmdsc_t* mm, map_entry_t* map) 
 {
-
 	adr_t  viraddr = 0, phyaddr = 0;
     size_t i = 0;
 	msadsc_t *tmpmsa = nullptr;
@@ -117,18 +116,26 @@ static size_t User_Map(mmdsc_t* mm, map_entry_t* map)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
         
-    //     for (viraddr = vma->kva_start; viraddr < vma->kva_end; viraddr += PAGE_4K_SIZE)
-    //     {
-    //         // phyaddr = hal_mmu_virtophy(&mm->msd_mmu, viraddr);
-    //         // if (phyaddr == NULL) {
-    //         //     continue;
-    //         // }
-    //         // map[i].start_vir = viraddr;
-    //         // map[i].end_vir = viraddr + PAGE_4K_SIZE;
-    //         // map[i].start_phy = phyaddr;
-    //         // map[i].end_phy = phyaddr + PAGE_4K_SIZE;
-    //         // i++;
-    //     }
+        for (viraddr = vma->kva_start; viraddr < vma->kva_end; viraddr += PAGE_4K_SIZE)
+        {
+            phyaddr = hal_mmu_virtophy(&mm->msd_mmu, viraddr);
+            if (phyaddr == NULL) {
+                continue;
+            }
+            if (i > 0 && (map[i - 1].end_vir == viraddr && map[i - 1].end_phy == phyaddr))
+            {
+                map[i - 1].end_vir = viraddr + PAGE_4K_SIZE;
+                map[i - 1].end_phy = phyaddr + PAGE_4K_SIZE;
+            }
+            else
+            {
+                map[i].start_vir = viraddr;
+                map[i].end_vir = viraddr + PAGE_4K_SIZE;
+                map[i].start_phy = phyaddr;
+                map[i].end_phy = phyaddr + PAGE_4K_SIZE;
+                i++;
+            }
+        }
     }
     return i;
 }
@@ -136,12 +143,12 @@ void test_show_vir_phy(task_t *tsk) {
 
 	size_t i_m = 0;
 
-    // map_entry_t* map = knew(sizeof(map_entry_t) * 56, 0);
+    map_entry_t* map = knew(sizeof(map_entry_t) * 56, 0);
 
-    // i_m = User_Map(tsk->mm, map);
+    i_m = User_Map(tsk->mm, map);
 
-    // Print_Map(map, i_m);
+    Print_Map(map, i_m);
     
-    // kdelete(map, sizeof(map_entry_t) * 56);
+    kdelete(map, sizeof(map_entry_t) * 56);
 }
 

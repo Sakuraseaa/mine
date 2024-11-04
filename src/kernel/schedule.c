@@ -109,8 +109,8 @@ void schedule()
 
 		// 按照进程优先级，给即将执行的进程计算PCB
 		supplement_process_time_slice();
-		// color_printk(YELLOW, BLACK, "#schedule:%ld, pid:%ld(%ld)=>>pid:%ld(%ld)#\n",
-		// 			 jiffies, current->pid, current->vrun_time, tsk->pid, tsk->vrun_time);
+		// 开启DEBUGK,会有不同的错误
+		// DEBUGK("#schedule:%ld, pid:%ld(%ld) [switch to]-> pid:%ld(%ld)#\n", jiffies, current->pid, current->vrun_time, tsk->pid, tsk->vrun_time);
 		task_schedule_table.is_running = tsk;
 		switch_mm(current, tsk);
 		switch_to(current, tsk); // 进程切换

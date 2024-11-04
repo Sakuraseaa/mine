@@ -229,6 +229,34 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 
 		copy_one_vma(newmm, vma);
 
+		// vma_start = vma->kva_start;
+		// vma_end = vma->kva_end;
+		// while (vma_start < vma_end)
+		// {
+		// 	vma_phy = hal_mmu_virtophy(&current->mm->msd_mmu, vma_start);
+		// 	if (vma_phy != NULL)
+		// 	{
+		// 		tmpmsa = find_msa_from_pagebox(vma->kva_kvmbox, vma_phy);
+		// 		char* buf = knew(PAGE_4K_SIZE, 0);
+		// 		if (tmpmsa == nullptr)
+		// 		{
+		// 			color_printk(RED, BLACK, "This is a import error!\n");
+		// 		}
+		// 		memcpy((void*)vma_start, buf, PAGE_4K_SIZE);
+		// 		// 给父,子进程修改权限，物理页面重新映射
+		// 		hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
+		// 		DEBUGK("direct copy to %#lx form %#lx \n", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
+				// hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
+				// hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
+				// tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
+				// tmpmsa->md_cntflgs.mf_refcnt++;
+		// 	}
+		// 	vma_start += PAGE_4K_SIZE;
+		// }
+    }
+	
+	if (vma == current->mm->msd_virmemadrs.vs_endkmvdsc)
+	{
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
 		while (vma_start < vma_end)
@@ -236,25 +264,17 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 			vma_phy = hal_mmu_virtophy(&current->mm->msd_mmu, vma_start);
 			if (vma_phy != NULL)
 			{
-				tmpmsa = find_msa_from_pagebox(vma->kva_kvmbox, vma_phy);
 				char* buf = knew(PAGE_4K_SIZE, 0);
-				if (tmpmsa == nullptr)
-				{
-					color_printk(RED, BLACK, "This is a import error!\n");
-				}
 				memcpy((void*)vma_start, buf, PAGE_4K_SIZE);
 				// 给父,子进程修改权限，物理页面重新映射
 				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
 				DEBUGK("direct copy to %#lx form %#lx \n", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
-				// hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
-				// hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
-				// tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
-				// tmpmsa->md_cntflgs.mf_refcnt++;
 			}
 			vma_start += PAGE_4K_SIZE;
 		}
-    }
-	// 扫描所有的虚拟区间, 为子进程创建
+	}
+
+	
     list_for_each(vma_entry, &tsk->mm->msd_virmemadrs.vs_list)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
@@ -510,13 +530,13 @@ void task_init()
 
 	// 创建内核线程
 	kernel_thread(init, 13, CLONE_FS | CLONE_SIGNAL);
-
+	
+	init_task_union.task.pid = 0;
 	init_task_union.task.state = TASK_RUNNING;
 	init_task_union.task.preempt_count = 0;
 	
 	// 内核初始化完毕，该进程不需要再被执行
-	// 给内核主程序赋值拥有虚拟时间的较大值, 依次降低他的允许优先级
-	init_task_union.task.vrun_time = 0x202410241517;
+	// 给内核主程序赋值拥有虚拟时间的较大值, 依次降低他的运行优先级
+	init_task_union.task.vrun_time = 200211121813;
+	// init_task_union.task.vrun_time = 0;
 }
-
-
