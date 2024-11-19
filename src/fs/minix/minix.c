@@ -856,10 +856,9 @@ spblk_t *minix_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     memcpy(sbp->buf->data, sbp->private_sb_info, sizeof(minix_sb_info_t));
     
     // ================================== 读取根目录 =====================================
-    color_printk(ORANGE, BLACK, "MINIX FSinfo\nFirstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\n\
-inode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
-                minix_sb->firstdatazone,  minix_sb->inodes, minix_sb->log_zone_size, minix_sb->imap_blocks,
-                minix_sb->zmap_blocks, minix_sb->magic);
+    DEBUGK("MINIX FSinfo\nFirstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\ninode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\n",
+        minix_sb->firstdatazone,  minix_sb->inodes, minix_sb->log_zone_size, minix_sb->imap_blocks,
+        minix_sb->zmap_blocks, minix_sb->magic);
     
     // directory entry 
     sbp->root = (dir_entry_t*)knew(sizeof(dir_entry_t), 0);

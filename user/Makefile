@@ -6,7 +6,7 @@ INC_DIR = /home/steven/mine/src/include
 ASM   = nasm
 CC	  = gcc
 
-CFLAGS = -O0 -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib -nostdinc\
+CFLAGS = -O0 -static -m64 -mcmodel=large -fno-stack-protector -Wall -nostdlib -nostdinc\
 		-fno-builtin -fno-pie -fno-pic -g -I $(USR_INC_DIR)/sys -I $(USR_INC_DIR)/  \
 		-c -I $(USR_INC_DIR)/base\
 

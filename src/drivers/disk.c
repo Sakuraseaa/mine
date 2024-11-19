@@ -10,20 +10,10 @@ void end_request(block_buffer_node_t *node)
 {
     if (node == nullptr)
         color_printk(RED, BLACK, "end_request error\n");
-
-    // 把任务重新加入到进程就绪队列
-    cpuflg_t flags;
     
-    spinlock_storeflg_cli(&disk_request.rqt_lock, &flags);
-    node->wait_queue.tsk->state = TASK_RUNNING;
-    spinunlock_restoreflg(&disk_request.rqt_lock, &flags);
-    
-    if (current == node->wait_queue.tsk)
+    if (current != node->wait_queue.tsk)
     {
-
-    }
-    else
-    {
+        node->wait_queue.tsk->state = TASK_RUNNING;
         insert_task_queue(node->wait_queue.tsk);
         // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
         current->flags |= NEED_SCHEDULE;
@@ -181,14 +171,18 @@ void submit(block_buffer_node_t *node)
 void wait_for_finish(block_buffer_node_t *node)
 {
     cpuflg_t flags;
-    
-    spinlock_storeflg_cli(&disk_request.rqt_lock, &flags);
+
     task_t* cur =  runing_task();
-    cur->state = TASK_UNINTERRUPTIBLE;
-    spinunlock_restoreflg(&disk_request.rqt_lock, &flags);
-    
-    while (node->flags != ATA_FINISHED)
+
+    /* 为什么 加三个pause? i don't know*/
+    __asm__ __volatile__( "pause \n\t":::"memory");
+    __asm__ __volatile__( "pause \n\t":::"memory");
+    __asm__ __volatile__( "pause \n\t":::"memory");
+
+    while (node->flags != ATA_FINISHED) {
+        cur->state = TASK_UNINTERRUPTIBLE;
         schedule();
+    }
 
     kdelete(node, sizeof(block_buffer_node_t));
 }

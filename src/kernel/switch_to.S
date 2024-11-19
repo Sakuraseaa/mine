@@ -18,6 +18,7 @@ switch_to:
     pushq   %rax
     pushq   %rcx
     pushq   %rdx
+    pushq   %rbx
 
     movq    thread(%rdi), %rcx // prev
     movq    thread(%rsi), %rdx // next
@@ -32,6 +33,7 @@ switch_to:
     jmp __switch_to
     
 back:
+    popq %rbx
     popq %rdx
     popq %rcx
     popq %rax
