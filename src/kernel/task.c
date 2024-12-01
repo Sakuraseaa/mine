@@ -201,9 +201,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	mmdsc_t *newmm = nullptr;
 	list_n_t *vma_entry = nullptr;
 	kmvarsdsc_t *vma = nullptr;
-	adr_t  vma_start = 0;           // 虚拟地址的开始
-	adr_t  vma_end = 0;             // 虚拟地址的结束
-	adr_t  vma_phy = 0;
+	adr_t  vma_start = 0, vma_end = 0, vma_phy = 0;           /* 虚拟地址的开始 虚拟地址的结束 */ 
 	msadsc_t *tmpmsa = nullptr;
 	
 	if (clone_flags & CLONE_VM) {
@@ -215,7 +213,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	// 3. 在halmm中添加修改页表属性的函数
 	// 1. 拷贝4级页表，修改初始化函数为只拷贝后256项
 	newmm = tsk->mm = (mmdsc_t *)knew(sizeof(mmdsc_t), 0);
-	// 进程相关内存初始化三大步
+	// 进程相关内存初始化三部曲
 	mmadrsdsc_t_init(tsk->mm);
 	kvma_inituserspace_virmemadrs(&tsk->mm->msd_virmemadrs);
 	hal_mmu_init(&tsk->mm->msd_mmu);
@@ -268,7 +266,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 				memcpy((void*)vma_start, buf, PAGE_4K_SIZE);
 				// 给父,子进程修改权限，物理页面重新映射
 				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
-				DEBUGK("direct copy to %#lx form %#lx \n", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
+				DEBUGK("direct copy from %#lx to %#lx \n", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
 			}
 			vma_start += PAGE_4K_SIZE;
 		}

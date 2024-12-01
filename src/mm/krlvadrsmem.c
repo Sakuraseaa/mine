@@ -466,9 +466,10 @@ static adr_t vma_new_vadrs_core(mmdsc_t *mm, adr_t start, size_t vassize, vma_to
 	newkmvd->kva_flgs = flags;
 
 	vma->vs_currkmvdsc = newkmvd;
-	
+
 	/* 将新的虚拟地址区间加入到virmemadrs_t结构中 */
 	list_add_to_behind(&currkmvd->kva_list, &newkmvd->kva_list);
+    vma->vs_kmvdscnr++;
 
 	/* 看看新的虚拟地址区间是否是最后一个 */
 	if (list_is_last(&newkmvd->kva_list, &vma->vs_list) == TRUE) {
@@ -523,7 +524,7 @@ adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 	virmemadrs_t *vma_family = &mm->msd_virmemadrs;
 	vma_to_file_t* vtft = nvma->kva_vir2file;
 
-	if (nvma->kva_vir2file != nullptr)
+	if (vtft != nullptr)
 	{
 		vtft = (vma_to_file_t*)knew(sizeof(vma_to_file_t), 0);
 		

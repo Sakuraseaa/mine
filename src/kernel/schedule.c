@@ -108,7 +108,6 @@ void supplement_process_time_slice()
 			break;
 	}
 }
-// task_t *tsk = nullptr;
 void schedule()
 {
     task_t* tsk = nullptr;

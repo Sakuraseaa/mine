@@ -155,6 +155,8 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         buf += length;
         offset -= offset; // 第二次循环后，offset = 0
         *position += length;
+
+        DEBUGK("*position(%#x) - length %d - index %#x\n",*position, length, index);
     } while ((index != 0) && (cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster)));
 
     kdelete(buffer, fsbi->bytes_per_cluster);
@@ -164,7 +166,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     if (!index)
         retval = count;
     
-    DEBUGK("read bytes:%#x form file-area(%#x-%#x) | Disk-file-name: %s\n",  retval, copy_position, *position, filp->dentry->name);
+    DEBUGK("read bytes:%#x form file-area(%#x-%#x) | Disk-file-name: %s-%#x\n",  retval, copy_position, *position, filp->dentry->name, index);
     return retval;
 }
 
