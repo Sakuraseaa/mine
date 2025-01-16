@@ -4,7 +4,7 @@
 static char_t debugk_buf[1024];
 extern serial_t serials[2];
 
-void debugk(cstr_t file, cstr_t func,s32_t line, cstr_t fmt, ...)
+void debugk(cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
 {
     va_list args;
     s32_t i = sprintf(debugk_buf, "[%s %d:%s] ", strrchr(file,'/') + 1, line,func);

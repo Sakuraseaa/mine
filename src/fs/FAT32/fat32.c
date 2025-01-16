@@ -2,6 +2,7 @@
 #include "fskit.h"
 #include "devkit.h"
 #include "mmkit.h"
+#include "kernelkit.h"
 
 #define FAT_DENRY_SIZE 32
 #define EOC 0x0ffffff8 // end of clusterchain
@@ -123,7 +124,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         index = count;
 
     // preempt:先占，先取，current->preempt_count是当前进程持有自旋锁数量
-
+    DEBUGK("proc[%d]:position(%#lx) want to read %d(%d)B data from %#lx to %#lx\n", current->pid, *position, index, count, buffer, buf);
     // C. 循环体实现数据读取过程
     do
     {
@@ -156,7 +157,6 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         offset -= offset; // 第二次循环后，offset = 0
         *position += length;
 
-        DEBUGK("*position(%#x) - length %d - index %#x\n",*position, length, index);
     } while ((index != 0) && (cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster)));
 
     kdelete(buffer, fsbi->bytes_per_cluster);
@@ -166,7 +166,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     if (!index)
         retval = count;
     
-    DEBUGK("read bytes:%#x form file-area(%#x-%#x) | Disk-file-name: %s-%#x\n",  retval, copy_position, *position, filp->dentry->name, index);
+    DEBUGK("proc[%d]: now-position(%#lx) read bytes:%#lx form %#lx\n", current->pid, *position, retval, copy_position);
     return retval;
 }
 

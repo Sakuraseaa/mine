@@ -225,12 +225,12 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
         rets = -ENOMEM;
         goto out;
     }
-    if (current->pid == 1 && vadrs == 0x40501a) {
-        DEBUGK("i have been to Xian\n");
-    }
-    if (current->pid == 2 && vadrs == 0x402a50) {
-        DEBUGK("i have been to Xiann\n");
-    }
+    // if (current->pid == 1 && vadrs == 0x40501a) {
+    //     DEBUGK("i have been to Xian\n");
+    // }
+    // if (current->pid == 2 && vadrs == 0x402a50) {
+    //     DEBUGK("i have been to Xiann\n");
+    // }
     vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start, kmbox);
     DEBUGK(" proc:%d, mapped %#0lx <-> %#0lx\n", current->pid , (vadrs & PAGE_4K_MASK), phyadrs);
     rets = EOK;
@@ -246,6 +246,7 @@ sint_t vma_map_fairvadrs(mmdsc_t *mm, adr_t vadrs)
 {
     if ((0x1000 > vadrs) || (USER_VIRTUAL_ADDRESS_END < vadrs) || (nullptr == mm))
     {
+        DEBUGK("vadrs is invalid in no page fault process\n");
         return -EPARAM;
     }
     //进行缺页异常的核心处理
@@ -332,13 +333,10 @@ u64_t do_wp_page(u64_t virtual_address) {
     
     rets = do_wp_page_core(current->mm, virtual_address);
     flush_tlb_one(virtual_address);
-    // flush_tlb();
     return rets;
 }
 
 s64_t do_no_page(u64_t virtual_address)
 {
-    DEBUGK(" proc:%d, no page %#0lx \n", current->pid, virtual_address);
-
     return krluserspace_accessfailed(virtual_address);
 }

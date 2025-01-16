@@ -258,6 +258,7 @@ void do_page_fault(pt_regs_t * regs,u64_t error_code)
 	__asm__	__volatile__("movq	%%cr2,	%0":"=r"(cr2)::"memory");
 
 	if(!(error_code & 0x01)) {
+        DEBUGK("rip:%#lx proc:%d, error address %#0lx \n", regs->rip, current->pid, cr2);
 		if(do_no_page(cr2) == EOK)	// 处理缺页成功则返回
 			return;
 		

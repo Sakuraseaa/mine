@@ -25,7 +25,7 @@ task_t *get_next_task(task_t* curt)
 	list_del(&tsk->list);
     if (tsk == curt)
     {
-        DEBUGK("adjflkafjlk\n");
+        DEBUGK("Why the next task is equal to the current task??\n");
     }
 	task_schedule_table.running_task_count -= 1;
 	return tsk;
@@ -91,7 +91,7 @@ void insert_task_queue(struct task_struct *tsk)
 	}
 
 	list_add_to_before(&tmp->list,&tsk->list);
-		task_schedule_table.running_task_count += 1;
+	task_schedule_table.running_task_count += 1;
 }
 void supplement_process_time_slice()
 {

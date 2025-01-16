@@ -527,8 +527,9 @@ adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 	if (vtft != nullptr)
 	{
 		vtft = (vma_to_file_t*)knew(sizeof(vma_to_file_t), 0);
-		
-		vtft->vtf_file = nvma->kva_vir2file->vtf_file;
+		file_t* new = (file_t*)knew(sizeof(file_t), 0);
+        memcpy(nvma->kva_vir2file->vtf_file, new, sizeof(file_t));
+		vtft->vtf_file = new;
 		vtft->vtf_flag = nvma->kva_vir2file->vtf_flag;
 		vtft->vtf_position = nvma->kva_vir2file->vtf_position;
 		vtft->vtf_size = nvma->kva_vir2file->vtf_size;

@@ -19,7 +19,6 @@ void sig_handler(long sig);
 
 int main()
 {
-
 	long pid = getpid();
 	pid = fork();
 	if (pid == 0) {
@@ -32,7 +31,8 @@ int main()
 	}
 	while(1)
 	{
-	// printf("Pid: %d\n", pid++);
+		printf(" i am proc %d\n", getpid());
+        sleep(10);
 	}
 	signal(4 , sig_handler);
 	kill(pid, 4);

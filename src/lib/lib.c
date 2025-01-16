@@ -448,6 +448,11 @@ char_t *strrchr(cstr_t str, cchar_t ch)
         }
         str++;
     }
+    // Special case for ch == '\0'
+    if (ch == '\0')
+    {
+        return (char_t *)str;
+    }
     return (char_t *)last_char;
 }
 
