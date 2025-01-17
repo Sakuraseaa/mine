@@ -32,67 +32,50 @@ task_t *get_next_task(task_t* curt)
 }
 
 // 加入一个任务到就绪队列, 该队列按照虚拟运行时间由小到大进行排序
-// void insert_task_queue(task_t *tsk)
-// {
-// 	if (tsk == &init_task_union.task)
-// 		return;
-	
-// 	task_t *tmp = nullptr;
-// 	list_n_t* node = nullptr;
-// 	list_h_t* head = &task_schedule_table.task_queue.list;
-	
-// 	list_for_each(node, head)
-// 	{
-// 		tmp = container_of(node, task_t, list);
-// 		if (tmp == tsk)
-// 		{
-//             DEBUGK("insert repeat\n");
-// 			return;
-// 		}
-// 	}
-
-// 	if (list_is_empty(&task_schedule_table.task_queue.list))
-// 	{
-// 		list_add_to_behind(head, &tsk->list);
-// 	}
-// 	else
-// 	{
-// 		// while (tmp->vrun_time < tsk->vrun_time)
-// 		// 	tmp = container_of(list_next(&tmp->list), task_t, list);
-// 		list_for_each(node, head)
-// 		{
-// 			tmp = container_of(node, task_t, list);
-// 			if (tmp->vrun_time > tsk->vrun_time) // 把当前进程时间，插入到有序队列中第一个比[tsk]大的元素之前
-// 			{
-// 				list_add_to_before(&tmp->list, &tsk->list);
-// 				break;
-// 			}
-// 		}
-// 		if (node == head) // 队列中没有比新加入元素更大虚拟运行时间的元素
-// 		{
-// 			list_add_to_before(head, &tsk->list); //插入到头结点的前面
-// 		}
-// 	}
-// 	task_schedule_table.running_task_count += 1;
-// }
-void insert_task_queue(struct task_struct *tsk)
+void insert_task_queue(task_t *tsk)
 {
-	struct task_struct *tmp = NULL;
-
-	tmp = container_of(list_next(&task_schedule_table.task_queue.list),struct task_struct,list);
-
-	if(list_is_empty(&task_schedule_table.task_queue.list))
+	if (tsk == &init_task_union.task)
+		return;
+	
+	task_t *tmp = nullptr;
+	list_n_t* node = nullptr;
+	list_h_t* head = &task_schedule_table.task_queue.list;
+	
+	list_for_each(node, head)
 	{
+		tmp = container_of(node, task_t, list);
+		if (tmp == tsk)
+		{
+            DEBUGK("insert repeat\n");
+			return;
+		}
+	}
+
+	if (list_is_empty(&task_schedule_table.task_queue.list))
+	{
+		list_add_to_behind(head, &tsk->list);
 	}
 	else
 	{
-		while(tmp->vrun_time < tsk->vrun_time)
-			tmp = container_of(list_next(&tmp->list),struct task_struct,list);
+		// while (tmp->vrun_time < tsk->vrun_time)
+		// 	tmp = container_of(list_next(&tmp->list), task_t, list);
+		list_for_each(node, head)
+		{
+			tmp = container_of(node, task_t, list);
+			if (tmp->vrun_time > tsk->vrun_time) // 把当前进程时间，插入到有序队列中第一个比[tsk]大的元素之前
+			{
+				list_add_to_before(&tmp->list, &tsk->list);
+				break;
+			}
+		}
+		if (node == head) // 队列中没有比新加入元素更大虚拟运行时间的元素
+		{
+			list_add_to_before(head, &tsk->list); //插入到头结点的前面
+		}
 	}
-
-	list_add_to_before(&tmp->list,&tsk->list);
 	task_schedule_table.running_task_count += 1;
 }
+
 void supplement_process_time_slice()
 {
 	// 根据进程的优先级,填充进程允许队列中的处理器时间片

@@ -32,7 +32,7 @@ int main()
 	while(1)
 	{
 		printf(" i am proc %d\n", getpid());
-        sleep(10);
+        // sleep(10);
 	}
 	signal(4 , sig_handler);
 	kill(pid, 4);

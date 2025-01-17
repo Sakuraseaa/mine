@@ -166,7 +166,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     if (!index)
         retval = count;
     
-    DEBUGK("proc[%d]: now-position(%#lx) read bytes:%#lx form %#lx\n", current->pid, *position, retval, copy_position);
+    DEBUGK("proc[%d]: now-position(%#lx) have read bytes:%#lx form %#lx\n", current->pid, *position, retval, copy_position);
     return retval;
 }
 
