@@ -514,7 +514,7 @@ adr_t vma_new_vadrs(mmdsc_t *mm, adr_t start, size_t vassize, vma_to_file_t* vtf
 	return vma_new_vadrs_core(mm, start, VADSZ_ALIGN(vassize), vtft, vaslimits, vastype, flags);
 }
 // 复制一个虚拟内存空间
-adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
+file_t* copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma, file_t* fp)
 {
 	if(nvma == nullptr)
 	{
@@ -527,9 +527,12 @@ adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 	if (vtft != nullptr)
 	{
 		vtft = (vma_to_file_t*)knew(sizeof(vma_to_file_t), 0);
-		file_t* new = (file_t*)knew(sizeof(file_t), 0);
-        memcpy(nvma->kva_vir2file->vtf_file, new, sizeof(file_t));
-		vtft->vtf_file = new;
+        if (fp == nullptr)
+        {
+            fp = (file_t*)knew(sizeof(file_t), 0);
+            memcpy(nvma->kva_vir2file->vtf_file, fp, sizeof(file_t));
+        }
+		vtft->vtf_file = fp;
 		vtft->vtf_flag = nvma->kva_vir2file->vtf_flag;
 		vtft->vtf_position = nvma->kva_vir2file->vtf_position;
 		vtft->vtf_size = nvma->kva_vir2file->vtf_size;
@@ -548,7 +551,7 @@ adr_t copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma)
 		// knl_count_kvmemcbox(nvma->kva_kvmbox);
 		// ovma->kva_kvmbox = nvma->kva_kvmbox;
 	}
-	return ret;
+	return fp;
 }
 kmvarsdsc_t *vma_del_find_kmvarsdsc(virmemadrs_t *vmalocked, adr_t start, size_t vassize)
 {

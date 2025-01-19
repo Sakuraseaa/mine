@@ -221,11 +221,12 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	// tsk->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox;
 	// tsk->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox;
 	// 扫描所有的虚拟区间, 为子进程创建
+    file_t* new_task_fp = nullptr;
     list_for_each(vma_entry, &current->mm->msd_virmemadrs.vs_list)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
 
-		copy_one_vma(newmm, vma);
+		new_task_fp = copy_one_vma(newmm, vma, new_task_fp);
 
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
@@ -272,15 +273,14 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	// 	}
 	// }
 
-	
+
     list_for_each(vma_entry, &tsk->mm->msd_virmemadrs.vs_list)
     {
         vma = list_entry(vma_entry, kmvarsdsc_t, kva_list);
 
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
-		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx\n", vma_start, vma_end, vma->kva_vir2file, vma->kva_kvmbox);
-		// DEBUGK("start:%x end:%x boxpage:%x\n", vma_start, vma_end, vma->kva_kvmbox);
+		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx\n", vma_start, vma_end, vma->kva_vir2file ? vma->kva_vir2file->vtf_file : 0x20021112, vma->kva_kvmbox);
     }
 	flush_tlb();
 

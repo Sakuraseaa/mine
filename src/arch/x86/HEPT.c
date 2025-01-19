@@ -36,21 +36,13 @@ static void weakUp_sleepList(void* pid) {
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
 static void ticks_to_sleep(u32_t sleep_ticks)
 {  
-   // bug报告(已解决):: 此处使用栈变量这两个值经过中断-调度之后都被破坏掉了
-   // 此处属于系统调用，这个内存开在内核栈上
-   // 为什么这栈空间值 没有好好的保护下来 - 
+    // 切换进程
+    struct timer_list *tmp = nullptr;
+    tmp = (struct timer_list *)knew(sizeof(struct timer_list), 0);
+    init_timer(tmp, &weakUp_sleepList, &current->pid, jiffies + sleep_ticks);
+    add_timer(tmp);
+    interruptible_sleep_on(&sleep_queue_head);
 
-   // 24-6-19 10:8 OK，检查过中断代码没有问题后，查看本程序的汇编，发现栈空间没有被开辟，
-   // 而只是单纯的递减rsp,使得变量存储在栈空间之外，经过中断后，变量就丢失
-   // 在次 我加上sleep_on()，经过编译之后，该函数就会主动开辟栈空间了
-   
-   // 切换进程
-   struct timer_list *tmp = nullptr;
-   tmp = (struct timer_list *)knew(sizeof(struct timer_list), 0);
-   init_timer(tmp, &weakUp_sleepList, &current->pid, jiffies + sleep_ticks);
-   add_timer(tmp);
-   interruptible_sleep_on(&sleep_queue_head);
-   
    // 睡眠空转
    // u64_t Old_ticks = jiffies;
    // // u64_t mid_ticks = sleep_ticks;
@@ -80,11 +72,13 @@ static void frequency_set(u8_t counter_port,
 /* 时钟的中断处理函数 */
 void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
-   jiffies++;
-   // 如果定时任务的失效日期没有到，那么不进入中断下半部
-   if ((container_of(list_next(&timer_list_head.list), struct timer_list, list))->expire_jiffies <= jiffies)
-      set_softirq_status(TIMER_SIRQ);
-
+    jiffies++;
+    u64_t nihao = container_of(list_next(&timer_list_head.list), struct timer_list, list)->expire_jiffies;
+    // 如果定时任务的失效日期没有到，那么不进入中断下半部
+    if ((container_of(list_next(&timer_list_head.list), struct timer_list, list))->expire_jiffies <= jiffies)
+    {
+        set_softirq_status(TIMER_SIRQ);
+    }
    // 依据进程的优先级，增加进程虚拟运行时间，减少处理器时间片维护代码
    switch (current->priority)
    {
@@ -99,9 +93,9 @@ void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
       current->vrun_time += 2;
       break;
    }
-   // 本进程的时间片耗尽，立马调度其他进程
-   if (task_schedule_table.CPU_exec_task_jiffies <= 0)
-      current->flags |= NEED_SCHEDULE;
+    // 本进程的时间片耗尽，立马调度其他进程
+    if (task_schedule_table.CPU_exec_task_jiffies <= 0)
+    current->flags |= NEED_SCHEDULE;
 }
 
 /* 初始化PIT8253 */

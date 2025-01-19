@@ -2,6 +2,7 @@
 #define _MMKIT_H_
 
 #include "toolkit.h"
+#include "fskit.h"
 #include "mmtype.h"
 #include "mmfunc.h"
 #include "memory.h"

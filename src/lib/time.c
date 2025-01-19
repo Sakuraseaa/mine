@@ -165,13 +165,15 @@ s32_t get_cmos_time(struct time *time)
     time->week_day = BCD2BIN(time->week_day);// 为什么 week_day 读取的不正确
     return 1;
 }
-
+static int do_timer_nums = 0;
 void do_timer(void *data)
 {
     struct timer_list *tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
 
     while ((!list_is_empty(&timer_list_head.list)) && (tmp->expire_jiffies <= jiffies))
     {
+
+        do_timer_nums++;
         tmp->func(tmp->data);
         tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
         del_timer(tmp);
