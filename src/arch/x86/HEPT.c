@@ -42,14 +42,6 @@ static void ticks_to_sleep(u32_t sleep_ticks)
     init_timer(tmp, &weakUp_sleepList, &current->pid, jiffies + sleep_ticks);
     add_timer(tmp);
     interruptible_sleep_on(&sleep_queue_head);
-
-   // 睡眠空转
-   // u64_t Old_ticks = jiffies;
-   // // u64_t mid_ticks = sleep_ticks;
-   // /* 若间隔的ticks数不够便让出cpu */
-   // while (jiffies - Old_ticks < sleep_ticks) // 此处应该去睡眠
-   //    sleep_on(nullptr);
-
 }
 
 
@@ -69,17 +61,27 @@ static void frequency_set(u8_t counter_port,
    io_out8(counter_port, (u8_t)(counter_value >> 8));
 }
 
-/* 时钟的中断处理函数 */
-void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
+static inline void test_timer_is_read()
 {
-    jiffies++;
     u64_t nihao = container_of(list_next(&timer_list_head.list), struct timer_list, list)->expire_jiffies;
     // 如果定时任务的失效日期没有到，那么不进入中断下半部
     if ((container_of(list_next(&timer_list_head.list), struct timer_list, list))->expire_jiffies <= jiffies)
     {
-        set_softirq_status(TIMER_SIRQ);
+        timer_list_t* tls = container_of(list_next(&timer_list_head.list), struct timer_list, list);
+        if (tls->tl_flag == tts_ready) 
+        {
+            tls->tl_flag = tts_runing;
+            set_softirq_status(TIMER_SIRQ);
+        }
     }
+}
+/* 时钟的中断处理函数 */
+void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
+{
+    jiffies++;
    // 依据进程的优先级，增加进程虚拟运行时间，减少处理器时间片维护代码
+
+    test_timer_is_read();
    switch (current->priority)
    {
    case 0:

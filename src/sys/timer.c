@@ -2,6 +2,7 @@
 #include "mmkit.h"
 
 struct timer_list timer_list_head;
+
 // 定时队列元素初始化, 定时器结构体需要动态申请创建
 void init_timer(struct timer_list *timer, void (*func)(void *data),
                 void *data, u64_t expire_jiffies)
@@ -10,6 +11,7 @@ void init_timer(struct timer_list *timer, void (*func)(void *data),
     timer->data = data;
     timer->expire_jiffies = expire_jiffies;
     timer->func = func;
+    timer->tl_flag = tts_ready;
 }
 
 // 定时队列任务添加

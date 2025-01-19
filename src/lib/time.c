@@ -185,7 +185,7 @@ s32_t shell_up = 0;
 void test_timer(void *data)
 {
     //BUG:: 此处使用 DEBUGK 会报错
-    //DEBUGK("Why does debbuggin timed queues fail?\n");
+    // DEBUGK("Why does debbuggin timed queues fail?\n");
     color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?  \n");
     shell_up = 1;
 }

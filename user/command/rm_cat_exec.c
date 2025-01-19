@@ -101,32 +101,20 @@ int exec_command(int argc, char **argv)
 	char* filename = 0;
 
 	errno = fork();
-	// if( errno ==  0 ) {
-	// 	// printf("child process\n");
-	// 	filename = get_filename_whole(filename, argv[1]);
-	// 	printf("exec_command filename:%s\n", filename);
+	if( errno ==  0 ) {
+		// printf("child process\n");
+		filename = get_filename_whole(filename, argv[1]);
+		printf("exec_command filename:%s\n", filename);
 		
-	// 	execve(filename, argv, nullptr);
+		execve(filename, argv, nullptr);
 
-	// 	exit(0);
-	// } else {
-	// 	printf("parent process childpid:%#d\n", errno);
-	// 	waitpid(errno, &retval, 0);
-	// 	printf("parent process waitpid:%#018lx\n", retval);
-	// }
-	if (errno == 0) {
-		printf(" i am child -> [%d, %d] \n", getpid(), errno);
-		// info('B');
+		exit(0);
 	} else {
-		// sleep(3);
-		printf(" i am parent -> [%d, %d] \n", getpid(), errno);
-		// info('B');
+		printf("parent process childpid:%#d\n", errno);
+		waitpid(errno, &retval, 0);
+		printf("parent process waitpid:%#018lx\n", retval);
 	}
-	while(1)
-	{
-		printf(" i am proc %d\n", getpid());
-        sleep(10);
-	}
+
     return 0;
 }
 

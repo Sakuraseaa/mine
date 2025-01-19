@@ -31,15 +31,15 @@ void softirq_init()
 
 void do_softirq()
 {
-    // sti();
+    sti();
     s32_t i;
     for (i = 0; i < 64 && softirq_status; i++)
     {
         if (softirq_status & (1UL << i))
         {
-            softirq_status &= ~(1UL << i);                      // 取消该标记
             softirq_vector[i].action(softirq_vector[i].data); // 执行中断处理程序
+            softirq_status &= ~(1UL << i);                      // 取消该标记
         }
     }
-    // cli();
+    cli();
 }
