@@ -11,6 +11,10 @@ void end_request(block_buffer_node_t *node)
     if (node == nullptr)
         color_printk(RED, BLACK, "end_request error\n");
     
+    // 释放硬盘请求队列节点占用的内存
+    disk_request.in_using->flags = ATA_FINISHED;
+    disk_request.in_using = nullptr;
+
     if (current != node->wait_queue.tsk)
     {
         node->wait_queue.tsk->state = TASK_RUNNING;
@@ -18,16 +22,16 @@ void end_request(block_buffer_node_t *node)
         // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
         current->flags |= NEED_SCHEDULE;
     }
-    // 释放硬盘请求队列节点占用的内存
-    disk_request.in_using->flags = ATA_FINISHED;
-    disk_request.in_using = nullptr;
+
     if (disk_request.block_request_count > 0) // 硬盘中断请求队列不为空，则继续处理请求包
         cmd_out();
 }
 
 // 给硬盘发送命令
 s64_t cmd_out()
-{
+{   
+    cpuflg_t flg;
+    spinlock_storeflg_cli(&disk_request.rqt_lock, &flg);
     wait_queue_t *wait_queue_tmp =
         container_of(list_next(&disk_request.wait_queue_list.wait_list), wait_queue_t, wait_list);
 
@@ -37,7 +41,7 @@ s64_t cmd_out()
     // 从队列中，删除本节点
     list_del(&disk_request.in_using->wait_queue.wait_list);
     disk_request.block_request_count--;
-
+    spinunlock_restoreflg(&disk_request.rqt_lock, &flg);
     // 硬盘忙则等待
     while (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_BUSY)
         nop();
@@ -153,8 +157,11 @@ block_buffer_node_t *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *bu
 // 把请求包，加入到等待队列。这里也许可以添加一些操作硬盘的算法
 void add_request(block_buffer_node_t *node)
 {
+    cpuflg_t flg;
+    spinlock_storeflg_cli(&disk_request.rqt_lock, &flg);
     list_add_to_before(&disk_request.wait_queue_list.wait_list, &node->wait_queue.wait_list);
     disk_request.block_request_count++;
+    spinunlock_restoreflg(&disk_request.rqt_lock, &flg);
 }
 
 // 参见IDE_transfer- 本函数属于子函数
@@ -172,12 +179,7 @@ void wait_for_finish(block_buffer_node_t *node)
 {
     cpuflg_t flags;
 
-    task_t* cur =  runing_task();
-
-    /* 为什么 加三个pause? i don't know*/
-    __asm__ __volatile__( "pause \n\t":::"memory");
-    __asm__ __volatile__( "pause \n\t":::"memory");
-    __asm__ __volatile__( "pause \n\t":::"memory");
+    task_t* cur = runing_task();
 
     while (node->flags != ATA_FINISHED) {
         cur->state = TASK_UNINTERRUPTIBLE;
@@ -217,7 +219,6 @@ s64_t IDE_ioctl(s64_t cmd, s64_t arg)
     if (cmd == GET_IDENTIFY_DISK_CMD)
     {
         node = make_request(cmd, 0, 0, (u8_t *)arg);
-
         submit(node);
         wait_for_finish(node);
         return 1;

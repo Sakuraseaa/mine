@@ -30,7 +30,7 @@ u32_t DISK1_FAT32_read_FAT_Entry(struct FAT32_sb_info *fsbi, u32_t fat_entry)
     // fat_entry >> 7: 是因为一个扇区有128个fat表项， 这样会定位到簇号对应的偏移扇区
     IDE_device_operation.transfer(ATA_READ_CMD, fsbi->FAT1_firstsector + (fat_entry >> 7), 1, (u8_t *)buf);
 
-    // color_printk(BLUE, BLACK, "DISK1_FAT32_read_FAT_Entry fat_entry:%#018lx, %#010x\n", fat_entry, buf[fat_entry & 0x7f]);
+    DEBUGK("fat_entry:%#018lx, %#010x\n", fat_entry, buf[fat_entry & 0x7f]);
 
     // fat_entry & 7f: 来定位本扇区内的，那个簇号
     return buf[fat_entry & 0x7f] & 0x0fffffff;

@@ -254,11 +254,13 @@ void do_general_protection(pt_regs_t * regs,u64_t error_code)
 void do_page_fault(pt_regs_t * regs,u64_t error_code)
 {
 	u64_t cr2 = 0;
+    u64_t cr3 = 0;
 
 	__asm__	__volatile__("movq	%%cr2,	%0":"=r"(cr2)::"memory");
+	__asm__	__volatile__("movq	%%cr3,	%0":"=r"(cr3)::"memory");
 
 	if(!(error_code & 0x01)) {
-        DEBUGK("rip:%#lx proc:%d, error address %#0lx \n", regs->rip, current->pid, cr2);
+        DEBUGK("rip:%#lx proc:%d, error address %#0lx cr3:%#0lx\n", regs->rip, current->pid, cr2, cr3);
 		if(do_no_page(cr2) == EOK)	// 处理缺页成功则返回
 			return;
 		

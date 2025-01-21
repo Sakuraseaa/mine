@@ -177,16 +177,14 @@ void do_timer(void *data)
         tmp->func(tmp->data);
         tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
         del_timer(tmp);
-        //BUG:: 此处使用 DEBUGK 会报错,程序会 混乱跳转,重启
-        // debugk(__BASE_FILE__, __LINE__, "(HPET:%ld):: A timing task is completed\n", jiffies);
+        DEBUGK("(HPET:%ld):: A timing task is completed\n", jiffies);
     }
 }
 s32_t shell_up = 0;
 void test_timer(void *data)
 {
     //BUG:: 此处使用 DEBUGK 会报错
-    // DEBUGK("Why does debbuggin timed queues fail?\n");
-    color_printk(BLUE, WHITE, "Why does debbuggin timed queues fail?  \n");
+    DEBUGK("Why does debbuggin timed queues fail?\n");
     shell_up = 1;
 }
 
@@ -194,7 +192,6 @@ void timer_init()
 {
     // 初始化定时任务队列
     struct timer_list *tmp = nullptr;
-    
 
     jiffies = 0;
     // +++++++++++++++实在不知道放哪里初始化了,就姑且放这里吧+++++++++++++
