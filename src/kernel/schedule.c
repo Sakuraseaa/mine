@@ -32,6 +32,29 @@ task_t *get_next_task(task_t* curt)
 }
 
 // 加入一个任务到就绪队列, 该队列按照虚拟运行时间由小到大进行排序
+#if 0
+void insert_task_queue(struct task_struct *tsk)
+{
+	struct task_struct *tmp = NULL;
+
+	if(tsk == init_task[SMP_cpu_id()])
+		return ;
+
+	tmp = container_of(list_next(&task_schedule_table.task_queue.list),struct task_struct,list);
+
+	if(list_is_empty(&task_schedule_table.task_queue.list))
+	{
+	}
+	else
+	{
+		while(tmp->vrun_time < tsk->vrun_time)
+			tmp = container_of(list_next(&tmp->list),struct task_struct,list);
+	}
+	list_add_to_before(&tmp->list,&tsk->list);
+	task_schedule_table.running_task_count += 1;
+}
+#endif
+#if 1
 void insert_task_queue(task_t *tsk)
 {
 	if (tsk == &init_task_union.task)
@@ -75,7 +98,7 @@ void insert_task_queue(task_t *tsk)
 	}
 	task_schedule_table.running_task_count += 1;
 }
-
+#endif
 void supplement_process_time_slice()
 {
 	// 根据进程的优先级,填充进程允许队列中的处理器时间片
@@ -107,7 +130,6 @@ void schedule()
 
 		// 只有当前进程是正在运行状态，才能进入就绪队列
 		if (task_schedule_table.is_running->state == TASK_RUNNING)
-            // && (tsk != task_schedule_table.is_running))
             insert_task_queue(task_schedule_table.is_running);
 
 		// 开启DEBUGK,会有不同的错误

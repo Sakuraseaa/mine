@@ -5,28 +5,6 @@
 #include "kernelkit.h"
 
 static request_queue_t disk_request;
-// 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
-void end_request(block_buffer_node_t *node)
-{
-    if (node == nullptr)
-        color_printk(RED, BLACK, "end_request error\n");
-    
-    // 释放硬盘请求队列节点占用的内存
-    disk_request.in_using->flags = ATA_FINISHED;
-    disk_request.in_using = nullptr;
-
-    if (current != node->wait_queue.tsk)
-    {
-        node->wait_queue.tsk->state = TASK_RUNNING;
-        insert_task_queue(node->wait_queue.tsk);
-        // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
-        current->flags |= NEED_SCHEDULE;
-    }
-
-    if (disk_request.block_request_count > 0) // 硬盘中断请求队列不为空，则继续处理请求包
-        cmd_out();
-}
-
 // 给硬盘发送命令
 s64_t cmd_out()
 {   
@@ -175,19 +153,56 @@ void submit(block_buffer_node_t *node)
 }
 
 // 参见IDE_transfer- 本函数属于子函数
+#if 1
+void wait_for_finish(block_buffer_node_t *node)
+{
+    current->state = TASK_UNINTERRUPTIBLE;
+    schedule();
+}
+void end_request(struct block_buffer_node * node)
+{
+	if(node == NULL)
+		color_printk(RED,BLACK,"end_request error\n");
+	node->wait_queue.tsk->state = TASK_RUNNING;
+	insert_task_queue(node->wait_queue.tsk);
+	current->flags |= NEED_SCHEDULE;
+	kdelete((unsigned long *)disk_request.in_using, 0);
+	disk_request.in_using = NULL;
+	if(disk_request.block_request_count)
+		cmd_out();
+}
+#endif
+
+#if 0
 void wait_for_finish(block_buffer_node_t *node)
 {
     cpuflg_t flags;
-
     task_t* cur = runing_task();
-
     while (node->flags != ATA_FINISHED) {
         cur->state = TASK_UNINTERRUPTIBLE;
         schedule();
     }
-
     kdelete(node, sizeof(block_buffer_node_t));
 }
+// 硬盘中断收尾函数，回收硬盘驱动程序为本次中断申请的资源
+void end_request(block_buffer_node_t *node)
+{
+    if (node == nullptr)
+        color_printk(RED, BLACK, "end_request error\n");
+    // 释放硬盘请求队列节点占用的内存
+    disk_request.in_using->flags = ATA_FINISHED;
+    disk_request.in_using = nullptr;
+    if (current != node->wait_queue.tsk)
+    {
+        node->wait_queue.tsk->state = TASK_RUNNING;
+        insert_task_queue(node->wait_queue.tsk);
+        // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
+        current->flags |= NEED_SCHEDULE;
+    }
+    if (disk_request.block_request_count > 0) // 硬盘中断请求队列不为空，则继续处理请求包
+        cmd_out();
+}
+#endif
 
 hw_int_controller disk_int_controller =
     {
