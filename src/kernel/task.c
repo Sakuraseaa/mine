@@ -342,12 +342,17 @@ void exit_thread(task_t *tsk) {}
  * @param stack_size
  * @return u64_t 为父进程返回子进程的ID号
  */
+task_t *procs[32] = {0};
+u8_t procs_item = 0;
 u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack_size)
 {
 	s32_t retval = 0;
 	task_t *tsk = nullptr;
 	// alloc & copy task struct
 	tsk = (task_t *)knew(STACK_SIZE, 0);
+
+    procs[procs_item++] = tsk;
+
 	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (u64_t)tsk);
 	if (tsk == nullptr)
 	{

@@ -153,7 +153,7 @@ void submit(block_buffer_node_t *node)
 }
 
 // 参见IDE_transfer- 本函数属于子函数
-#if 1
+#if 0
 void wait_for_finish(block_buffer_node_t *node)
 {
     current->state = TASK_UNINTERRUPTIBLE;
@@ -173,7 +173,7 @@ void end_request(struct block_buffer_node * node)
 }
 #endif
 
-#if 0
+#if 1
 void wait_for_finish(block_buffer_node_t *node)
 {
     cpuflg_t flags;
@@ -337,7 +337,6 @@ void read_handler(u64_t nr, u64_t parameter)
     else
     {
         port_insw(PORT_DISK1_DATA, node->buffer, 256); // 硬盘操作成功，读取数据到缓存区
-
         // 在PIO模式下, 当使用控制命令一次性访问多个连续的扇区时，
         // 硬盘会在每个扇区操作结束后向处理器发送一个中断信号，以通知处理器为操作下一个扇区做准备
         // 每次中断递减操作的扇区数count, 递增缓冲区基址
