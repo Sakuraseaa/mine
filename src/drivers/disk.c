@@ -153,7 +153,7 @@ void submit(block_buffer_node_t *node)
 }
 
 // 参见IDE_transfer- 本函数属于子函数
-#if 0
+#if 1
 void wait_for_finish(block_buffer_node_t *node)
 {
     current->state = TASK_UNINTERRUPTIBLE;
@@ -173,7 +173,7 @@ void end_request(struct block_buffer_node * node)
 }
 #endif
 
-#if 1
+#if 0
 void wait_for_finish(block_buffer_node_t *node)
 {
     cpuflg_t flags;
@@ -332,7 +332,6 @@ void read_handler(u64_t nr, u64_t parameter)
     if (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_ERROR)
     {    // 检测硬盘控制器，是否发生了错误
         color_printk(RED, BLACK, "read_handler:%#010x LAB: %d sectors: %d\n", io_in8(PORT_DISK1_ERR_FEATURE), node->LBA, node->count);
-        while(1);
     }
     else
     {

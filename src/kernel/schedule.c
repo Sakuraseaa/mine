@@ -64,15 +64,6 @@ void insert_task_queue(task_t *tsk)
 	list_n_t* node = nullptr;
 	list_h_t* head = &task_schedule_table.task_queue.list;
 	
-	list_for_each(node, head)
-	{
-		tmp = container_of(node, task_t, list);
-		if (tmp == tsk)
-		{
-            DEBUGK("insert repeat\n");
-			return;
-		}
-	}
 
 	if (list_is_empty(&task_schedule_table.task_queue.list))
 	{
@@ -80,8 +71,6 @@ void insert_task_queue(task_t *tsk)
 	}
 	else
 	{
-		// while (tmp->vrun_time < tsk->vrun_time)
-		// 	tmp = container_of(list_next(&tmp->list), task_t, list);
 		list_for_each(node, head)
 		{
 			tmp = container_of(node, task_t, list);
@@ -99,7 +88,7 @@ void insert_task_queue(task_t *tsk)
 	task_schedule_table.running_task_count += 1;
 }
 #endif
-void supplement_process_time_slice()
+static inline void supplement_process_time_slice()
 {
 	// 根据进程的优先级,填充进程允许队列中的处理器时间片
 	switch (task_schedule_table.is_running->priority)
@@ -137,6 +126,7 @@ void schedule()
 		
         // 按照进程优先级，给即将执行的进程计算PCB
 		task_schedule_table.is_running = tsk; // 记录当前运行进程是tsk
+        tsk->state = TASK_RUNNING;
 		supplement_process_time_slice();
 		switch_mm(current, tsk);
 		switch_to(current, tsk); // 进程切换

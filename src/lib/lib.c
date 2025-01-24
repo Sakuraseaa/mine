@@ -134,6 +134,8 @@ void list_del(struct List *entry)
 {
     entry->next->prev = entry->prev;
     entry->prev->next = entry->next;
+    entry->next = nullptr;
+    entry->prev = nullptr;
 }
 
 // return: 1 = 空 ， 0 = 不空

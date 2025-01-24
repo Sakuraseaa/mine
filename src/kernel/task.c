@@ -540,6 +540,6 @@ void task_init()
 	
 	// 内核初始化完毕，该进程不需要再被执行
 	// 给内核主程序赋值拥有虚拟时间的较大值, 依次降低他的运行优先级
-	init_task_union.task.vrun_time = 200211121813;
-	// init_task_union.task.vrun_time = 0;
+	// init_task_union.task.vrun_time = 200211121813;
+	init_task_union.task.vrun_time = 0;
 }
