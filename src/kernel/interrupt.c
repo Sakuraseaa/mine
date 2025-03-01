@@ -225,12 +225,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
         rets = -ENOMEM;
         goto out;
     }
-    // if (current->pid == 1 && vadrs == 0x40501a) {
-    //     DEBUGK("i have been to Xian\n");
-    // }
-    // if (current->pid == 2 && vadrs == 0x402a50) {
-    //     DEBUGK("i have been to Xiann\n");
-    // }
+
     vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start, kmbox);
     DEBUGK(" proc:%d, mapped %#0lx <-> %#0lx\n", current->pid , (vadrs & PAGE_4K_MASK), phyadrs);
     rets = EOK;

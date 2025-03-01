@@ -1024,22 +1024,22 @@ adr_t vma_map_msa_fault(mmdsc_t *mm, kvmemcbox_t *kmbox, adr_t vadrs, u64_t flag
     msadsc_t *usermsa;
     adr_t phyadrs = NULL;
 
-   //分配一个物理内存页面，挂载到kvmemcbox_t中，并返回对应的msadsc_t结构
+    /* 分配一个物理内存页面，挂载到kvmemcbox_t中，并返回对应的msadsc_t结构 */
     usermsa = vma_new_usermsa(mm, kmbox);
     if (nullptr == usermsa) { //没有物理内存页面返回NULL表示失败
         return NULL;
     }
     
-	//获取msadsc_t对应的内存页面的物理地址
+	/* 获取msadsc_t对应的内存页面的物理地址 */
     phyadrs = msadsc_ret_addr(usermsa);
     
-	// 建立MMU页表完成虚拟地址到物理地址的映射
+    /* 建立MMU页表完成虚拟地址到物理地址的映射 */
     if (hal_mmu_transform(&mm->msd_mmu, vadrs, phyadrs, flags) == TRUE)
     {//映射成功则返回物理地址
         return phyadrs;
     }
 
-    //映射失败就要先释放分配的物理内存页面
+    /* 映射失败就要先释放分配的物理内存页面 */
     vma_del_usermsa(mm, kmbox, usermsa, phyadrs);
     return NULL;
 }

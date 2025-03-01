@@ -283,30 +283,49 @@ last_slash:     // 最后的斜杠
 }
 
 // 设置文件指针的位置。这个函数的使用能否提升到VFS层面?
-s64_t FS_lseek(file_t *filp, s64_t offset, s64_t origin)
+s64_t fs_lseek(file_t *filp, s64_t offset, s64_t origin)
 {
 
     s64_t pos = 0;
 
     switch (origin)
     {
-    case SEEK_SET:
-        pos = offset;
-        break;
-    case SEEK_CUR:
-        pos = filp->position + offset;
-        break;
-    case SEEK_END:
-        pos = filp->dentry->dir_inode->file_size + offset;
-        break;
-    default:
-        return -EINVAL;
-        break;
+        case SEEK_SET:
+        {
+            pos = offset;
+            break;
+        }
+        case SEEK_CUR:
+        {
+            pos = filp->position + offset;
+            break;
+        }
+        case SEEK_END:
+        {
+            if (filp->dentry && filp->dentry->dir_inode)
+            {
+                pos = filp->dentry->dir_inode->file_size + offset;
+            } 
+            else 
+            {
+                return -ENOENT; // 访问位置不正确
+            }
+            break;
+        }
+        default:
+        {
+            return -EINVAL;
+            break;
+        }
     }
 
-    if (pos < 0 || pos > filp->dentry->dir_inode->file_size)
-        return -EOVERFLOW; // 访问位置不正确
-
+    if (filp->dentry && filp->dentry->dir_inode) 
+    {
+        if (pos < 0 || pos > filp->dentry->dir_inode->file_size)
+        {
+            return -EOVERFLOW; // 访问位置不正确
+        }
+    }
     filp->position = pos;
     // color_printk(GREEN, BLACK, "FAT32 FS(lseek) alert position:%d\n", filp->position);
     return pos;

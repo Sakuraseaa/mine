@@ -101,6 +101,21 @@ int exec_command(int argc, char **argv)
 	char* filename = 0;
 
 	errno = fork();
+
+	if (errno == 0) {
+		printf(" i am child -> [%d, %d] \n", getpid(), errno);
+		// info('B');
+	} else {
+		printf(" i am parent -> [%d, %d] \n", getpid(), errno);
+		// info('B');
+	}
+	while(1)
+	{
+		printf("[%#lx]: I am proc %d\n", retval, getpid());
+        sleep(5);
+        retval++;
+	}
+
 	if( errno ==  0 ) {
 		// printf("child process\n");
 		filename = get_filename_whole(filename, argv[1]);

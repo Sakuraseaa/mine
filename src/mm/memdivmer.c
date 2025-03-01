@@ -103,14 +103,19 @@ memarea_t *onfrmsa_retn_marea(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs
  */
 memarea_t *onmrtype_retn_marea(mmgro_t *mmobjp, uint_t mrtype)
 {
-	for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
-	{
-		if (mrtype == mmobjp->mo_mareastat[mi].ma_type)
-		{
-			return &mmobjp->mo_mareastat[mi];
-		}
-	}
-	return nullptr;
+    if (mmobjp == nullptr)
+    {
+        DEBUGK("mmgro is nullptr!");
+        return nullptr;
+    }
+    for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
+    {
+        if (mrtype == mmobjp->mo_mareastat[mi].ma_type)
+        {
+            return &mmobjp->mo_mareastat[mi];
+        }
+    }
+    return nullptr;
 }
 
 bafhlst_t *onma_retn_maxbafhlst(memarea_t *malckp) // 得到一个有空闲结点且最大的链表

@@ -20,6 +20,7 @@ void sig_handler(long sig);
 int main()
 {
 	long pid = getpid();
+
 	pid = fork();
 	if (pid == 0) {
 		printf(" i am child -> [%d, %d] \n", getpid(), pid);
@@ -33,6 +34,7 @@ int main()
 		printf(" i am proc %d\n", getpid());
         sleep(5);
 	}
+
 	signal(4 , sig_handler);
 	kill(pid, 4);
 	

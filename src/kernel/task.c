@@ -280,7 +280,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
-		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx\n", vma_start, vma_end, vma->kva_vir2file ? vma->kva_vir2file->vtf_file : 0x20021112, vma->kva_kvmbox);
+		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx\n", vma_start, vma_end, vma->kva_vir2file ? vma->kva_vir2file->vtf_file : nullptr, vma->kva_kvmbox);
     }
 	flush_tlb();
 
@@ -472,11 +472,8 @@ void __switch_to(task_t *prev, task_t *next)
 	// 这样下一次中断就会使用next进程中断栈
 	set_tss64(init_tss[0].rsp0, init_tss[0].rsp1, init_tss[0].rsp2, init_tss[0].ist1, init_tss[0].ist2, init_tss[0].ist3, init_tss[0].ist4, init_tss[0].ist5, init_tss[0].ist6, init_tss[0].ist7);
 
-	__asm__ __volatile__("movq	%%fs,	%0 \n\t"
-						 : "=a"(prev->thread->fs));
-	__asm__ __volatile__("movq	%%gs,	%0 \n\t"
-						 : "=a"(prev->thread->gs));
-
+	__asm__ __volatile__("movq	%%fs,	%0 \n\t": "=a"(prev->thread->fs));
+	__asm__ __volatile__("movq	%%gs,	%0 \n\t": "=a"(prev->thread->gs));
 	__asm__ __volatile__("movq	%0,	%%fs \n\t" ::"a"(next->thread->fs));
 	__asm__ __volatile__("movq	%0,	%%gs \n\t" ::"a"(next->thread->gs));
 

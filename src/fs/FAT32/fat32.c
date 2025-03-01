@@ -137,14 +137,13 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         // c.2. 读取整个簇的数据
         if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer))
         {
-            color_printk(RED, BLACK, "FAT32 FS(read) read disk ERROR!!!!!!\n");
+            DEBUGK("FAT32 FS(read) read disk ERROR!\n");
             retval = -EIO;
             break;
         }
 
         // c.3. 计算本次从buffer缓冲区中复制给用户的数据长度
         length = index <= (fsbi->bytes_per_cluster - offset) ? index : fsbi->bytes_per_cluster - offset;
-
 
         // c.4. 根据buf是进程区内存 or 内核区内存，使用不同的复制函数
         if ((u64_t)buf < TASK_SIZE)
@@ -166,7 +165,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     // 否则说明数据读取错误，进而返回错误码
     if (!index)
         retval = count;
-    
+
     DEBUGK("proc[%d]: now-position(%#lx) have read bytes:%#lx form %#lx\n", current->pid, *position, retval, copy_position);
     return retval;
 }
@@ -437,7 +436,7 @@ file_operations_t FAT32_file_ops =
         .close = FAT32_close,
         .read = FAT32_read,
         .write = FAT32_write,
-        .lseek = FS_lseek,
+        .lseek = fs_lseek,
         .ioctl = FAT32_ioctl,
         .readdir = FAT32_readdir,
 };

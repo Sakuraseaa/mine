@@ -63,7 +63,6 @@ static void frequency_set(u8_t counter_port,
 
 static inline void test_timer_is_read()
 {
-    u64_t nihao = container_of(list_next(&timer_list_head.list), struct timer_list, list)->expire_jiffies;
     // 如果定时任务的失效日期没有到，那么不进入中断下半部
     if ((container_of(list_next(&timer_list_head.list), struct timer_list, list))->expire_jiffies <= jiffies)
     {
@@ -82,22 +81,22 @@ void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
    // 依据进程的优先级，增加进程虚拟运行时间，减少处理器时间片维护代码
 
     test_timer_is_read();
-   switch (current->priority)
-   {
-   case 0:
-   case 1:
-      task_schedule_table.CPU_exec_task_jiffies--;
-      current->vrun_time += 1;
-      break;
-   case 2:
-   default:
-      task_schedule_table.CPU_exec_task_jiffies -= 2;
-      current->vrun_time += 2;
-      break;
-   }
+    switch (current->priority)
+    {
+    case 0:
+    case 1:
+        task_schedule_table.CPU_exec_task_jiffies--;
+        current->vrun_time += 1;
+        break;
+    case 2:
+    default:
+        task_schedule_table.CPU_exec_task_jiffies -= 2;
+        current->vrun_time += 2;
+        break;
+    }
     // 本进程的时间片耗尽，立马调度其他进程
     if (task_schedule_table.CPU_exec_task_jiffies <= 0)
-    current->flags |= NEED_SCHEDULE;
+        current->flags |= NEED_SCHEDULE;
 }
 
 /* 初始化PIT8253 */

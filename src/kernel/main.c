@@ -101,7 +101,7 @@ void Start_Kernel(void)
 	while (!shell_up)
 		SKOFLOVE++; 
 	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
-	task_t* tsk = nullptr;
+	// task_t* tsk = nullptr;
 	while (1)
 	{
 

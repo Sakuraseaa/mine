@@ -154,7 +154,7 @@ void submit(block_buffer_node_t *node)
 
 // 参见IDE_transfer- 本函数属于子函数
 #if 1
-void wait_for_finish(block_buffer_node_t *node)
+void wait_for_finish()
 {
     current->state = TASK_UNINTERRUPTIBLE;
     schedule();

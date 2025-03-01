@@ -95,7 +95,8 @@
         "krlvadrsmem.h": "c",
         "kerneltype.h": "c",
         "kernelfunc.h": "c",
-        "schedule_f.h": "c"
+        "schedule_f.h": "c",
+        "stdarg.h": "c"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "C_Cpp.intelliSenseEngineFallback": "disabled",

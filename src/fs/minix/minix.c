@@ -404,7 +404,7 @@ file_operations_t minix_file_ops =
         .close = minix_close,
         .read = minix_read,
         .write = minix_write,
-        .lseek = FS_lseek,
+        .lseek = fs_lseek,
         .ioctl = minix_ioctl,
         .readdir = minix_readdir,
 };

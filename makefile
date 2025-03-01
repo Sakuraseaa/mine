@@ -9,10 +9,10 @@ PIC   := PIC
 ASM   = nasm
 CC	  = gcc
 
+#  -Wno-address-of-packed-member	-Wno-implicit-function-declaration \
 # 编译选项中我屏蔽了两处警告，等到日后再处理吧
 CFLAGS = -O0 -m64 -mcmodel=large -fno-common -std=gnu99 -nostartfiles -fno-stack-protector -Wall \
 		-fno-builtin -fno-pie -fno-pic -nostdlib  -nostdinc \
-		-Wno-address-of-packed-member	-Wno-implicit-function-declaration \
 		-c -g -I $(INC_DIR)/ -I $(SRC_DIR)/drivers/inc -I $(SRC_DIR)/lib/inc -I $(INC_DIR)/base/ \
 		-I $(SRC_DIR)/fs/inc -I $(SRC_DIR)/kernel/inc/ -I $(SRC_DIR)/kernel/usrinc -I $(SRC_DIR)/sys/inc	\
 		-I $(SRC_DIR)/mm/inc -I $(SRC_DIR)/arch/x86/inc \
