@@ -649,69 +649,70 @@ bool_t merlove_mem_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_t msanr)
 
 bool_t merlove_mem_core()
 {
-	// 获取msadsc_t结构的首地址和个数
-	msadsc_t *mstatp = (msadsc_t *)glomm.mo_msadscstat;
-	uint_t msanr = (uint_t)glomm.mo_msanr , maxp = 0;
-	// 获得memarea_t结构的首地址
-	memarea_t *marea = (memarea_t *)glomm.mo_mareastat;
-	uint_t sretf = ~0UL, tretf = ~0UL;
-	
+    // 获取msadsc_t结构的首地址和个数
+    msadsc_t *mstatp = (msadsc_t *)glomm.mo_msadscstat;
+    uint_t msanr = (uint_t)glomm.mo_msanr , maxp = 0;
+    // 获得memarea_t结构的首地址
+    memarea_t *marea = (memarea_t *)glomm.mo_mareastat;
+    uint_t sretf = ~0UL;
+
     // 给每一个 msadsc_t 内存空间地址描述符, 添加内存区标志
-	for (uint_t mi = 0; mi < (uint_t)glomm.mo_mareanr; mi++)
-	{
-		sretf = merlove_setallmarflgs_onmemarea(&marea[mi], mstatp, msanr);
-		if ((~0UL) == sretf)
-		{
-			return FALSE;
-		}
+    for (uint_t mi = 0; mi < (uint_t)glomm.mo_mareanr; mi++)
+    {
+        sretf = merlove_setallmarflgs_onmemarea(&marea[mi], mstatp, msanr);
+        if ((~0UL) == sretf)
+        {
+            return FALSE;
+        }
         #if 0
-		// tretf = test_setflgs(&marea[mi], mstatp, msanr);
-		// if ((~0UL) == tretf)
-		// {
-		// 	return FALSE;
-		// }
-		// if (sretf != tretf)
-		// {
-		// 	return FALSE;
-		// }
+        uint_t tretf  = ~0UL;
+        // tretf = test_setflgs(&marea[mi], mstatp, msanr);
+        // if ((~0UL) == tretf)
+        // {
+        // 	return FALSE;
+        // }
+        // if (sretf != tretf)
+        // {
+        // 	return FALSE;
+        // }
         #endif
-	}
+    }
 
-	// 把 物理页 挂载到 内存区 结构上
-	for (uint_t maidx = 0; maidx < (uint_t)glomm.mo_mareanr; maidx++)
-	{
-		#if ENABLE_MM_DEBUG
-		switch (marea[maidx].ma_type)
-		{
-			case MA_TYPE_HWAD:
-				color_printk(WHITE, BLACK, " ============ Begin Hard area's pages mount=================\n");
-				break;
-			case MA_TYPE_KRNL:
-				color_printk(WHITE, BLACK, " ============ Begin Kernel area's pages mount=================\n");
-				break;
-			case MA_TYPE_PROC:
-				color_printk(WHITE, BLACK, " ============ Begin User area's pages mount================\n");
-				break;
-			default:
-				break;
-		}
-		#endif
-	
-		if (merlove_mem_onmemarea(&marea[maidx], mstatp, msanr) == FALSE)
-		{
-			return FALSE;
-		}
-		maxp += marea[maidx].ma_maxpages;
-		
-		#if ENABLE_MM_DEBUG
-		color_printk(WHITE, BLACK, " ============ mounted %dMB ===============\n\n", (marea[maidx].ma_maxpages * PAGE_4K_SIZE)/1024/1024);
-		#endif
-	}
-	
-	glomm.mo_freepages = maxp;
-	glomm.mo_memsz = maxp * PAGE_4K_SIZE;
+    // 把 物理页 挂载到 内存区 结构上
+    for (uint_t maidx = 0; maidx < (uint_t)glomm.mo_mareanr; maidx++)
+    {
+        #if ENABLE_MM_DEBUG
+        switch (marea[maidx].ma_type)
+        {
+            case MA_TYPE_HWAD:
+                color_printk(WHITE, BLACK, " ============ Begin Hard area's pages mount=================\n");
+                break;
+            case MA_TYPE_KRNL:
+                color_printk(WHITE, BLACK, " ============ Begin Kernel area's pages mount=================\n");
+                break;
+            case MA_TYPE_PROC:
+                color_printk(WHITE, BLACK, " ============ Begin User area's pages mount================\n");
+                break;
+            default:
+                break;
+        }
+        #endif
 
-	return TRUE;
+        if (merlove_mem_onmemarea(&marea[maidx], mstatp, msanr) == FALSE)
+        {
+            return FALSE;
+        }
+        maxp += marea[maidx].ma_maxpages;
+        
+        #if ENABLE_MM_DEBUG
+        color_printk(WHITE, BLACK, " ============ mounted %dMB ===============\n\n", (marea[maidx].ma_maxpages * PAGE_4K_SIZE)/1024/1024);
+        #endif
+    }
+
+    glomm.mo_freepages = maxp;
+    glomm.mo_memsz = maxp * PAGE_4K_SIZE;
+
+    return TRUE;
 }
 
 uint_t check_multi_msadsc(msadsc_t *mstat, bafhlst_t *bafhp, memarea_t *mareap)

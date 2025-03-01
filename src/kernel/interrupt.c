@@ -186,7 +186,7 @@ static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_
     assert(cur_start_load_size > 0);
 
     vtft->vtf_alread_load_size += cur_start_load_size;
-    DEBUGK("file:%#lx, load_size:%#lx\n",task_file, cur_start_load_size);
+    DEBUGK("file_t addr:%#lx, load_size:%#lx\n",task_file, cur_start_load_size);
     task_file->f_ops->lseek(task_file, vtft->vtf_position + cur_load_position, SEEK_SET);
     task_file->f_ops->read(task_file, (buf_t)fault_vadrs, cur_start_load_size, &task_file->position);
 

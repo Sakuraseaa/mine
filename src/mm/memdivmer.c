@@ -969,7 +969,7 @@ void* kmalloc_4k_page(uint_t pages)
 void* hmalloc_4k_page(uint_t pages) 
 {
 	u64_t retpnr = 0;
-	msadsc_t *msa = nullptr, *etd = nullptr;
+	msadsc_t *msa = nullptr;
 	
 	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_HWAD, DMF_RELDIV);
 

@@ -132,8 +132,21 @@ void list_add_to_before(struct List *entry, struct List *pnew) ////add to entry 
 
 void list_del(struct List *entry)
 {
-    entry->next->prev = entry->prev;
-    entry->prev->next = entry->next;
+    int a = 0;
+    if (entry->next != nullptr)
+    {
+        entry->next->prev = entry->prev;
+    } else {
+        a++;
+    }
+
+    if (entry->prev != nullptr)
+    {
+        entry->prev->next = entry->next;
+    } else {
+        a++;
+    }
+
     entry->next = nullptr;
     entry->prev = nullptr;
 }
@@ -439,7 +452,6 @@ char_t *strchr(cstr_t str, cchar_t ch)
 /* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
 char_t *strrchr(cstr_t str, cchar_t ch)
 {
-
     cstr_t last_char = nullptr;
     /* 从头到尾遍历一次,若存在ch字符,last_char总是该字符最后一次出现在串中的地址(不是下标,是地址)*/
     while (*str != 0)

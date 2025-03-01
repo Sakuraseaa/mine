@@ -520,7 +520,6 @@ file_t* copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma, file_t* fp)
 	{
 		return NULL;
 	}
-	adr_t ret = NULL;
 	virmemadrs_t *vma_family = &mm->msd_virmemadrs;
 	vma_to_file_t* vtft = nvma->kva_vir2file;
 
@@ -539,7 +538,7 @@ file_t* copy_one_vma(mmdsc_t* mm, const kmvarsdsc_t* nvma, file_t* fp)
 		vtft->vtf_alread_load_size = 0;
 	}
 
-	ret = vma_new_vadrs_core(mm, nvma->kva_start, (nvma->kva_end - nvma->kva_start), vtft, nvma->kva_limits, nvma->kva_maptype, nvma->kva_flgs);
+	vma_new_vadrs_core(mm, nvma->kva_start, (nvma->kva_end - nvma->kva_start), vtft, nvma->kva_limits, nvma->kva_maptype, nvma->kva_flgs);
 	
 	kmvarsdsc_t* ovma = vma_family->vs_currkmvdsc;
 	

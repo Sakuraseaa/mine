@@ -120,7 +120,6 @@ void schedule()
 		// 只有当前进程是正在运行状态，才能进入就绪队列
 		if (task_schedule_table.is_running->state == TASK_RUNNING)
             insert_task_queue(task_schedule_table.is_running);
-
 		// 开启DEBUGK,会有不同的错误
 		// DEBUGK("#schedule:%ld, pid:%ld(%ld) [switch to]-> pid:%ld(%ld)#\n", jiffies, current->pid, current->vrun_time, tsk->pid, tsk->vrun_time);
 		
