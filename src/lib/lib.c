@@ -273,7 +273,7 @@ s32_t memcmp(void *FirstPart, void *SecondPart, s64_t Count)
 
 void *memset(void *Address, u8_t C, s64_t Count)
 {
-    s32_t d0, d1;
+    volatile s32_t d0, d1;
     u64_t tmp = C * 0x0101010101010101UL;
     __asm__ __volatile__("cld	\n\t"
                          "rep	\n\t"

@@ -8,7 +8,7 @@ void debugk(cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
     va_list args;
     char_t debugk_buf[1024] = {0};
 
-    s32_t i = sprintf(debugk_buf, "[%s %d:%s] ", strrchr(file,'/') + 1, line,func);
+    s32_t i = sprintf(debugk_buf, "[%s:%d %s] ", strrchr(file,'/') + 1, line,func);
     va_start(args, fmt);
     i += vsprintf(debugk_buf + i, fmt, args);
     va_end(args);

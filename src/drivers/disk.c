@@ -106,7 +106,7 @@ s64_t cmd_out()
  */
 block_buffer_node_t *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
-    block_buffer_node_t *node = (block_buffer_node_t *)knew(sizeof(block_buffer_node_t), 0);
+    block_buffer_node_t *node = (block_buffer_node_t *)kmalloc(sizeof(block_buffer_node_t), 0);
     wait_queue_init(&node->wait_queue, current);
 
     switch (cmd)
@@ -165,8 +165,9 @@ void end_request(struct block_buffer_node * node)
 		color_printk(RED,BLACK,"end_request error\n");
 	node->wait_queue.tsk->state = TASK_RUNNING;
 	insert_task_queue(node->wait_queue.tsk);
-	current->flags |= NEED_SCHEDULE;
-	kdelete((unsigned long *)disk_request.in_using, 0);
+	current->flags |= NEED_SCHEDULE; /* 如果当前运行的线程 和 中断完成的线程相同，是不是不应该加调度标志*/
+	// kdelete((unsigned long *)disk_request.in_using, 0);
+	kfree((unsigned long *)disk_request.in_using);
 	disk_request.in_using = NULL;
 	if(disk_request.block_request_count)
 		cmd_out();
@@ -178,7 +179,7 @@ void wait_for_finish(block_buffer_node_t *node)
 {
     cpuflg_t flags;
     task_t* cur = runing_task();
-    while (node->flags != ATA_FINISHED) {
+    if (node->flags != ATA_FINISHED) {
         cur->state = TASK_UNINTERRUPTIBLE;
         schedule();
     }
@@ -188,17 +189,19 @@ void wait_for_finish(block_buffer_node_t *node)
 void end_request(block_buffer_node_t *node)
 {
     if (node == nullptr)
+    {
         color_printk(RED, BLACK, "end_request error\n");
-    // 释放硬盘请求队列节点占用的内存
-    disk_request.in_using->flags = ATA_FINISHED;
-    disk_request.in_using = nullptr;
+    }
+
+    node->wait_queue.tsk->state = TASK_RUNNING;
+    node->wait_queue.tsk->flags = ATA_FINISHED;
     if (current != node->wait_queue.tsk)
     {
-        node->wait_queue.tsk->state = TASK_RUNNING;
         insert_task_queue(node->wait_queue.tsk);
         // 给当前进程需要调度标志，使得等待数据的进程抢占当前进程
         current->flags |= NEED_SCHEDULE;
     }
+    disk_request.in_using = nullptr;
     if (disk_request.block_request_count > 0) // 硬盘中断请求队列不为空，则继续处理请求包
         cmd_out();
 }
@@ -238,7 +241,7 @@ s64_t IDE_ioctl(s64_t cmd, s64_t arg)
         wait_for_finish(node);
         return 1;
     }
-
+    DEBUGK("why are you here?");
     return 0;
 }
 

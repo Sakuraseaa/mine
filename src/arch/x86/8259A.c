@@ -57,7 +57,7 @@ void init_8259A()
 	io_out8(0xa1, 0x01);
 
 	// 8259A-M/S	OCW1 0xf9, 会关闭了时钟中断, Old::0xf8
-	io_out8(0x21, 0xe0); // 开启了两个串口的中断
+	io_out8(0x21, 0xe8); // 开启了两个串口的中断
 	io_out8(0xa1, 0x2f);
 
 	// enable IF eflages
