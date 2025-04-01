@@ -5,7 +5,6 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
-extern list_t super_list;
 extern struct super_block *current_sb;
 
 typedef struct super_block_operations super_block_operations_t;

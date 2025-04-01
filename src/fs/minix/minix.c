@@ -846,7 +846,7 @@ spblk_t *minix_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     sbp->count = 1;
     list_init(&sbp->inode_list);
     list_init(&sbp->node);
-    list_add_to_behind(&super_list, &sbp->node);
+    register_super(sbp);
     sbp->sb_ops = &minix_super_ops;
 
     sbp->private_sb_info = minix_sb = (minix_sb_info_t *)knew(sizeof(minix_sb_info_t), 0);

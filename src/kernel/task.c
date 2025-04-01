@@ -353,7 +353,6 @@ u64_t do_fork(pt_regs_t *regs, u64_t clone_flags, u64_t stack_start, u64_t stack
 
     procs[procs_item++] = tsk;
 
-	// color_printk(WHITE, BLACK, "struct_task address:%#018lx\n", (u64_t)tsk);
 	if (tsk == nullptr)
 	{
 		retval = -EAGAIN;

@@ -24,10 +24,10 @@ int main()
 	pid = fork();
 	if (pid == 0) {
 		printf(" i am child -> [%d, %d] \n", getpid(), pid);
-		// info('B');
+		info('B');
 	} else {
 		printf(" i am parent -> [%d, %d] \n", getpid(), pid);
-		// info('B');
+		info('B');
 	}
 	while(1)
 	{

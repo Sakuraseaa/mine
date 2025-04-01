@@ -452,6 +452,9 @@ char_t *strchr(cstr_t str, cchar_t ch)
 /* 从后往前查找字符串str中首次出现字符ch的地址(不是下标,是地址) */
 char_t *strrchr(cstr_t str, cchar_t ch)
 {
+    if (!str) return NULL;  // 空指针检查
+    if (ch == '\0') return (char_t *)str;
+
     cstr_t last_char = nullptr;
     /* 从头到尾遍历一次,若存在ch字符,last_char总是该字符最后一次出现在串中的地址(不是下标,是地址)*/
     while (*str != 0)
@@ -462,11 +465,7 @@ char_t *strrchr(cstr_t str, cchar_t ch)
         }
         str++;
     }
-    // Special case for ch == '\0'
-    if (ch == '\0')
-    {
-        return (char_t *)str;
-    }
+
     return (char_t *)last_char;
 }
 

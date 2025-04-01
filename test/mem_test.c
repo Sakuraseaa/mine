@@ -148,7 +148,7 @@ void test_show_vir_phy(task_t *tsk) {
     i_m = User_Map(tsk->mm, map);
 
     Print_Map(map, i_m);
-    
+
     kdelete(map, sizeof(map_entry_t) * 56);
 }
 

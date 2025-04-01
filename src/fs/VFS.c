@@ -75,7 +75,7 @@ spblk_t *mount_fs(str_t name, struct Disk_Partition_Table_Entry *DPTE, void *buf
     for (p = &filesystem; p; p = p->next)
         if (!strcmp(p->name, name)) {
             sb = p->read_superblock(DPTE, buf);
-            list_add_to_behind(&super_list, &sb->node);
+            register_super(sb);
             break;
         }
     return sb;

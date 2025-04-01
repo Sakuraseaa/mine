@@ -769,7 +769,7 @@ u64_t sys_cleanScreen(void) {
     return 0;
 }
 
-void dir_Tree(dir_entry_t* cur, s32_t depth) {
+void dir_tree(dir_entry_t* cur, s32_t depth) {
     color_printk(WHITE, BLACK, "|");
     
     dir_entry_t* child = nullptr;
@@ -797,17 +797,17 @@ void dir_Tree(dir_entry_t* cur, s32_t depth) {
         color_printk(WHITE, BLACK, "->");
         //=======================================
         
-        dir_Tree(child, depth + 1);
+        dir_tree(child, depth + 1);
     }
 }
 
 u64_t sys_info(char_t order) {
-    
+
     switch (order)
     {
     case 'A':  // 显示系统目录项树
         dir_entry_t *parent = current_sb->root; // 父目录项
-        dir_Tree(parent, 0);
+        dir_tree(parent, 0);
         break;
     case 'B':// 显示本进程的虚拟内存 到 物理内存的映射
         test_show_vir_phy(current);

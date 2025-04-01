@@ -1,6 +1,6 @@
 #include "toolkit.h"
 #include "fskit.h"
-list_t super_list;
+static list_t super_list;
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 // 获得设备 dev 的超级块
@@ -16,6 +16,12 @@ spblk_t *get_super(dev_t dev)
         ptr = ptr->next;
     }
     return nullptr;
+}
+
+bool register_super(spblk_t * sb)
+{
+    list_add_to_behind(&super_list, &sb->node);
+    return TRUE;
 }
 
 void super_init() {

@@ -79,13 +79,11 @@ s64_t cmd_out()
         io_out8(PORT_DISK1_SECTOR_LOW, node->LBA & 0xff);
         io_out8(PORT_DISK1_SECTOR_MID, (node->LBA >> 8) & 0xff);
         io_out8(PORT_DISK1_SECTOR_HIGH, (node->LBA >> 16) & 0xff);
-        color_printk(ORANGE, WHITE, "test\n");
         // 硬盘没准备好接收命令，则等待
         while (!(io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_READY))
             nop();
         // 发送命令
         io_out8(PORT_DISK1_STATUS_CMD, node->cmd);
-        color_printk(ORANGE, WHITE, "test\n");
         break;
     default:
         color_printk(BLACK, WHITE, "ATA CMD Error\n");

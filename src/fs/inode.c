@@ -2,7 +2,6 @@
 #include "fskit.h"
 #include "syskit.h"
 #include "mmkit.h"
-list_t super_list;
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 // 获得设备 dev 的超级块
