@@ -12,25 +12,25 @@ extern struct Global_Memory_Descriptor memory_management_struct;
  */
 static void msadsc_t_init(msadsc_t *initp)
 {
-	list_init(&initp->md_list);
-	spin_init(&initp->md_lock);
-	initp->md_cntflgs.mf_olkty = MF_OLKTY_INIT; // Overlay Link Type 挂入链表类型， 内核 or 用户?
-	initp->md_cntflgs.mf_lstty = MF_LSTTY_LIST; // List type 链表类型，空闲链表，已分配链表
-	initp->md_cntflgs.mf_mocty = MF_MOCTY_FREE; // Memory Occupation Type 内存占用类型, 空闲/被内核使用/被用户使用
-	initp->md_cntflgs.mf_marty = MF_MARTY_INIT; // Memory Area Type 内存区域类型，内核区/用户区/设备区/
-	initp->md_cntflgs.mf_refcnt = MF_UINDX_INIT; // Usage index 使用计数
-	initp->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-	initp->md_phyadrs.paf_shared = PAF_NO_SHARED;
-	initp->md_phyadrs.paf_swap = PAF_NO_SWAP;
-	initp->md_phyadrs.paf_cache = PAF_NO_CACHE;
-	initp->md_phyadrs.paf_kmap = PAF_NO_KMAP;
-	initp->md_phyadrs.paf_lock = PAF_NO_LOCK;
-	initp->md_phyadrs.paf_dirty = PAF_NO_DIRTY;
-	initp->md_phyadrs.paf_busy = PAF_NO_BUSY;
-	initp->md_phyadrs.paf_rv2 = PAF_RV2_VAL;    // reserve - 保留
-	initp->md_phyadrs.paf_padrs = PAF_INIT_PADRS; // 页地址
-	initp->md_odlink = nullptr; // Adjacent Link / Ordered Link 相邻链接-有序链接
-	return;
+    list_init(&initp->md_list);
+    spin_init(&initp->md_lock);
+    initp->md_cntflgs.mf_olkty = MF_OLKTY_INIT; // Overlay Link Type 挂入链表类型， 内核 or 用户?
+    initp->md_cntflgs.mf_lstty = MF_LSTTY_LIST; // List type 链表类型，空闲链表，已分配链表
+    initp->md_cntflgs.mf_mocty = MF_MOCTY_FREE; // Memory Occupation Type 内存占用类型, 空闲/被内核使用/被用户使用
+    initp->md_cntflgs.mf_marty = MF_MARTY_INIT; // Memory Area Type 内存区域类型，内核区/用户区/设备区/
+    initp->md_cntflgs.mf_refcnt = MF_UINDX_INIT; // Usage index 使用计数
+    initp->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
+    initp->md_phyadrs.paf_shared = PAF_NO_SHARED;
+    initp->md_phyadrs.paf_swap = PAF_NO_SWAP;
+    initp->md_phyadrs.paf_cache = PAF_NO_CACHE;
+    initp->md_phyadrs.paf_kmap = PAF_NO_KMAP;
+    initp->md_phyadrs.paf_lock = PAF_NO_LOCK;
+    initp->md_phyadrs.paf_dirty = PAF_NO_DIRTY;
+    initp->md_phyadrs.paf_busy = PAF_NO_BUSY;
+    initp->md_phyadrs.paf_rv2 = PAF_RV2_VAL;    // reserve - 保留
+    initp->md_phyadrs.paf_padrs = PAF_INIT_PADRS; // 页地址
+    initp->md_odlink = nullptr; // Adjacent Link / Ordered Link 相邻链接-有序链接
+    return;
 }
 
 /**
@@ -57,20 +57,22 @@ u64_t init_msadsc_core(msadsc_t *msastart, u64_t msanr)
 
     for (i = 0; i <= memory_management_struct.e820_length; i++)
     {
-        if (memory_management_struct.e820[i].type != 1)
+        if (memory_management_struct.e820[i].type != 1) {
             continue;
+        }
 
         // start向上取整，end向下取整
         start = memory_management_struct.e820[i].address;
         end = memory_management_struct.e820[i].address + memory_management_struct.e820[i].length;
-        if(end <= 0x100000UL)   // 忽略低于1MB的物理地址
+        if (end <= 0x100000UL) {   // 忽略低于1MB的物理地址
             continue;
-        
-        for(;start < end; start += PAGE_4K_SIZE) { // 遍历区间
-            
+        }
+
+        for (;start < end; start += PAGE_4K_SIZE)
+        {
             if ((start + 4096 - 1) <= end) // 确保 start 到 end 之间任有 4KB 内存
-			{
-				init_one_msadsc(&msastart[mdindx++], start);
+            {
+                init_one_msadsc(&msastart[mdindx++], start);
             }
         }
     }
@@ -81,7 +83,7 @@ u64_t init_msadsc_core(msadsc_t *msastart, u64_t msanr)
 // return msadsc virtual address and size
 void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
     u64_t   TotalMem = 0, i;
-    
+
     for (i = 0; i <= memory_management_struct.e820_length; i++)
     {
         u64_t start, end;
@@ -99,10 +101,10 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
             continue;
         TotalMem += (end - start) >> PAGE_4K_SHIFT;
     }
-    
+
     *msar = TotalMem;
     *msavstart = (msadsc_t*)(memory_management_struct.end_of_struct);
-    
+
     DEBUGK("OS having %d 4k pagesize  = %d MB\n", TotalMem, (TotalMem * PAGE_4K_SIZE) / 1024 / 1024);
     glomm.mo_maxpages = TotalMem; // 内存总共划分成4kb，总共4kB页数
     return;
@@ -110,21 +112,24 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
 
 void disp_one_msadsc(msadsc_t *mp)
 {
-	color_printk(WHITE,BLACK,"msadsc_t.md_f:_ux[%x],_my[%x],md_phyadrs:_alc[%x],_shd[%x],_swp[%x],_che[%x],_kmp[%x],_lck[%x],_dty[%x],_bsy[%x],_padrs[0x%x]\n",
-		   (uint_t)mp->md_cntflgs.mf_refcnt, (uint_t)mp->md_cntflgs.mf_mocty, (uint_t)mp->md_phyadrs.paf_alloc, (uint_t)mp->md_phyadrs.paf_shared, (uint_t)mp->md_phyadrs.paf_swap, (uint_t)mp->md_phyadrs.paf_cache, (uint_t)mp->md_phyadrs.paf_kmap, (uint_t)mp->md_phyadrs.paf_lock,
-		   (uint_t)mp->md_phyadrs.paf_dirty, (uint_t)mp->md_phyadrs.paf_busy, (uint_t)(mp->md_phyadrs.paf_padrs << 12));
-	return;
+    color_printk(WHITE,BLACK,"msadsc_t.md_f:_ux[%x],_my[%x],md_phyadrs:_alc[%x],_shd[%x],_swp[%x],_che[%x],_kmp[%x],_lck[%x],_dty[%x],_bsy[%x],_padrs[0x%x]\n",
+            (uint_t)mp->md_cntflgs.mf_refcnt, (uint_t)mp->md_cntflgs.mf_mocty, (uint_t)mp->md_phyadrs.paf_alloc, (uint_t)mp->md_phyadrs.paf_shared, (uint_t)mp->md_phyadrs.paf_swap, (uint_t)mp->md_phyadrs.paf_cache, (uint_t)mp->md_phyadrs.paf_kmap, (uint_t)mp->md_phyadrs.paf_lock,
+            (uint_t)mp->md_phyadrs.paf_dirty, (uint_t)mp->md_phyadrs.paf_busy, (uint_t)(mp->md_phyadrs.paf_padrs << 12));
+    return;
 }
 
-
+/**
+ * @brief initialize memory space address description.
+ * 
+ */
 void init_msadsc()
 {
     u64_t coremdnr = 0, msanr = 0;
     msadsc_t *msastart = nullptr;
-    
+
     //计算msadsc_t结构数组的开始地址和数组元素个数
     ret_msadsc_vadrandsz(&msastart, &msanr);
-    
+
     //初始化 msadsc_t 结构数组 的核心逻辑
     coremdnr = init_msadsc_core(msastart, msanr);
     if (coremdnr != msanr)
@@ -132,12 +137,12 @@ void init_msadsc()
         color_printk(RED, BLACK,"init_msadsc init_msadsc_core err\n");
         return;
     }
-    
+
     //将msadsc_t结构数组的开始的物理地址写入kmachbsp结构中 
     glomm.mo_msadscstat = msastart;
     glomm.mo_msanr = msanr;
     memory_management_struct.end_of_struct += (sizeof(msadsc_t) * coremdnr + sizeof(u64_t) * 2) & (~(sizeof(u64_t)-1));
-    
+
     // for(int i = 159; i < 165; i++) //1MB
     //     disp_one_msadsc(glomm.mo_msadscstat + i);
 
@@ -214,24 +219,28 @@ bool_t search_krloccupymsadsc_core()
     {
         return FALSE;
     }
-//     //搜索内核栈占用的内存页所对应msadsc_t结构
-//     retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_krlinitstack & (~(0xfffUL)), mbsp->mb_krlinitstack);
-//     if (0 == retschmnr)
-//     {
-//         return FALSE;
-//     }
-//     //搜索内核占用的内存页所对应msadsc_t结构
-//     retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_krlimgpadr, mbsp->mb_nextwtpadr);
-//     if (0 == retschmnr)
-//     {
-//         return FALSE;
-//     }
-//     //搜索内核映像文件占用的内存页所对应msadsc_t结构
-//     retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_imgpadr, mbsp->mb_imgpadr + mbsp->mb_imgsz);
-//     if (0 == retschmnr)
-//     {
-//         return FALSE;
-//     }
+
+    #if 0
+    //搜索内核栈占用的内存页所对应msadsc_t结构
+    retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_krlinitstack & (~(0xfffUL)), mbsp->mb_krlinitstack);
+    if (0 == retschmnr)
+    {
+        return FALSE;
+    }
+    //搜索内核占用的内存页所对应msadsc_t结构
+    retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_krlimgpadr, mbsp->mb_nextwtpadr);
+    if (0 == retschmnr)
+    {
+        return FALSE;
+    }
+    //搜索内核映像文件占用的内存页所对应msadsc_t结构
+    retschmnr = search_segment_occupymsadsc(msadstat, msanr, mbsp->mb_imgpadr, mbsp->mb_imgpadr + mbsp->mb_imgsz);
+    if (0 == retschmnr)
+    {
+        return FALSE;
+    }
+    #endif
+
     return TRUE;
 }
 
@@ -247,6 +256,7 @@ void init_search_krloccupymm()
     }
     return;
 }
+
 adr_t msadsc_ret_addr(msadsc_t *msa)
 {
     if (nullptr == msa) {

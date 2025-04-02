@@ -40,7 +40,7 @@ void mafuncobjs_t_init(mafuncobjs_t *initp)
  * @brief 初始化内存块分配释放头链表
  * 
  * @param initp 
- * @param stus 
+ * @param stus 分割 / 单一分配
  * @param oder 物理页数的以2为底的指数
  * @param oderpnr 一个内存块占用的 内存空间地址描述符的数量 / 占用的物理页数
  */
@@ -124,7 +124,7 @@ void memarea_t_init(memarea_t *initp)
 
 bool_t init_memarea_core()
 {
-    //获取memarea_t结构开始地址, memearea坐落在4K边界上，只是占用你整个页面
+    //获取memarea_t结构开始地址, memearea坐落在4K边界上，占用一整个页面
     memarea_t *virmarea = (memarea_t *)PAGE_4K_ALIGN(memory_management_struct.end_of_struct);
     for (uint_t mai = 0; mai < MEMAREA_MAX; mai++)
     {   //循环初始化每个memarea_t结构实例变量
@@ -155,10 +155,10 @@ bool_t init_memarea_core()
     return TRUE;
 }
 
-//初始化内存区
+/* 初始化内存区 */
 void init_memarea()
 {
-    //真正初始化内存区
+    /* 真正初始化内存区 */
     if (init_memarea_core() == FALSE)
     {
         color_printk(RED, BLACK, "init_memarea_core fail");
@@ -340,8 +340,8 @@ bool_t merlove_scan_continumsadsc(memarea_t *mareap, msadsc_t *fmstat, uint_t *f
 /**
  * @brief 给内存区memarea_t 所囊括的物理页面结构体赋予内存区标识
  * 
- * @param mareap 
- * @param mstat 
+ * @param mareap 内存区指针
+ * @param mstat 内存页头地址
  * @param msanr 
  * @return uint_t 
  */
@@ -350,7 +350,7 @@ uint_t merlove_setallmarflgs_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_
 	if (nullptr == mareap || nullptr == mstat || 0 == msanr) {
 		return ~0UL;
 	}
-	u32_t muindx = 0;
+	u64_t muindx = 0;
 	msadflgs_t *mdfp = nullptr;
 	// 获取内存区类型
 	switch (mareap->ma_type) {
@@ -513,66 +513,62 @@ bool_t continumsadsc_add_procmareabafh(memarea_t *mareap, bafhlst_t *bafhp, msad
 bool_t continumsadsc_mareabafh_core(memarea_t *mareap, msadsc_t **rfstat, msadsc_t **rfend, uint_t *rfmnr)
 {
 
-	if (nullptr == mareap || nullptr == rfstat || nullptr == rfend || nullptr == rfmnr) {
-		return FALSE;
-	}
-	uint_t retval = *rfmnr, tmpmnr = 0;
-	msadsc_t *mstat = *rfstat, *mend = *rfend;
-	if (1 > (retval)) {
-		return FALSE;
-	}
+    if (nullptr == mareap || nullptr == rfstat || nullptr == rfend || nullptr == rfmnr) {
+        return FALSE;
+    }
+    uint_t retval = *rfmnr, tmpmnr = 0;
+    msadsc_t *mstat = *rfstat, *mend = *rfend;
+    if (1 > (retval)) {
+        return FALSE;
+    }
 
-	// 根据地址连续的msadsc_t结构的数量查找合适bafhlst_t结构
-	bafhlst_t *bafhp = find_continumsa_inbafhlst(mareap, retval);
-	
-	if (nullptr == bafhp) {
-		return FALSE;
-	}
-	if (retval < bafhp->af_oderpnr) {
-		return FALSE;
-	}
-	
+    // 根据地址连续的msadsc_t结构的数量查找合适bafhlst_t结构
+    bafhlst_t *bafhp = find_continumsa_inbafhlst(mareap, retval);
+
+    if (nullptr == bafhp) {
+        return FALSE;
+    }
+    if (retval < bafhp->af_oderpnr) {
+        return FALSE;
+    }
+
     if ((BAFH_STUS_DIVP == bafhp->af_stus || BAFH_STUS_DIVM == bafhp->af_stus) && MA_TYPE_PROC != mareap->ma_type)
-	{
-		tmpmnr = retval - bafhp->af_oderpnr;
+    {
+        tmpmnr = retval - bafhp->af_oderpnr;
         // 把 页面们加入 到 bafhlst 结构之中
-		if (continumsadsc_add_bafhlst(mareap, bafhp, mstat, &mstat[bafhp->af_oderpnr - 1], bafhp->af_oderpnr) == FALSE) {
-			return FALSE;
-		}
-		#if ENABLE_MM_DEBUG
-		color_printk(WHITE, BLACK, "Kernel::on bafhlst[%d](%d) = %dMB, mounted memory space descriptor arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,(bafhp->af_oderpnr * PAGE_4K_SIZE / 1024 / 1024),
-		mstat->md_phyadrs.paf_padrs, (mstat + bafhp->af_oderpnr - 1)->md_phyadrs.paf_padrs);
-		#endif
-		// 如果地址连续的msadsc_t结构的数量正好是bafhp->af_oderpnr则完成，否则返回再次进入此函数
-		if (tmpmnr == 0) {
-			*rfmnr = tmpmnr;
-			*rfend = nullptr;
-			return TRUE;
-		}
+        if (continumsadsc_add_bafhlst(mareap, bafhp, mstat, &mstat[bafhp->af_oderpnr - 1], bafhp->af_oderpnr) == FALSE) {
+            return FALSE;
+        }
+        DEBUGK("Kernel::on bafhlst[%d](%d) = %dMB, mounted memory space descriptor arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,(bafhp->af_oderpnr * PAGE_4K_SIZE / 1024 / 1024),
+        mstat->md_phyadrs.paf_padrs, (mstat + bafhp->af_oderpnr - 1)->md_phyadrs.paf_padrs);
+        // 如果地址连续的msadsc_t结构的数量正好是bafhp->af_oderpnr则完成，否则返回再次进入此函数
+        if (tmpmnr == 0) {
+            *rfmnr = tmpmnr;
+            *rfend = nullptr;
+            return TRUE;
+        }
 
-    	// 挂载bafhp.af_oderpnr地址连续的msadsc_t结构到bafhlst_t中
-		*rfstat = &mstat[bafhp->af_oderpnr];
-		// 还剩多少个地址连续的msadsc_t结构
-		*rfmnr = tmpmnr;
+        // 挂载bafhp.af_oderpnr地址连续的msadsc_t结构到bafhlst_t中
+        *rfstat = &mstat[bafhp->af_oderpnr];
+        // 还剩多少个地址连续的msadsc_t结构
+        *rfmnr = tmpmnr;
 
-		return TRUE;
-	}
+        return TRUE;
+    }
 
-	if (BAFH_STUS_ONEM == bafhp->af_stus && MA_TYPE_PROC == mareap->ma_type)
-	{ // 专为用户分配的 ？
-		if (continumsadsc_add_procmareabafh(mareap, bafhp, mstat, mend, *rfmnr) == FALSE)
-		{
-		 	return FALSE;
-		}
-		#if ENABLE_MM_DEBUG
-		color_printk(WHITE, BLACK, "User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_amsanr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
-		#endif
-		*rfmnr = 0;
-		*rfend = nullptr;
-		return TRUE;
-	}
+    if (BAFH_STUS_ONEM == bafhp->af_stus && MA_TYPE_PROC == mareap->ma_type)
+    { // 专为用户分配的 ？
+        if (continumsadsc_add_procmareabafh(mareap, bafhp, mstat, mend, *rfmnr) == FALSE)
+        {
+            return FALSE;
+        }
+        DEBUGK("User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB\n",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_amsanr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
+        *rfmnr = 0;
+        *rfend = nullptr;
+        return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 // 多次分割这段内存页, 直到将其全部挂载到 area -> divmerge_t -> bafhlst_t
@@ -681,32 +677,28 @@ bool_t merlove_mem_core()
     // 把 物理页 挂载到 内存区 结构上
     for (uint_t maidx = 0; maidx < (uint_t)glomm.mo_mareanr; maidx++)
     {
-        #if ENABLE_MM_DEBUG
         switch (marea[maidx].ma_type)
         {
             case MA_TYPE_HWAD:
-                color_printk(WHITE, BLACK, " ============ Begin Hard area's pages mount=================\n");
+                DEBUGK(" ============ Begin Hard area's pages mount=================\n");
                 break;
             case MA_TYPE_KRNL:
-                color_printk(WHITE, BLACK, " ============ Begin Kernel area's pages mount=================\n");
+                DEBUGK(" ============ Begin Kernel area's pages mount=================\n");
                 break;
             case MA_TYPE_PROC:
-                color_printk(WHITE, BLACK, " ============ Begin User area's pages mount================\n");
+                DEBUGK(" ============ Begin User area's pages mount================\n");
                 break;
             default:
                 break;
         }
-        #endif
 
         if (merlove_mem_onmemarea(&marea[maidx], mstatp, msanr) == FALSE)
         {
             return FALSE;
         }
         maxp += marea[maidx].ma_maxpages;
-        
-        #if ENABLE_MM_DEBUG
-        color_printk(WHITE, BLACK, " ============ mounted %dMB ===============\n\n", (marea[maidx].ma_maxpages * PAGE_4K_SIZE)/1024/1024);
-        #endif
+
+        DEBUGK(" ============ mounted %dMB ===============\n\n", (marea[maidx].ma_maxpages * PAGE_4K_SIZE)/1024/1024);
     }
 
     glomm.mo_freepages = maxp;

@@ -39,7 +39,7 @@ typedef struct s_FREOBJH
 	list_h_t oh_list; // 链表
 	uint_t oh_stus;	 // 对象状态
 	void* oh_stat;	// 对象的开始地址
-}freobjh_t; // free object head
+}freobjh_t; /* free object head */
 
 // 在物理页的起始地址存放该结构
 //内存对象容器
@@ -72,7 +72,7 @@ typedef struct s_KMBEXT
 	adr_t mt_vend;		// 内存对象容器扩展容量结束地址
 	kmsob_t* mt_kmsb;	// 指向内存对象容器结构
 	uint_t mt_mobjnr;	// 内存对象容器扩展容量的内存中有多少对象
-}kmbext_t;
+}kmbext_t; /* kernel memory block extend*/
 
 
 // 挂载内存池结构, 在本系统中boklst统筹 包含(a, a +31)大小的内存对象的内存池

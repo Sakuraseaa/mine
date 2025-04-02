@@ -22,107 +22,107 @@ extern s32_t shell_up;
 static u64_t SKOFLOVE = 0;
 void Start_Kernel(void)
 {
-	global_pid = 1;
+    global_pid = 1;
 
-	Pos.XResolution = 1440;
-	Pos.YResolution = 750;
-	Pos.XPosition = 0;
-	Pos.YPosition = 0;
+    Pos.XResolution = 1440;
+    Pos.YResolution = 750;
+    Pos.XPosition = 0;
+    Pos.YPosition = 0;
 
-	Pos.XCharSize = 8;
-	Pos.YCharSize = 16;
+    Pos.XCharSize = 8;
+    Pos.YCharSize = 16;
 
-	Pos.FB_addr = (u32_t *)0xffff800003000000;
-	Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
+    Pos.FB_addr = (u32_t *)0xffff800003000000;
+    Pos.FB_length = (Pos.XResolution * Pos.YResolution * 4 + PAGE_4K_SIZE - 1) & PAGE_4K_MASK; // ?
 
-	semaphore_init(&visual_lock, 1);
-	spin_init(&Pos.printk_lock);
-	
-	load_TR(10);
+    semaphore_init(&visual_lock, 1);
+    spin_init(&Pos.printk_lock);
 
-	set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00);
+    load_TR(10);
 
-	// 初始化异常函数表 IDT
-	sys_vector_init();
-	
-	serial_init();
-	init_cpu();
+    set_tss64(0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00, 0xffff800000007c00);
 
-	memory_management_struct.start_code = (u64_t)&_text;
-	memory_management_struct.end_code = (u64_t)&_etext;
-	memory_management_struct.end_data = (u64_t)&_edata;
-	memory_management_struct.end_rodata = (u64_t)&_erodata;
-	memory_management_struct.start_brk = (u64_t)&_end;
+    // 初始化异常函数表 IDT
+    sys_vector_init();
 
-	init_memory();
-	
-	init_phymm();
-	
-	slab_init();
+    serial_init();
+    init_cpu();
 
-	frame_buffer_init();
-	pagetable_4K_init();
-	
-	test_mmobj();
-	init_krlmm();
-	
-	device_init();
+    memory_management_struct.start_code = (u64_t)&_text;
+    memory_management_struct.end_code = (u64_t)&_etext;
+    memory_management_struct.end_data = (u64_t)&_edata;
+    memory_management_struct.end_rodata = (u64_t)&_erodata;
+    memory_management_struct.start_brk = (u64_t)&_end;
 
-	buffer_init();
+    init_memory();
 
-	HEPT_init();
+    init_phymm();
 
-#if APIC
-	APIC_IOAPIC_init();
-#else
-	init_8259A();
-#endif
+    slab_init();
 
+    frame_buffer_init();
+    pagetable_4K_init();
 
-	keyboard_init();
+    test_mmobj();
+    init_krlmm();
 
-	mouse_init();
+    device_init();
 
-	disk_init();
+    buffer_init();
 
-	schedule_init();
+    HEPT_init();
 
-	softirq_init();
-
-	timer_init();
-
-	VFS_init();
-
-	task_init();
-	sti();
+    #if APIC
+    APIC_IOAPIC_init();
+    #else
+    init_8259A();
+    #endif
 
 
-	// 此处的while用于线程同步
-	while (!shell_up)
-		SKOFLOVE++; 
-	// kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
-	// task_t* tsk = nullptr;
-	while (1)
-	{
+    keyboard_init();
 
-		SKOFLOVE++; // 检查内核进程初始化完成在运行之后，是否还会再运行
-		
-		// 这里可以遍历所有进程，寻找僵尸进程。释放他。
-		// 但是这种做法有点笨，来点消息通知就好了
-		__asm__ __volatile__( "pause \n\t":::"memory");
-		/*
-			TASK_RUNNING (1UL << 0)
-			TASK_INTERRUPTIBLE (1UL << 1)
-			TASK_UNINTERRUPTIBLE (1UL << 2)
-			TASK_ZOMBIE (1UL << 3)
-			TASK_STOPPED (1UL << 4)
-		*/
-		// task_t* tsk = &init_task_union.task;
-		// for(; tsk != nullptr ; tsk = tsk->next)
-		// {
-			__asm__ __volatile__( "pause \n\t":::"memory");
-			// DEBUGK("[pid:%d state:%d] ->", tsk->pid, tsk->state);
-			__asm__ __volatile__( "pause \n\t":::"memory");
-		// }
-	}
+    mouse_init();
+
+    disk_init();
+
+    schedule_init();
+
+    softirq_init();
+
+    timer_init();
+
+    VFS_init();
+
+    task_init();
+    sti();
+
+
+    // 此处的while用于线程同步
+    while (!shell_up)
+        SKOFLOVE++; 
+    // kernel_thread(shell_boot, 12, CLONE_FS | CLONE_SIGNAL);
+    // task_t* tsk = nullptr;
+    while (1)
+    {
+
+        SKOFLOVE++; // 检查内核进程初始化完成在运行之后，是否还会再运行
+        
+        // 这里可以遍历所有进程，寻找僵尸进程。释放他。
+        // 但是这种做法有点笨，来点消息通知就好了
+        __asm__ __volatile__( "pause \n\t":::"memory");
+        /*
+            TASK_RUNNING (1UL << 0)
+            TASK_INTERRUPTIBLE (1UL << 1)
+            TASK_UNINTERRUPTIBLE (1UL << 2)
+            TASK_ZOMBIE (1UL << 3)
+            TASK_STOPPED (1UL << 4)
+        */
+        // task_t* tsk = &init_task_union.task;
+        // for(; tsk != nullptr ; tsk = tsk->next)
+        // {
+            __asm__ __volatile__( "pause \n\t":::"memory");
+            // DEBUGK("[pid:%d state:%d] ->", tsk->pid, tsk->state);
+            __asm__ __volatile__( "pause \n\t":::"memory");
+        // }
+    }
 }

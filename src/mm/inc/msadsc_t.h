@@ -61,14 +61,14 @@ typedef struct s_PHYADRFLGS
     u64_t paf_padrs:52;    //页物理地址位
 }__attribute__((packed)) phyadrflgs_t;
 
-//内存空间地址描述符 - Memory Space Address Descriptor
+/* 内存空间地址描述符 - Memory Space Address Descriptor */
 typedef struct s_MSADSC
 {
-    list_n_t md_list;           //链表
-    spinlock_t md_lock;         //保护自身的自旋锁
-    msadflgs_t md_cntflgs;     //内存空间地址描述符标志
-    phyadrflgs_t md_phyadrs;    //物理地址和标志
-    void* md_odlink;            //相邻且相同大小msadsc的指针
+    list_n_t md_list;
+    spinlock_t md_lock;         /* 保护自身的自旋锁 */
+    msadflgs_t md_cntflgs;      /* 内存区描述符标志 */
+    phyadrflgs_t md_phyadrs;    /* 物理地址和标志 */
+    void* md_odlink;            /* 相邻且相同大小msadsc的指针 */
 }msadsc_t;
 
 #endif // _MSADSC_T_H_
