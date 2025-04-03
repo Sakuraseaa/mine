@@ -93,13 +93,15 @@ u64_t kernel_mktime(struct time* tm) {
 u64_t NOW() {
     return startup_time + (jiffies / 100);
 }
+
 // 更新时间
-void localtime(u64_t stamp, struct time* tm) {
+void localtime(u64_t stamp, struct time* tm) 
+{
     // 确定秒
     tm->second = stamp % 60;
     
     // 确定分
-    u64_t remain = stamp / 60;
+    s64_t remain = stamp / 60;
     tm->minute = remain % 60;
     
     // 确定时
@@ -107,7 +109,7 @@ void localtime(u64_t stamp, struct time* tm) {
     tm->hour = remain % 24;
     
     // 计算1970年到现在已经过去了多少天
-    u64_t days = remain / 24; // 天,
+    s64_t days = remain / 24; // 天,
     // 确定星期,1970-01-01 是周四
     tm->week_day = (days + 4) % 7;
     
@@ -135,9 +137,17 @@ void localtime(u64_t stamp, struct time* tm) {
     tm->month = mon - 1;
     // 此处+1的原因是，在计算 hour second minite 中，
     // 已经把当天的那些时钟跳数 在整除运算中忽略掉了
-    tm->day = (tm->year_day + 1) - (month[tm->month]);
+    tm->day = (tm->year_day + 1) - month[tm->month] + offset;
 
     return;
+}
+
+/* 获取当前事件 */
+bool_t get_time(struct time *tm) 
+{
+    memset(tm, 0, sizeof(struct time));
+    localtime(startup_time + (jiffies / 100), tm);
+    return true;
 }
 
 // 读取cmos芯片获取当前时间
@@ -177,14 +187,14 @@ void do_timer(void *data)
         tmp->func(tmp->data);
         tmp = container_of(list_next(&timer_list_head.list), struct timer_list, list);
         del_timer(tmp);
-        DEBUGK("(HPET:%ld):: A timing task is completed\n", jiffies);
+        DEBUGK("(HPET:%ld):: A timing task is completed", jiffies);
     }
 }
 s32_t shell_up = 0;
 void test_timer(void *data)
 {
     //BUG:: 此处使用 DEBUGK 会报错
-    DEBUGK("Why does debbuggin timed queues fail?\n");
+    DEBUGK("Why does debbuggin timed queues fail?");
     shell_up = 1;
 }
 

@@ -186,7 +186,7 @@ static void vma_load_filedata(vma_to_file_t* vtft, adr_t fault_vadrs, adr_t vma_
     assert(cur_start_load_size > 0);
 
     vtft->vtf_alread_load_size += cur_start_load_size;
-    DEBUGK("file_t addr:%#lx, load_size:%#lx\n",task_file, cur_start_load_size);
+    DEBUGK("file_t addr:%#lx, load_size:%#lx\t",task_file, cur_start_load_size);
     task_file->f_ops->lseek(task_file, vtft->vtf_position + cur_load_position, SEEK_SET);
     task_file->f_ops->read(task_file, (buf_t)fault_vadrs, cur_start_load_size, &task_file->position);
 
@@ -227,7 +227,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
     }
 
     vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start, kmbox);
-    DEBUGK(" proc:%d, mapped %#0lx <-> %#0lx\n", current->pid , (vadrs & PAGE_4K_MASK), phyadrs);
+    DEBUGK(" proc:%d, mapped %#0lx <-> %#0lx\t", current->pid , (vadrs & PAGE_4K_MASK), phyadrs);
     rets = EOK;
 
 out:
@@ -241,7 +241,7 @@ sint_t vma_map_fairvadrs(mmdsc_t *mm, adr_t vadrs)
 {
     if ((0x1000 > vadrs) || (USER_VIRTUAL_ADDRESS_END < vadrs) || (nullptr == mm))
     {
-        DEBUGK("vadrs is invalid in no page fault process\n");
+        ERRORK("vadrs is invalid in no page fault process");
         return -EPARAM;
     }
     //进行缺页异常的核心处理
@@ -324,7 +324,7 @@ out:
 u64_t do_wp_page(u64_t virtual_address) {
     
     u64_t rets = EOK;
-    DEBUGK(" proc:%d, wp page  %#0lx ", current->pid, virtual_address);
+    ERRORK("proc:%d, wp page  %#0lx", current->pid, virtual_address);
     
     rets = do_wp_page_core(current->mm, virtual_address);
     flush_tlb_one(virtual_address);

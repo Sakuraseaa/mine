@@ -1030,16 +1030,16 @@ void dump_mmu(mmudsc_t* dump)
 	{
 		return;
 	}
-	DEBUGK("mmudsc_t.mud_tdirearr:%x\n", dump->mud_tdirearr);
-	DEBUGK("mmudsc_t.mud_cr3:%x\n", dump->mud_cr3.c3s_entry);
-	DEBUGK("mmudsc_t.mud_tdirmsanr:%x\n", dump->mud_tdirmsanr);
-	DEBUGK("mmudsc_t.mud_sdirmsanr:%x\n", dump->mud_sdirmsanr);
-	DEBUGK("mmudsc_t.mud_idirmsanr:%x\n", dump->mud_idirmsanr);
-	DEBUGK("mmudsc_t.mud_mdirmsanr:%x\n", dump->mud_mdirmsanr);
-	DEBUGK("mmudsc_t.mud_tdirhead:%x\n", list_is_empty_careful(&dump->mud_tdirhead));
-	DEBUGK("mmudsc_t.mud_sdirhead:%x\n", list_is_empty_careful(&dump->mud_sdirhead));
-	DEBUGK("mmudsc_t.mud_idirhead:%x\n", list_is_empty_careful(&dump->mud_idirhead));
-	DEBUGK("mmudsc_t.mud_mdirhead:%x\n", list_is_empty_careful(&dump->mud_mdirhead));
+	DEBUGK("mmudsc_t.mud_tdirearr:%x", dump->mud_tdirearr);
+	DEBUGK("mmudsc_t.mud_cr3:%x", dump->mud_cr3.c3s_entry);
+	DEBUGK("mmudsc_t.mud_tdirmsanr:%x", dump->mud_tdirmsanr);
+	DEBUGK("mmudsc_t.mud_sdirmsanr:%x", dump->mud_sdirmsanr);
+	DEBUGK("mmudsc_t.mud_idirmsanr:%x", dump->mud_idirmsanr);
+	DEBUGK("mmudsc_t.mud_mdirmsanr:%x", dump->mud_mdirmsanr);
+	DEBUGK("mmudsc_t.mud_tdirhead:%x", list_is_empty_careful(&dump->mud_tdirhead));
+	DEBUGK("mmudsc_t.mud_sdirhead:%x", list_is_empty_careful(&dump->mud_sdirhead));
+	DEBUGK("mmudsc_t.mud_idirhead:%x", list_is_empty_careful(&dump->mud_idirhead));
+	DEBUGK("mmudsc_t.mud_mdirhead:%x", list_is_empty_careful(&dump->mud_mdirhead));
 
 	return;
 }

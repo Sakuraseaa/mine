@@ -288,7 +288,7 @@ void disk_init()
 {
     /* Get the number of drives from the BIOS data area */
     u64_t *pNrDrives = (u64_t *)(0xffff800000000475);
-    DEBUGK("NrDrives:%d.\n", *pNrDrives & 0xff);
+    DEBUGK("NrDrives:%d.", *pNrDrives & 0xff);
     // color_printk(ORANGE, WHITE, "NrDrives:%d.\n", *pNrDrives & 0xff);
     /*在IO_APIC中，注册硬盘中断函数*/
     io_apic_ret_entry_t entry;

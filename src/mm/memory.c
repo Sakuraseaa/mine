@@ -944,7 +944,7 @@ void init_memory()
         TotalMem += (end - start) >> PAGE_2M_SHIFT;
     }
 
-    DEBUGK("OS Can Used Total 2M PAGEs:%#x=%d\n", TotalMem, TotalMem);
+    DEBUGK("OS Can Used Total 2M PAGEs:%#x=%d", TotalMem, TotalMem);
     
     
     // 这里计算出的TotalMem是4GB, 最大的寻址范围(此处使用4GB开始计算对系统安全吗？)
@@ -1048,8 +1048,8 @@ void init_memory()
 
     memory_management_struct.zones_length = (memory_management_struct.zones_size * sizeof(struct Zone) + sizeof(s64_t) - 1) & (~(sizeof(s64_t) - 1));
     // 显示三种结构的信息
-    DEBUGK("bits_map:%#018lx,bits_size:%#018lx,bits_length:%#018lx\n", memory_management_struct.bits_map, memory_management_struct.bits_size, memory_management_struct.bits_length);
-    DEBUGK("pages_struct:%#018lx,pages_size:%#018lx,pages_length:%#018lx\n", memory_management_struct.pages_struct, memory_management_struct.pages_size, memory_management_struct.pages_length);
+    DEBUGK("bits_map:%#018lx,bits_size:%#018lx,bits_length:%#018lx", memory_management_struct.bits_map, memory_management_struct.bits_size, memory_management_struct.bits_length);
+    DEBUGK("pages_struct:%#018lx,pages_size:%#018lx,pages_length:%#018lx", memory_management_struct.pages_struct, memory_management_struct.pages_size, memory_management_struct.pages_length);
     // color_printk(ORANGE, BLACK, "zones_struct:%#018lx,zones_size:%#018lx,zones_length:%#018lx\n", memory_management_struct.zones_struct, memory_management_struct.zones_size, memory_management_struct.zones_length);
     //  显示ZONE结构体具体信息
     ZONE_DMA_INDEX = 0;
@@ -1089,9 +1089,9 @@ void init_memory()
     /*不过0xffff800是映射的第256个表项, 所以内核程序可以继续运行*/
     Global_CR3 = Get_gdt();
 
-    DEBUGK("Global_CR3: %#018lx\t", Global_CR3);
-    // DEBUGK("*Global_CR3: %#018lx\t", *Phy_To_Virt(Global_CR3) & (~0xff));
-    // DEBUGK("**Global_CR3: %#018lx\n", *Phy_To_Virt(*Phy_To_Virt(Global_CR3) & (~0xff)) & (~0xff));
+    DEBUGK("Global_CR3: %#018lx", Global_CR3);
+    // DEBUGK("*Global_CR3: %#018lx", *Phy_To_Virt(Global_CR3) & (~0xff));
+    // DEBUGK("**Global_CR3: %#018lx", *Phy_To_Virt(*Phy_To_Virt(Global_CR3) & (~0xff)) & (~0xff));
 
     // 此处打印的bits_maps的位图会是 01, 这里表示0 ~ 2MB已经被占用。
     // zone_struct掌握的内存是 2MB ~ 510MB

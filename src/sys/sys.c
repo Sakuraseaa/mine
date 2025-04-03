@@ -618,7 +618,7 @@ u64_t sys_execve()
     s64_t error = 0;
     pt_regs_t* regs = (pt_regs_t*)current->thread->rsp0 - 1;
     
-    DEBUGK("sys_execve\n");
+    DEBUGK("sys_execve");
 
     pathname = (str_t)knew(PAGE_4K_SIZE, 0);
     if(pathname == nullptr)
@@ -727,7 +727,7 @@ u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
 
 u64_t sys_exit(s32_t exit_code)
 {
-    DEBUGK("sys_exit\n");
+    DEBUGK("sys_exit");
     return do_exit(exit_code);
 }
 

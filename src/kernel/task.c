@@ -46,26 +46,26 @@ task_t *get_task(s64_t pid)
 // 新的程序位于文件系统根目录下，名为init.bin
 u64_t init(u64_t arg)
 {
-	DISK1_FAT32_FS_init();
- 	DEBUGK("init task is running, arg:%#018lx\n", arg);
+    DISK1_FAT32_FS_init();
+    DEBUGK("init task is running, arg:%#018lx", arg);
 
-	// sys_open("/The quick brown.fox", O_CREAT);
+    // sys_open("/The quick brown.fox", O_CREAT);
 
-	current->thread->rip = (u64_t)ret_system_call;
-	current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(pt_regs_t);
-	current->thread->gs = USER_DS;
-	current->thread->fs = USER_DS;
-	current->flags &= ~PF_KTHREAD;
+    current->thread->rip = (u64_t)ret_system_call;
+    current->thread->rsp = (u64_t)current + STACK_SIZE - sizeof(pt_regs_t);
+    current->thread->gs = USER_DS;
+    current->thread->fs = USER_DS;
+    current->flags &= ~PF_KTHREAD;
 
-	// 更换rsp到中断栈, PCB最上部的需要pop返回的位置
-	// 压入了ret_system_call作为返回地址
-	__asm__ __volatile("movq %1, %%rsp \n\t"
-					   "pushq %2  \n\t"
-					   "jmp do_execve \n\t" ::"D"(current->thread->rsp),
-					   "m"(current->thread->rsp), "m"(current->thread->rip), 
-					   "S"("/init.bin"),"d"(nullptr),"c"(nullptr)
-					   : "memory");
-	return 1;
+    // 更换rsp到中断栈, PCB最上部的需要pop返回的位置
+    // 压入了ret_system_call作为返回地址
+    __asm__ __volatile("movq %1, %%rsp \n\t"
+                        "pushq %2  \n\t"
+                        "jmp do_execve \n\t" ::"D"(current->thread->rsp),
+                        "m"(current->thread->rsp), "m"(current->thread->rip), 
+                        "S"("/init.bin"),"d"(nullptr),"c"(nullptr)
+                        : "memory");
+    return 1;
 }
 
 // ------------------DEBUG----------------------
@@ -244,7 +244,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 				memcpy((void*)vma_start, buf, PAGE_4K_SIZE);
 				// 给父,子进程修改权限，物理页面重新映射
 				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
-				DEBUGK("direct copy to %#lx form %#lx \n", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
+				DEBUGK("direct copy to %#lx form %#lx", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
 				// hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
 				// hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
 				// tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;
@@ -280,7 +280,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 
 		vma_start = vma->kva_start;
 		vma_end = vma->kva_end;
-		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx\n", vma_start, vma_end, vma->kva_vir2file ? vma->kva_vir2file->vtf_file : nullptr, vma->kva_kvmbox);
+		DEBUGK("start:%#lx end:%#lx file:%#lx boxpage:%#lx", vma_start, vma_end, vma->kva_vir2file ? vma->kva_vir2file->vtf_file : nullptr, vma->kva_kvmbox);
     }
 	flush_tlb();
 
@@ -416,7 +416,7 @@ void exit_notify(void)
 u64_t do_exit(u64_t exit_code)
 {
 	task_t *tsk = current;
-	DEBUGK("exit task is running,arg:%#018lx\n", exit_code);
+	DEBUGK("exit task is running,arg:%#018lx", exit_code);
 	
 
 	cli();

@@ -101,10 +101,10 @@ static err_t buffer_alloc(bdesc_t *desc) {
         list_add_to_behind(&desc->free_list, &buf->rnode);
 
         desc->count++; // 增加空闲块计数
-        LOGK("buffer block:: buf_addr %#0x data_addr %#0x\n", buf, buf->data);
+        LOGK("buffer block:: buf_addr %#0x data_addr %#0x", buf, buf->data);
     }
 
-    LOGK("buffer desciptor update:: size %d count %d\n", desc->size, desc->count);
+    LOGK("buffer desciptor update:: size %d count %d", desc->size, desc->count);
     return 0;
 }
 
@@ -260,7 +260,7 @@ void sync(void) {
 
 
 void buffer_init(void) {
-    LOGK("buffer_t size is %d\n", sizeof(buffer_t));
+    LOGK("buffer_t size is %d", sizeof(buffer_t));
 
     size_t sz = 512;
     for(size_t i = 0; i < BUFFER_DESC_NR; i++, sz <<= 1) {

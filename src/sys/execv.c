@@ -345,7 +345,7 @@ u64_t do_execve(pt_regs_t *regs, str_t name, str_t argv[], str_t envp[])
 		kvma_inituserspace_virmemadrs(&cur->mm->msd_virmemadrs);
 		hal_mmu_init(&cur->mm->msd_mmu);
 
-		DEBUGK("load_binary_file malloc new pgd:%#018lx\n", cur->mm->msd_mmu.mud_cr3);
+		DEBUGK("load_binary_file malloc new pgd:%#018lx", cur->mm->msd_mmu.mud_cr3);
 
 		cur->flags &= ~PF_VFORK;
 		hal_mmu_load(&initmm.msd_mmu);

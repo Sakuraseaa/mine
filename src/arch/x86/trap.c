@@ -4,52 +4,66 @@
 #include "arch_x86kit.h"
 s32_t lookup_kallsyms(u64_t address,s32_t level)
 {
-	s32_t index = 0;
-	s32_t level_index = 0;
-	str_t string = (str_t)&kallsyms_names;
-	for(index = 0;index<kallsyms_syms_num;index++)
-		if(address > kallsyms_addresses[index] && address <= kallsyms_addresses[index+1])
-			break;
-	if(index < kallsyms_syms_num)
-	{
-		for(level_index = 0;level_index < level;level_index++)
-			color_printk(RED,BLACK,"  ");
-		color_printk(RED,BLACK,"+---> ");
+    s32_t index = 0;
+    s32_t level_index = 0;
+    str_t string = (str_t)&kallsyms_names;
+    for(index = 0;index<kallsyms_syms_num;index++)
+        if(address > kallsyms_addresses[index] && address <= kallsyms_addresses[index+1])
+            break;
+    if(index < kallsyms_syms_num)
+    {
+        for(level_index = 0;level_index < level;level_index++) 
+        {
+            color_printk(RED,BLACK,"  ");
+        }
+        color_printk(RED,BLACK,"+---> ");
 
-		color_printk(RED,BLACK,"address:%#018lx \t(+) %04d function:%s\n",address,address - kallsyms_addresses[index],&string[kallsyms_index[index]]);
-		return 0;
-	}
-	else
-		return 1;
+        color_printk(RED,BLACK,"address:%#018lx \t(+) %04d function:%s\n",address,address - kallsyms_addresses[index],&string[kallsyms_index[index]]);
+        ERRORK("address:%#018lx \t(+) %04d function:%s",address,address - kallsyms_addresses[index],&string[kallsyms_index[index]]);
+        return 0;
+    }
+    else
+        return 1;
 }
 
 void backtrace(pt_regs_t * regs)
 {
-	u64_t *rbp = (u64_t *)regs->rbp;
-	u64_t ret_address = regs->rip;
-	s32_t i = 0;
+    u64_t *rbp = (u64_t *)regs->rbp;
+    u64_t ret_address = regs->rip;
+    s32_t i = 0;
 
-	color_printk(RED,BLACK,"====================== Kernel Stack Backtrace ======================\n");
+    color_printk(RED,BLACK,"====================== Kernel Stack Backtrace From Stack Top To Stack Bottom======================\n");
+    ERRORK("====================== Kernel Stack Backtrace From Stack Top To Stack Bottom======================\n");
 
-	for(i = 0;i<10;i++)
-	{
-		if(lookup_kallsyms(ret_address,i))
-			break;
-		if((u64_t)rbp < (u64_t)regs->rsp || (u64_t)rbp > current->thread->rsp0)
-			break;
-		
-		/*这里不是特别理解，这与函数调用机制有关*/
-		ret_address = *(rbp + 1);
-		rbp = (u64_t *)*rbp; // 可以想象但 没有手操过
-	}
+    for(i = 0;i<10;i++)
+    {
+        if(lookup_kallsyms(ret_address,i))
+            break;
+        if((u64_t)rbp < (u64_t)regs->rsp || (u64_t)rbp > current->thread->rsp0)
+            break;
+        
+        /*这里不是特别理解，这与函数调用机制有关*/
+        ret_address = *(rbp + 1);
+        rbp = (u64_t *)*rbp; // 可以想象但 没有手操过
+    }
 }
 
 void display_regs(pt_regs_t * regs)
 {
-	color_printk(RED,BLACK,"CS:%#010x,SS:%#010x\nDS:%#010x,ES:%#010x\nRFLAGS:%#018lx\n",regs->cs,regs->ss,regs->ds,regs->es,regs->rflags);
-	color_printk(RED,BLACK,"RAX:%#018lx,RBX:%#018lx,RCX:%#018lx,RDX:%#018lx\nRSP:%#018lx,RBP:%#018lx,RIP:%#018lx\nRSI:%#018lx,RDI:%#018lx\n",regs->rax,regs->rbx,regs->rcx,regs->rdx,regs->rsp,regs->rbp,regs->rip,regs->rsi,regs->rdi);
-	color_printk(RED,BLACK,"R8 :%#018lx,R9 :%#018lx\nR10:%#018lx,R11:%#018lx\nR12:%#018lx,R13:%#018lx\nR14:%#018lx,R15:%#018lx\n",regs->r8,regs->r9,regs->r10,regs->r11,regs->r12,regs->r13,regs->r14,regs->r15);
-	backtrace(regs);
+    color_printk(RED,BLACK,"CS:%#010x,SS:%#010x\nDS:%#010x,ES:%#010x\nRFLAGS:%#018lx\n",regs->cs,regs->ss,regs->ds,regs->es,regs->rflags);
+    color_printk(RED,BLACK,"RAX:%#018lx,RBX:%#018lx,RCX:%#018lx,RDX:%#018lx\nRSP:%#018lx,RBP:%#018lx,RIP:%#018lx\nRSI:%#018lx,RDI:%#018lx\n",regs->rax,regs->rbx,regs->rcx,regs->rdx,regs->rsp,regs->rbp,regs->rip,regs->rsi,regs->rdi);
+    color_printk(RED,BLACK,"R8 :%#018lx,R9 :%#018lx\nR10:%#018lx,R11:%#018lx\nR12:%#018lx,R13:%#018lx\nR14:%#018lx,R15:%#018lx\n",regs->r8,regs->r9,regs->r10,regs->r11,regs->r12,regs->r13,regs->r14,regs->r15);
+    ERRORK("CS:%#010x,SS:%#010x",regs->cs,regs->ss);
+    ERRORK("DS:%#010x,ES:%#010x",regs->ds,regs->es);
+    ERRORK("RFLAGS:%#018lx", regs->rflags);
+    ERRORK("RAX:%#018lx,RBX:%#018lx,RCX:%#018lx,RDX:%#018lx", regs->rax,regs->rbx,regs->rcx,regs->rdx);
+    ERRORK("RSP:%#018lx,RBP:%#018lx,RIP:%#018lx",regs->rsp,regs->rbp,regs->rip);
+    ERRORK("RSI:%#018lx,RDI:%#018lx",regs->rsi,regs->rdi);
+    ERRORK("R8 :%#018lx,R9 :%#018lx",regs->r8,regs->r9);
+    ERRORK("R10:%#018lx,R11:%#018lx",regs->r10,regs->r11);
+    ERRORK("R12:%#018lx,R13:%#018lx",regs->r12,regs->r13);
+    ERRORK("R14:%#018lx,R15:%#018lx",regs->r14,regs->r15);
+    backtrace(regs);
 }
 
 void do_divide_error(pt_regs_t * regs,u64_t error_code)
@@ -253,46 +267,46 @@ void do_general_protection(pt_regs_t * regs,u64_t error_code)
 
 void do_page_fault(pt_regs_t * regs,u64_t error_code)
 {
-	u64_t cr2 = 0;
+    u64_t cr2 = 0;
     u64_t cr3 = 0;
 
-	__asm__	__volatile__("movq	%%cr2,	%0":"=r"(cr2)::"memory");
-	__asm__	__volatile__("movq	%%cr3,	%0":"=r"(cr3)::"memory");
+    __asm__	__volatile__("movq	%%cr2,	%0":"=r"(cr2)::"memory");
+    __asm__	__volatile__("movq	%%cr3,	%0":"=r"(cr3)::"memory");
 
-	if(!(error_code & 0x01)) {
-        DEBUGK("rip:%#lx proc:%d, error address %#0lx cr3:%#0lx\n", regs->rip, current->pid, cr2, cr3);
-		if(do_no_page(cr2) == EOK)	// 处理缺页成功则返回
-			return;
-		
-		color_printk(RED,BLACK,"(%d)Page Not-Present! address: %#x\t", current->pid, cr2);
-	}
-	if(error_code & 0x02) {
-		if(do_wp_page(cr2) == EOK)
-			return;
-		
-		color_printk(RED,BLACK,"Write Cause Fault,\t");
-	}
-	else
-		color_printk(RED,BLACK,"Read Cause Fault,\t");
+    if(!(error_code & 0x01)) {
+        ERRORK("rip:%#lx proc:%d, error address %#0lx cr3:%#0lx", regs->rip, current->pid, cr2, cr3);
+        if(do_no_page(cr2) == EOK)	// 处理缺页成功则返回
+            return;
+        
+        color_printk(RED,BLACK,"(%d)Page Not-Present! address: %#x\t", current->pid, cr2);
+    }
+    if(error_code & 0x02) {
+        if(do_wp_page(cr2) == EOK)
+            return;
+        
+        color_printk(RED,BLACK,"Write Cause Fault,\t");
+    }
+    else
+        color_printk(RED,BLACK,"Read Cause Fault,\t");
 
-	if(error_code & 0x04)
-		color_printk(RED,BLACK,"Fault in user(3)\t");
-	else
-		color_printk(RED,BLACK,"Fault in supervisor(0,1,2)\t");
+    if(error_code & 0x04)
+        color_printk(RED,BLACK,"Fault in user(3)\t");
+    else
+        color_printk(RED,BLACK,"Fault in supervisor(0,1,2)\t");
 
-	if(error_code & 0x08)
-		color_printk(RED,BLACK,",Reserved Bit Cause Fault\t");
+    if(error_code & 0x08)
+        color_printk(RED,BLACK,",Reserved Bit Cause Fault\t");
 
-	if(error_code & 0x10)
-		color_printk(RED,BLACK,",Instruction fetch Cause Fault");
+    if(error_code & 0x10)
+        color_printk(RED,BLACK,",Instruction fetch Cause Fault");
 
-	color_printk(RED,BLACK,"\n");
+    color_printk(RED,BLACK,"\n");
 
-	color_printk(RED,BLACK,"CR2:%#018lx\n",cr2);
-
-	display_regs(regs);
-	while(1)
-		hlt();
+    color_printk(RED,BLACK,"CR2:%#018lx\n",cr2);
+    ERRORK("CR2:%#018lx",cr2);
+    display_regs(regs);
+    while(1)
+        hlt();
 }
 
 

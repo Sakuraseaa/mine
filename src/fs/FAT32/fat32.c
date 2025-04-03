@@ -125,7 +125,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         index = count;
 
     // preempt:先占，先取，current->preempt_count是当前进程持有自旋锁数量
-    DEBUGK("proc[%d]:position(%#lx) want to read %d(%d)B data from %#lx to %#lx\n", current->pid, *position, index, count, buffer, buf);
+    DEBUGK("proc[%d]:position(%#lx) want to read %d(%d)B data from %#lx to %#lx", current->pid, *position, index, count, buffer, buf);
     // C. 循环体实现数据读取过程
     do
     {
@@ -137,7 +137,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
         // c.2. 读取整个簇的数据
         if (!IDE_device_operation.transfer(ATA_READ_CMD, sector, fsbi->sector_per_cluster, (u8_t *)buffer))
         {
-            DEBUGK("FAT32 FS(read) read disk ERROR!\n");
+            DEBUGK("FAT32 FS(read) read disk ERROR!");
             retval = -EIO;
             break;
         }
@@ -166,7 +166,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     if (!index)
         retval = count;
 
-    DEBUGK("proc[%d]: now-position(%#lx) have read bytes:%#lx form %#lx\n", current->pid, *position, retval, copy_position);
+    DEBUGK("proc[%d]: now-position(%#lx) have read bytes:%#lx form %#lx", current->pid, *position, retval, copy_position);
     return retval;
 }
 
@@ -1081,7 +1081,7 @@ spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     fsbi->fat_fsinfo = (struct FAT32_FSInfo *)knew(sizeof(struct FAT32_FSInfo), 0);
     memset(fsbi->fat_fsinfo, 0, sizeof(struct FAT32_FSInfo));
     IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (u8_t *)fsbi->fat_fsinfo);
-    DEBUGK("FAT32 FSInfo\nFSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx\n", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
+    DEBUGK("FAT32 FSInfo\t FSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
 
     // ================================== 创建根目录 =====================================
     // directory entry

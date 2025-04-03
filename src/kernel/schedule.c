@@ -12,23 +12,23 @@ task_t *runing_task()
 /* 传入参数是当前允许任务 */
 task_t *get_next_task(task_t* curt)
 {
-	task_t *tsk = nullptr;
-	// 就绪队列为空且当前进程不处于执行状态的时候，返回内核主线程, 这将会是一个空转的线程
-	// 否则 就绪队列为空，继续执行当前进程
-	if (list_is_empty(&task_schedule_table.task_queue.list))
-	{
-		return &init_task_union.task;
-	}
+    task_t *tsk = nullptr;
+    // 就绪队列为空且当前进程不处于执行状态的时候，返回内核主线程, 这将会是一个空转的线程
+    // 否则 就绪队列为空，继续执行当前进程
+    if (list_is_empty(&task_schedule_table.task_queue.list))
+    {
+        return &init_task_union.task;
+    }
 
-	//  从就绪队列中得到一个进程
-	tsk = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
-	list_del(&tsk->list);
+    //  从就绪队列中得到一个进程
+    tsk = container_of(list_next(&task_schedule_table.task_queue.list), task_t, list);
+    list_del(&tsk->list);
     if (tsk == curt)
     {
-        DEBUGK("it is the unforeseen that always happens\n");
+        WARNINGK("it is the unforeseen that always happens");
     }
-	task_schedule_table.running_task_count -= 1;
-	return tsk;
+    task_schedule_table.running_task_count -= 1;
+    return tsk;
 }
 
 // 加入一个任务到就绪队列, 该队列按照虚拟运行时间由小到大进行排序
@@ -121,7 +121,7 @@ void schedule()
 		if (task_schedule_table.is_running->state == TASK_RUNNING)
             insert_task_queue(task_schedule_table.is_running);
 		// 开启DEBUGK,会有不同的错误
-		// DEBUGK("#schedule:%ld, pid:%ld(%ld) [switch to]-> pid:%ld(%ld)#\n", jiffies, current->pid, current->vrun_time, tsk->pid, tsk->vrun_time);
+		// DEBUGK("#schedule:%ld, pid:%ld(%ld) [switch to]-> pid:%ld(%ld)#", jiffies, current->pid, current->vrun_time, tsk->pid, tsk->vrun_time);
 		
         // 按照进程优先级，给即将执行的进程计算PCB
 		task_schedule_table.is_running = tsk; // 记录当前运行进程是tsk

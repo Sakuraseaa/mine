@@ -231,7 +231,7 @@ dir_entry_t *path_walk(str_t name, u64_t flags, dir_entry_t **create_file)
                 goto continue_for;
             }
 
-            DEBUGK("can not find file or dir:%s\n", path->name);
+            DEBUGK("can not find file or dir:%s", path->name);
             kdelete(path->name, path->name_length);
             kdelete(path, sizeof(dir_entry_t));
 
@@ -357,7 +357,7 @@ void DISK1_FAT32_FS_init() // 该函数不应该出现在这里
     for(u8_t i = 0; i < 4; i++) {
         
         if(DPT.DPTE[i].start_LBA != 0) {
-            DEBUGK("DPTE[%d] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx\n", i, DPT.DPTE[i].start_LBA, DPT.DPTE[i].type, DPT.DPTE[i].sectors_limit);
+            DEBUGK("DPTE[%d] start_LBA:%#lx\ttype:%#lx\tsectors:%#lx", i, DPT.DPTE[i].start_LBA, DPT.DPTE[i].type, DPT.DPTE[i].sectors_limit);
             sprintf(part[i].name, "1_part%d", i);
             part[i].disk = nullptr;
             part[i].start = DPT.DPTE[i].start_LBA;
