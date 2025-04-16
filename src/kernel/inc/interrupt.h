@@ -22,8 +22,8 @@ typedef struct
 } irq_desc_t;
 
 #define NR_IRQS 24
-irq_desc_t interrupt_desc[NR_IRQS] = {0};
 
+extern irq_desc_t interrupt_desc[NR_IRQS];
 extern void (*interrupt[24])(void);
 extern void do_IRQ(pt_regs_t *regs, u64_t nr);
 

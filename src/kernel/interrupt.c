@@ -116,6 +116,7 @@ void (*interrupt[24])(void) =
         IRQ0x37_interrupt,
 };
 
+irq_desc_t interrupt_desc[NR_IRQS] = {0};
 /**
  * @brief Init Struct Irq_desc_T, 中断注册函数
  *
