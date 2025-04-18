@@ -6,6 +6,8 @@ static cstr_t debug_type[] = {
     "INFO",
     "ERROR",
     "WARNING",
+    "FAILURE",
+    "DEBUG"
 };
 
 void debugk(u8_t type, cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
@@ -14,9 +16,18 @@ void debugk(u8_t type, cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
     char_t debugk_buf[1024] = {0};
     struct time tm;
     get_time(&tm);
+    s32_t i = 0;
 
-    s32_t i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s] [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
-    tm.minute, tm.second, debug_type[type],strrchr(file,'/') + 1, line, func);
+    if (type == LOG_INFO_INDEX) 
+    {
+        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
+        tm.minute, tm.second, debug_type[type], func);
+    }
+    else 
+    {
+        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s] [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
+        tm.minute, tm.second, debug_type[type],strrchr(file,'/') + 1, line, func);
+    }
 
     va_start(args, fmt);
     i += vsprintf(debugk_buf + i, fmt, args);

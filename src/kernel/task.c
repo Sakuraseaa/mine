@@ -244,7 +244,7 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 				memcpy((void*)vma_start, buf, PAGE_4K_SIZE);
 				// 给父,子进程修改权限，物理页面重新映射
 				hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf), (PML4E_RW | 0 | PML4E_US | PML4E_P));
-				DEBUGK("direct copy to %#lx form %#lx", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
+				INFOK("direct copy to %#lx form %#lx", vma_start, hal_mmu_virtophy(&current->mm->msd_mmu, (adr_t)buf));
 				// hal_mmu_transform(&tsk->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
 				// hal_mmu_transform(&current->mm->msd_mmu, vma_start, vma_phy, (0 | PML4E_US | PML4E_P));
 				// tmpmsa->md_phyadrs.paf_shared = PAF_SHARED;

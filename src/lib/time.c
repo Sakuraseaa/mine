@@ -193,8 +193,6 @@ void do_timer(void *data)
 s32_t shell_up = 0;
 void test_timer(void *data)
 {
-    //BUG:: 此处使用 DEBUGK 会报错
-    DEBUGK("Why does debbuggin timed queues fail?");
     shell_up = 1;
 }
 

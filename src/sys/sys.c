@@ -617,8 +617,6 @@ u64_t sys_execve()
     s64_t pathlen = 0;
     s64_t error = 0;
     pt_regs_t* regs = (pt_regs_t*)current->thread->rsp0 - 1;
-    
-    DEBUGK("sys_execve");
 
     pathname = (str_t)knew(PAGE_4K_SIZE, 0);
     if(pathname == nullptr)
@@ -700,7 +698,6 @@ u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
     task_t* child = nullptr;
     task_t* tsk = nullptr;
 
-    // color_printk(GREEN, BLACK,"sys_wait4\n");
     for(tsk =&init_task_union.task; tsk->next != &init_task_union.task; tsk = tsk->next)
     {
         if(tsk->next->pid == pid)
@@ -727,7 +724,6 @@ u64_t sys_wait4(u64_t pid, s32_t *status, s32_t options,void *rusage)
 
 u64_t sys_exit(s32_t exit_code)
 {
-    DEBUGK("sys_exit");
     return do_exit(exit_code);
 }
 

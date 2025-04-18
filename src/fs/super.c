@@ -2,7 +2,6 @@
 #include "fskit.h"
 static list_t super_list;
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 // 获得设备 dev 的超级块
 spblk_t *get_super(dev_t dev)
 {

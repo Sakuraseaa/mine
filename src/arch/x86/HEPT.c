@@ -21,16 +21,16 @@ extern struct timer_list timer_list_head;
 extern struct time time;
 
 hw_int_controller HPET_int_controller =
-    {
-        .enable = IOAPIC_enable,
-        .disable = IOAPIC_disable,
-        .install = IOAPIC_install,
-        .uninstall = IOAPIC_uninstall,
-        .ack = IOAPIC_edge_ack,
+{
+    .enable = IOAPIC_enable,
+    .disable = IOAPIC_disable,
+    .install = IOAPIC_install,
+    .uninstall = IOAPIC_uninstall,
+    .ack = IOAPIC_edge_ack,
 };
 
 static void weakUp_sleepList(void* pid) {
-   wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *((s64_t*)pid));
+    wakeup_pid(&sleep_queue_head, TASK_INTERRUPTIBLE, *((s64_t*)pid));
 }
 
 /* 以tick为单位的sleep,任何时间形式的sleep会转换此ticks形式 */
@@ -53,12 +53,12 @@ static void frequency_set(u8_t counter_port,
                           u8_t counter_mode,
                           u16_t counter_value)
 {
-   /* 往控制字寄存器端口0x43中写入控制字 */
-   io_out8(PIT_CONTROL_PORT, (u8_t)(counter_no << 6 | rwl << 4 | counter_mode << 1));
-   /* 先写入counter_value的低8位 */
-   io_out8(counter_port, (u8_t)counter_value);
-   /* 再写入counter_value的高8位 */
-   io_out8(counter_port, (u8_t)(counter_value >> 8));
+    /* 往控制字寄存器端口0x43中写入控制字 */
+    io_out8(PIT_CONTROL_PORT, (u8_t)(counter_no << 6 | rwl << 4 | counter_mode << 1));
+    /* 先写入counter_value的低8位 */
+    io_out8(counter_port, (u8_t)counter_value);
+    /* 再写入counter_value的高8位 */
+    io_out8(counter_port, (u8_t)(counter_value >> 8));
 }
 
 static inline void test_timer_is_read()
@@ -78,7 +78,7 @@ static inline void test_timer_is_read()
 void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 {
     jiffies++;
-   // 依据进程的优先级，增加进程虚拟运行时间，减少处理器时间片维护代码
+    // 依据进程的优先级，增加进程虚拟运行时间，减少处理器时间片维护代码
 
     test_timer_is_read();
     switch (current->priority)
@@ -102,47 +102,45 @@ void intr_timer_handler(u64_t nr, u64_t parameter, pt_regs_t *regs)
 /* 初始化PIT8253 */
 void HEPT_init()
 {
-   jiffies = 0;
-   /* 设置8253的定时周期,也就是发中断的周期 */
-   frequency_set(CONTRER0_PORT, COUNTER0_NO, READ_WRITE_LATCH, COUNTER_MODE, COUNTER0_VALUE);
+    jiffies = 0;
+    /* 设置8253的定时周期,也就是发中断的周期 */
+    frequency_set(CONTRER0_PORT, COUNTER0_NO, READ_WRITE_LATCH, COUNTER_MODE, COUNTER0_VALUE);
 
-   io_apic_ret_entry_t entry;
+    io_apic_ret_entry_t entry;
 
-   entry.vector = 0x20;
-   entry.deliver_mode = APIC_ICR_IOAPIC_Fixed;
-   entry.dest_mode = ICR_IOAPIC_DELV_PHYSICAL;
-   entry.deliver_status = APIC_ICR_IOAPIC_Idle;
-   entry.polarity = APIC_IOAPIC_POLARITY_HIGH;
-   entry.irr = APIC_IOAPIC_IRR_RESET;
-   entry.trigger = APIC_ICR_IOAPIC_Edge;
-   entry.mask = APIC_ICR_IOAPIC_Masked;
-   entry.reserved = 0;
+    entry.vector = 0x20;
+    entry.deliver_mode = APIC_ICR_IOAPIC_Fixed;
+    entry.dest_mode = ICR_IOAPIC_DELV_PHYSICAL;
+    entry.deliver_status = APIC_ICR_IOAPIC_Idle;
+    entry.polarity = APIC_IOAPIC_POLARITY_HIGH;
+    entry.irr = APIC_IOAPIC_IRR_RESET;
+    entry.trigger = APIC_ICR_IOAPIC_Edge;
+    entry.mask = APIC_ICR_IOAPIC_Masked;
+    entry.reserved = 0;
 
-   entry.destination.physical.reserved1 = 0;
-   entry.destination.physical.phy_dest = 0; // 物理模式
-   entry.destination.physical.reserved2 = 0;
+    entry.destination.physical.reserved1 = 0;
+    entry.destination.physical.phy_dest = 0; // 物理模式
+    entry.destination.physical.reserved2 = 0;
 
-   register_irq(0x20, &entry, intr_timer_handler, 0, &HPET_int_controller, "HPET");
-   // 初始化睡眠队列 等待头
-   list_init(&sleep_queue_head.wait_list);
-   
-   get_cmos_time(&time);
-   DEBUGK("year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d",
-   time.year, time.month, time.day, time.week_day, time.hour, time.minute, time.second);
-   // color_printk(RED, BLACK, "year:%#010x, month:%#010x, day:%#010x,  week:%#010x, hour:%#010x, mintue:%#010x, second:%#010x\n",
-   //  Time.year, Time.month, Time.day, Time.week_day, Time.hour, Time.minute, Time.second);
+    register_irq(0x20, &entry, intr_timer_handler, 0, &HPET_int_controller, "HPET");
+    // 初始化睡眠队列 等待头
+    list_init(&sleep_queue_head.wait_list);
+
+    get_cmos_time(&time);
+    INFOK("year:%#010d, month:%#010d, day:%#010d,  week:%#010d, hour:%#010d, mintue:%#010d, second:%#010d",
+    time.year, time.month, time.day, time.week_day, time.hour, time.minute, time.second);
 }
 
 /* 以毫秒为单位的sleep   1秒= 1000毫秒 */
 void mtime_sleep(u32_t m_seconds)
 {
-   u32_t sleep_ticks = (m_seconds + mil_seconds_per_intr - 1) / mil_seconds_per_intr;
-   ticks_to_sleep(sleep_ticks);
+    u32_t sleep_ticks = (m_seconds + mil_seconds_per_intr - 1) / mil_seconds_per_intr;
+    ticks_to_sleep(sleep_ticks);
 }
 
 /* 以秒为单位的sleep   1秒 */
 void time_sleep(u32_t seconds)
 {
-   mtime_sleep(seconds * 1000);
+    mtime_sleep(seconds * 1000);
 }
 

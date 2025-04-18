@@ -944,7 +944,7 @@ void init_memory()
         TotalMem += (end - start) >> PAGE_2M_SHIFT;
     }
 
-    DEBUGK("OS Can Used Total 2M PAGEs:%#x=%d", TotalMem, TotalMem);
+    INFOK("OS Can Used Total 2M PAGEs:%#x=%d", TotalMem, TotalMem);
     
     
     // 这里计算出的TotalMem是4GB, 最大的寻址范围(此处使用4GB开始计算对系统安全吗？)

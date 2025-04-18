@@ -3,7 +3,6 @@
 #include "syskit.h"
 #include "mmkit.h"
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 // 获得设备 dev 的超级块
 inode_t *find_inode(dev_t dev, idx_t nr)
 {

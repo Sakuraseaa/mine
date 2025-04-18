@@ -1,7 +1,6 @@
 #include "fskit.h"
 #include "devkit.h"
 
-#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 static Device_t devices[DEVICE_NR]; // 设备数组
 
 // 获取空设备
@@ -24,7 +23,7 @@ s32_t device_ioctl(dev_t dev, s32_t cmd, void *args, s32_t flags)
         block_dev_opt_t* bdo = (block_dev_opt_t*)device->device_ops;
         return  bdo->ioctl(GET_IDENTIFY_DISK_CMD, 0);
     }
-    LOGK("ioctl of device %d not implemented!!!\n", dev);
+    FAILK("ioctl of device %d not implemented!!!\n", dev);
     return -ENOSYS;
 }
 
@@ -47,7 +46,7 @@ s32_t device_read(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
         return  bdo->transfer(ATA_READ_CMD, ipt->start + lba, count, buf);
     }else if(1) {
     }
-    LOGK("read of device %d not implemented!!!\n", dev);
+    FAILK("read of device %d not implemented!!!\n", dev);
     return -ENOSYS;
 }
 
@@ -60,7 +59,7 @@ s32_t device_write(dev_t dev, void *buf, size_t count, idx_t lba, s32_t flags)
         return  bdo->transfer(ATA_WRITE_CMD, ipt->start + lba, count, buf);
     }else if(1) {
     }
-    LOGK("write of device %d not implemented!!!\n", dev);
+    FAILK("write of device %d not implemented!!!\n", dev);
     return -ENOSYS;
 }
 

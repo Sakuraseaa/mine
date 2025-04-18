@@ -105,7 +105,7 @@ memarea_t *onmrtype_retn_marea(mmgro_t *mmobjp, uint_t mrtype)
 {
     if (mmobjp == nullptr)
     {
-        DEBUGK("mmgro is nullptr!");
+        FAILK("mmgro is nullptr!");
         return nullptr;
     }
     for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)

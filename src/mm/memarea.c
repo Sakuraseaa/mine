@@ -536,7 +536,7 @@ bool_t continumsadsc_mareabafh_core(memarea_t *mareap, msadsc_t **rfstat, msadsc
         if (continumsadsc_add_bafhlst(mareap, bafhp, mstat, &mstat[bafhp->af_oderpnr - 1], bafhp->af_oderpnr) == FALSE) {
             return FALSE;
         }
-        DEBUGK("Kernel::on bafhlst[%d](%d) = %dMB, mounted memory space descriptor arange[%#lx - %#lx]/4KB",bafhp->af_oder,bafhp->af_oderpnr,(bafhp->af_oderpnr * PAGE_4K_SIZE / 1024 / 1024),
+        INFOK("Kernel::on bafhlst[%d](%d) = %dMB, mounted memory space descriptor arange[%#lx - %#lx]/4KB",bafhp->af_oder,bafhp->af_oderpnr,(bafhp->af_oderpnr * PAGE_4K_SIZE / 1024 / 1024),
         mstat->md_phyadrs.paf_padrs, (mstat + bafhp->af_oderpnr - 1)->md_phyadrs.paf_padrs);
         // 如果地址连续的msadsc_t结构的数量正好是bafhp->af_oderpnr则完成，否则返回再次进入此函数
         if (tmpmnr == 0) {
@@ -559,7 +559,7 @@ bool_t continumsadsc_mareabafh_core(memarea_t *mareap, msadsc_t **rfstat, msadsc
         {
             return FALSE;
         }
-        DEBUGK("User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_amsanr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
+        INFOK("User::on bafhlst[%d](%d), every one is 4KB, ALL:%d,Arange[%#lx - %#lx]/4KB",bafhp->af_oder,bafhp->af_oderpnr,bafhp->af_amsanr, mstat->md_phyadrs.paf_padrs, mend->md_phyadrs.paf_padrs);
         *rfmnr = 0;
         *rfend = nullptr;
         return TRUE;
@@ -783,13 +783,13 @@ bool_t merlove_mem_core()
         switch (marea[maidx].ma_type)
         {
             case MA_TYPE_HWAD:
-                DEBUGK(" ============ Begin Hard area's pages mount=================");
+                INFOK(" ============ Begin Hard area's pages mount=================");
                 break;
             case MA_TYPE_KRNL:
-                DEBUGK(" ============ Begin Kernel area's pages mount=================");
+                INFOK(" ============ Begin Kernel area's pages mount=================");
                 break;
             case MA_TYPE_PROC:
-                DEBUGK(" ============ Begin User area's pages mount================");
+                INFOK(" ============ Begin User area's pages mount================");
                 break;
             default:
                 break;
@@ -801,7 +801,7 @@ bool_t merlove_mem_core()
         }
         maxp += marea[maidx].ma_maxpages;
 
-        DEBUGK(" ============ mounted %dMB ===============\n", (marea[maidx].ma_maxpages * PAGE_4K_SIZE)/1024/1024);
+        INFOK(" ============ mounted %dMB ===============\n", (marea[maidx].ma_maxpages * PAGE_4K_SIZE)/1024/1024);
     }
 
     glomm.mo_freepages = maxp;

@@ -25,7 +25,7 @@ task_t *get_next_task(task_t* curt)
     list_del(&tsk->list);
     if (tsk == curt)
     {
-        WARNINGK("it is the unforeseen that always happens");
+        WARNK("it is the unforeseen that always happens");
     }
     task_schedule_table.running_task_count -= 1;
     return tsk;
