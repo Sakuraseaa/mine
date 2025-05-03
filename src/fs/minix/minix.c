@@ -846,15 +846,13 @@ spblk_t *minix_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     sbp->count = 1;
     list_init(&sbp->inode_list);
     list_init(&sbp->node);
-    register_super(sbp);
     sbp->sb_ops = &minix_super_ops;
-
     sbp->private_sb_info = minix_sb = (minix_sb_info_t *)knew(sizeof(minix_sb_info_t), 0);
     memset(sbp->private_sb_info, 0, sizeof(minix_sb_info_t));
-
     sbp->buf = bread(sbp->dev, 1, sbp->block_size);
     memcpy(sbp->buf->data, sbp->private_sb_info, sizeof(minix_sb_info_t));
-    
+    register_super(sbp);
+
     // ================================== 读取根目录 =====================================
     INFOK("MINIX FSinfo\tFirstdatalba:%#08lx\tinode_count:%#08lx\tlog_zone_size:%#08lx\tinode_map_size:%08lx\t zone_map_size:%08lx\t minix_magic:%08lx\t",
         minix_sb->firstdatazone,  minix_sb->inodes, minix_sb->log_zone_size, minix_sb->imap_blocks,

@@ -228,7 +228,7 @@ sint_t vma_map_fairvadrs_core(mmdsc_t *mm, adr_t vadrs)
     }
 
     vma_load_filedata(kmvd->kva_vir2file, vadrs, kmvd->kva_start, kmbox);
-    DEBUGK(" proc:%d, mapped %#0lx <-> %#0lx\t", current->pid , (vadrs & PAGE_4K_MASK), phyadrs);
+    DEBUGK("proc:%d, mapped %#0lx <-> %#0lx\t", current->pid , (vadrs & PAGE_4K_MASK), phyadrs);
     rets = EOK;
 
 out:

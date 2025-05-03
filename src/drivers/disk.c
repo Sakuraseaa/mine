@@ -8,8 +8,8 @@ static request_queue_t disk_request;
 // 给硬盘发送命令
 s64_t cmd_out()
 {   
-    cpuflg_t flg;
-    spinlock_storeflg_cli(&disk_request.rqt_lock, &flg);
+    // cpuflg_t flg;
+    // spinlock_storeflg_cli(&disk_request.rqt_lock, &flg);
     wait_queue_t *wait_queue_tmp =
         container_of(list_next(&disk_request.wait_queue_list.wait_list), wait_queue_t, wait_list);
 
@@ -19,7 +19,7 @@ s64_t cmd_out()
     // 从队列中，删除本节点
     list_del(&disk_request.in_using->wait_queue.wait_list);
     disk_request.block_request_count--;
-    spinunlock_restoreflg(&disk_request.rqt_lock, &flg);
+    // spinunlock_restoreflg(&disk_request.rqt_lock, &flg);
     // 硬盘忙则等待
     while (io_in8(PORT_DISK1_STATUS_CMD) & DISK_STATUS_BUSY)
         nop();
@@ -104,7 +104,7 @@ s64_t cmd_out()
  */
 block_buffer_node_t *make_request(s64_t cmd, u64_t blocks, s64_t count, u8_t *buffer)
 {
-    block_buffer_node_t *node = (block_buffer_node_t *)kmalloc(sizeof(block_buffer_node_t), 0);
+    block_buffer_node_t *node = (block_buffer_node_t *)knew(sizeof(block_buffer_node_t), 0);
     wait_queue_init(&node->wait_queue, current);
 
     switch (cmd)
@@ -146,6 +146,7 @@ void submit(block_buffer_node_t *node)
     add_request(node);
     if (disk_request.in_using == nullptr) // 目前没有硬盘操作, 给硬盘发送命令
     {
+        cli();
         cmd_out();
     }
 }
@@ -164,8 +165,7 @@ void end_request(struct block_buffer_node * node)
 	node->wait_queue.tsk->state = TASK_RUNNING;
 	insert_task_queue(node->wait_queue.tsk);
 	current->flags |= NEED_SCHEDULE; /* 如果当前运行的线程 和 中断完成的线程相同，是不是不应该加调度标志*/
-	// kdelete((unsigned long *)disk_request.in_using, 0);
-	kfree((unsigned long *)disk_request.in_using);
+	kdelete((unsigned long *)disk_request.in_using, 0);
 	disk_request.in_using = NULL;
 	if(disk_request.block_request_count)
 		cmd_out();

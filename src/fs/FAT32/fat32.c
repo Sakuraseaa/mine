@@ -159,6 +159,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
 
     } while ((index != 0) && (cluster = DISK1_FAT32_read_FAT_Entry(fsbi, cluster)));
 
+    DEBUGK("proc[%d]: buffer:%#lx", current->pid, buffer);
     kdelete(buffer, fsbi->bytes_per_cluster);
 
     // index值若为0，则说明数据已经成功从文件读取出来，随即返回已读取数据长度
@@ -166,7 +167,7 @@ s64_t FAT32_read(file_t *filp, buf_t buf, u64_t count, s64_t *position)
     if (!index)
         retval = count;
 
-    DEBUGK("proc[%d]: now-position(%#lx) have read bytes:%#lx form %#lx", current->pid, *position, retval, copy_position);
+    DEBUGK("proc[%d]:now-position(%#lx) have read bytes:%#lx form %#lx", current->pid, *position, retval, copy_position);
     return retval;
 }
 
@@ -1082,6 +1083,7 @@ spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     memset(fsbi->fat_fsinfo, 0, sizeof(struct FAT32_FSInfo));
     IDE_device_operation.transfer(ATA_READ_CMD, DPTE->start_LBA + fbs->BPB_FSInfo, 1, (u8_t *)fsbi->fat_fsinfo);
     INFOK("FAT32 FSInfo\t FSI_LeadSig:%#018lx\tFSI_StrucSig:%#018lx\tFSI_Free_Count:%#018lx", fsbi->fat_fsinfo->FSI_LeadSig, fsbi->fat_fsinfo->FSI_StrucSig, fsbi->fat_fsinfo->FSI_Free_Count);
+    register_super(sbp);
 
     // ================================== 创建根目录 =====================================
     // directory entry
@@ -1117,7 +1119,7 @@ spblk_t *fat32_read_superblock(struct Disk_Partition_Table_Entry *DPTE, void *bu
     finode->create_time = 0;
     finode->write_date = 0;
     finode->write_time = 0;
-    
+
     sbp->s_flags = false; // 标记挂载
 
     return sbp;

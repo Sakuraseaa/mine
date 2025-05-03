@@ -37,7 +37,7 @@
         // },
         {
             "label": "Run-Qemu!",
-            "command": "/home/steven/mine/Run-Qemu-GDB.sh",
+            "command": "/home/steven/mine/Qemu-GDB.sh",
             "type": "shell",
             "isBackground": true,
             "args": [

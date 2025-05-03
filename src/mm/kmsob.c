@@ -580,7 +580,7 @@ void *kmsob_new_onkmsob(kmsob_t *kmsp, size_t msz)
 	}
 	void *retptr = nullptr;
 	cpuflg_t cpuflg;
-	// knl_spinlock_cli(&kmsp->so_lock, &cpuflg);
+	spinlock_storeflg_cli(&kmsp->so_lock, &cpuflg);
 	if (scan_kmsob_objnr(kmsp) < 1)
 	{ // 当前内存池内存对象不足，GOTO: 扩展内存池
 		if (kmsob_extn_pages(kmsp) == FALSE)
@@ -591,7 +591,7 @@ void *kmsob_new_onkmsob(kmsob_t *kmsp, size_t msz)
 	}
 	retptr = kmsob_new_opkmsob(kmsp, msz);
 ret_step:
-	// knl_spinunlock_sti(&kmsp->so_lock, &cpuflg);
+	spinunlock_restoreflg(&kmsp->so_lock, &cpuflg);
 	return retptr;
 }
 
@@ -608,8 +608,8 @@ void *kmsob_new_core(size_t msz)
 	koblst_t *koblp = nullptr;
 	kmsob_t *kmsp = nullptr;
 	cpuflg_t cpuflg;
-	// knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
-	
+	spinlock_storeflg_cli(&kmobmgrp->ks_lock, &cpuflg);
+
 	// 根据内存对象大小查找并返回 koblst_t(指定小内存为msz的内存池) 结构指针
 	koblp = onmsz_retn_koblst(kmobmgrp, msz); 
 	if (nullptr == koblp) {
@@ -639,7 +639,7 @@ void *kmsob_new_core(size_t msz)
 	//更新kmsobmgrhed_t结构的信息
 	kmsob_updata_cache(kmobmgrp, koblp, kmsp, KUC_NEWFLG);
 ret_step:
-	// knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
+	spinunlock_restoreflg(&kmobmgrp->ks_lock, &cpuflg);
 	return retptr;
 }
 
@@ -776,14 +776,14 @@ bool_t kmsob_delete_onkmsob(kmsob_t *kmsp, void *fadrs, size_t fsz)
 	}
 	bool_t rets = FALSE;
 	cpuflg_t cpuflg;
-	// knl_spinlock_cli(&kmsp->so_lock, &cpuflg);
+	spinlock_storeflg_cli(&kmsp->so_lock, &cpuflg);
 	if (kmsob_del_opkmsob(kmsp, fadrs, fsz) == FALSE) {
 		rets = FALSE;
 		goto ret_step;
 	}
 	rets = TRUE;
 ret_step:
-	// knl_spinunlock_sti(&kmsp->so_lock, &cpuflg);
+	spinunlock_restoreflg(&kmsp->so_lock, &cpuflg);
 	return rets;
 }
 
@@ -794,7 +794,7 @@ bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 	koblst_t *koblp = nullptr;
 	kmsob_t *kmsp = nullptr;
 	cpuflg_t cpuflg;
-	//knl_spinlock_cli(&kmobmgrp->ks_lock, &cpuflg);
+	spinlock_storeflg_cli(&kmobmgrp->ks_lock, &cpuflg);
 	
 	// 根据释放内存对象的大小在kmsobmgrhed_t中查找并返回koblst_t，
 	koblp = onmsz_retn_koblst(kmobmgrp, fsz);
@@ -824,7 +824,7 @@ bool_t kmsob_delete_core(void *fadrs, size_t fsz)
 	}
 	rets = TRUE;
 ret_step:
-	//knl_spinunlock_sti(&kmobmgrp->ks_lock, &cpuflg);
+	spinunlock_restoreflg(&kmobmgrp->ks_lock, &cpuflg);
 	return rets;
 }
 
