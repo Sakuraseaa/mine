@@ -8,7 +8,7 @@
 
 #define MF_OLKTY_INIT (0)
 #define MF_OLKTY_ODER (1)
-#define MF_OLKTY_BAFH (2)
+#define MF_OLKTY_BAFH (2) /* 标志自己这块物理页没有使用odlink连接后续物理块了，自己是最后一个块，自己直接挂载到桶上 */
 #define MF_OLKTY_TOBJ (3)
 
 #define MF_LSTTY_LIST (0)
@@ -27,9 +27,9 @@
 //内存空间地址描述符标志
 typedef struct s_MSADFLGS
 {   /* olkty和lstty是什么作用 */
-    u64_t mf_olkty:2;    //挂入链表的类型 ownership link type?
-    u64_t mf_lstty:1;    //是否挂入链表 list type?
-    u64_t mf_mocty:2;    //分配类型,被谁占用了,内核,应用,空闲 memory allocation type?
+    u64_t mf_olkty:2;     //  指明 md_odlink 变量的挂载类型
+    u64_t mf_lstty:1;     //是否挂入链表 list type?
+    u64_t mf_mocty:2;     //分配类型,被谁占用了,内核,应用,空闲 memory allocation type?
     u64_t mf_marty:3;     // memory area type
     u64_t mf_refcnt:56;   // reference count
 }__attribute__((packed)) msadflgs_t; 

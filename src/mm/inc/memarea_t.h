@@ -47,8 +47,9 @@ typedef struct s_BAFHLST
 	u32_t af_stus;          /* 是单个页面的独自分配策略， 还是多个页面的分割合并策略 */
 	uint_t af_oder;		 	// 页面数的位移量 order
 	uint_t af_oderpnr;		// 页面数, 该bafh list每一个节点挂载的页面数, 如果oder为2，那这个数就是 1<<2=4  order-page-number
-	uint_t af_fmsanr;		// 空闲msadsc_t数，未分配内存块数 free msadsc_t number
-	uint_t af_amsanr; 		//  msadsc_t object number 此结构管理的msadsc_t数 all msadsc_t number
+	uint_t af_fobjnr;		// 空闲桶元素数量 free msadsc_objects number, 一个桶元素等于oderpnr个页面数的组合
+    uint_t af_aobjnr;       // 已经分配的桶元素数量 
+	uint_t af_mobjnr; 		// 此结构管理的桶数
 	uint_t af_alccnt; 		// 此结构的分配计数 allocation count
 	uint_t af_frecnt;		// 此结构的释放计数 free count
 	list_h_t af_frelst; 	// 挂载此结构的空闲msadsc_t结构 free-list

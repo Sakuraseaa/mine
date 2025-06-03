@@ -122,7 +122,7 @@ bafhlst_t *onma_retn_maxbafhlst(memarea_t *malckp) // 得到一个有空闲结�
 {
 	for (s64_t li = (MDIVMER_ARR_LMAX - 1); li >= 0; li--)
 	{
-		if (malckp->ma_mdmdata.dm_pools[li].af_fmsanr > 0)
+		if (malckp->ma_mdmdata.dm_pools[li].af_fobjnr > 0)
 		{
 			return &malckp->ma_mdmdata.dm_pools[li];
 		}
@@ -351,7 +351,7 @@ bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retlogba
 	
 	for (sint_t idx = dividx; idx < MDIVMER_ARR_LMAX; idx++)
 	{ // 请求的page页对应的bafhstat的链表不一定有空闲节点，所以向上寻求更大的页链表，然后分割他的大的空闲节点
-		if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fmsanr)
+		if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fobjnr)
 		{
 			*retlogbafh = &bafhstat[dividx];  // 请求分配的bafhlst_t结构指针
 			*retdivbafh = &bafhstat[idx];	 // 实际分配的bafhlst_t结构指针
@@ -379,11 +379,11 @@ bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrel
 		*retmerbf = nullptr;
 		return FALSE;
 	}
-	if ((~0UL) <= bafhstat[dividx].af_amsanr) {
-		system_error("onfpgs_retn_bafhlst af_amsanr max");
+	if ((~0UL) <= bafhstat[dividx].af_mobjnr) {
+		system_error("onfpgs_retn_bafhlst af_mobjnr max");
 	}
-	if ((~0UL) <= bafhstat[dividx].af_fmsanr) {
-		system_error("onfpgs_retn_bafhlst af_fmsanr max");
+	if ((~0UL) <= bafhstat[dividx].af_fobjnr) {
+		system_error("onfpgs_retn_bafhlst af_fobjnr max");
 	}
 
 	if (freepgs != bafhstat[dividx].af_oderpnr) {
@@ -403,7 +403,7 @@ msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
 	{
 		return nullptr;
 	}
-	if (1 > bafhp->af_fmsanr)
+	if (1 > bafhp->af_fobjnr)
 	{
 		return nullptr;
 	}
@@ -415,8 +415,9 @@ msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
 	list_del(&tmp->md_list);
 	tmp->md_cntflgs.mf_refcnt++;
 	tmp->md_phyadrs.paf_alloc = PAF_ALLOC;
-	bafhp->af_fmsanr--;
-	bafhp->af_amsanr--;
+	bafhp->af_fobjnr--;
+	bafhp->af_mobjnr--;
+	bafhp->af_aobjnr++;
 	bafhp->af_alccnt++;
 	return tmp;
 }
@@ -427,7 +428,7 @@ bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **
 	if (nullptr == bafhp || nullptr == retmstat || nullptr == retmend) {
 		return FALSE;
 	}
-	if (1 > bafhp->af_amsanr || 1 > bafhp->af_fmsanr) {
+	if (1 > bafhp->af_mobjnr || 1 > bafhp->af_fobjnr) {
 		*retmstat = nullptr;
 		*retmend = nullptr;
 		return FALSE;
@@ -441,10 +442,11 @@ bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **
 	
 	msadsc_t *tmp = list_entry(bafhp->af_frelst.next, msadsc_t, md_list);
 	list_del(&tmp->md_list);
-	bafhp->af_amsanr--; // 减少总页面数
-	bafhp->af_fmsanr--; // 减少空闲页面数
+	bafhp->af_mobjnr--; // 减少总页面数
+	bafhp->af_fobjnr--; // 减少空闲页面数
 	bafhp->af_frecnt++; // 增加释放计数
-	
+	bafhp->af_aobjnr++;
+
 	*retmstat = tmp;
 	*retmend = (msadsc_t *)tmp->md_odlink;
 	if (MF_OLKTY_BAFH == tmp->md_cntflgs.mf_olkty) {
@@ -597,8 +599,8 @@ bool_t mrdmb_add_msa_bafh(bafhlst_t *bafhp, msadsc_t *msastat, msadsc_t *msaend)
 	msaend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
 	msaend->md_odlink = bafhp;
 	list_add_to_behind(&bafhp->af_frelst, &msastat->md_list);
-	bafhp->af_amsanr++;
-	bafhp->af_fmsanr++;
+	bafhp->af_mobjnr++;
+	bafhp->af_fobjnr++;
 	return TRUE;
 }
 
@@ -1219,7 +1221,7 @@ sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 	}
 	msadsc_t *freemstat = *rfnms;
 	msadsc_t *freemend = *rfnme;
-	if (1 > fbafh->af_fmsanr) {
+	if (1 > fbafh->af_fobjnr) {
 		return 1;
 	}
 	
@@ -1236,8 +1238,8 @@ sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 			blkms = tmpmsa;
 			blkme = &tmpmsa[fbafh->af_oderpnr - 1];
 			list_del(&tmpmsa->md_list); // ?
-			fbafh->af_fmsanr--;
-			fbafh->af_amsanr--;
+			fbafh->af_fobjnr--;
+			fbafh->af_mobjnr--;
 			goto step1;
 		}
 	}
@@ -1300,9 +1302,9 @@ bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemen
 	{
 		return FALSE;
 	}
-	if ((~0UL) <= bafhp->af_fmsanr || (~0UL) <= bafhp->af_amsanr)
+	if ((~0UL) <= bafhp->af_fobjnr || (~0UL) <= bafhp->af_mobjnr)
 	{
-		system_error("(~0UL)<=bafhp->af_fmsanr\n");
+		system_error("(~0UL)<=bafhp->af_fobjnr\n");
 		return FALSE;
 	}
 
@@ -1312,8 +1314,8 @@ bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemen
 	freemend->md_odlink = bafhp;
 	
 	list_add_to_behind(&bafhp->af_frelst, &freemstat->md_list);
-	bafhp->af_fmsanr++;
-	bafhp->af_amsanr++;
+	bafhp->af_fobjnr++;
+	bafhp->af_mobjnr++;
 	return TRUE;
 }
 
