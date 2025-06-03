@@ -26,7 +26,7 @@
 
 //内存空间地址描述符标志
 typedef struct s_MSADFLGS
-{
+{   /* olkty和lstty是什么作用 */
     u64_t mf_olkty:2;    //挂入链表的类型 ownership link type?
     u64_t mf_lstty:1;    //是否挂入链表 list type?
     u64_t mf_mocty:2;    //分配类型,被谁占用了,内核,应用,空闲 memory allocation type?

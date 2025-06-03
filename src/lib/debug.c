@@ -1,5 +1,6 @@
 #include "toolkit.h"
 #include "devkit.h"
+#include "kernelkit.h"
 
 extern serial_t serials[2];
 static cstr_t debug_type[] = {
@@ -20,13 +21,13 @@ void debugk(u8_t type, cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
 
     if (type == LOG_INFO_INDEX) 
     {
-        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
-        tm.minute, tm.second, debug_type[type], func);
+        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](%#02x) '%s' ", tm.year, tm.month, tm.day, tm.hour, 
+        tm.minute, tm.second, debug_type[type], current->pid, func);
     }
     else 
     {
-        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s] [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
-        tm.minute, tm.second, debug_type[type],strrchr(file,'/') + 1, line, func);
+        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](%#02x) [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
+        tm.minute, tm.second, debug_type[type], current->pid, strrchr(file,'/') + 1, line, func);
     }
 
     va_start(args, fmt);

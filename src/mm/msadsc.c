@@ -112,7 +112,7 @@ void ret_msadsc_vadrandsz(msadsc_t **msavstart, u64_t* msar) {
 
 void disp_one_msadsc(msadsc_t *mp)
 {
-    color_printk(WHITE,BLACK,"msadsc_t.md_f:_ux[%x],_my[%x],md_phyadrs:_alc[%x],_shd[%x],_swp[%x],_che[%x],_kmp[%x],_lck[%x],_dty[%x],_bsy[%x],_padrs[0x%x]\n",
+    INFOK("msadsc_t.md_f:_ux[%x],_my[%x],md_phyadrs:_alc[%x],_shd[%x],_swp[%x],_che[%x],_kmp[%x],_lck[%x],_dty[%x],_bsy[%x],_padrs[0x%x]\n",
             (uint_t)mp->md_cntflgs.mf_refcnt, (uint_t)mp->md_cntflgs.mf_mocty, (uint_t)mp->md_phyadrs.paf_alloc, (uint_t)mp->md_phyadrs.paf_shared, (uint_t)mp->md_phyadrs.paf_swap, (uint_t)mp->md_phyadrs.paf_cache, (uint_t)mp->md_phyadrs.paf_kmap, (uint_t)mp->md_phyadrs.paf_lock,
             (uint_t)mp->md_phyadrs.paf_dirty, (uint_t)mp->md_phyadrs.paf_busy, (uint_t)(mp->md_phyadrs.paf_padrs << 12));
     return;
@@ -143,8 +143,8 @@ void init_msadsc()
     glomm.mo_msanr = msanr;
     memory_management_struct.end_of_struct += (sizeof(msadsc_t) * coremdnr + sizeof(u64_t) * 2) & (~(sizeof(u64_t)-1));
 
-    // for(int i = 159; i < 165; i++) //1MB
-    //     disp_one_msadsc(glomm.mo_msadscstat + i);
+    for(int i = 159; i < 165; i++) //1MB
+        disp_one_msadsc(glomm.mo_msadscstat + i);
 
     return;
 }
@@ -155,11 +155,11 @@ u64_t search_segment_occupymsadsc(msadsc_t *msastart, u64_t msanr, u64_t ocpysta
 {
     u64_t mphyadr = 0, fsmsnr = 0, mnr, tmpadr;
     msadsc_t *fstatmp = nullptr;
+    /* 找出开始地址ocpystat对应的第一个msadsc_t结构，就跳转到step1 */
     for (mnr = 0; mnr < msanr; mnr++)
     {
         if ((msastart[mnr].md_phyadrs.paf_padrs << PSHRSIZE) == ocpystat)
         {
-            //找出开始地址对应的第一个msadsc_t结构，就跳转到step1
             fstatmp = &msastart[mnr];
             goto step1;
         }
@@ -212,8 +212,8 @@ bool_t search_krloccupymsadsc_core()
     u64_t retschmnr = 0;
     msadsc_t *msadstat = glomm.mo_msadscstat;
     u64_t msanr = glomm.mo_msanr;
-    //搜索BIOS中断表占用的内存页所对应msadsc_t结构
-    retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0, 0x200000);
+    //搜索BIOS中断表占用的内存页所对应msadsc_t结构, msadsc_t记录的地址从1MB开始
+    // retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0, 0x200000); // 2MB
     retschmnr = search_segment_occupymsadsc(msadstat, msanr, 0x100000, PAGE_2M_ALIGN(Virt_To_Phy(memory_management_struct.end_of_struct)));
     if (0 == retschmnr)
     {

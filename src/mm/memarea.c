@@ -82,6 +82,7 @@ void memdivmer_t_init(memdivmer_t *initp)
     {
         bafhlst_t_init(&initp->dm_pools[li], BAFH_STUS_DIVM, li, (1UL << li));
     }
+
     bafhlst_t_init(&initp->dm_onepool, BAFH_STUS_ONEM, 0, 1UL);
     return;
 }
@@ -783,7 +784,7 @@ bool_t merlove_mem_core()
         switch (marea[maidx].ma_type)
         {
             case MA_TYPE_HWAD:
-                INFOK(" ============ Begin Hard area's pages mount=================");
+                INFOK(" ===🇦🇸========= Begin Hard area's pages mount=================");
                 break;
             case MA_TYPE_KRNL:
                 INFOK(" ============ Begin Kernel area's pages mount=================");

@@ -44,7 +44,7 @@ typedef struct s_MAFUNCOBJS
 typedef struct s_BAFHLST
 {
 	spinlock_t af_lock;
-	u32_t af_stus;
+	u32_t af_stus;          /* 是单个页面的独自分配策略， 还是多个页面的分割合并策略 */
 	uint_t af_oder;		 	// 页面数的位移量 order
 	uint_t af_oderpnr;		// 页面数, 该bafh list每一个节点挂载的页面数, 如果oder为2，那这个数就是 1<<2=4  order-page-number
 	uint_t af_fmsanr;		// 空闲msadsc_t数，未分配内存块数 free msadsc_t number
