@@ -7,8 +7,8 @@
 #define MSA_SIZE (1 << PAGPHYADR_SZLSHBIT)
 
 #define MF_OLKTY_INIT (0)
-#define MF_OLKTY_ODER (1)
-#define MF_OLKTY_BAFH (2) /* 标志自己这块物理页没有使用odlink连接后续物理块了，自己是最后一个块，自己直接挂载到桶上 */
+#define MF_OLKTY_ODER (1)   /* 作为一个桶元素的开始物理块，oldlink链接着桶元素的最后一个物理块 */
+#define MF_OLKTY_BAFH (2)   /* 作为一个桶元素的结束, 标志自己这块物理页没有使用odlink连接后续物理块了，自己是最后一个块，自己(oldlink)直接挂载到桶链表上. */
 #define MF_OLKTY_TOBJ (3)
 
 #define MF_LSTTY_LIST (0)

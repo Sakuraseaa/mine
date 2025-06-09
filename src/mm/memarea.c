@@ -1,7 +1,5 @@
 #include "mmkit.h"
 
-extern mmgro_t glomm;
-
 void arclst_t_init(arclst_t *initp)
 {
     list_init(&initp->al_lru1);
@@ -219,8 +217,8 @@ bool_t scan_len_msadsc(msadsc_t *mstat, msadflgs_t *cmpmdfp, uint_t mnr, uint_t 
     {
         return FALSE;
     }
-    for (uint_t tmdx = 0; tmdx < mnr - 1; tmdx++) /* mnr - 1的作用是什么 */
-    {
+    for (uint_t tmdx = 0; tmdx < mnr - 1; tmdx++)
+    {   /* 检查当前 物理页 和 下一个物理页 是否连续且属于同类型*/
         retclok = continumsadsc_is_ok(&mstat[tmdx], &mstat[tmdx + 1], cmpmdfp);
         if ((~0UL) == retclok)
         {
@@ -229,6 +227,7 @@ bool_t scan_len_msadsc(msadsc_t *mstat, msadflgs_t *cmpmdfp, uint_t mnr, uint_t 
         }
         if (0 == retclok) 
         { /* 这种错误好像不会发送？ */
+            INFOK("0 == retclok happened!!");
             *retmnr = 0;
             return FALSE;
         }
@@ -293,10 +292,10 @@ bool_t merlove_scan_continumsadsc(memarea_t *mareap, msadsc_t *fmstat, uint_t *f
         return FALSE;
     }
 
-    msadsc_t *msastat = fmstat;
+    msadsc_t *msastat = fmstat; /* 物理页数组头 */
+    uint_t tmidx = *fntmsanr;   /* 物理页启示地址 */
     uint_t retfindmnr = 0; // 找到的连续页面数
     bool_t rets = FALSE;
-    uint_t tmidx = *fntmsanr;
     for (; tmidx < fmsanr; tmidx++)
     {
         if (msastat[tmidx].md_cntflgs.mf_marty == mdfp->mf_marty && // 保证该内存页属于该内存区
@@ -495,7 +494,7 @@ bool_t continumsadsc_add_procmareabafh(memarea_t *mareap, bafhlst_t *bafhp, msad
     }
     for (uint_t tmpnr = 0; tmpnr < fmnr; tmpnr++)
     {
-        fstat[tmpnr].md_cntflgs.mf_olkty = MF_OLKTY_BAFH; // 尾巴 ？
+        fstat[tmpnr].md_cntflgs.mf_olkty = MF_OLKTY_BAFH; /* 链接到的桶类型 */
         fstat[tmpnr].md_odlink = bafhp;
         
         list_add_to_behind(&bafhp->af_frelst, &fstat[tmpnr].md_list);
@@ -583,7 +582,7 @@ bool_t continumsadsc_mareabafh_core(memarea_t *mareap, msadsc_t **rfstat, msadsc
     return FALSE;
 }
 
-// 多次分割这段内存页, 直到将其全部挂载到 area -> divmerge_t -> bafhlst_t
+// 多次分割这段内存页, 直到将其全部挂载到桶中 area -> divmerge_t -> bafhlst_t 
 bool_t merlove_continumsadsc_mareabafh(memarea_t *mareap, msadsc_t *mstat, msadsc_t *mend, uint_t mnr)
 {
 	if (nullptr == mareap || nullptr == mstat || nullptr == mend || 0 == mnr) {
@@ -728,16 +727,17 @@ bool_t merlove_mem_onmemarea(memarea_t *mareap, msadsc_t *mstat, uint_t msanr)
         return FALSE;
     }
 
-    msadsc_t *retstatmsap = nullptr, *retendmsap = nullptr, *fntmsap = mstat; 
     /*  
-        fntsd: first next msadsc page 下一次循环中第一个等待处理的内存页结构体
+        fntmsap:        物理页数组头
+        fntmnr:         物理页索引,会一直变更着，
         retstatmsap:	当前连续地址page的开始地址 return start msadsc_t point
         retendmsap: 	当前连续地址page的结束地址 return end msadsc_t posint
         retfindmnr: 	当前有多少给连续地址的 page 结构 return finded msadsc_t Number
         fntmsanr:		本轮开始的page结构页地址
     */
+    msadsc_t *retstatmsap = nullptr, *retendmsap = nullptr, *fntmsap = mstat; 
     uint_t retfindmnr = 0;
-    uint_t fntmnr = 0; // find next msadsc number
+    uint_t fntmnr = 0;
     bool_t retscan = FALSE;
 
     for (; fntmnr < msanr;)
@@ -766,43 +766,43 @@ uint_t test_setflgs(memarea_t *mareap, msadsc_t *mstat, uint_t msanr)
 {
     u32_t muindx = 0;
     msadflgs_t *mdfp = NULL;
-    if (NULL == mareap || NULL == mstat || 0 == msanr)
-    {
+    if (NULL == mareap || NULL == mstat || 0 == msanr) {
         return ~0UL;
     }
+
     switch (mareap->ma_type)
     {
-    case MA_TYPE_HWAD:
-    {
-        muindx = MF_MARTY_HWD << 5;
-        mdfp = (msadflgs_t *)(&muindx);
-        break;
+        case MA_TYPE_HWAD:
+        {
+            muindx = MF_MARTY_HWD << 5;
+            mdfp = (msadflgs_t *)(&muindx);
+            break;
+        }
+        case MA_TYPE_KRNL:
+        {
+            muindx = MF_MARTY_KRL << 5;
+            mdfp = (msadflgs_t *)(&muindx);
+            break;
+        }
+        case MA_TYPE_PROC:
+        {
+            muindx = MF_MARTY_PRC << 5;
+            mdfp = (msadflgs_t *)(&muindx);
+            break;
+        }
+        case MA_TYPE_SHAR:
+        {
+            return 0;
+        }
+        default:
+        {
+            muindx = 0;
+            mdfp = NULL;
+            break;
+        }
     }
-    case MA_TYPE_KRNL:
-    {
-        muindx = MF_MARTY_KRL << 5;
-        mdfp = (msadflgs_t *)(&muindx);
-        break;
-    }
-    case MA_TYPE_PROC:
-    {
-        muindx = MF_MARTY_PRC << 5;
-        mdfp = (msadflgs_t *)(&muindx);
-        break;
-    }
-    case MA_TYPE_SHAR:
-    {
-        return 0;
-    }
-    default:
-    {
-        muindx = 0;
-        mdfp = NULL;
-        break;
-    }
-    }
-    if (0 == muindx || NULL == mdfp)
-    {
+    
+    if (0 == muindx || NULL == mdfp) {
         return ~0UL;
     }
     u64_t phyadr = 0;
@@ -1067,6 +1067,11 @@ void disp_memarea(void)
     }
     return;
 }
+
+/**
+ * @brief 挂载 对应内存页msadsc_t 到对应的内存区的桶中
+ * 
+ */
 void init_merlove_mem()
 {
     if (merlove_mem_core() == FALSE)

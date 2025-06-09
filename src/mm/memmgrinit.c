@@ -4,6 +4,9 @@ GLOBVAR_DEFINITION(mmgro_t, glomm);
 
 void init_phymm()
 {	
+    memset(&glomm, 0, sizeof(mmgro_t));
+    spin_init(&glomm.mo_lock);
+    list_init(&glomm.mo_list);
     // init 物理页 结构
     init_msadsc();
 
@@ -14,7 +17,7 @@ void init_phymm()
     // 处理内存占用
     init_search_krloccupymm();
 
-    // 合并内存页到内存区中
+    // 挂载内存页到内存区中
     init_merlove_mem();
 
     init_kmsob();

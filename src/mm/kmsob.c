@@ -100,7 +100,6 @@ void kmsobmgrhed_t_init(kmsobmgrhed_t *initp)
 	return;
 }
 
-extern mmgro_t glomm;
 void init_kmsob()
 {
 	kmsobmgrhed_t_init(&glomm.mo_kmsobmgr);

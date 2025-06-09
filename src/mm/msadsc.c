@@ -143,7 +143,7 @@ void init_msadsc()
     glomm.mo_msanr = msanr;
     memory_management_struct.end_of_struct += (sizeof(msadsc_t) * coremdnr + sizeof(u64_t) * 2) & (~(sizeof(u64_t)-1));
 
-    for(int i = 0; i < msanr; i += 256) //1MB = 256 * 4KB
+    for(int i = 0; i < msanr; i += 2560) //10MB =  10 * 256 * 4KB, 以10MB为梯度
         disp_one_msadsc(glomm.mo_msadscstat + i);
 
     return;

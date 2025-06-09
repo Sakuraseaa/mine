@@ -1,6 +1,5 @@
 #include "mmkit.h"
 
-extern mmgro_t glomm;
 /**
  * @brief 更新内存管理全局资源对象中有关物理页计数
  * 
@@ -9,22 +8,22 @@ extern mmgro_t glomm;
  */
 void mm_update_memmgrob(uint_t realpnr, uint_t flgs)
 {
-	cpuflg_t cpuflg;
-	if (0 == flgs)
-	{
-		//knl_spinlock_cli(&memmgrob.mo_lock, &cpuflg);
-		glomm.mo_alocpages += realpnr;
-		glomm.mo_freepages -= realpnr;
-		//knl_spinunlock_sti(&memmgrob.mo_lock, &cpuflg);
-	}
-	if (1 == flgs)
-	{
-		//knl_spinlock_cli(&memmgrob.mo_lock, &cpuflg);
-		glomm.mo_alocpages -= realpnr;
-		glomm.mo_freepages += realpnr;
-		//knl_spinunlock_sti(&memmgrob.mo_lock, &cpuflg);
-	}
-	return;
+    cpuflg_t cpuflg;
+    if (0 == flgs)
+    {
+        spinlock_storeflg_cli(&glomm.mo_lock, &cpuflg);
+        glomm.mo_alocpages += realpnr;
+        glomm.mo_freepages -= realpnr;
+        spinunlock_restoreflg(&glomm.mo_lock, &cpuflg);
+    }
+    if (1 == flgs)
+    {
+        spinlock_storeflg_cli(&glomm.mo_lock, &cpuflg);
+        glomm.mo_alocpages -= realpnr;
+        glomm.mo_freepages += realpnr;
+        spinunlock_restoreflg(&glomm.mo_lock, &cpuflg);
+    }
+    return;
 }
 
 /**
@@ -55,17 +54,16 @@ void mm_update_memarea(memarea_t *malokp, uint_t pgnr, uint_t flgs)
 
 KLINE sint_t retn_divoder(uint_t pages)
 {
-	
-	sint_t pbits = search_64rlbits((uint_t)pages) - 1;
-	
-	// 检查 pages 是否是2的幂
-	// 如果 pages 是2的幂，那么它的二进制表示只有一个位是1，其余都是0。对于这种情况，pages & (pages - 1) 的结果是0（例如，8 & 7 = 0）。
-	// 如果 pages 不是2的幂，pages & (pages - 1) 的结果将不是0，表示有多于一个的1位存在。这时，pbits 增加1
-	if (pages & (pages - 1))
-	{
-		pbits++;
-	}
-	return pbits;
+    sint_t pbits = search_64rlbits((uint_t)pages) - 1;
+
+    // 检查 pages 是否是2的幂
+    // 如果 pages 是2的幂，那么它的二进制表示只有最高位是1，其余都是0。对于这种情况，pages & (pages - 1) 的结果是0（例如，8 & 7 = 0）。
+    // 如果 pages 不是2的幂，pages & (pages - 1) 的结果将不是0，表示有多于一个的1位存在。这时，pbits 增加1
+    if (pages & (pages - 1))
+    {
+        pbits++;
+    }
+    return pbits;
 }
 
 // C_1 获取释放msadsc_t结构所在的内存区
@@ -118,69 +116,72 @@ memarea_t *onmrtype_retn_marea(mmgro_t *mmobjp, uint_t mrtype)
     return nullptr;
 }
 
-bafhlst_t *onma_retn_maxbafhlst(memarea_t *malckp) // 得到一个有空闲结点且最大的链表
+// 得到一个有空闲结点且最大的链表
+bafhlst_t *onma_retn_maxbafhlst(memarea_t *malckp) 
 {
-	for (s64_t li = (MDIVMER_ARR_LMAX - 1); li >= 0; li--)
-	{
-		if (malckp->ma_mdmdata.dm_pools[li].af_fobjnr > 0)
-		{
-			return &malckp->ma_mdmdata.dm_pools[li];
-		}
-	}
-	return nullptr;
+    for (s64_t li = (MDIVMER_ARR_LMAX - 1); li >= 0; li--)
+    {
+        if (malckp->ma_mdmdata.dm_pools[li].af_fobjnr > 0)
+        {
+            return &malckp->ma_mdmdata.dm_pools[li];
+        }
+    }
+    return nullptr;
 }
 
 // E3 设置节点被申请后的属性
 msadsc_t *mm_divpages_opmsadsc(msadsc_t *msastat, uint_t mnr)
 {
-	if (nullptr == msastat || 0 == mnr) {
-		return nullptr;
-	}
+    if (nullptr == msastat || 0 == mnr) {
+        return nullptr;
+    }
 
-	if ((MF_OLKTY_ODER != msastat->md_cntflgs.mf_olkty &&
-		MF_OLKTY_BAFH != msastat->md_cntflgs.mf_olkty) ||
-		nullptr == msastat->md_odlink ||
-		PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc)
-	{
-		color_printk(RED, BLACK, "mm_divpages_opmsadsc err1\n");
-	}
+    if ((MF_OLKTY_ODER != msastat->md_cntflgs.mf_olkty && MF_OLKTY_BAFH != msastat->md_cntflgs.mf_olkty) 
+        || nullptr == msastat->md_odlink 
+        || PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc)
+    {
+        color_printk(RED, BLACK, "mm_divpages_opmsadsc err1\n");
+    }
 
-	msadsc_t *mend = (msadsc_t *)msastat->md_odlink;
-	if (MF_OLKTY_BAFH == msastat->md_cntflgs.mf_olkty) { // 用户？
-		mend = msastat;
-	}
+    msadsc_t *mend = (msadsc_t *)msastat->md_odlink;
+    if (MF_OLKTY_BAFH == msastat->md_cntflgs.mf_olkty) { 
+        mend = msastat;
+    }
 
-	if (mend < msastat) {
-		color_printk(RED, BLACK, "mm_divpages_opmsadsc err2\n");
-	}
+    if (mend < msastat) {
+        color_printk(RED, BLACK, "mm_divpages_opmsadsc err2\n");
+    }
 
-	if ((uint_t)((mend - msastat) + 1) != mnr) {
-		color_printk(RED, BLACK, "mm_divpages_opmsadsc err3\n");
-	}
-	if (msastat->md_cntflgs.mf_refcnt > (MF_UINDX_MAX - 1) || mend->md_cntflgs.mf_refcnt > (MF_UINDX_MAX - 1) ||
-		msastat->md_cntflgs.mf_refcnt != mend->md_cntflgs.mf_refcnt)
-	{
-		color_printk(RED, BLACK, "mm_divpages_opmsadsc err4");
-	}
-	
-	if (mend == msastat)
-	{
-		msastat->md_cntflgs.mf_refcnt++;
-		msastat->md_phyadrs.paf_alloc = PAF_ALLOC;
-		msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
-		msastat->md_odlink = mend;
-		return msastat;
-	}
+    if ((uint_t)((mend - msastat) + 1) != mnr) {
+        color_printk(RED, BLACK, "mm_divpages_opmsadsc err3\n");
+    }
 
-	msastat->md_cntflgs.mf_refcnt++;
-	msastat->md_phyadrs.paf_alloc = PAF_ALLOC;
-	mend->md_cntflgs.mf_refcnt++;
-	mend->md_phyadrs.paf_alloc = PAF_ALLOC;
-	//msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER; // 是否有错？mend->md_cntflgs.mf_olkty = MF_OLKTY_ODER
-	//msastat->md_odlink = mend; // 是否有错？ mend->md_odlink = msastat;
-	mend->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
-	mend->md_odlink = msastat;
-	return msastat;
+    if (   msastat->md_cntflgs.mf_refcnt > (MF_UINDX_MAX - 1) 
+        || mend->md_cntflgs.mf_refcnt > (MF_UINDX_MAX - 1) 
+        || msastat->md_cntflgs.mf_refcnt != mend->md_cntflgs.mf_refcnt)
+    {
+        color_printk(RED, BLACK, "mm_divpages_opmsadsc err4");
+    }
+
+    if (mend == msastat)
+    {
+        msastat->md_cntflgs.mf_refcnt++;
+        msastat->md_phyadrs.paf_alloc = PAF_ALLOC;
+        msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
+        msastat->md_odlink = mend;
+        return msastat;
+    }
+
+    msastat->md_cntflgs.mf_refcnt++;
+    msastat->md_phyadrs.paf_alloc = PAF_ALLOC;
+    mend->md_cntflgs.mf_refcnt++;
+    mend->md_phyadrs.paf_alloc = PAF_ALLOC;
+    msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER; 
+    msastat->md_odlink = mend;
+    /* 这里是否应该设置一下mend? 由于各种情况，mend的mf_olkty和odlink是未知的 */
+    // mend->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
+    // mend->md_odlink = msastat;
+    return msastat;
 }
 
 #if 0
@@ -331,37 +332,37 @@ sint_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
  */
 bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retlogbafh, bafhlst_t **retdivbafh)
 {
-	if (nullptr == malckp || 1 > pages || nullptr == retlogbafh || nullptr == retdivbafh) {
-		return FALSE;
-	}
-	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
-	sint_t dividx = retn_divoder(pages); // 把页面数向上对齐到2的整数次幂
-	
-	if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
-		*retlogbafh = nullptr;
-		*retdivbafh = nullptr;
-		return FALSE;
-	}
+    if (nullptr == malckp || 1 > pages || nullptr == retlogbafh || nullptr == retdivbafh) {
+        return FALSE;
+    }
+    bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
+    sint_t dividx = retn_divoder(pages); /* 把页面数向上对齐到2的整数次幂 */
 
-	if (pages > bafhstat[dividx].af_oderpnr) { 
-		*retlogbafh = nullptr;
-		*retdivbafh = nullptr;
-		return FALSE;
-	}
-	
-	for (sint_t idx = dividx; idx < MDIVMER_ARR_LMAX; idx++)
-	{ // 请求的page页对应的bafhstat的链表不一定有空闲节点，所以向上寻求更大的页链表，然后分割他的大的空闲节点
-		if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fobjnr)
-		{
-			*retlogbafh = &bafhstat[dividx];  // 请求分配的bafhlst_t结构指针
-			*retdivbafh = &bafhstat[idx];	 // 实际分配的bafhlst_t结构指针
-			return TRUE;
-		}
-	}
+    if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
+        *retlogbafh = nullptr;
+        *retdivbafh = nullptr;
+        return FALSE;
+    }
 
-	*retlogbafh = nullptr;
-	*retdivbafh = nullptr;
-	return FALSE;
+    if (pages > bafhstat[dividx].af_oderpnr) { 
+        *retlogbafh = nullptr;
+        *retdivbafh = nullptr;
+        return FALSE;
+    }
+
+    for (sint_t idx = dividx; idx < MDIVMER_ARR_LMAX; idx++)
+    { // 请求的page页对应的bafhstat的链表不一定有空闲桶元素，所以向上寻求更大的页链表，然后分割他的大的桶元素
+        if (bafhstat[idx].af_oderpnr >= pages && 0 < bafhstat[idx].af_fobjnr)
+        {
+            *retlogbafh = &bafhstat[dividx];  // 请求分配的bafhlst_t结构指针
+            *retdivbafh = &bafhstat[idx];	 // 实际分配的bafhlst_t结构指针
+            return TRUE;
+        }
+    }
+
+    *retlogbafh = nullptr;
+    *retdivbafh = nullptr;
+    return FALSE;
 }
 
 // E-1 根据freepgs返回请求释放的和最大释放的bafhlst_t结构指针
@@ -425,35 +426,35 @@ msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
 // E1, 获得bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
 bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **retmend)
 {
-	if (nullptr == bafhp || nullptr == retmstat || nullptr == retmend) {
-		return FALSE;
-	}
-	if (1 > bafhp->af_mobjnr || 1 > bafhp->af_fobjnr) {
-		*retmstat = nullptr;
-		*retmend = nullptr;
-		return FALSE;
-	}
-	
-	if (list_is_empty_careful(&bafhp->af_frelst) == TRUE){
-		*retmstat = nullptr;
-		*retmend = nullptr;
-		return FALSE;
-	}
-	
-	msadsc_t *tmp = list_entry(bafhp->af_frelst.next, msadsc_t, md_list);
-	list_del(&tmp->md_list);
-	bafhp->af_mobjnr--; // 减少总页面数
-	bafhp->af_fobjnr--; // 减少空闲页面数
-	bafhp->af_frecnt++; // 增加释放计数
-	bafhp->af_aobjnr++;
+    if (nullptr == bafhp || nullptr == retmstat || nullptr == retmend) {
+        return FALSE;
+    }
+    if (1 > bafhp->af_mobjnr || 1 > bafhp->af_fobjnr) {
+        *retmstat = nullptr;
+        *retmend = nullptr;
+        return FALSE;
+    }
 
-	*retmstat = tmp;
-	*retmend = (msadsc_t *)tmp->md_odlink;
-	if (MF_OLKTY_BAFH == tmp->md_cntflgs.mf_olkty) {
-		*retmend = tmp;
-	}
+    if (list_is_empty_careful(&bafhp->af_frelst) == TRUE){
+        *retmstat = nullptr;
+        *retmend = nullptr;
+        return FALSE;
+    }
 
-	return TRUE;
+    msadsc_t *tmp = list_entry(bafhp->af_frelst.next, msadsc_t, md_list);
+    list_del(&tmp->md_list);
+    bafhp->af_mobjnr--; // 减少总页面数
+    bafhp->af_fobjnr--; // 减少空闲页面数
+    bafhp->af_frecnt++; // 增加释放计数
+    bafhp->af_aobjnr++;
+
+    *retmstat = tmp;                        /* tmp自然是分割合并块的第一个物理页 */
+    *retmend = (msadsc_t *)tmp->md_odlink; /*一般地讲, odlink链接着分割合并块的最后一个物理页*/
+    if (MF_OLKTY_BAFH == tmp->md_cntflgs.mf_olkty) {
+        *retmend = tmp;
+    }
+
+    return TRUE;
 }
 
 /**
@@ -465,42 +466,42 @@ bool_t mm_retnmsaob_onbafhlst(bafhlst_t *bafhp, msadsc_t **retmstat, msadsc_t **
  */
 bool_t scan_mapgsalloc_ok(memarea_t *malckp, uint_t pages)
 {
-	if (nullptr == malckp || 1 > pages) {
-		return FALSE;
-	}
-	if (malckp->ma_freepages >= pages && malckp->ma_maxpages >= pages) {
-		return TRUE;
-	}
-	return FALSE;
+    if (nullptr == malckp || 1 > pages) {
+        return FALSE;
+    }
+    if (malckp->ma_freepages >= pages && malckp->ma_maxpages >= pages) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 // C2
 msadsc_t *mm_maxdivpages_onmarea(memarea_t *malckp, uint_t *retrelpnr)
 {
-	bafhlst_t *bafhp = onma_retn_maxbafhlst(malckp);
-	if (nullptr == bafhp)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	msadsc_t *retmsa = nullptr;
+    bafhlst_t *bafhp = onma_retn_maxbafhlst(malckp);
+    if (nullptr == bafhp)
+    {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+    msadsc_t *retmsa = nullptr;
 
-	msadsc_t *retmstat = nullptr, *retmend = nullptr;
-	bool_t rets = mm_retnmsaob_onbafhlst(bafhp, &retmstat, &retmend);
-	if (FALSE == rets || nullptr == retmstat || nullptr == retmend)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	retmsa = mm_divpages_opmsadsc(retmstat, bafhp->af_oderpnr);
+    msadsc_t *retmstat = nullptr, *retmend = nullptr;
+    bool_t rets = mm_retnmsaob_onbafhlst(bafhp, &retmstat, &retmend);
+    if (FALSE == rets || nullptr == retmstat || nullptr == retmend)
+    {
+        *retrelpnr = 0;
+        return nullptr;
+    }
 
-	if (nullptr == retmsa)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	*retrelpnr = bafhp->af_oderpnr;
-	return retmsa;
+    retmsa = mm_divpages_opmsadsc(retmstat, bafhp->af_oderpnr);
+    if (nullptr == retmsa)
+    {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+    *retrelpnr = bafhp->af_oderpnr;
+    return retmsa;
 }
 
 uint_t chek_divlenmsa(msadsc_t *msastat, msadsc_t *msaend, uint_t mnr)
@@ -575,114 +576,116 @@ uint_t chek_divlenmsa(msadsc_t *msastat, msadsc_t *msaend, uint_t mnr)
  */
 bool_t mrdmb_add_msa_bafh(bafhlst_t *bafhp, msadsc_t *msastat, msadsc_t *msaend)
 {
-	if (nullptr == bafhp || nullptr == msastat || nullptr == msaend) {
-		return FALSE;
-	}
-	uint_t mnr = (msaend - msastat) + 1;
-	if (mnr != (uint_t)bafhp->af_oderpnr) {
-		return FALSE;
-	}
-	if (0 < msastat->md_cntflgs.mf_refcnt || 0 < msaend->md_cntflgs.mf_refcnt) {
-		return FALSE;
-	}
-	if (PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc || PAF_NO_ALLOC != msaend->md_phyadrs.paf_alloc) {
-		return FALSE;
-	}
+    if (nullptr == bafhp || nullptr == msastat || nullptr == msaend) {
+        return FALSE;
+    }
 
-	if (msastat == msaend && 1 != mnr && 1 != bafhp->af_oderpnr) {
-		return FALSE;
-	}
+    uint_t mnr = (msaend - msastat) + 1;
+    if (mnr != (uint_t)bafhp->af_oderpnr) {
+        return FALSE;
+    }
+    if (0 < msastat->md_cntflgs.mf_refcnt || 0 < msaend->md_cntflgs.mf_refcnt) {
+        return FALSE;
+    }
+    if (PAF_NO_ALLOC != msastat->md_phyadrs.paf_alloc || PAF_NO_ALLOC != msaend->md_phyadrs.paf_alloc) {
+        return FALSE;
+    }
+    if (msastat == msaend && 1 != mnr && 1 != bafhp->af_oderpnr) {
+        return FALSE;
+    }
 
-	msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
-	msastat->md_odlink = msaend;
+    msastat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
+    msastat->md_odlink = msaend;
 
-	msaend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
-	msaend->md_odlink = bafhp;
-	list_add_to_behind(&bafhp->af_frelst, &msastat->md_list);
-	bafhp->af_mobjnr++;
-	bafhp->af_fobjnr++;
-	return TRUE;
+    msaend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
+    msaend->md_odlink = bafhp;
+    list_add_to_behind(&bafhp->af_frelst, &msastat->md_list);
+    bafhp->af_mobjnr++;
+    bafhp->af_fobjnr++;
+    return TRUE;
 }
 
 // D2 从bafhlst中划分物理页
 msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrelpnr, bafhlst_t *relbfl, bafhlst_t *divbfl)
 {
-	msadsc_t *retmsa = nullptr;
-	bool_t rets = FALSE;
-	msadsc_t *retmstat = nullptr, *retmend = nullptr;
-	if (nullptr == malckp || 1 > pages || nullptr == retrelpnr || nullptr == relbfl || nullptr == divbfl) {
-		return nullptr;
-	}
-	
-	// 逻辑上错误，但现实可能发生
-	if (relbfl > divbfl) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	// 两个块分配释放头链表相等，说明这给链表上有空闲结点且该结点满足内存需求，直接分配
-	if (relbfl == divbfl)
-	{
-		//  卸载bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
-		rets = mm_retnmsaob_onbafhlst(relbfl, &retmstat, &retmend);
-		if (FALSE == rets || nullptr == retmstat || nullptr == retmend) {
-			*retrelpnr = 0;
-			return nullptr;
-		}
-		if ((uint_t)((retmend - retmstat) + 1) != relbfl->af_oderpnr) {
-			*retrelpnr = 0;
-			return nullptr;
-		}
-		
-		// 执行实际的分配内存块动作(设置该内存块已经被分配
-		retmsa = mm_divpages_opmsadsc(retmstat, relbfl->af_oderpnr);
-		if (nullptr == retmsa) {
-			*retrelpnr = 0;
-			return nullptr;
-		}
-		
-		// 传出参数 - 设置实际的分配页数
-		*retrelpnr = relbfl->af_oderpnr;
-		return retmsa;
-	}
-	
-	// 两个块分配释放头链表不相等，但仍然有大的空闲结点，可以把大的空闲结点进行划分成小结点，挂在低端内存链表上
-	// 获得bafh list上的一个空闲节点，用mstat 和 mend记录这个节点的信息
-	rets = mm_retnmsaob_onbafhlst(divbfl, &retmstat, &retmend);
-	if (FALSE == rets || nullptr == retmstat || nullptr == retmend) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	if ((uint_t)((retmend - retmstat) + 1) != divbfl->af_oderpnr) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	
-	// 按照2的次幂划分 页面数为divnr的大节点(从高端向低端划分，核心操作)，把他们挂载到低端合适的块分配释放链表上
-	// 直到划分到用户想要的内存块对应的块分配释放头链表a，按照2倍的方式划分下去，最后会有一个闲置内存块返回给上传使用
-	// 有一个多余的闲置内存块挂在块分配释放头链表a
+    msadsc_t *retmsa = nullptr;
+    bool_t rets = FALSE;
+    msadsc_t *retmstat = nullptr, *retmend = nullptr;
+    if (nullptr == malckp || 1 > pages || nullptr == retrelpnr || nullptr == relbfl || nullptr == divbfl) {
+        return nullptr;
+    }
 
-	// 这个大内存是从高地址对半式的向下划分
-	uint_t divnr = divbfl->af_oderpnr;
-	for (bafhlst_t *tmpbfl = divbfl - 1; tmpbfl >= relbfl; tmpbfl--)
-	{
-		// 分割出一块挂在低级块分配释放链表上,留下一块给上层使用
-		if (mrdmb_add_msa_bafh(tmpbfl, &retmstat[tmpbfl->af_oderpnr], (msadsc_t *)retmstat->md_odlink) == FALSE) {
-			color_printk(RED, BLACK, "mrdmb_add_msa_bafh fail\n");
-		}
-		retmstat->md_odlink = &retmstat[tmpbfl->af_oderpnr - 1];
-		divnr -= tmpbfl->af_oderpnr; // 划分后的，剩余页数
-	}
+    if (relbfl > divbfl) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    // 两个块分配释放头链表相等，说明这给链表上有空闲结点且该结点满足档次内存请求，直接分配
+    if (relbfl == divbfl)
+    {
+        // a.卸载bafh list上的一个节点，用mstat 和 mend记录这个节点的信息
+        rets = mm_retnmsaob_onbafhlst(relbfl, &retmstat, &retmend);
+        if (FALSE == rets || nullptr == retmstat || nullptr == retmend) {
+            *retrelpnr = 0;
+            return nullptr;
+        }
+        if ((uint_t)((retmend - retmstat) + 1) != relbfl->af_oderpnr) {
+            *retrelpnr = 0;
+            return nullptr;
+        }
+        
+        // 执行实际的分配内存块动作(设置该内存块已经被分配
+        retmsa = mm_divpages_opmsadsc(retmstat, relbfl->af_oderpnr);
+        if (nullptr == retmsa) {
+            *retrelpnr = 0;
+            return nullptr;
+        }
+        
+        // 传出参数 - 设置实际的分配页数
+        *retrelpnr = relbfl->af_oderpnr;
+        return retmsa;
+    }
+
+    // 两个块分配释放头链表不相等，说明relbfl无空闲桶元素，divbfl上有桶元素，
+    // 可以把大的桶元素分解成小的桶元素, 挂在块分配释放头链表内存链表上
+
+    // 获得bafh list上的一个空闲节点，用mstat 和 mend记录这个节点的信息
+    rets = mm_retnmsaob_onbafhlst(divbfl, &retmstat, &retmend);
+    if (FALSE == rets || nullptr == retmstat || nullptr == retmend) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+    if ((uint_t)((retmend - retmstat) + 1) != divbfl->af_oderpnr) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    // 按照2的次幂划分 页面数为divnr的大节点(从高端向低端划分，核心操作)，把他们挂载到低端合适的块分配释放链表上
+    // 直到划分到用户想要的内存块对应的块分配释放头链表a，按照2倍的方式划分下去，最后会有一个闲置内存块返回给上传使用
+    // 有一个多余的闲置内存块挂在块分配释放头链表a
+
+    // 这个大内存是从高地址对半式的向下划分
+    uint_t divnr = divbfl->af_oderpnr;
+    for (bafhlst_t *tmpbfl = divbfl - 1; tmpbfl >= relbfl; tmpbfl--)
+    {
+        // 分割出一块挂在低级块分配释放链表上,留下一块给上层使用
+        if (mrdmb_add_msa_bafh(tmpbfl, &retmstat[tmpbfl->af_oderpnr], (msadsc_t *)retmstat->md_odlink) == FALSE) {
+            color_printk(RED, BLACK, "mrdmb_add_msa_bafh fail\n");
+        }
+        retmstat->md_odlink = &retmstat[tmpbfl->af_oderpnr - 1];
+        divnr -= tmpbfl->af_oderpnr; // 划分后的，剩余页数
+    }
 
 
-	// 执行实际的分配内存块动作(设置该内存块已经被分配
-	retmsa = mm_divpages_opmsadsc(retmstat, divnr);
-	if (nullptr == retmsa) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	
-	*retrelpnr = relbfl->af_oderpnr;
-	return retmsa;
+    // 执行实际的分配内存块动作(设置该内存块已经被分配
+    retmsa = mm_divpages_opmsadsc(retmstat, divnr);
+    if (nullptr == retmsa) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    *retrelpnr = relbfl->af_oderpnr;
+    return retmsa;
 }
 
 /**
@@ -695,75 +698,76 @@ msadsc_t *mm_reldpgsdivmsa_bafhl(memarea_t *malckp, uint_t pages, uint_t *retrel
  */
 msadsc_t *mm_reldivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrelpnr)
 {
-	if (nullptr == malckp || 1 > pages || nullptr == retrelpnr) {
-		return nullptr;
-	}
-	
-	if (scan_mapgsalloc_ok(malckp, pages) == FALSE) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
+    if (nullptr == malckp || 1 > pages || nullptr == retrelpnr) {
+        return nullptr;
+    }
 
-	bafhlst_t *retrelbhl = nullptr, *retdivbhl = nullptr;
+    /* 检查内存区是否拥有pages个空闲物理页 */
+    if (scan_mapgsalloc_ok(malckp, pages) == FALSE) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
 
-	//根据页面数在内存区的m_mdmlielst数组中找出下面两个东西
-	//1. 请求分配页面的bafhlst_t结构（retrelbhl）
-	//2. 实际要在其中分配页面的bafhlst_t结构(retdivbhl)
-	bool_t rets = onmpgs_retn_bafhlst(malckp, pages, &retrelbhl, &retdivbhl);
-	if (FALSE == rets) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
+    bafhlst_t *retrelbhl = nullptr, *retdivbhl = nullptr;
 
-	//在bafhlst_t结构中划分出内存块,返回给上层使用
-	uint_t retpnr = 0;
-	msadsc_t *retmsa = mm_reldpgsdivmsa_bafhl(malckp, pages, &retpnr, retrelbhl, retdivbhl);
-	if (nullptr == retmsa) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	*retrelpnr = retpnr;
-	return retmsa;
+    //根据页面数在内存区的m_mdmlielst数组中找出下面两个东西
+    //1. 请求分配页面的bafhlst_t结构（retrelbhl）桶结构
+    //2. 实际要在其中分配页面的bafhlst_t结构(retdivbhl)
+    bool_t rets = onmpgs_retn_bafhlst(malckp, pages, &retrelbhl, &retdivbhl);
+    if (FALSE == rets) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    //在bafhlst_t结构中划分出内存块,返回给上层使用
+    uint_t retpnr = 0;
+    msadsc_t *retmsa = mm_reldpgsdivmsa_bafhl(malckp, pages, &retpnr, retrelbhl, retdivbhl);
+    if (nullptr == retmsa) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+    *retrelpnr = retpnr;
+    return retmsa;
 }
 
 msadsc_t *mm_prcdivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrelpnr)
 {
-	if (nullptr == malckp || nullptr == retrelpnr || 1 != pages)
-	{
-		return nullptr;
-	}
-	if (MA_TYPE_PROC != malckp->ma_type)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	if (scan_mapgsalloc_ok(malckp, pages) == FALSE)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	bafhlst_t *prcbfh = &malckp->ma_mdmdata.dm_onepool;
-	bool_t rets = FALSE;
-	msadsc_t *retmsa = nullptr, *retmstat = nullptr, *retmend = nullptr;
-	rets = mm_retnmsaob_onbafhlst(prcbfh, &retmstat, &retmend);
-	if (FALSE == rets || nullptr == retmstat || nullptr == retmend)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	if ((uint_t)((retmend - retmstat) + 1) != prcbfh->af_oderpnr)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	retmsa = mm_divpages_opmsadsc(retmstat, prcbfh->af_oderpnr);
-	if (nullptr == retmsa)
-	{
-		*retrelpnr = 0;
-		return nullptr;
-	}
-	*retrelpnr = prcbfh->af_oderpnr;
-	return retmsa;
+    if (nullptr == malckp || nullptr == retrelpnr || 1 != pages) {
+        return nullptr;
+    }
+    if (MA_TYPE_PROC != malckp->ma_type) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+    if (scan_mapgsalloc_ok(malckp, pages) == FALSE) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    bafhlst_t *prcbfh = &malckp->ma_mdmdata.dm_onepool;
+    bool_t rets = FALSE;
+    msadsc_t *retmsa = nullptr, *retmstat = nullptr, *retmend = nullptr;
+    rets = mm_retnmsaob_onbafhlst(prcbfh, &retmstat, &retmend);
+    if (FALSE == rets || nullptr == retmstat || nullptr == retmend)
+    {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+    if ((uint_t)((retmend - retmstat) + 1) != prcbfh->af_oderpnr)
+    {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    retmsa = mm_divpages_opmsadsc(retmstat, prcbfh->af_oderpnr);
+    if (nullptr == retmsa)
+    {
+        *retrelpnr = 0;
+        return nullptr;
+    }
+
+    *retrelpnr = prcbfh->af_oderpnr;
+    return retmsa;
 }
 
 /**
@@ -777,64 +781,65 @@ msadsc_t *mm_prcdivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrel
  */
 msadsc_t *mm_divpages_core(memarea_t *mareap, uint_t pages, uint_t *retrealpnr, uint_t flgs)
 {
-	uint_t retpnr = 0;
-	msadsc_t *retmsa = nullptr;
-	cpuflg_t cpuflg;
-	if (DMF_RELDIV != flgs && DMF_MAXDIV != flgs) {
-		*retrealpnr = 0;
-		return nullptr;
-	}
-	if (MA_TYPE_KRNL != mareap->ma_type && MA_TYPE_HWAD != mareap->ma_type) { // 只给内核分配
-		*retrealpnr = 0; 
-		return nullptr;
-	}
-	
-	// knl_spinlock_cli(&mareap->ma_lock, &cpuflg); // 上锁
+    uint_t retpnr = 0;
+    msadsc_t *retmsa = nullptr;
+    cpuflg_t cpuflg;
+    if (DMF_RELDIV != flgs && DMF_MAXDIV != flgs) {
+        *retrealpnr = 0;
+        return nullptr;
+    }
+    if (MA_TYPE_KRNL != mareap->ma_type && MA_TYPE_HWAD != mareap->ma_type) { // 只给内核分配
+        *retrealpnr = 0; 
+        return nullptr;
+    }
 
-	if (DMF_MAXDIV == flgs) // 分配尽可能的最大一块内存
-	{	
-		retmsa = mm_maxdivpages_onmarea(mareap, &retpnr);
-		goto ret_step;
-	}
-	if (DMF_RELDIV == flgs) // 按需分配
-	{
-		retmsa = mm_reldivpages_onmarea(mareap, pages, &retpnr);
-		goto ret_step;
-	}
-	
-	retmsa = nullptr;
-	retpnr = 0;
-ret_step:
-	if (nullptr != retmsa && 0 != retpnr)
-	{
-		mm_update_memarea(mareap, retpnr, 0);
-		mm_update_memmgrob(retpnr, 0);
-	}
-	
-	// knl_spinunlock_sti(&mareap->ma_lock, &cpuflg);
-	
-	*retrealpnr = retpnr;
-	return retmsa;
+    spinlock_storeflg_cli(&mareap->ma_lock, &cpuflg); // 上锁
+
+    if (DMF_MAXDIV == flgs) // 分配尽可能的最大一块内存
+    {	
+        retmsa = mm_maxdivpages_onmarea(mareap, &retpnr);
+        goto ret_step;
+    }
+    if (DMF_RELDIV == flgs) // 按需分配
+    {
+        retmsa = mm_reldivpages_onmarea(mareap, pages, &retpnr);
+        goto ret_step;
+    }
+
+    retmsa = nullptr;
+    retpnr = 0;
+    ret_step:
+    if (nullptr != retmsa && 0 != retpnr)
+    {
+        mm_update_memarea(mareap, retpnr, 0);
+        mm_update_memmgrob(retpnr, 0);
+    }
+
+    spinunlock_restoreflg(&mareap->ma_lock, &cpuflg);
+
+    *retrealpnr = retpnr;
+    return retmsa;
 }
 
 // a. 分配内存入口函数
 msadsc_t *mm_divpages_fmwk(mmgro_t *mmobjp, uint_t pages, uint_t *retrelpnr, uint_t mrtype, uint_t flgs)
 {
-	memarea_t *marea = onmrtype_retn_marea(mmobjp, mrtype);
-	if (nullptr == marea) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
+    /* 获取mrtype类型的内存区 */
+    memarea_t *marea = onmrtype_retn_marea(mmobjp, mrtype);
+    if (nullptr == marea) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
 
-	uint_t retpnr = 0;
-	msadsc_t *retmsa = mm_divpages_core(marea, pages, &retpnr, flgs);
-	if (nullptr == retmsa) {
-		*retrelpnr = 0;
-		return nullptr;
-	}
+    uint_t retpnr = 0;
+    msadsc_t *retmsa = mm_divpages_core(marea, pages, &retpnr, flgs);
+    if (nullptr == retmsa) {
+        *retrelpnr = 0;
+        return nullptr;
+    }
 
-	*retrelpnr = retpnr;
-	return retmsa;
+    *retrelpnr = retpnr;
+    return retmsa;
 }
 
 /**
@@ -842,7 +847,7 @@ msadsc_t *mm_divpages_fmwk(mmgro_t *mmobjp, uint_t pages, uint_t *retrelpnr, uin
  * 
  * @param mmobjp 内存管理全局资源对象
  * @param pages 请求分配的内存页面数
- * @param retrealpnr 存放实际分配内存页面数的指针
+ * @param[out] retrealpnr 存放实际分配内存页面数的指针
  * @param mrtype 请求的分配内存页面的内存区类型
  * @param flgs 请求分配的内存页面的标志位
  * 			flgs == 1: 表示获取该内存区中，尺寸最大的一个内存块
@@ -851,93 +856,96 @@ msadsc_t *mm_divpages_fmwk(mmgro_t *mmobjp, uint_t pages, uint_t *retrelpnr, uin
  */
 msadsc_t *mm_division_pages(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr, uint_t mrtype, uint_t flgs)
 {
-	if (nullptr == mmobjp || nullptr == retrealpnr || 0 == mrtype) {
-		return nullptr;
-	}
+    if (nullptr == mmobjp || nullptr == retrealpnr || 0 == mrtype) {
+        return nullptr;
+    }
 
-	uint_t retpnr = 0;
-	msadsc_t *retmsa = mm_divpages_fmwk(mmobjp, pages, &retpnr, mrtype, flgs);
-	if (nullptr == retmsa) {
-		*retrealpnr = 0;
-		return nullptr;
-	}
-	
+    uint_t retpnr = 0;
+    msadsc_t *retmsa = mm_divpages_fmwk(mmobjp, pages, &retpnr, mrtype, flgs);
+    if (nullptr == retmsa) {
+        *retrealpnr = 0;
+        return nullptr;
+    }
+
     *retrealpnr = retpnr;
-	return retmsa;
+    return retmsa;
 }
 
 memarea_t *retn_procmarea(mmgro_t *mmobjp)
 {
-	if (nullptr == mmobjp) {
-		return nullptr;
-	}
-	for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
-	{
-		if (MA_TYPE_PROC == mmobjp->mo_mareastat[mi].ma_type)
-		{
-			return &mmobjp->mo_mareastat[mi];
-		}
-	}
-	return nullptr;
+    if (nullptr == mmobjp) {
+        return nullptr;
+    }
+    for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
+    {
+        if (MA_TYPE_PROC == mmobjp->mo_mareastat[mi].ma_type)
+        {
+            return &mmobjp->mo_mareastat[mi];
+        }
+    }
+    return nullptr;
 }
 
 msadsc_t *divpages_procmarea_core(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr)
 {
-	cpuflg_t cpuflg;
-	uint_t retpnr = 0;						  
-	msadsc_t *retmsa = nullptr, *retmsap = nullptr; 
-	if (nullptr == mmobjp || 1 != pages || nullptr == retrealpnr) {
-		return nullptr;
-	}
-	memarea_t *marp = retn_procmarea(mmobjp);
-	if (nullptr == marp) {
-		*retrealpnr = 0;
-		return nullptr;
-	}
-	//knl_spinlock_cli(&marp->ma_lock, &cpuflg);
-	if (scan_mapgsalloc_ok(marp, pages) == FALSE) {
-		retmsap = nullptr;
-		retpnr = 0;
-		goto ret_step;
-	}
-	retmsa = mm_prcdivpages_onmarea(marp, pages, &retpnr);
+    cpuflg_t cpuflg;
+    uint_t retpnr = 0;						  
+    msadsc_t *retmsa = nullptr, *retmsap = nullptr; 
+    if (nullptr == mmobjp || 1 != pages || nullptr == retrealpnr) {
+        return nullptr;
+    }
 
-	if (nullptr != retmsa && 0 != retpnr) {
-		mm_update_memarea(marp, retpnr, 0);
-		mm_update_memmgrob(retpnr, 0);
-		retmsap = retmsa;
-		goto ret_step;
-	}
-	retpnr = 0;
-	retmsap = nullptr;
+    /* 获取内存区 */
+    memarea_t *marp = retn_procmarea(mmobjp);
+    if (nullptr == marp) {
+        *retrealpnr = 0;
+        return nullptr;
+    }
+
+    spinlock_storeflg_cli(&marp->ma_lock, &cpuflg);
+    if (scan_mapgsalloc_ok(marp, pages) == FALSE) { /* 检测该内存区中是否有pages个物理页，可以提供分配*/
+        retmsap = nullptr;
+        retpnr = 0;
+        goto ret_step;
+    }
+    retmsa = mm_prcdivpages_onmarea(marp, pages, &retpnr);
+
+    if (nullptr != retmsa && 0 != retpnr) {
+        mm_update_memarea(marp, retpnr, 0);
+        mm_update_memmgrob(retpnr, 0);
+        retmsap = retmsa;
+        goto ret_step;
+    }
+    retpnr = 0;
+    retmsap = nullptr;
 ret_step:
-	//knl_spinunlock_sti(&marp->ma_lock, &cpuflg);
-	*retrealpnr = retpnr;
-	return retmsap;
+    spinunlock_restoreflg(&marp->ma_lock, &cpuflg);
+    *retrealpnr = retpnr;
+    return retmsap;
 }
 
+/* 给用户分配内存 */
 msadsc_t *mm_divpages_procmarea(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr)
 {
-	msadsc_t *retmsa = nullptr;
-	uint_t retpnr = 0;
-	if (nullptr == mmobjp || 1 != pages || nullptr == retrealpnr)
-	{
-		return nullptr;
-	}
-	retmsa = divpages_procmarea_core(mmobjp, pages, &retpnr);
-	if (nullptr != retmsa)
-	{
-		*retrealpnr = retpnr;
-		return retmsa;
-	}
-	retmsa = mm_division_pages(mmobjp, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
-	if (nullptr == retmsa)
-	{
-		*retrealpnr = 0;
-		return nullptr;
-	}
-	*retrealpnr = retpnr;
-	return retmsa;
+    msadsc_t *retmsa = nullptr;
+    uint_t retpnr = 0;
+    if (nullptr == mmobjp || 1 != pages || nullptr == retrealpnr) {
+        return nullptr;
+    }
+
+    retmsa = divpages_procmarea_core(mmobjp, pages, &retpnr);
+    if (nullptr != retmsa) {
+        *retrealpnr = retpnr;
+        return retmsa;
+    }
+
+    retmsa = mm_division_pages(mmobjp, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+    if (nullptr == retmsa) {
+        *retrealpnr = 0;
+        return nullptr;
+    }
+    *retrealpnr = retpnr;
+    return retmsa;
 }
 
 static msadsc_t* phy_to_msadsc(adr_t phyaddr) 
@@ -946,12 +954,12 @@ static msadsc_t* phy_to_msadsc(adr_t phyaddr)
 }
 
 // 只给用户分配内存
-void* umalloc_4k_page(uint_t pages) 
+void* umalloc_4k_page() 
 {
 	u64_t retpnr = 0;
 	msadsc_t *msa = nullptr, *etd = nullptr;
 
-	msa = mm_divpages_procmarea(&glomm, pages, &retpnr);
+	msa = mm_divpages_procmarea(&glomm, 1, &retpnr);
 
 	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
@@ -1432,9 +1440,9 @@ bool_t mm_merpages_core(memarea_t *marea, msadsc_t *freemsa, uint_t freepgs)
 	cpuflg_t cpuflg;
 
 	// D_1 针对内存区进行操作
-	// knl_spinlock_cli(&marea->ma_lock, &cpuflg);
+	spinlock_storeflg_cli(&marea->ma_lock, &cpuflg);
 	rets = mm_merpages_onmarea(marea, freemsa, freepgs);
-	// knl_spinunlock_sti(&marea->ma_lock, &cpuflg);
+	spinunlock_restoreflg(&marea->ma_lock, &cpuflg);
 	return rets;
 }
 

@@ -1,6 +1,5 @@
 #include "mmkit.h"
 #include "kernelkit.h"
-extern mmgro_t glomm;
 void kvmemcboxmgr_t_init(kvmemcboxmgr_t* init);
 void knl_count_kvmemcbox(kvmemcbox_t* kmbox);
 bool_t knl_put_kvmemcbox(kvmemcbox_t* kmbox);

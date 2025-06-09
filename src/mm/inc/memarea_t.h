@@ -38,8 +38,8 @@ typedef struct s_MAFUNCOBJS
 }mafuncobjs_t;
 
 #define BAFH_STUS_INIT 0
-#define BAFH_STUS_ONEM 1
-#define BAFH_STUS_DIVP 2
+#define BAFH_STUS_ONEM 1    /* 只挂载单个物理页的桶 */
+#define BAFH_STUS_DIVP 2    /* 分割合并核心的桶 */
 #define BAFH_STUS_DIVM 3
 typedef struct s_BAFHLST
 {
@@ -49,7 +49,7 @@ typedef struct s_BAFHLST
 	uint_t af_oderpnr;		// 页面数, 该bafh list每一个节点挂载的页面数, 如果oder为2，那这个数就是 1<<2=4  order-page-number
 	uint_t af_fobjnr;		// 空闲桶元素数量 free msadsc_objects number, 一个桶元素等于oderpnr个页面数的组合
     uint_t af_aobjnr;       // 已经分配的桶元素数量 
-	uint_t af_mobjnr; 		// 此结构管理的桶数
+	uint_t af_mobjnr; 		// 此结构管理的桶元素数
 	uint_t af_alccnt; 		// 此结构的分配计数 allocation count
 	uint_t af_frecnt;		// 此结构的释放计数 free count
 	list_h_t af_frelst; 	// 挂载此结构的空闲msadsc_t结构 free-list
