@@ -1042,11 +1042,11 @@ void disp_bafhlst(bafhlst_t *bafhp)
 {
     const char* b1 = "MB";
     const char* b2 = "kB";
-    char* unit_b = bafhp->af_oder >= 8 ? b1 : b2;
+    const char* unit_b = bafhp->af_oder >= 8 ? b1 : b2;
     if (bafhp->af_mobjnr > 0)
     {
         INFOK("bafhlst_t.af_stus:%#x,af_indx:%#x,af_onebnr:%#x[%d%s],af_fobjnr:%#x",
-                bafhp->af_stus, bafhp->af_oder, bafhp->af_oderpnr, bafhp->af_oder >= 8 ? bafhp->af_oderpnr / 256 : bafhp->af_oderpnr * 4, unit_b,bafhp->af_fobjnr);
+                bafhp->af_stus, bafhp->af_oder, bafhp->af_oderpnr, bafhp->af_oder >= 8 ? bafhp->af_oderpnr / 256 : bafhp->af_oderpnr * 4, unit_b, bafhp->af_fobjnr);
     }
     return;
 }

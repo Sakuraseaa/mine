@@ -925,8 +925,6 @@ msadsc_t* find_msa_from_pagebox(kvmemcbox_t* kbox, adr_t phyadr)
 		return nullptr;
 	}
 
-	// knl_spinlock(&kmbox->kmb_lock);
-
 	list_for_each(pos, &kbox->kmb_msalist)
 	{
 		tmpmsa = list_entry(pos, msadsc_t, md_list);
@@ -949,7 +947,7 @@ bool_t vma_del_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phy
 		return FALSE;
 	}
 
-	// knl_spinlock(&kmbox->kmb_lock);
+	spin_lock(&kmbox->kmb_lock);
 
 	if (nullptr != msa)
 	{
@@ -980,7 +978,7 @@ bool_t vma_del_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox, msadsc_t *msa, adr_t phy
 	rets = FALSE;
 
 out:
-	// knl_spinunlock(&kmbox->kmb_lock);
+	spin_unlock(&kmbox->kmb_lock);
 
 	if (nullptr != delmsa)
 	{
@@ -1008,12 +1006,10 @@ msadsc_t *vma_new_usermsa(mmdsc_t *mm, kvmemcbox_t *kmbox)
 		return nullptr;
 	}
 
-	// knl_spinlock(&kmbox->kmb_lock);
-
+	spin_lock(&kmbox->kmb_lock);
 	list_add_to_behind(&kmbox->kmb_msalist, &msa->md_list);
 	kmbox->kmb_msanr++;
-
-	// knl_spinunlock(&kmbox->kmb_lock);
+	spin_unlock(&kmbox->kmb_lock);
 	return msa;
 }
 

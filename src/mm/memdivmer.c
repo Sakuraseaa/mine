@@ -35,21 +35,21 @@ void mm_update_memmgrob(uint_t realpnr, uint_t flgs)
  */
 void mm_update_memarea(memarea_t *malokp, uint_t pgnr, uint_t flgs)
 {
-	if (nullptr == malokp)
-	{
-		return;
-	}
-	if (0 == flgs) // 分割
-	{
-		malokp->ma_freepages -= pgnr;
-		malokp->ma_allocpages += pgnr;
-	}
-	if (1 == flgs) // 合并
-	{
-		malokp->ma_freepages += pgnr;
-		malokp->ma_allocpages -= pgnr;
-	}
-	return;
+    if (nullptr == malokp)
+    {
+        return;
+    }
+    if (0 == flgs) // 分割
+    {
+        malokp->ma_freepages -= pgnr;
+        malokp->ma_allocpages += pgnr;
+    }
+    if (1 == flgs) // 合并
+    {
+        malokp->ma_freepages += pgnr;
+        malokp->ma_allocpages -= pgnr;
+    }
+    return;
 }
 
 KLINE sint_t retn_divoder(uint_t pages)
@@ -69,28 +69,26 @@ KLINE sint_t retn_divoder(uint_t pages)
 // C_1 获取释放msadsc_t结构所在的内存区
 memarea_t *onfrmsa_retn_marea(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
-	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink)
-	{
-		return nullptr;
-	}
-	msadsc_t *fmend = (msadsc_t *)freemsa->md_odlink;
-	if (((uint_t)(fmend - freemsa) + 1) != freepgs)
-	{
-		return nullptr;
-	}
-	if (freemsa->md_cntflgs.mf_marty != fmend->md_cntflgs.mf_marty)
-	{
-		return nullptr;
-	}
+    if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink) {
+        return nullptr;
+    }
 
-	for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
-	{
-		if ((uint_t)(freemsa->md_cntflgs.mf_marty) == mmobjp->mo_mareastat[mi].ma_type)
-		{
-			return &mmobjp->mo_mareastat[mi];
-		}
-	}
-	return nullptr;
+    msadsc_t *fmend = (msadsc_t *)freemsa->md_odlink;
+    if (((uint_t)(fmend - freemsa) + 1) != freepgs) {
+        return nullptr;
+    }
+    if (freemsa->md_cntflgs.mf_marty != fmend->md_cntflgs.mf_marty) {
+        return nullptr;
+    }
+
+    for (uint_t mi = 0; mi < mmobjp->mo_mareanr; mi++)
+    {
+        if ((uint_t)(freemsa->md_cntflgs.mf_marty) == mmobjp->mo_mareastat[mi].ma_type)
+        {
+            return &mmobjp->mo_mareastat[mi];
+        }
+    }
+    return nullptr;
 }
 
 /**
@@ -262,7 +260,7 @@ bool_t mm_merpages_onmarea(memarea_t *malckp, msadsc_t *freemsa, uint_t freepgs)
 #endif
 
 /**
- * @brief E-2 设置 freemsa 内存块被释放的信息
+ * @brief E-2 标记 freemsa 内存块被释放
  * 
  * @param bafh 
  * @param freemsa 
@@ -272,52 +270,52 @@ bool_t mm_merpages_onmarea(memarea_t *malckp, msadsc_t *freemsa, uint_t freepgs)
  */
 sint_t mm_merpages_opmsadsc(bafhlst_t *bafh, msadsc_t *freemsa, uint_t freepgs)
 {
-	if (nullptr == bafh || nullptr == freemsa || 1 > freepgs) {
-		return 0;
-	}
-	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink) {
-		system_error("mm_merpages_opmsadsc err1\n");
-	}
-	msadsc_t *fmend = (msadsc_t *)freemsa->md_odlink;
-	if (fmend < freemsa) {
-		system_error("mm_merpages_opmsadsc err2\n");
-	}
-	if (bafh->af_oderpnr != freepgs || ((uint_t)(fmend - freemsa) + 1) != freepgs) {
-		system_error("mm_merpages_opmsadsc err3\n");
-	}
-	if (PAF_NO_ALLOC == freemsa->md_phyadrs.paf_alloc || 1 > freemsa->md_cntflgs.mf_refcnt) {
-		system_error("mm_merpages_opmsadsc err4\n");
-	}
-	if (PAF_NO_ALLOC == fmend->md_phyadrs.paf_alloc || 1 > fmend->md_cntflgs.mf_refcnt) {
-		system_error("mm_merpages_opmsadsc err5\n");
-	}
-	if (freemsa->md_cntflgs.mf_refcnt != fmend->md_cntflgs.mf_refcnt) {
-		system_error("mm_merpages_opmsadsc err6\n");
-	}
-	if (freemsa == fmend) {
-		freemsa->md_cntflgs.mf_refcnt--;
-		if (0 < freemsa->md_cntflgs.mf_refcnt) { // 共享返回1
-			return 1;
-		}
-		freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-		freemsa->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
-		freemsa->md_odlink = bafh;
-		return 2;
-	}
+    if (nullptr == bafh || nullptr == freemsa || 1 > freepgs) {
+        return 0;
+    }
 
-	freemsa->md_cntflgs.mf_refcnt--;
-	fmend->md_cntflgs.mf_refcnt--;
-	if (0 < freemsa->md_cntflgs.mf_refcnt) {
-		return 1;
-	}
-	freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-	fmend->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
-	
-	freemsa->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
-	freemsa->md_odlink = fmend;
-	fmend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
-	fmend->md_odlink = bafh;
-	return 2;
+    if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty || nullptr == freemsa->md_odlink) {
+        system_error("mm_merpages_opmsadsc err1\n");
+    }
+    msadsc_t *fmend = (msadsc_t *)freemsa->md_odlink;
+    if (fmend < freemsa) {
+        system_error("mm_merpages_opmsadsc err2\n");
+    }
+    if (bafh->af_oderpnr != freepgs || ((uint_t)(fmend - freemsa) + 1) != freepgs) {
+        system_error("mm_merpages_opmsadsc err3\n");
+    }
+    if (PAF_NO_ALLOC == freemsa->md_phyadrs.paf_alloc || 1 > freemsa->md_cntflgs.mf_refcnt) {
+        system_error("mm_merpages_opmsadsc err4\n");
+    }
+    if (PAF_NO_ALLOC == fmend->md_phyadrs.paf_alloc || 1 > fmend->md_cntflgs.mf_refcnt) {
+        system_error("mm_merpages_opmsadsc err5\n");
+    }
+    if (freemsa->md_cntflgs.mf_refcnt != fmend->md_cntflgs.mf_refcnt) {
+        system_error("mm_merpages_opmsadsc err6\n");
+    }
+    if (freemsa == fmend) {
+        freemsa->md_cntflgs.mf_refcnt--;
+        if (0 < freemsa->md_cntflgs.mf_refcnt) { // 共享返回1
+            return 1;
+        }
+        freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
+        freemsa->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
+        freemsa->md_odlink = bafh;
+        return 2;
+    }
+
+    freemsa->md_cntflgs.mf_refcnt--;
+    fmend->md_cntflgs.mf_refcnt--;
+    if (0 < freemsa->md_cntflgs.mf_refcnt) {
+        return 1;
+    }
+    freemsa->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
+    fmend->md_phyadrs.paf_alloc = PAF_NO_ALLOC;
+    freemsa->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
+    freemsa->md_odlink = fmend;
+    fmend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
+    fmend->md_odlink = bafh;
+    return 2;
 }
 
 /**
@@ -370,32 +368,30 @@ bool_t onmpgs_retn_bafhlst(memarea_t *malckp, uint_t pages, bafhlst_t **retlogba
 //	*retmerbf 最大的内存的页，位于的bafhlst_t结构指针
 bool_t onfpgs_retn_bafhlst(memarea_t *malckp, uint_t freepgs, bafhlst_t **retrelbf, bafhlst_t **retmerbf)
 {
-	if (nullptr == malckp || 1 > freepgs || nullptr == retrelbf || nullptr == retmerbf) {
-		return FALSE;
-	}
-	bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
-	sint_t dividx = retn_divoder(freepgs);
-	if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
-		*retrelbf = nullptr;
-		*retmerbf = nullptr;
-		return FALSE;
-	}
-	if ((~0UL) <= bafhstat[dividx].af_mobjnr) {
-		system_error("onfpgs_retn_bafhlst af_mobjnr max");
-	}
-	if ((~0UL) <= bafhstat[dividx].af_fobjnr) {
-		system_error("onfpgs_retn_bafhlst af_fobjnr max");
-	}
+    if (nullptr == malckp || 1 > freepgs || nullptr == retrelbf || nullptr == retmerbf) {
+        return FALSE;
+    }
 
-	if (freepgs != bafhstat[dividx].af_oderpnr) {
-		*retrelbf = nullptr;
-		*retmerbf = nullptr;
-		return FALSE;
-	}
-	
-	*retrelbf = &bafhstat[dividx];
-	*retmerbf = &bafhstat[MDIVMER_ARR_LMAX - 1];
-	return TRUE;
+    bafhlst_t *bafhstat = malckp->ma_mdmdata.dm_pools;
+    sint_t dividx = retn_divoder(freepgs);
+    if (0 > dividx || MDIVMER_ARR_LMAX <= dividx) {
+        *retrelbf = nullptr;
+        *retmerbf = nullptr;
+        return FALSE;
+    }
+    if ((~0UL) <= bafhstat[dividx].af_mobjnr) {
+        system_error("onfpgs_retn_bafhlst af_mobjnr max");
+    }
+
+    if (freepgs != bafhstat[dividx].af_oderpnr) {
+        *retrelbf = nullptr;
+        *retmerbf = nullptr;
+        return FALSE;
+    }
+
+    *retrelbf = &bafhstat[dividx];
+    *retmerbf = &bafhstat[MDIVMER_ARR_LMAX - 1];
+    return TRUE;
 }
 
 msadsc_t *mm_divipages_onbafhlst(bafhlst_t *bafhp)
@@ -744,9 +740,11 @@ msadsc_t *mm_prcdivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrel
         return nullptr;
     }
 
+    /* 获取块分配释放头链表，onepool上的每一个桶元素大小等于一个物理页大小*/
     bafhlst_t *prcbfh = &malckp->ma_mdmdata.dm_onepool;
     bool_t rets = FALSE;
     msadsc_t *retmsa = nullptr, *retmstat = nullptr, *retmend = nullptr;
+    /* 获取一个桶元素 */
     rets = mm_retnmsaob_onbafhlst(prcbfh, &retmstat, &retmend);
     if (FALSE == rets || nullptr == retmstat || nullptr == retmend)
     {
@@ -759,6 +757,7 @@ msadsc_t *mm_prcdivpages_onmarea(memarea_t *malckp, uint_t pages, uint_t *retrel
         return nullptr;
     }
 
+    /* 标记桶元素被占用 */
     retmsa = mm_divpages_opmsadsc(retmstat, prcbfh->af_oderpnr);
     if (nullptr == retmsa)
     {
@@ -903,13 +902,15 @@ msadsc_t *divpages_procmarea_core(mmgro_t *mmobjp, uint_t pages, uint_t *retreal
     }
 
     spinlock_storeflg_cli(&marp->ma_lock, &cpuflg);
-    if (scan_mapgsalloc_ok(marp, pages) == FALSE) { /* 检测该内存区中是否有pages个物理页，可以提供分配*/
+    /* 检测该内存区中是否有pages个物理页，可以提供分配*/
+    if (scan_mapgsalloc_ok(marp, pages) == FALSE) { 
         retmsap = nullptr;
         retpnr = 0;
         goto ret_step;
     }
-    retmsa = mm_prcdivpages_onmarea(marp, pages, &retpnr);
 
+    /* 分配的核心逻辑 */
+    retmsa = mm_prcdivpages_onmarea(marp, pages, &retpnr);
     if (nullptr != retmsa && 0 != retpnr) {
         mm_update_memarea(marp, retpnr, 0);
         mm_update_memmgrob(retpnr, 0);
@@ -924,7 +925,14 @@ ret_step:
     return retmsap;
 }
 
-/* 给用户分配内存 */
+/**
+ * @brief 给用户分配内存
+ * 
+ * @param mmobjp  全局内存管理对象
+ * @param pages  申请的页数(目前必须为1)
+ * @param retrealpnr 实际得到的页数
+ * @return msadsc_t* 返回物理页的首地址
+ */
 msadsc_t *mm_divpages_procmarea(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpnr)
 {
     msadsc_t *retmsa = nullptr;
@@ -933,12 +941,14 @@ msadsc_t *mm_divpages_procmarea(mmgro_t *mmobjp, uint_t pages, uint_t *retrealpn
         return nullptr;
     }
 
+    /* 先去找用户区分配 */
     retmsa = divpages_procmarea_core(mmobjp, pages, &retpnr);
     if (nullptr != retmsa) {
         *retrealpnr = retpnr;
         return retmsa;
     }
 
+    /* 用户区分配不成功，在内核去分配 */
     retmsa = mm_division_pages(mmobjp, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
     if (nullptr == retmsa) {
         *retrealpnr = 0;
@@ -953,265 +963,272 @@ static msadsc_t* phy_to_msadsc(adr_t phyaddr)
 	return &glomm.mo_msadscstat[(phyaddr - 0x100000) >> PAGE_4K_SHIFT];
 }
 
-// 只给用户分配内存
-void* umalloc_4k_page() 
+/**
+ * @brief 为用户分配内存
+ * 
+ * @param pages 为1的时候在用户区分配，大于1的时候在内核区分配
+ * @return void* 
+ */
+void* umalloc_4k_page(uint_t pages) 
 {
-	u64_t retpnr = 0;
-	msadsc_t *msa = nullptr, *etd = nullptr;
+    u64_t retpnr = 0;
+    msadsc_t *msa = nullptr, *etd = nullptr;
 
-	msa = mm_divpages_procmarea(&glomm, 1, &retpnr);
+    msa = mm_divpages_procmarea(&glomm, pages, &retpnr);
 
-	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
+    return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
 
 // 内核分配
 void* kmalloc_4k_page(uint_t pages) 
 {
-	u64_t retpnr = 0;
-	msadsc_t *msa = nullptr, *etd = nullptr;
+    u64_t retpnr = 0;
+    msadsc_t *msa = nullptr, *etd = nullptr;
 
-	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
+    msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_KRNL, DMF_RELDIV);
 
-	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
+    return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
 
 // 硬件区分配
 void* hmalloc_4k_page(uint_t pages) 
 {
-	u64_t retpnr = 0;
-	msadsc_t *msa = nullptr;
-	
-	msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_HWAD, DMF_RELDIV);
+    u64_t retpnr = 0;
+    msadsc_t *msa = nullptr;
 
-	return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
+    msa = mm_division_pages(&glomm, pages, &retpnr, MA_TYPE_HWAD, DMF_RELDIV);
+
+    return Phy_To_Virt(msa->md_phyadrs.paf_padrs << PAGE_4K_SHIFT);
 }
 
 void kfree_4k_page(void * addr)
 {
-	msadsc_t* msa = phy_to_msadsc(Virt_To_Phy(addr));
+    msadsc_t* msa = phy_to_msadsc(Virt_To_Phy(addr));
 
-	mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa));
-	
-	return;
+    mm_merge_pages(&glomm, msa, onfrmsa_retn_fpagenr(msa));
+
+    return;
 }
 
 // 执行一些释放的安全性检测
 bool_t scan_freemsa_isok(msadsc_t *freemsa, uint_t freepgs)
 {
-	if (nullptr == freemsa || 1 > freepgs) {
-		return FALSE;
-	}
-	if (MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty ||
-		nullptr == freemsa->md_odlink || 1 > freemsa->md_cntflgs.mf_refcnt) {
-		return FALSE;
-	}
-	msadsc_t *end = (msadsc_t *)freemsa->md_odlink;
+    if (nullptr == freemsa || 1 > freepgs) {
+        return FALSE;
+    }
 
-	if (PAF_ALLOC != freemsa->md_phyadrs.paf_alloc ||
-		PAF_ALLOC != end->md_phyadrs.paf_alloc ||
-		1 > end->md_cntflgs.mf_refcnt) {
-		return FALSE;
-	}
+    if ( MF_OLKTY_ODER != freemsa->md_cntflgs.mf_olkty 
+        || nullptr == freemsa->md_odlink 
+        || 1 > freemsa->md_cntflgs.mf_refcnt) {
+        return FALSE;
+    }
 
-	if (((uint_t)((end - freemsa) + 1)) != freepgs) {
-		return FALSE;
-	}
-	return TRUE;
+    msadsc_t *end = (msadsc_t *)freemsa->md_odlink;
+    if (PAF_ALLOC != freemsa->md_phyadrs.paf_alloc ||
+        PAF_ALLOC != end->md_phyadrs.paf_alloc ||
+        1 > end->md_cntflgs.mf_refcnt) {
+        return FALSE;
+    }
+
+    if (((uint_t)((end - freemsa) + 1)) != freepgs) {
+        return FALSE;
+    }
+    return TRUE;
 }
 
 sint_t mm_cmsa1blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me)
 {
-	if (nullptr == bafh || nullptr == _1ms || nullptr == _1me) {
-		return 0;
-	}
-	if (_1me < _1ms) {
-		return 0;
-	}
-	if (_1ms == _1me)
-	{
-		if (MF_OLKTY_BAFH != _1me->md_cntflgs.mf_olkty)
-		{
-			return 0;
-		}
-		if (bafh != (bafhlst_t *)_1me->md_odlink)
-		{
-			return 0;
-		}
-		if (PAF_NO_ALLOC != _1me->md_phyadrs.paf_alloc)
-		{
-			return 0;
-		}
-		if (0 != _1me->md_cntflgs.mf_refcnt)
-		{
-			return 0;
-		}
-		if ((_1me->md_phyadrs.paf_padrs - _1ms->md_phyadrs.paf_padrs) != (uint_t)(_1me - _1ms))
-		{
-			return 0;
-		}
-		return 2;
-	}
+    if (nullptr == bafh || nullptr == _1ms || nullptr == _1me) {
+        return 0;
+    }
+    if (_1me < _1ms) {
+        return 0;
+    }
 
-	if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty)
-	{
-		return 0;
-	}
-	if (_1me != (msadsc_t *)_1ms->md_odlink)
-	{
-		return 0;
-	}
-	if (PAF_NO_ALLOC != _1ms->md_phyadrs.paf_alloc)
-	{
-		return 0;
-	}
-	if (0 != _1ms->md_cntflgs.mf_refcnt)
-	{
-		return 0;
-	}
+    if (_1ms == _1me)
+    {
+        if (MF_OLKTY_BAFH != _1me->md_cntflgs.mf_olkty)
+        {
+            return 0;
+        }
+        if (bafh != (bafhlst_t *)_1me->md_odlink)
+        {
+            return 0;
+        }
+        if (PAF_NO_ALLOC != _1me->md_phyadrs.paf_alloc)
+        {
+            return 0;
+        }
+        if (0 != _1me->md_cntflgs.mf_refcnt)
+        {
+            return 0;
+        }
+        if ((_1me->md_phyadrs.paf_padrs - _1ms->md_phyadrs.paf_padrs) != (uint_t)(_1me - _1ms))
+        {
+            return 0;
+        }
+        return 2;
+    }
 
-	if (MF_OLKTY_BAFH != _1me->md_cntflgs.mf_olkty)
-	{
-		return 0;
-	}
-	if (bafh != (bafhlst_t *)_1me->md_odlink)
-	{
-		return 0;
-	}
-	if (PAF_NO_ALLOC != _1me->md_phyadrs.paf_alloc)
-	{
-		return 0;
-	}
-	if (0 != _1me->md_cntflgs.mf_refcnt)
-	{
-		return 0;
-	}
-	if ((_1me->md_phyadrs.paf_padrs - _1ms->md_phyadrs.paf_padrs) != (uint_t)(_1me - _1ms))
-	{
-		return 0;
-	}
-	
-	return 2;
+    if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty)
+    {
+        return 0;
+    }
+    if (_1me != (msadsc_t *)_1ms->md_odlink)
+    {
+        return 0;
+    }
+    if (PAF_NO_ALLOC != _1ms->md_phyadrs.paf_alloc)
+    {
+        return 0;
+    }
+    if (0 != _1ms->md_cntflgs.mf_refcnt)
+    {
+        return 0;
+    }
+
+    if (MF_OLKTY_BAFH != _1me->md_cntflgs.mf_olkty)
+    {
+        return 0;
+    }
+    if (bafh != (bafhlst_t *)_1me->md_odlink)
+    {
+        return 0;
+    }
+    if (PAF_NO_ALLOC != _1me->md_phyadrs.paf_alloc)
+    {
+        return 0;
+    }
+    if (0 != _1me->md_cntflgs.mf_refcnt)
+    {
+        return 0;
+    }
+
+    if ((_1me->md_phyadrs.paf_padrs - _1ms->md_phyadrs.paf_padrs) != (uint_t)(_1me - _1ms))
+    {
+        return 0;
+    }
+    return 2;
 }
 
 sint_t mm_cmsa2blk_isok(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_t *_2ms, msadsc_t *_2me)
 {
-	if (nullptr == bafh || nullptr == _1ms || nullptr == _1me ||
-		nullptr == _2ms || nullptr == _2me || _1ms == _2ms || _1me == _2me) {
-		return 0;
-	}
-	sint_t ret1s = 0, ret2s = 0;
-	
-	// a. 检查两个内存块是否合法
-	ret1s = mm_cmsa1blk_isok(bafh, _1ms, _1me);
-	if (0 == ret1s) {
-		system_error("mm_cmsa1blk_isok ret1s == 0\n");
-	}
-	
-	ret2s = mm_cmsa1blk_isok(bafh, _2ms, _2me);
-	if (0 == ret2s) {
-		system_error("mm_cmsa1blk_isok ret2s == 0\n");
-	}
+    if (nullptr == bafh || nullptr == _1ms || nullptr == _1me ||
+        nullptr == _2ms || nullptr == _2me || _1ms == _2ms || _1me == _2me) {
+        return 0;
+    }
 
-	if (2 == ret1s && 2 == ret2s)
-	{
-		// b. 判断两个内存块是否连续的
-		if (_1ms < _2ms && _1me < _2me)
-		{
-			if ((_1me + 1) != _2ms)
-			{
-				return 1;
-			}
-			if ((_1me->md_phyadrs.paf_padrs + 1) != _2ms->md_phyadrs.paf_padrs)
-			{
-				return 1;
-			}
-			return 2;
-		}
-		if (_1ms > _2ms && _1me > _2me)
-		{
-			if ((_2me + 1) != _1ms)
-			{
-				return 1;
-			}
-			if ((_2me->md_phyadrs.paf_padrs + 1) != _1ms->md_phyadrs.paf_padrs)
-			{
-				return 1;
-			}
-			return 4;
-		}
-		return 0;
-	}
-	return 0;
+    sint_t ret1s = 0, ret2s = 0;
+    // a. 检查两个内存块是否合法
+    ret1s = mm_cmsa1blk_isok(bafh, _1ms, _1me);
+    if (0 == ret1s) {
+        system_error("mm_cmsa1blk_isok ret1s == 0\n");
+    }
+    ret2s = mm_cmsa1blk_isok(bafh, _2ms, _2me);
+    if (0 == ret2s) {
+        system_error("mm_cmsa1blk_isok ret2s == 0\n");
+    }
+
+    // b. 判断两个内存块是否连续的
+    if (2 == ret1s && 2 == ret2s)
+    {
+        if (_1ms < _2ms && _1me < _2me)
+        {
+            if ((_1me + 1) != _2ms)
+            {   /* 不连续 */
+                return 1;
+            }
+            if ((_1me->md_phyadrs.paf_padrs + 1) != _2ms->md_phyadrs.paf_padrs)
+            {  /* 不连续 */
+                return 1;
+            }
+            return 2;
+        }
+        if (_1ms > _2ms && _1me > _2me)
+        {
+            if ((_2me + 1) != _1ms)
+            {
+                return 1;
+            }
+            if ((_2me->md_phyadrs.paf_padrs + 1) != _1ms->md_phyadrs.paf_padrs)
+            {
+                return 1;
+            }
+            return 4;
+        }
+        return 0;
+    }
+    return 0;
 }
 
 bool_t chek_cl2molkflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_t *_2ms, msadsc_t *_2me)
 {
-	if (nullptr == bafh || nullptr == _1ms || nullptr == _1me || nullptr == _2ms || nullptr == _2me)
-	{
-		return FALSE;
-	}
-	if (_1ms == _2ms || _1me == _2me)
-	{
-		return FALSE;
-	}
-	if (((uint_t)(_2me - _1ms) + 1) != bafh->af_oderpnr)
-	{
-		return FALSE;
-	}
-	if (_1ms == _1me && _2ms == _2me)
-	{
-		if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
-		{
-			return FALSE;
-		}
-		if (MF_OLKTY_BAFH != _2me->md_cntflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
-		{
-			return FALSE;
-		}
-		return TRUE;
-	}
+    if (nullptr == bafh || nullptr == _1ms || nullptr == _1me || nullptr == _2ms || nullptr == _2me)
+    {
+        return FALSE;
+    }
+    if (_1ms == _2ms || _1me == _2me)
+    {
+        return FALSE;
+    }
 
-	if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
-	{
-		return FALSE;
-	}
-	if (MF_OLKTY_INIT != _1me->md_cntflgs.mf_olkty || nullptr != _1me->md_odlink)
-	{
-		return FALSE;
-	}
-	if (MF_OLKTY_INIT != _2ms->md_cntflgs.mf_olkty || nullptr != _2ms->md_odlink)
-	{
-		return FALSE;
-	}
-	if (MF_OLKTY_BAFH != _2me->md_cntflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
-	{
-		return FALSE;
-	}
-	return TRUE;
+    if (((uint_t)(_2me - _1ms) + 1) != bafh->af_oderpnr)
+    {
+        return FALSE;
+    }
+    if (_1ms == _1me && _2ms == _2me)
+    {
+        if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
+        {
+            return FALSE;
+        }
+        if (MF_OLKTY_BAFH != _2me->md_cntflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
+        {
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    if (MF_OLKTY_ODER != _1ms->md_cntflgs.mf_olkty || (msadsc_t *)_1ms->md_odlink != _2me)
+    {
+        return FALSE;
+    }
+    if (MF_OLKTY_INIT != _1me->md_cntflgs.mf_olkty || nullptr != _1me->md_odlink)
+    {
+        return FALSE;
+    }
+    if (MF_OLKTY_INIT != _2ms->md_cntflgs.mf_olkty || nullptr != _2ms->md_odlink)
+    {
+        return FALSE;
+    }
+    if (MF_OLKTY_BAFH != _2me->md_cntflgs.mf_olkty || (bafhlst_t *)_2me->md_odlink != bafh)
+    {
+        return FALSE;
+    }
+    return TRUE;
 }
 
-// 合并物理块操作，并且对合并的页面初始化
+// 合并物理块操作并且对合并的[块分配释放链表元素]初始化
 bool_t mm_clear_2msaolflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msadsc_t *_2ms, msadsc_t *_2me)
 {
-	if (nullptr == bafh || nullptr == _1ms || nullptr == _1me || nullptr == _2ms || nullptr == _2me) {
-		return FALSE;
-	}
-	if (_1ms == _2ms || _1me == _2me) {
-		return FALSE;
-	}
+    if (nullptr == bafh || nullptr == _1ms || nullptr == _1me || nullptr == _2ms || nullptr == _2me) {
+        return FALSE;
+    }
+    if (_1ms == _2ms || _1me == _2me) {
+        return FALSE;
+    }
 
-	_1me->md_cntflgs.mf_olkty = MF_OLKTY_INIT;
-	_1me->md_odlink = nullptr;
-	_2ms->md_cntflgs.mf_olkty = MF_OLKTY_INIT;
-	_2ms->md_odlink = nullptr;
-	_1ms->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
-	_1ms->md_odlink = _2me;
-	_2me->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
-	_2me->md_odlink = bafh;
-	return TRUE;
+    _1me->md_cntflgs.mf_olkty = MF_OLKTY_INIT;
+    _1me->md_odlink = nullptr;
+    _2ms->md_cntflgs.mf_olkty = MF_OLKTY_INIT;
+    _2ms->md_odlink = nullptr;
+    _1ms->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
+    _1ms->md_odlink = _2me;
+    _2me->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
+    _2me->md_odlink = bafh;
+    return TRUE;
 }
 
-// 
 /**
  * @brief F1 查看最大地址连续、且空闲msadsc_t结构，
  * 如释放的是第0个msadsc_t结构我们就去查找第1个msadsc_t结构是否空闲，
@@ -1224,68 +1241,66 @@ bool_t mm_clear_2msaolflg(bafhlst_t *bafh, msadsc_t *_1ms, msadsc_t *_1me, msads
  */
 sint_t mm_find_cmsa2blk(bafhlst_t *fbafh, msadsc_t **rfnms, msadsc_t **rfnme)
 {
-	if (nullptr == fbafh || nullptr == rfnms || nullptr == rfnme) {
-		return 0;
-	}
-	msadsc_t *freemstat = *rfnms;
-	msadsc_t *freemend = *rfnme;
-	if (1 > fbafh->af_fobjnr) {
-		return 1;
-	}
-	
-	list_n_t *tmplst = nullptr;
-	msadsc_t *tmpmsa = nullptr, *blkms = nullptr, *blkme = nullptr;
-	sint_t rets = 0;
-	list_for_each(tmplst, &fbafh->af_frelst) // 遍历块分配释放头链表的空闲块
-	{
-		tmpmsa = list_entry(tmplst, msadsc_t, md_list);
-		// 检测这两个内存块是否可以融合 ？
-		rets = mm_cmsa2blk_isok(fbafh, freemstat, freemend, tmpmsa, &tmpmsa[fbafh->af_oderpnr - 1]);
-		if (2 == rets || 4 == rets)
-		{
-			blkms = tmpmsa;
-			blkme = &tmpmsa[fbafh->af_oderpnr - 1];
-			list_del(&tmpmsa->md_list); // ?
-			fbafh->af_fobjnr--;
-			fbafh->af_mobjnr--;
-			goto step1;
-		}
-	}
-step1:
-	if (0 == rets || 1 == rets)
-	{
-		return 1;
-	}
-	if (2 == rets)
-	{
-		if (mm_clear_2msaolflg(fbafh + 1, freemstat, freemend, blkms, blkme) == TRUE)
-		{
-			if (chek_cl2molkflg(fbafh + 1, freemstat, freemend, blkms, blkme) == FALSE)
-			{
-				system_error("chek_cl2molkflg err1\n");
-			}
-			*rfnms = freemstat;
-			*rfnme = blkme;
-			return 2;
-		}
-		return 0;
-	}
-	if (4 == rets)
-	{
-		if (mm_clear_2msaolflg(fbafh + 1, blkms, blkme, freemstat, freemend) == TRUE)
-		{
-			if (chek_cl2molkflg(fbafh + 1, blkms, blkme, freemstat, freemend) == FALSE)
-			{
-				system_error("chek_cl2molkflg err2\n");
-			}
-			*rfnms = blkms;
-			*rfnme = freemend;
-			return 2;
-		}
+    if (nullptr == fbafh || nullptr == rfnms || nullptr == rfnme) {
+        return 0;
+    }
+    msadsc_t *freemstat = *rfnms;
+    msadsc_t *freemend = *rfnme;
+    if (1 > fbafh->af_fobjnr) {
+        return 1;
+    }
 
-		return 0;
-	}
-	return 0;
+    list_n_t *tmplst = nullptr;
+    msadsc_t *tmpmsa = nullptr, *blkms = nullptr, *blkme = nullptr;
+    sint_t rets = 0;
+    list_for_each(tmplst, &fbafh->af_frelst) // 遍历块分配释放头链表的空闲块
+    {
+        tmpmsa = list_entry(tmplst, msadsc_t, md_list);
+        // 检测这两个内存块是否可以融合
+        rets = mm_cmsa2blk_isok(fbafh, freemstat, freemend, tmpmsa, &tmpmsa[fbafh->af_oderpnr - 1]);
+        if (2 == rets || 4 == rets)
+        {
+            blkms = tmpmsa;
+            blkme = &tmpmsa[fbafh->af_oderpnr - 1];
+            list_del(&tmpmsa->md_list);
+            fbafh->af_fobjnr--;
+            fbafh->af_mobjnr--;
+            goto step1;
+        }
+    }
+step1:
+    if (0 == rets || 1 == rets) {
+        return 1;
+    }
+    if (2 == rets)
+    {
+        if (mm_clear_2msaolflg(fbafh + 1, freemstat, freemend, blkms, blkme) == TRUE)
+        {
+            if (chek_cl2molkflg(fbafh + 1, freemstat, freemend, blkms, blkme) == FALSE)
+            {
+                system_error("chek_cl2molkflg err1\n");
+            }
+            *rfnms = freemstat;
+            *rfnme = blkme;
+            return 2;
+        }
+        return 0;
+    }
+    if (4 == rets)
+    {
+        if (mm_clear_2msaolflg(fbafh + 1, blkms, blkme, freemstat, freemend) == TRUE)
+        {
+            if (chek_cl2molkflg(fbafh + 1, blkms, blkme, freemstat, freemend) == FALSE)
+            {
+                system_error("chek_cl2molkflg err2\n");
+            }
+            *rfnms = blkms;
+            *rfnme = freemend;
+            return 2;
+        }
+        return 0;
+    }
+    return 0;
 }
 
 /**
@@ -1298,169 +1313,169 @@ step1:
  */
 bool_t mpobf_add_msadsc(bafhlst_t *bafhp, msadsc_t *freemstat, msadsc_t *freemend)
 {
-	if (nullptr == bafhp || nullptr == freemstat || nullptr == freemend)
-	{
-		return FALSE;
-	}
-	if (freemend < freemstat)
-	{
-		return FALSE;
-	}
-	if (bafhp->af_oderpnr != ((uint_t)(freemend - freemstat) + 1))
-	{
-		return FALSE;
-	}
-	if ((~0UL) <= bafhp->af_fobjnr || (~0UL) <= bafhp->af_mobjnr)
-	{
-		system_error("(~0UL)<=bafhp->af_fobjnr\n");
-		return FALSE;
-	}
+    if (nullptr == bafhp || nullptr == freemstat || nullptr == freemend)
+    {
+        return FALSE;
+    }
+    if (freemend < freemstat)
+    {
+        return FALSE;
+    }
+    if (bafhp->af_oderpnr != ((uint_t)(freemend - freemstat) + 1))
+    {
+        return FALSE;
+    }
+    if ((~0UL) <= bafhp->af_fobjnr || (~0UL) <= bafhp->af_mobjnr)
+    {
+        system_error("(~0UL)<=bafhp->af_fobjnr\n");
+        return FALSE;
+    }
 
-	freemstat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
-	freemstat->md_odlink = freemend;
-	freemend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
-	freemend->md_odlink = bafhp;
-	
-	list_add_to_behind(&bafhp->af_frelst, &freemstat->md_list);
-	bafhp->af_fobjnr++;
-	bafhp->af_mobjnr++;
-	return TRUE;
+    freemstat->md_cntflgs.mf_olkty = MF_OLKTY_ODER;
+    freemstat->md_odlink = freemend;
+    freemend->md_cntflgs.mf_olkty = MF_OLKTY_BAFH;
+    freemend->md_odlink = bafhp;
+
+    list_add_to_behind(&bafhp->af_frelst, &freemstat->md_list);
+    bafhp->af_fobjnr++;
+    bafhp->af_mobjnr++;
+    return TRUE;
 }
 
 // E-3 把msadsc_t结构进行合并然后加入对应bafhlst_t结构
 bool_t mm_merpages_onbafhlst(msadsc_t *freemsa, uint_t freepgs, bafhlst_t *relbf, bafhlst_t *merbf)
 {
-	sint_t rets = 0;
-	msadsc_t *mnxs = freemsa, *mnxe = &freemsa[freepgs - 1];
-	bafhlst_t *tmpbf = relbf;
-	for (; tmpbf < merbf; tmpbf++)
-	{
-		// 查看最大地址连续、且空闲msadsc_t结构(bafhlst_t节点)，
-		// 若是找到会把待释放节点 和空闲节点 向上融合成一个大节点。
-		// 存储在mnxstart,mnxend中. 不断的向上融合，直到无法融合或者有故障发生。
-		rets = mm_find_cmsa2blk(tmpbf, &mnxs, &mnxe);
-		if (1 == rets) {
-			break;
-		}
-		if (0 == rets) {
-			system_error("mm_find_cmsa2blk retn 0\n");
-		}
-	}
+    sint_t rets = 0;
+    msadsc_t *mnxs = freemsa, *mnxe = &freemsa[freepgs - 1];
+    bafhlst_t *tmpbf = relbf;
+    /* 遍历桶列表 */
+    for (; tmpbf < merbf; tmpbf++)
+    {
+        // 查看最大地址连续、且空闲msadsc_t结构(bafhlst_t节点)，
+        // 若是找到会把待释放节点 和空闲节点 向上融合成一个大节点。
+        // 存储在mnxstart,mnxend中. 不断的向上融合，直到无法融合或者有故障发生。
+        rets = mm_find_cmsa2blk(tmpbf, &mnxs, &mnxe);
+        if (1 == rets) {
+            break;
+        }
+        if (0 == rets) {
+            system_error("mm_find_cmsa2blk retn 0\n");
+        }
+    }
 
-	// 把大节点放入 bafhlst_t 链表中
-	if (mpobf_add_msadsc(tmpbf, mnxs, mnxe) == FALSE)
-	{
-		return FALSE;
-	}
-	return TRUE;
+    // 把大节点放入 bafhlst_t 链表中
+    if (mpobf_add_msadsc(tmpbf, mnxs, mnxe) == FALSE)
+    {
+        return FALSE;
+    }
+    return TRUE;
 }
 
 // D_1 在内存区上合并页
 bool_t mm_merpages_onmarea(memarea_t *malckp, msadsc_t *freemsa, uint_t freepgs)
 {
-	if (nullptr == malckp || nullptr == freemsa || 1 > freepgs) {
-		return FALSE;
-	}
+    if (nullptr == malckp || nullptr == freemsa || 1 > freepgs) {
+        return FALSE;
+    }
 
-	bafhlst_t *prcbf = nullptr;
-	sint_t pocs = 0;
-	if (MA_TYPE_PROC == malckp->ma_type) {
+    bafhlst_t *prcbf = nullptr;
+    sint_t pocs = 0;
+    /* 释放用户区内存 */
+    if (MA_TYPE_PROC == malckp->ma_type) {
+        prcbf = &malckp->ma_mdmdata.dm_onepool;
+        pocs = mm_merpages_opmsadsc(prcbf, freemsa, freepgs);
+        if (2 == pocs)
+        {
+            if (mpobf_add_msadsc(prcbf, freemsa, &freemsa[freepgs - 1]) == FALSE)
+            {
+                system_error("mm_merpages_onmarea proc memarea merge fail\n");
+            }
+            mm_update_memarea(malckp, freepgs, 1);
+            mm_update_memmgrob(freepgs, 1);
+            return TRUE;
+        }
+        if (1 == pocs)
+        {
+            return TRUE;
+        }
+        if (0 == pocs)
+        {
+            return FALSE;
+        }
+        return FALSE;
+    }
 
-		prcbf = &malckp->ma_mdmdata.dm_onepool;
-		pocs = mm_merpages_opmsadsc(prcbf, freemsa, freepgs);
-		if (2 == pocs)
-		{
-			if (mpobf_add_msadsc(prcbf, freemsa, &freemsa[freepgs - 1]) == FALSE)
-			{
-				system_error("mm_merpages_onmarea proc memarea merge fail\n");
-			}
-			mm_update_memarea(malckp, freepgs, 1);
-			mm_update_memmgrob(freepgs, 1);
-			return TRUE;
-		}
-		if (1 == pocs)
-		{
-			return TRUE;
-		}
-		if (0 == pocs)
-		{
-			return FALSE;
-		}
-		return FALSE;
-	}
+    bafhlst_t *retrelbf = nullptr, *retmerbf = nullptr;
+    bool_t rets = FALSE;
+    //E-1 根据freepgs返回请求释放的和最大释放的bafhlst_t结构指针
+    rets = onfpgs_retn_bafhlst(malckp, freepgs, &retrelbf, &retmerbf);
+    if (FALSE == rets) {
+        return FALSE;
+    }
+    if (nullptr == retrelbf || nullptr == retmerbf) {
+        return FALSE;
+    }
 
-	bafhlst_t *retrelbf = nullptr, *retmerbf = nullptr;
-	bool_t rets = FALSE;
-	
-	//E-1 根据freepgs返回请求释放的和最大释放的bafhlst_t结构指针
-	rets = onfpgs_retn_bafhlst(malckp, freepgs, &retrelbf, &retmerbf);
-	if (FALSE == rets) {
-		return FALSE;
-	}
-	if (nullptr == retrelbf || nullptr == retmerbf) {
-		return FALSE;
-	}
-	
-	//E-2 设置freemsa释放标志，返回1表示不需要下一步合并操作，返回2表示要进行合并操作
-	sint_t mopms = mm_merpages_opmsadsc(retrelbf, freemsa, freepgs);
-	if (2 == mopms)
-	{
-		// E-3 把msadsc_t结构进行合并然后加入对应bafhlst_t结构, (核心操作)
-		rets = mm_merpages_onbafhlst(freemsa, freepgs, retrelbf, retmerbf);
-		if (TRUE == rets)
-		{
-			mm_update_memarea(malckp, freepgs, 1);
-			mm_update_memmgrob(freepgs, 1);
-			return rets;
-		}
-		return FALSE;
-	}
-	if (1 == mopms) {
-		return TRUE;
-	}
-	if (0 == mopms) {
-		return FALSE;
-	}
-	return FALSE;
+    //E-2 设置freemsa释放标志，返回1表示不需要下一步合并操作，返回2表示要进行合并操作
+    sint_t mopms = mm_merpages_opmsadsc(retrelbf, freemsa, freepgs);
+    if (2 == mopms)
+    {
+        // E-3 把msadsc_t结构进行合并然后加入对应bafhlst_t结构, (核心操作)
+        rets = mm_merpages_onbafhlst(freemsa, freepgs, retrelbf, retmerbf);
+        if (TRUE == rets)
+        {
+            mm_update_memarea(malckp, freepgs, 1);
+            mm_update_memmgrob(freepgs, 1);
+            return rets;
+        }
+        return FALSE;
+    }
+    if (1 == mopms) {
+        return TRUE;
+    }
+    if (0 == mopms) {
+        return FALSE;
+    }
+    return FALSE;
 }
 
 
 // C_2 释放内存页面的核心函数
 bool_t mm_merpages_core(memarea_t *marea, msadsc_t *freemsa, uint_t freepgs)
 {
-	if (nullptr == marea || nullptr == freemsa || 1 > freepgs) {
-		return FALSE;
-	}
+    if (nullptr == marea || nullptr == freemsa || 1 > freepgs) {
+        return FALSE;
+    }
 
-	/* 执行一些释放的安全性检测 */
-	if (scan_freemsa_isok(freemsa, freepgs) == FALSE) {
-		return FALSE;
-	}
-	bool_t rets = FALSE;
-	cpuflg_t cpuflg;
+    /* 执行一些释放的安全性检测 */
+    if (scan_freemsa_isok(freemsa, freepgs) == FALSE) {
+        return FALSE;
+    }
 
-	// D_1 针对内存区进行操作
-	spinlock_storeflg_cli(&marea->ma_lock, &cpuflg);
-	rets = mm_merpages_onmarea(marea, freemsa, freepgs);
-	spinunlock_restoreflg(&marea->ma_lock, &cpuflg);
-	return rets;
+    bool_t rets = FALSE;
+    cpuflg_t cpuflg;
+    // D_1 针对内存区进行操作
+    spinlock_storeflg_cli(&marea->ma_lock, &cpuflg);
+    rets = mm_merpages_onmarea(marea, freemsa, freepgs);
+    spinunlock_restoreflg(&marea->ma_lock, &cpuflg);
+    return rets;
 }
 
 //B_释放页内存
 bool_t mm_merpages_fmwk(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
-	// C_1 需要获取释放msadsc_t结构所在的内存区
-	memarea_t *marea = onfrmsa_retn_marea(mmobjp, freemsa, freepgs);
-	if (nullptr == marea) {
-		return FALSE;
-	}
+    // C_1 需要获取释放msadsc_t结构所在的内存区
+    memarea_t *marea = onfrmsa_retn_marea(mmobjp, freemsa, freepgs);
+    if (nullptr == marea) {
+        return FALSE;
+    }
 
-	// C_2 释放内存页面的核心函数
-	bool_t rets = mm_merpages_core(marea, freemsa, freepgs);
-	if (FALSE == rets) {
-		return FALSE;
-	}
-	return rets;
+    // C_2 释放内存页面的核心函数
+    bool_t rets = mm_merpages_core(marea, freemsa, freepgs);
+    if (FALSE == rets) {
+        return FALSE;
+    }
+    return rets;
 }
 
 /**
@@ -1473,29 +1488,34 @@ bool_t mm_merpages_fmwk(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
  */
 bool_t mm_merge_pages(mmgro_t *mmobjp, msadsc_t *freemsa, uint_t freepgs)
 {
-	if (nullptr == mmobjp || nullptr == freemsa || 1 > freepgs) {
-		return FALSE;
-	}
-	
-	sint_t dividx = retn_divoder(freepgs); // 把页面数向上对齐到2的整数次幂
-	freepgs = 1 << dividx;
+    if (nullptr == mmobjp || nullptr == freemsa || 1 > freepgs) {
+        return FALSE;
+    }
 
-	bool_t rets = mm_merpages_fmwk(mmobjp, freemsa, freepgs);
-	if (FALSE == rets) {
-		return FALSE;
-	}
-	return rets;
+    /* 把页面数向上对齐到2的整数次幂 */ 
+    sint_t dividx = retn_divoder(freepgs); 
+    if (freepgs != (1 << dividx)) {
+        /*通常来说freepgs就是二次幂的形式,分配函数不会分配非二次幂的桶元素 */
+        color_printk(RED, BLACK, "mm_merge_pages err1");
+        return FALSE;
+    }
+
+    bool_t rets = mm_merpages_fmwk(mmobjp, freemsa, 1 << dividx);
+    if (FALSE == rets) {
+        return FALSE;
+    }
+    return rets;
 }
 
 u64_t onfrmsa_retn_fpagenr(msadsc_t* freemsa)
 {
-	if( nullptr==freemsa || nullptr==freemsa->md_odlink ) {
-		return 0;
-	}
-	msadsc_t* fmend=(msadsc_t*)freemsa->md_odlink;
-	if(fmend < freemsa) {
-		return 0;
-	}
+    if( nullptr==freemsa || nullptr==freemsa->md_odlink ) {
+        return 0;
+    }
+    msadsc_t* fmend=(msadsc_t*)freemsa->md_odlink;
+    if(fmend < freemsa) {
+        return 0;
+    }
 
-	return ((u64_t)(fmend-freemsa)+1);
+    return ((u64_t)(fmend - freemsa) + 1);
 }
