@@ -5,10 +5,11 @@
 extern serial_t serials[2];
 static cstr_t debug_type[] = {
     "INFO",
-    "ERROR",
+    "ERROR", /* 可恢复错误 */
     "WARNING",
     "FAILURE",
-    "DEBUG"
+    "DEBUG", 
+    "FATAL" /* 不可恢复错误 */
 };
 
 void debugk(u8_t type, cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
@@ -23,12 +24,12 @@ void debugk(u8_t type, cstr_t file, cstr_t func, s32_t line, cstr_t fmt, ...)
     {
         // i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](%#02x) '%s' ", tm.year, tm.month, tm.day, tm.hour, 
         // tm.minute, tm.second, debug_type[type], current->pid, func);
-        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](%#02x) [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
+        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](pid:%#02d) [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
         tm.minute, tm.second, debug_type[type], (current->pid  > 0xFE ? 0xFF : current->pid), strrchr(file,'/') + 1, line, func);
     }
     else 
     {
-        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](%#02x) [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
+        i = sprintf(debugk_buf, "%04d-%02d-%02d %02d:%02d:%02d [%s](pid:%#02d) [%s:%d] '%s' ", tm.year, tm.month, tm.day, tm.hour, 
         tm.minute, tm.second, debug_type[type], (current->pid  > 0xFE ? 0xFF : current->pid), strrchr(file,'/') + 1, line, func);
     }
 
