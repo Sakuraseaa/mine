@@ -61,7 +61,7 @@ s64_t keyboard_ioctl(inode_t *inode, file_t *filp, u64_t cmd, u64_t arg)
         p_kb->p_head = p_kb->buf;
         p_kb->p_tail = p_kb->buf;
         p_kb->count = 0;
-        memset(p_kb, 0, KB_BUF_SIZE);
+        memset(p_kb->buf, 0, KB_BUF_SIZE);
         break;
     default:
         break;
@@ -98,7 +98,7 @@ s64_t keyboard_read(file_t *flip, char_t *buf, u64_t count, s64_t *position)
         p_kb->p_tail = p_kb->buf + (counter - tail_end_gap);
     }
 
-    p_kb->count -= count;
+    p_kb->count -= counter;
     return counter;
 }
 
@@ -146,6 +146,8 @@ void keyboard_init()
     u64_t i, j;
 
     p_kb = (keyboard_inputbuffer_t *)knew(sizeof(keyboard_inputbuffer_t), 0);
+    p_kb->p_head = p_kb->buf;
+    p_kb->p_tail = p_kb->buf;
 
     wait_queue_init(&keyboard_wait_queue, nullptr);
 

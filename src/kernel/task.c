@@ -218,6 +218,21 @@ u64_t copy_mm_fork(u64_t clone_flags, task_t *tsk)
 	kvma_inituserspace_virmemadrs(&tsk->mm->msd_virmemadrs);
 	hal_mmu_init(&tsk->mm->msd_mmu);
 
+	// 从父进程复制地址空间布局信息 因为他们在mmadrsdsc_t_init函数中已经清空了.
+	// 如果复制子进程 进行 sys_brk 时候会执行错误, 返回0地址.
+	tsk->mm->start_code   = current->mm->start_code;
+	tsk->mm->end_code     = current->mm->end_code;
+	tsk->mm->start_data   = current->mm->start_data;
+	tsk->mm->end_data     = current->mm->end_data;
+	tsk->mm->start_rodata = current->mm->start_rodata;
+	tsk->mm->end_rodata   = current->mm->end_rodata;
+	tsk->mm->start_bss    = current->mm->start_bss;
+	tsk->mm->end_bss      = current->mm->end_bss;
+	tsk->mm->start_brk    = current->mm->start_brk;
+	tsk->mm->end_brk      = current->mm->end_brk;
+	tsk->mm->start_stack  = current->mm->start_stack;
+	tsk->mm->stack_length = current->mm->stack_length;
+
 	// tsk->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_startkmvdsc->kva_kvmbox;
 	// tsk->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox = current->mm->msd_virmemadrs.vs_endkmvdsc->kva_kvmbox;
 	// 扫描所有的虚拟区间, 为子进程创建

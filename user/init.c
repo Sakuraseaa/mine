@@ -6,6 +6,7 @@ void run_command(int index, int argc, char **argv);
 int parse_command(char *buf, int *argc, char ***argv);
 void print_prompt(void);
 
+extern void * malloc(unsigned long size, int invalid);
 extern unsigned int keycode_map_normal[NR_SCAN_CODES * MAP_COLS];
 
 struct buildincmd
@@ -28,14 +29,13 @@ int main()
     } else {
         printf(" i am parent -> [%d, %d] \n", getpid(), pid);
         info('B');
-    }
-    while(1)
-    {
-        sleep(5);
+        while(1) {
+            sleep(5);
+        }
     }
 
-    signal(4 , sig_handler);
-    kill(pid, 4);
+    // signal(4 , sig_handler);
+    // kill(pid, 4);
 
     int fd = 0;
     char buf[256] = {0};

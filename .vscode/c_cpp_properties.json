@@ -21,6 +21,7 @@
                 "${workspaceFolder}/src/fs/minix/*",
                 "${workspaceFolder}/src/mm/inc/*",
                 "${workspaceFolder}/user/include/base/*",
+                "${workspaceFolder}/user/include/sys/*",
                 "${workspaceFolder}/user/include/*"
             ],
             "defines": [],
